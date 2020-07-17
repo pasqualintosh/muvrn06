@@ -1,0 +1,18 @@
+{
+  type: 'ADD_ACTIVITY',
+  itemActivity: {
+    key: 1522743396410,
+    activity: [{ type: 'WALKING' }]
+  }
+}
+
+{
+  type: 'ADD_TRACKING',
+  item: {
+    key: 1564569895579,
+    time: 1564569895880,
+    longitude: 13.36492120,
+    latitude: 38.11512115,
+    altitude: 62.89999771118164
+  }
+}
