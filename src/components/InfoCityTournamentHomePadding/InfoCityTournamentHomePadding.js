@@ -15,20 +15,20 @@ import {
   TouchableOpacity,
   Platform
 } from "react-native";
-import pointsDecimal from "../../helpers/pointsDecimal";
+
 import { connect } from "react-redux";
-import { createSelector } from "reselect";
-import { limitAvatar } from "./../UserItem/UserItem";
-import WavyArea from "./../../components/WavyArea/WavyArea";
-import LinearGradient from "react-native-linear-gradient";
+
+import { getMyTeamsState } from "./../../domains/tournaments/Selectors";
+
+import { getPermActivitiesState } from "./../../domains/statistics/Selectors";
 import {
-  getGlobalInfoState,
-  getCityInfoState,
-  getFriendInfoState,
-  getCommunityInfoState,
-  getSelectedLeaderboardState
-} from "../../domains/standings/Selectors";
-import { TournamentCities } from "./../../components/FriendItem/FriendItem";
+  updateActivitiesStep,
+  changeStatusPerm
+} from "./../../domains/statistics/ActionCreators";
+
+import AppleHealthKit from "rn-apple-healthkit";
+import GoogleFit, { Scopes } from "react-native-google-fit";
+
 
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
@@ -38,11 +38,10 @@ class InfoCityTournamentHomePadding extends React.PureComponent {
   }
 
   goToLive = () => {
-    // quando è attivo il torneo 
-    this.props.navigation.navigate("GameWeekTournamentBlur", { infoProfile: this.props.infoProfile});
-    // quando è disattivato il torneo 
+    // quando è attivo il torneo
+    this.props.navigation.navigate("Tournament");
+    // quando è disattivato il torneo
     // this.props.navigation.navigate("Tournament", { infoProfile: this.props.infoProfile});
-
     // if (this.props.match.season_match) {
     //   // se ho i dati vado nel live
     //   this.props.navigation.navigate("GameWeekTournamentBlur", {
@@ -62,13 +61,11 @@ class InfoCityTournamentHomePadding extends React.PureComponent {
     //     );
     //   }
     // }
+    // this.props.navigation.navigate("EniDetailScreenBlur");
   };
 
   moveProfile = () => {
-    // this.props.dispatch(changeScreenProfile("myself"));
-    // this.props.navigation.navigate("Profile");
-
-    this.props.navigation.navigate("ChangeAvatarScreen", {
+    this.props.navigation.navigate("Info", {
       avatar: this.props.infoProfile.avatar
     });
   };
@@ -77,14 +74,82 @@ class InfoCityTournamentHomePadding extends React.PureComponent {
     // this.props.dispatch(changeScreenProfile("myself"));
     // this.props.navigation.navigate("Profile");
 
-    this.props.navigation.navigate("Trainings");
+    // this.props.navigation.navigate("TrainingsScreen");
+   
+    if (this.props.perm) {
+      this.props.navigation.navigate("ChartsStack");
+    } else {
+
+      if (Platform.OS == "ios") {
+        let perm = {
+          permissions: {
+            read: [
+              "StepCount"
+            ]
+          },
+          observers: [{ type: "StepCount" }]
+        };
+        AppleHealthKit.initHealthKit(perm, (err, results) => {
+          if (err) {
+            err;
+            console.log("error initializing Healthkit: ", err);
+            return;
+          }
+          // ho ottenuto il permesso, lo salvo
+         
+            this.props.dispatch(changeStatusPerm(true));
+          
+  
+            this.props.dispatch(updateActivitiesStep());
+            this.props.navigation.navigate("ChartsStack");
+
+          });
+
+     
+    } else {
+      // The list of available scopes inside of src/scopes.js file
+      const options = {
+        scopes: [
+          Scopes.FITNESS_ACTIVITY_READ,
+          Scopes.FITNESS_ACTIVITY_READ_WRITE,
+          Scopes.FITNESS_BODY_READ,
+          Scopes.FITNESS_BODY_READ_WRITE,
+          Scopes.FITNESS_NUTRITION_READ,
+          Scopes.FITNESS_LOCATION_READ_WRITE
+        ]
+      };
+
+      GoogleFit.authorize(options)
+        .then(res => {
+          console.log("authorized >>>", res);
+          this.setState({ log: "authorized >>> " + JSON.stringify(res) });
+          if (res.success) {
+            // ho ottenuto il permesso, lo salvo
+           
+              this.props.dispatch(changeStatusPerm(true));
+            
+
+            this.props.dispatch(updateActivitiesStep())
+            this.props.navigation.navigate("ChartsStack");
+
+          } else {
+            // Alert.alert("Enable to extra points");
+          }
+        })
+        .catch(err => {
+          console.log("err >>> ", err);
+          this.setState({ log: "err >>> " + JSON.stringify(err) });
+        });
+
+   
+  }}
   };
 
   moveRanking = () => {
     // const TypeRanking = "global";
-    
+
     this.props.navigation.navigate("StandingsScreen");
-  };
+    };
 
   moveSettings = () => {
     this.props.navigation.navigate("PersonalDataScreenBlur");
@@ -97,48 +162,49 @@ class InfoCityTournamentHomePadding extends React.PureComponent {
         : ""
       : "";
 
-    const cityInTournament = TournamentCities(city);
+    const cityInTournament = 1;
 
-    const name = this.props.infoProfile.first_name
-    ? this.props.infoProfile.first_name.toUpperCase() +
-      " " +
-      this.props.infoProfile.last_name.charAt(0).toUpperCase() +
-      "."
-    : "";
+    const name = this.props.infoProfile.username
+      ? this.props.infoProfile.username.toUpperCase()
+      : "";
 
     return (
       <View style={styles.Container}>
         <View style={styles.centerContainer}>
-        <TouchableOpacity
+          <TouchableOpacity
             disabled={this.props.ValueBlur ? true : false}
             style={{
               opacity: 0,
-              height: 40,
+              height: 40
             }}
             onPress={this.moveSettings}
           >
-            <View  style={{
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                 
-                  height: 40,
-                }}>
-          <Text
-            style={{
-              fontFamily: "Montserrat-ExtraBold",
-              textAlign: "center",
-              fontSize: 18,
-              color: "#fff",
-              
-            }}
-          >
-             {name !== " ." ? name : ""}
-          </Text>
-          </View>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+
+                height: 40
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "Montserrat-ExtraBold",
+                  textAlign: "center",
+                  fontSize: 18,
+                  color: "#fff"
+                }}
+              >
+                {name !== " ." ? name : ""}
+              </Text>
+            </View>
           </TouchableOpacity>
           {cityInTournament ? (
-            <TouchableOpacity disabled={this.props.ValueBlur ? true : false}  onPress={this.moveTrainings}>
+            <TouchableOpacity
+              disabled={this.props.ValueBlur ? true : false}
+              onPress={this.moveTrainings}
+            >
               <View
                 style={{
                   flexDirection: "row",
@@ -179,9 +245,7 @@ class InfoCityTournamentHomePadding extends React.PureComponent {
         </View>
         <View style={styles.ThreeContainer}>
           <TouchableOpacity
-          onPress={this.moveProfile}
-         
-          
+            onPress={this.moveProfile}
             disabled={this.props.ValueBlur ? true : false}
             style={{
               width: 80,
@@ -196,61 +260,61 @@ class InfoCityTournamentHomePadding extends React.PureComponent {
             />
           </TouchableOpacity>
           <TouchableOpacity
-           onPress={this.moveRanking}
+            onPress={this.moveRanking}
             disabled={this.props.ValueBlur ? true : false}
-            
           >
             <View
               style={{
-              flexDirection: "column",
-              width: Dimensions.get("window").width - 170,
-              flex: 1,
+                flexDirection: "column",
+                width: Dimensions.get("window").width - 170,
+                flex: 1,
                 flexDirection: "row",
-              height: 80,
-              justifyContent: "center",
-              alignContent: "center",
-              alignItems: "center",
-              
-              
-              // alignSelf: 'flex-start'
-            }}
+                height: 80,
+                justifyContent: "center",
+                alignContent: "center",
+                alignItems: "center"
+
+                // alignSelf: 'flex-start'
+              }}
             />
           </TouchableOpacity>
-          
-          {!cityInTournament ? (
-            <TouchableOpacity disabled={this.props.ValueBlur ? true : false}  onPress={this.moveTrainings}>
-             
-            <View
-              style={{
-                width: 90,
-                height: 80,
-                paddingTop: 8,
 
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                opacity: 0
-              }}
+          {true ? (
+            <TouchableOpacity
+              disabled={this.props.ValueBlur ? true : false}
+              onPress={this.moveTrainings}
             >
-              <OwnIcon
-                name="user_level_icn"
-                // click={() => this.DescriptionIconModal("infoTrophies")}
-                size={35}
-                color="#FFFFFF"
-              />
-              <Text
+              <View
                 style={{
-                  fontFamily: "OpenSans-Regular",
-                  textAlign: "center",
-                  fontSize: 12,
-                  color: "white",
+                  width: 90,
+                  height: 80,
+                  paddingTop: 8,
 
-                  textAlignVertical: "center"
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  opacity: 0
                 }}
               >
-                Newbie
-              </Text>
-            </View>
+                <OwnIcon
+                  name="user_level_icn"
+                  // click={() => this.DescriptionIconModal("infoTrophies")}
+                  size={35}
+                  color="#FFFFFF"
+                />
+                <Text
+                  style={{
+                    fontFamily: "OpenSans-Regular",
+                    textAlign: "center",
+                    fontSize: 12,
+                    color: "white",
+
+                    textAlignVertical: "center"
+                  }}
+                >
+                  Newbie
+                </Text>
+              </View>
             </TouchableOpacity>
           ) : (
             <View
@@ -264,22 +328,22 @@ class InfoCityTournamentHomePadding extends React.PureComponent {
                 alignItems: "center"
               }}
             >
-            <TouchableOpacity
+              <TouchableOpacity
                 disabled={this.props.ValueBlur ? true : false}
                 onPress={() => this.goToLive()}
                 style={{
                   width: 90,
-                height: 80,
-                paddingTop: 8,
-                
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center"
+                  height: 80,
+                  paddingTop: 8,
+
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center"
                 }}
               ></TouchableOpacity>
               {/* <TouchableOpacity
                 disabled={this.props.ValueBlur ? true : false}
-                onPress={() => this.goToLive()}
+                // onPress={() => this.goToLive()}
                 style={{
                   width: 50,
                   height: 30,
@@ -316,7 +380,14 @@ class InfoCityTournamentHomePadding extends React.PureComponent {
   }
 }
 
-export default InfoCityTournamentHomePadding;
+const withMyTeam = connect(state => {
+  return {
+    myteam: getMyTeamsState(state),
+    perm: getPermActivitiesState(state)
+  };
+});
+
+export default withMyTeam(InfoCityTournamentHomePadding);
 
 export const styles = StyleSheet.create({
   Container: {

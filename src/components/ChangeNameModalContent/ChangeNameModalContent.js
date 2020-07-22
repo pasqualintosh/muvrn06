@@ -21,7 +21,8 @@ import {
   Picker,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  TouchableHighlight
+  TouchableHighlight,
+  Alert
 } from "react-native";
 
 import { Input } from "react-native-elements";
@@ -30,6 +31,7 @@ import Modal from "react-native-modal";
 import Icon from "react-native-vector-icons/Ionicons";
 import OwnIcon from "../OwnIcon/OwnIcon";
 import LinearGradient from "react-native-linear-gradient";
+import { strings } from "../../config/i18n";
 
 class ChangeNameModalContent extends React.Component {
   constructor() {
@@ -123,22 +125,25 @@ class ChangeNameModalContent extends React.Component {
         }}
       />
 
-      {this._renderButton("Confirm", () => {
+      {this._renderButton(strings("id_13_23"), () => {
         this.closeModelChangeValue();
       })}
     </View>
   );
 
   closeModelChangeValue = () => {
-    this.props.changeState(
-      this.state.value !== null &&
-        this.state.value !== this.props.value &&
-        this.state.ValidationValue
-        ? this.state.value
-        : this.props.value,
-      this.props.type,
-      this.props.function
-    );
+    if (this.state.value !== null && this.state.value.length >= 2) {
+      this.props.changeState(
+        this.state.value !== null &&
+          this.state.value !== this.props.value &&
+          this.state.ValidationValue
+          ? this.state.value
+          : this.props.value,
+        this.props.type,
+        this.props.function
+      );
+    }
+
     this.setState({ isModalVisible: false, value: null });
   };
 
@@ -149,14 +154,20 @@ class ChangeNameModalContent extends React.Component {
           style={{
             alignContent: "center",
             justifyContent: "center"
-            
           }}
         >
           <TouchableOpacity
             onPress={this._toggleModal}
             style={{
               flexDirection: "row",
-              
+              alignSelf: "center",
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              alignContent: "center",
+              alignItems: "center",
+
+              height: Dimensions.get("window").height * 0.1,
+              width: Dimensions.get("window").width * 0.45
             }}
           >
             <Text style={styles.Right}>
@@ -186,7 +197,14 @@ class ChangeNameModalContent extends React.Component {
             onPress={this._toggleModal}
             style={{
               flexDirection: "row",
-              
+              alignSelf: "center",
+              flexDirection: "row",
+              justifyContent: "flex-end",
+              alignContent: "center",
+              alignItems: "center",
+
+              height: Dimensions.get("window").height * 0.1,
+              width: Dimensions.get("window").width * 0.45
             }}
           >
             <Text style={[styles.rightText]}>
@@ -227,7 +245,7 @@ const styles = StyleSheet.create({
 
   Right: {
     alignSelf: "center",
-    
+
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     fontSize: 13,
@@ -241,8 +259,7 @@ const styles = StyleSheet.create({
     color: "#3D3D3D"
   },
   RightAndroid: {
-    alignSelf: "center",
-    
+    alignSelf: "center"
   },
   rightText: {
     fontFamily: "OpenSans-Regular",

@@ -3,6 +3,10 @@ import { View, TouchableWithoutFeedback, Text } from "react-native";
 import NotificationNumberCircle from "../NotificationNumberCircle/NotificationNumberCircle";
 
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
+import {
+  frequentTripsState
+} from "./../../domains/login/Selectors.js";
+import { connect } from "react-redux";
 
 class IconMenuDrawer extends React.Component {
   constructor(props) {
@@ -10,7 +14,7 @@ class IconMenuDrawer extends React.Component {
   }
 
   render() {
-    const numberNotification = 0;
+    const numberNotification = 1;
     return (
       <TouchableWithoutFeedback
         onPress={() => {
@@ -28,8 +32,8 @@ class IconMenuDrawer extends React.Component {
         >
           <OwnIcon name="top_menu_icn" size={30} color={"black"} />
 
-          {numberNotification ? (
-            <NotificationNumberCircle numberNotification={numberNotification} />
+          {!this.props.routine.length ? (
+            <NotificationNumberCircle numberNotification={1} />
           ) : (
             <View />
           )}
@@ -39,4 +43,13 @@ class IconMenuDrawer extends React.Component {
   }
 }
 
-export default IconMenuDrawer;
+const notificationPopup = connect(state => {
+  // prendo solo le routine
+  return {
+    routine: frequentTripsState(state)
+  };
+});
+
+export default notificationPopup(IconMenuDrawer);
+
+

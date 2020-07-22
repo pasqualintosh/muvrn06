@@ -425,12 +425,12 @@ class ModalSplitScreenChoose extends React.Component {
                     // this.props.navigation.navigate("SurveyUserData");
                     this.props.navigation.navigate("SurveyAvatar");
                   } else {
-                    Alert.alert("Oops", strings("seems_like_you_"));
+                    Alert.alert(strings("id_0_10"), strings("id_0_46"));
                   }
                 }}
               >
                 <View style={styles.buttonBox}>
-                  <Text style={styles.buttonGoOnText}>{strings("go_on")}</Text>
+                  <Text style={styles.buttonGoOnText}>{strings("id_0_15")}</Text>
                 </View>
               </TouchableWithoutFeedback>
             </View>
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

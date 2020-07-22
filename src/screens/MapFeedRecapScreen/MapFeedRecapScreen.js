@@ -80,6 +80,13 @@ class MapFeedRecapScreen extends React.Component {
           color = "#F9B224";
         }
         break;
+        case "Carpooling":
+          {
+            color = "#3363AD";
+           
+           
+          }
+          break
       default:
         {
           color = "rgba(108, 186, 126, 1)";

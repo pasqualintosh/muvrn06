@@ -229,7 +229,9 @@ class ChangeAvatarScreen extends React.Component {
                       colors={["#E82F73", "#F49658"]}
                       style={style.buttonBox}
                     >
-                      <Text style={style.buttonGoOnText}>{strings("ok")}</Text>
+                      <Text style={style.buttonGoOnText}>
+                        {strings("id_0_12")}
+                      </Text>
                     </LinearGradient>
                   </TouchableWithoutFeedback>
                 </View>

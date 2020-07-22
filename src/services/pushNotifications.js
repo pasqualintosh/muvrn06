@@ -1,7 +1,7 @@
 import {
   DeviceEventEmitter,
   PushNotificationIOS,
-  Platform
+  Platform,
 } from "react-native";
 import PushNotification from "react-native-push-notification";
 import NotificationActions from "react-native-ios-notification-actions";
@@ -17,22 +17,24 @@ const EndGMTTournament = 17;
 
 const configure = () => {
   PushNotification.configure({
-    onRegister: function(token) {
+    onRegister: function (token) {
       console.log("device token: " + token);
     },
 
-    onError: function() {
+    onError: function () {
       console.log("onError");
     },
 
-    onRemoteFetch: function() {
+    onRemoteFetch: function () {
       console.log("onRemoteFetch");
     },
 
-    onNotification: function(notification) {
+    popInitialNotification: true,
+
+    onNotification: function (notification) {
       console.log(notification);
 
-      if (notification.message == strings("hey__don_t_forg")) {
+      if (notification.message == strings("id_17_15")) {
         // get the weather
         // uso la posizione corrente per calcolare il meteo
         // navigator.geolocation.getCurrentPosition(
@@ -49,12 +51,20 @@ const configure = () => {
         //   }
         // );
         console.log("notifica settata dall'utente arrivata");
-      } else if (notification.message == strings("the_weekly_chal")) {
+      } else if (notification.message == strings("id_17_18")) {
         // aggiorno la classifica e blocco la classifica
         console.log("notifica arrivata");
 
         store.dispatch(dispatchNotification());
       } else if (notification.message == "prova") {
+      }
+
+      if (notification.action == "Walk") {
+        alert("Walk");
+      } else if (notification.action == "Bike") {
+        alert("Bike");
+      } else if (notification.action == "Tpl") {
+        alert("Tpl");
       }
 
       if (notification) {
@@ -68,11 +78,11 @@ const configure = () => {
     permissions: {
       alert: true,
       badge: true,
-      sound: true
+      sound: true,
     },
 
     popInitialNotification: true,
-    requestPermissions: true
+    requestPermissions: true,
   });
 };
 
@@ -91,7 +101,7 @@ const configureRemoteNotif = (onRegister, onNotification, gcm = "") => {
     permissions: {
       alert: true,
       badge: true,
-      sound: true
+      sound: true,
     },
 
     // Should the initial notification be popped automatically
@@ -103,7 +113,7 @@ const configureRemoteNotif = (onRegister, onNotification, gcm = "") => {
      * - Specified if permissions (ios) and token (android and ios) will requested or not,
      * - if not, you must call PushNotificationsHandler.requestPermissions() later
      */
-    requestPermissions: true
+    requestPermissions: true,
   });
 };
 
@@ -111,8 +121,33 @@ const deleteUserIsStandingsNotification = () => {
   PushNotification.cancelLocalNotifications({ id: "010202" });
 };
 
-const userIsStillNotification = date => {
-  // su android preparo la notifica 
+const activitiesMinutesNotification = (minActivities) => {
+  // su android preparo la notifica
+  // su ios la faccio scatare nel momento corretto
+  PushNotification.localNotification({
+    autoCancel: true,
+    largeIcon: "ic_launcher",
+    smallIcon: "ic_notification",
+    icon: "ic_notification",
+    subText: "Attività effettuata",
+    vibrate: true,
+    vibration: 300,
+    title: "Attività effettuata",
+    message: "Attività effettuata con " + minActivities + " minuti",
+    playSound: true,
+    soundName: "default",
+    // bigText: "My big text that will be shown when notification is expanded",
+    // color: "green",
+    // actions: '["Walk", "Bike", "Tpl"]',
+    date: new Date(Date.now()),
+    id: "010202",
+    userInfo: { id: "010202" },
+    // alertAction: () => {}
+  });
+};
+
+const userIsStillNotification = (date) => {
+  // su android preparo la notifica
   // su ios la faccio scatare nel momento corretto
   PushNotification.localNotification({
     autoCancel: true,
@@ -122,8 +157,8 @@ const userIsStillNotification = date => {
     subText: "Hey, you've been still too long",
     vibrate: true,
     vibration: 300,
-    title: "Muv is opened",
-    message: strings("hey__you_ve_bee"),
+    title: strings("id_17_16"),
+    message: strings("id_17_17"),
     playSound: true,
     soundName: "default",
     // bigText: "My big text that will be shown when notification is expanded",
@@ -131,7 +166,32 @@ const userIsStillNotification = date => {
     // actions: '["Walk", "Bike", "Tpl"]',
     date: new Date(Date.now()),
     id: "010202",
-    userInfo: { id: "010202" }
+    userInfo: { id: "010202" },
+    // alertAction: () => {}
+  });
+};
+
+const userIsStillNotificationToStop = (date) => {
+  // su android preparo la notifica
+  // su ios la faccio scatare nel momento corretto
+  PushNotification.localNotification({
+    autoCancel: true,
+    largeIcon: "ic_launcher",
+    smallIcon: "ic_notification",
+    icon: "ic_notification",
+    subText: "Hey, you've been still too long",
+    vibrate: true,
+    vibration: 300,
+    title: "Trip si closed",
+    message: "You've been stationary for too long.",
+    playSound: true,
+    soundName: "default",
+    // bigText: "My big text that will be shown when notification is expanded",
+    // color: "green",
+    // actions: '["Walk", "Bike", "Tpl"]',
+    date: new Date(Date.now()),
+    id: "010203",
+    userInfo: { id: "010203" },
     // alertAction: () => {}
   });
 };
@@ -172,20 +232,20 @@ const localNotificationSchedule = (time, weekDaysState) => {
   // console.log(daysInYear);
   // console.log(daysInNextYear);
 
-  daysInYear.forEach(element => {
+  daysInYear.forEach((element) => {
     try {
       let rand_id = getRandomArbitrary(0, 1000000);
 
       ids.push(rand_id);
       PushNotification.localNotificationSchedule({
-        message: strings("hey__don_t_forg"), // (required)
+        message: strings("id_17_15"), // (required)
         date: new Date(element),
         largeIcon: "ic_launcher",
         smallIcon: "ic_notification",
         icon: "ic_notification",
         click_action: "OPEN_MAIN_ACTIVITY",
         id: rand_id.toString(),
-        userInfo: { id: rand_id.toString() }
+        userInfo: { id: rand_id.toString() },
       });
     } catch (error) {
       console.log(error);
@@ -193,19 +253,19 @@ const localNotificationSchedule = (time, weekDaysState) => {
     }
   });
 
-  daysInNextYear.forEach(element => {
+  daysInNextYear.forEach((element) => {
     let rand_id = getRandomArbitrary(0, 1000000);
     ids.push(rand_id);
     try {
       PushNotification.localNotificationSchedule({
-        message: strings("hey__don_t_forg"), // (required)
+        message: strings("id_17_15"), // (required)
         largeIcon: "ic_launcher",
         smallIcon: "ic_notification",
         icon: "ic_notification",
         date: new Date(element),
         click_action: "OPEN_MAIN_ACTIVITY",
         id: rand_id.toString(),
-        userInfo: { id: rand_id.toString() }
+        userInfo: { id: rand_id.toString() },
       });
     } catch (error) {
       console.log(error);
@@ -216,9 +276,9 @@ const localNotificationSchedule = (time, weekDaysState) => {
   return ids;
 };
 
-const deleteNotificationByIds = ids => {
+const deleteNotificationByIds = (ids) => {
   if (ids != undefined)
-    ids.forEach(e => {
+    ids.forEach((e) => {
       PushNotification.cancelLocalNotifications({ id: e.toString() });
     });
 };
@@ -244,14 +304,14 @@ const localWeeklyNotificationSundayEveningAndroid = () => {
     3: false,
     4: false,
     5: false,
-    6: false
+    6: false,
   };
 
   let today = new Date();
   let ids = [];
   // su android tengo conto del fuso new Date().getTimezoneOffset() / 60; // in italia da -60
   let h = EndGMTTournament - today.getTimezoneOffset() / 60;
-  h = h > 23 ? h - 24 : h
+  h = h > 23 ? h - 24 : h;
   const m = 0;
 
   today.setUTCHours(h);
@@ -278,20 +338,20 @@ const localWeeklyNotificationSundayEveningAndroid = () => {
   console.log(daysInYear);
   // console.log(daysInNextYear);
 
-  daysInYear.forEach(element => {
+  daysInYear.forEach((element) => {
     let rand_id = getRandomArbitrary(0, 1000000);
     ids.push(rand_id);
 
     try {
       if (new Date(element) > new Date())
         PushNotification.localNotificationSchedule({
-          message: strings("the_weekly_chal"), // (required)
+          message: strings("id_17_18"), // (required)
           largeIcon: "ic_launcher",
           smallIcon: "ic_notification",
           icon: "ic_notification",
           date: new Date(element),
           id: rand_id.toString(),
-          userInfo: { id: rand_id.toString() }
+          userInfo: { id: rand_id.toString() },
         });
     } catch (error) {
       console.log(error);
@@ -324,7 +384,7 @@ const localWeeklyNotificationMondayMorningAndroid = () => {
     3: false,
     4: false,
     5: false,
-    6: false
+    6: false,
   };
 
   let today = new Date();
@@ -356,7 +416,7 @@ const localWeeklyNotificationMondayMorningAndroid = () => {
   console.log(daysInYear);
   // console.log(daysInNextYear);
 
-  daysInYear.forEach(element => {
+  daysInYear.forEach((element) => {
     let rand_id = getRandomArbitrary(0, 1000000);
     ids.push(rand_id);
 
@@ -369,7 +429,7 @@ const localWeeklyNotificationMondayMorningAndroid = () => {
           icon: "ic_notification",
           date: new Date(element),
           id: rand_id.toString(),
-          userInfo: { id: rand_id.toString() }
+          userInfo: { id: rand_id.toString() },
         });
     } catch (error) {
       console.log(error);
@@ -411,7 +471,7 @@ const localWeekNotificationSundayEvening = () => {
     3: false,
     4: false,
     5: false,
-    6: false
+    6: false,
   };
 
   let weekDays = [];
@@ -434,20 +494,20 @@ const localWeekNotificationSundayEvening = () => {
 
   console.log(weekDays);
 
-  weekDays.forEach(element => {
+  weekDays.forEach((element) => {
     let rand_id = getRandomArbitrary(0, 1000000);
     if (weekDaysArrayState.includes(element.index)) {
       ids.push(rand_id);
       try {
         PushNotification.localNotificationSchedule({
-          message: strings("the_weekly_chal"), // (required)
+          message: strings("id_17_18"), // (required)
           largeIcon: "ic_launcher",
           smallIcon: "ic_notification",
           icon: "ic_notification",
           date: new Date(element.date),
           id: rand_id.toString(),
           userInfo: { id: rand_id.toString() },
-          repeatType: "week"
+          repeatType: "week",
         });
       } catch (error) {
         console.log(error);
@@ -469,7 +529,7 @@ const localWeekNotificationMondayMorning = () => {
     3: false,
     4: false,
     5: false,
-    6: false
+    6: false,
   };
 
   let weekDays = [];
@@ -492,7 +552,7 @@ const localWeekNotificationMondayMorning = () => {
 
   console.log(weekDays);
 
-  weekDays.forEach(element => {
+  weekDays.forEach((element) => {
     let rand_id = getRandomArbitrary(0, 1000000);
     if (weekDaysArrayState.includes(element.index)) {
       ids.push(rand_id);
@@ -505,7 +565,7 @@ const localWeekNotificationMondayMorning = () => {
           date: new Date(element.date),
           id: rand_id.toString(),
           userInfo: { id: rand_id.toString() },
-          repeatType: "week"
+          repeatType: "week",
         });
       } catch (error) {
         console.log(error);
@@ -545,20 +605,20 @@ const localDailyNotificationSchedule = (time, weekDaysState) => {
   console.log(m);
   console.log(weekDays);
 
-  weekDays.forEach(element => {
+  weekDays.forEach((element) => {
     let rand_id = getRandomArbitrary(0, 1000000);
     if (weekDaysArrayState.includes(element.index)) {
       ids.push(rand_id);
       try {
         PushNotification.localNotificationSchedule({
-          message: strings("hey__don_t_forg"), // (required)
+          message: strings("id_17_15"), // (required)
           largeIcon: "ic_launcher",
           smallIcon: "ic_notification",
           icon: "ic_notification",
           date: new Date(element.date),
           id: rand_id.toString(),
           userInfo: { id: rand_id.toString() },
-          repeatType: "week"
+          repeatType: "week",
         });
       } catch (error) {
         console.log(error);
@@ -578,26 +638,28 @@ const cancelAllLocalNotifications = () => {
 };
 
 const inStandingsNotification = () => {
-  if (Platform.OS == "ios") setIosActions();
-  else setAndroidActions();
+  // if (Platform.OS == "ios") setIosActions();
+  // else setAndroidActions();
 
   PushNotification.localNotification({
     largeIcon: "ic_launcher",
     smallIcon: "ic_notification",
     icon: "ic_notification",
     // bigText: "My big text that will be shown when notification is expanded",
-    subText: strings("hey__you_ve_bee"),
+    subText: strings("id_17_17"),
     // color: "green",
     vibrate: true,
     vibration: 300,
-    title: "Muv is opened",
+    // date: new Date(Date.now() + 60 * 1000), // in 60 secs
+    title: strings("id_17_16"),
     message: "Hey, you've been still too long, did you forget to close it?",
     playSound: true,
     soundName: "default",
-    actions: '["Walk", "Bike", "Tpl"]',
+    actions: '["UPVOTE_ACTION", "REPLY_ACTION"]',
     id: "0001",
     userInfo: { id: "0001" },
-    category: "something_happened" // ios actions
+    foreground: true,
+    category: "something_happened", // ios actions
   });
 };
 
@@ -701,7 +763,7 @@ const getDaysInMonth = (month, year) => {
 /**
  * ottengo l'ora o il minuto da un formato hh:mm
  */
-const getNotificationHour = time => {
+const getNotificationHour = (time) => {
   const stringH = time.split(":")[0];
   return Number.parseInt(stringH);
 };
@@ -709,17 +771,18 @@ const getNotificationHour = time => {
 /**
  * ottengo l'ora o il minuto da un formato hh:mm
  */
-const getNotificationMinute = time => {
+const getNotificationMinute = (time) => {
   const stringM = time.split(":")[1];
   return Number.parseInt(stringM);
 };
 
 const setAndroidActions = () => {
+  console.log("setAndroidActions");
   PushNotification.registerNotificationActions(["Walk", "Bike", "Tpl"]);
-  DeviceEventEmitter.addListener("notificationActionReceived", function(
+  DeviceEventEmitter.addListener("notificationActionReceived", function (
     action
   ) {
-    // console.log("Notification action received: " + JSON.stringify(action));
+    console.log("Notification action received: " + JSON.stringify(action));
     const info = JSON.parse(action.dataJSON);
     if (info.action == "Walk") {
       console.log("Walk");
@@ -737,7 +800,7 @@ const setIosActions = () => {
     {
       activationMode: "background",
       title: "Upvote",
-      identifier: "UPVOTE_ACTION"
+      identifier: "UPVOTE_ACTION",
     },
     (res, done) => {
       console.info("upvote button pressed with result: ", res);
@@ -751,7 +814,7 @@ const setIosActions = () => {
       activationMode: "background",
       title: "Reply",
       behavior: "textInput",
-      identifier: "REPLY_ACTION"
+      identifier: "REPLY_ACTION",
     },
     (res, done) => {
       console.info(
@@ -768,7 +831,7 @@ const setIosActions = () => {
   let myCategory = new NotificationActions.Category({
     identifier: "something_happened",
     actions: [upvoteButton, commentTextButton],
-    forContext: "minimal"
+    forContext: "minimal",
   });
 
   // ** important ** update the categories
@@ -782,7 +845,7 @@ function fetchWeather(lat = 40, lon = 40) {
     .get(
       `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${API_KEY}`
     )
-    .then(res => {
+    .then((res) => {
       console.log(res);
       // se risponde correttamente setto un valore da 1 a 3 per dire che il meteo è stato settato
       if (res.status === 200) {
@@ -842,12 +905,12 @@ function fetchWeather(lat = 40, lon = 40) {
         alert("the weather is " + weather);
       }
     })
-    .catch(err => {
+    .catch((err) => {
       console.log(err);
     });
 }
 
-const checkPermission = cbk => {
+const checkPermission = (cbk) => {
   PushNotification.checkPermissions(cbk);
 };
 
@@ -858,7 +921,7 @@ function fetchWeekWeather(lat = 40, lon = 40) {
     .get(
       `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&APPID=${API_KEY}`
     )
-    .then(res => {
+    .then((res) => {
       console.log(res);
       // se risponde correttamente setto un valore da 1 a 3 per dire che il meteo è stato settato
       if (res.status === 200) {
@@ -921,7 +984,7 @@ function fetchWeekWeather(lat = 40, lon = 40) {
       }
     })
 
-    .catch(err => {
+    .catch((err) => {
       console.log(err);
     });
 }
@@ -939,7 +1002,7 @@ const weekDaysAndroidArrayState = [
   "thu",
   "fri",
   "sat",
-  "sun"
+  "sun",
 ];
 
 function getCETorCESTDate() {
@@ -992,5 +1055,7 @@ export {
   deleteAllNotification,
   localWeekNotification,
   configureRemoteNotif,
-  checkPermission
+  checkPermission,
+  userIsStillNotificationToStop,
+  activitiesMinutesNotification,
 };

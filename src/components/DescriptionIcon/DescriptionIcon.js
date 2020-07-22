@@ -22,11 +22,11 @@ class DescriptionIcon extends React.Component {
     let text = "If the weather sucks, your points raise up!";
 
     if (this.props.icon === "series_icn") {
-      title = strings("dedication_mult");
-      text = strings("play_muv_many_d");
+      title = strings("id_1_11");
+      text = strings("id_1_12");
     } else if (this.props.icon === "rush_hour_icn") {
-      title = strings("traffic_multipl");
-      text = strings("if_traffic_is_a");
+      title = strings("id_1_09");
+      text = strings("id_1_10");
     } else if (this.props.icon === "infoCityTournament") {
       title = strings("just_train_now_");
       text = strings("just_imagine_to");
@@ -75,12 +75,12 @@ class DescriptionIcon extends React.Component {
       text = strings("with_muv_you_ha");
     } else if (this.props.icon === "tournamentInfo") {
       title = "The match rules are simple (and fair!).";
-      text = "The City's score is the sum of the 3 best players points plus the avarege points made by all the other City members. And remember: Greater numbers of MUVers means larger bonus!";
+      text =
+        "The City's score is the sum of the 3 best players points plus the avarege points made by all the other City members. And remember: Greater numbers of MUVers means larger bonus!";
     } else {
-      title = strings("weather_multipl");
-      text = strings("if_the_weather_");
+      title = strings("id_1_07");
+      text = strings("id_1_08");
     }
-    
 
     return (
       <View

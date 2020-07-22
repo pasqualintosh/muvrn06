@@ -190,7 +190,7 @@ class ChangeCityModalContent extends React.Component {
         />
         {this.renderScrollAutofocus(result)}
 
-        {this.renderButton("Confirm", () => {
+        {this.renderButton(strings("id_13_23"), () => {
           this.closeModelChangeValue();
         })}
       </View>

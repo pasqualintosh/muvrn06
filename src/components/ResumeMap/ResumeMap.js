@@ -2,7 +2,6 @@ import React from "react";
 import { View, Text, Button, Dimensions } from "react-native";
 import MapView from "react-native-maps";
 import { styles } from "./Style";
-
 import InteractionManager from "../../helpers/loadingComponent";
 
 // aggiungere l'attributo cacheEnabled per renderla definitiva, ovvero non si puo cambiare zoom o posizione, diventa un immagine
@@ -107,6 +106,13 @@ class ResumeMap extends React.Component {
             color1 = "#FFCC00";
           }
           break;
+          case "Carpooling":
+          {
+            color = "#3363AD";
+            color1 = "#3363AD";
+           
+          }
+          break
         default:
           {
             color = "rgba(108, 186, 126, 1)";

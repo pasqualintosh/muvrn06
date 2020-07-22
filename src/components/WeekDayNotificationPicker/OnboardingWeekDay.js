@@ -17,8 +17,8 @@ class OnboardingWeekDay extends React.Component {
           locations={[0, 1.0]}
           colors={
             this.props.detailScreen
-              ? ["#5FC4E2", "#5FDDE2"]
-              : ["#E82F73", "#F49658"]
+              ? ["#7D4D99", "#6497CC"]
+              : ["#7D4D99", "#6497CC"]
           }
           style={[styles.checkboxesGradient]}
         />
@@ -27,7 +27,15 @@ class OnboardingWeekDay extends React.Component {
 
   render() {
     return (
-      <View style={styles.weekDayContainer}>
+      <View
+        style={[
+          styles.weekDayContainer,
+          {
+            alignItems: this.props.detailScreen ? "center" : "center"
+          },
+          this.props.style
+        ]}
+      >
         <TouchableWithoutFeedback
           onPress={() => {
             this.props.onPress(this.props.index);
@@ -37,8 +45,11 @@ class OnboardingWeekDay extends React.Component {
             style={[
               styles.weekDayBorder,
               {
-                borderColor: "#fff"
-              }
+                borderColor: "#fff",
+                backgroundColor: this.props.detailScreen ? "#fff" : "#fff",
+                alignSelf: this.props.detailScreen ? "center" : "center"
+              },
+              this.props.styleBox
             ]}
           >
             {this.renderLinearGradientCheckbox()}
@@ -48,7 +59,8 @@ class OnboardingWeekDay extends React.Component {
           style={[
             styles.weekDayText,
             {
-              color: this.props.detailScreen ? "#3d3d3d" : "#fff"
+              color: this.props.detailScreen ? "#3d3d3d" : "#fff",
+              fontSize: this.props.detailScreen ? 9 : 13
             }
           ]}
         >
@@ -65,7 +77,8 @@ const styles = StyleSheet.create({
     width: 40,
     flexDirection: "column",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+    alignSelf: "center"
   },
   weekDayBorder: {
     width: 20,
@@ -89,7 +102,9 @@ const styles = StyleSheet.create({
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     fontSize: 13,
-    color: "#9D9B9C"
+    color: "#9D9B9C",
+    textAlign: "center",
+    paddingTop: 4
   },
   checkboxesGradient: {
     height: 8,
@@ -99,4 +114,8 @@ const styles = StyleSheet.create({
   }
 });
 
+OnboardingWeekDay.defaultProps = {
+  style: {},
+  styleBox: {}
+};
 export default OnboardingWeekDay;

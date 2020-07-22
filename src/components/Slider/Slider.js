@@ -9,10 +9,14 @@ import {
   PanResponder,
   View,
   Easing,
-  ViewPropTypes
+  ViewPropTypes,
+  Text,
+  Dimensions,
 } from "react-native";
+import Aux from "../../helpers/Aux";
 
 import PropTypes from "prop-types";
+import { strings } from "../../config/i18n";
 
 var TRACK_SIZE = 4;
 var THUMB_SIZE = 20;
@@ -24,7 +28,7 @@ function Rect(x, y, width, height) {
   this.height = height;
 }
 
-Rect.prototype.containsPoint = function(x, y) {
+Rect.prototype.containsPoint = function (x, y) {
   return (
     x >= this.x &&
     y >= this.y &&
@@ -36,13 +40,13 @@ Rect.prototype.containsPoint = function(x, y) {
 var DEFAULT_ANIMATION_CONFIGS = {
   spring: {
     friction: 7,
-    tension: 100
+    tension: 100,
   },
   timing: {
     duration: 150,
     easing: Easing.inOut(Easing.ease),
-    delay: 0
-  }
+    delay: 0,
+  },
   // decay : { // This has a serious bug
   //   velocity     : 1,
   //   deceleration : 0.997
@@ -109,7 +113,7 @@ export default class Slider extends PureComponent {
      */
     thumbTouchSize: PropTypes.shape({
       width: PropTypes.number,
-      height: PropTypes.number
+      height: PropTypes.number,
     }),
 
     /**
@@ -177,7 +181,7 @@ export default class Slider extends PureComponent {
     /**
      * Set this to true to invert the swipe direction of the slider. Inversion is linked to the slider's orientation.
      */
-    inverted: PropTypes.bool
+    inverted: PropTypes.bool,
   };
 
   static defaultProps = {
@@ -192,7 +196,7 @@ export default class Slider extends PureComponent {
     debugTouchArea: false,
     animationType: "timing",
     orientation: "horizontal",
-    inverted: false
+    inverted: false,
   };
 
   state = {
@@ -200,7 +204,7 @@ export default class Slider extends PureComponent {
     trackSize: { width: 0, height: 0 },
     thumbSize: { width: 0, height: 0 },
     allMeasured: false,
-    value: new Animated.Value(this.props.value)
+    value: new Animated.Value(this.props.value),
   };
 
   componentWillMount() {
@@ -211,7 +215,7 @@ export default class Slider extends PureComponent {
       onPanResponderMove: this._handlePanResponderMove,
       onPanResponderRelease: this._handlePanResponderEnd,
       onPanResponderTerminationRequest: this._handlePanResponderRequestEnd,
-      onPanResponderTerminate: this._handlePanResponderEnd
+      onPanResponderTerminate: this._handlePanResponderEnd,
     });
   }
 
@@ -240,6 +244,8 @@ export default class Slider extends PureComponent {
       trackStyle,
       thumbStyle,
       debugTouchArea,
+      textRight,
+      stepValue,
       ...other
     } = this.props;
     var {
@@ -247,14 +253,15 @@ export default class Slider extends PureComponent {
       containerSize,
       trackSize,
       thumbSize,
-      allMeasured
+      allMeasured,
     } = this.state;
     var mainStyles = styles || defaultStyles;
     var thumbLeft = value.interpolate({
       inputRange: [minimumValue, maximumValue],
-      outputRange: [0, containerSize.width - thumbSize.width]
+      outputRange: [0, containerSize.width - thumbSize.width],
       //extrapolate: 'clamp',
     });
+
     var valueVisibleStyle = {};
     if (!allMeasured) {
       valueVisibleStyle.opacity = 0;
@@ -264,7 +271,14 @@ export default class Slider extends PureComponent {
       position: "absolute",
       width: Animated.add(thumbLeft, thumbSize.width / 2),
       backgroundColor: minimumTrackTintColor,
-      ...valueVisibleStyle
+      ...valueVisibleStyle,
+    };
+
+    var minimumTrackStyleLine = {
+      position: "absolute",
+      width: Animated.add(thumbLeft, thumbSize.width / 2),
+      backgroundColor: "red",
+      ...valueVisibleStyle,
     };
 
     var touchOverflowStyle = this._getTouchOverflowStyle();
@@ -279,15 +293,132 @@ export default class Slider extends PureComponent {
           style={[
             { backgroundColor: maximumTrackTintColor },
             mainStyles.track,
-            trackStyle
+            trackStyle,
           ]}
           renderToHardwareTextureAndroid={true}
           onLayout={this._measureTrack}
         />
+        {textRight && (
+          <Text
+            style={{
+              position: "absolute",
+              bottom: 0,
+              right: 0,
+              color: "#ffffff",
+              fontFamily: "OpenSans-Regular",
+              fontSize: 11,
+              textAlign: "right",
+            }}
+          >
+            {textRight}
+          </Text>
+        )}
+        { stepValue && (<Aux><View
+          style={{
+            height: 26,
+            width: 4,
+            position: "absolute",
+            // bottom: 6,
+            right: 0,
+            backgroundColor: "#ffffff",
+            borderRadius: 13,
+          }}
+        ></View>
+        <View
+          style={{
+            height: 26,
+            width: 40,
+            position: "absolute",
+            top: 40,
+            left: - 16 ,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center'
+            
+          }}
+        ><Text style={defaultStyles.textStep}>{strings("id_0_146")}</Text></View>
+        <View
+          style={{
+            height: 26,
+            width: 40,
+            position: "absolute",
+            top: 40,
+            right: Dimensions.get("window").width * 0.3 - 16 ,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center'
+            
+          }}
+        ><Text style={defaultStyles.textStep}>{strings("id_0_148")}</Text></View>
+        <View
+          style={{
+            height: 26,
+            width: 4,
+            position: "absolute",
+            // bottom: 6,
+            left: 0,
+            backgroundColor: "#ffffff",
+            borderRadius: 13,
+          }}
+        ></View>
+        <View
+          style={{
+            height: 26,
+            width: 4,
+            position: "absolute",
+            // bottom: 6,
+            right: Dimensions.get("window").width * 0.3 + 2 ,
+            backgroundColor: "#ffffff",
+            borderRadius: 13,
+          }}
+        ></View>
+        <View
+          style={{
+            height: 26,
+            width: 40,
+            position: "absolute",
+            top: 40,
+            left: Dimensions.get("window").width * 0.3 - 16 ,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center'
+            
+          }}
+        ><Text style={defaultStyles.textStep}>{strings("id_0_147")}</Text></View>
+        <View
+          style={{
+            height: 26,
+            width: 4,
+            position: "absolute",
+            // bottom: 6,
+            left: Dimensions.get("window").width * 0.3 + 2 ,
+            backgroundColor: "#ffffff",
+            borderRadius: 13,
+          }}
+        ></View><View
+          style={{
+            height: 26,
+            width: 40,
+            position: "absolute",
+            top: 40,
+            right: - 16 ,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center'
+            
+          }}
+        ><Text style={defaultStyles.textStep}>{strings("id_0_149")}</Text></View></Aux>)
+}
+        <Animated.View
+          renderToHardwareTextureAndroid={true}
+          style={[mainStyles.track, trackStyle, minimumTrackStyleLine]}
+        />
+
         <Animated.View
           renderToHardwareTextureAndroid={true}
           style={[mainStyles.track, trackStyle, minimumTrackStyle]}
         />
+
         <Animated.View
           onLayout={this._measureThumb}
           renderToHardwareTextureAndroid={true}
@@ -299,8 +430,8 @@ export default class Slider extends PureComponent {
               justifyContent: "center",
               alignItems: "center",
               transform: [{ translateX: thumbLeft }, { translateY: 0 }],
-              ...valueVisibleStyle
-            }
+              ...valueVisibleStyle,
+            },
           ]}
         >
           {this._renderThumbImage()}
@@ -370,15 +501,15 @@ export default class Slider extends PureComponent {
     this._fireChangeEvent("onSlidingComplete");
   };
 
-  _measureContainer = x => {
+  _measureContainer = (x) => {
     this._handleMeasure("containerSize", x);
   };
 
-  _measureTrack = x => {
+  _measureTrack = (x) => {
     this._handleMeasure("trackSize", x);
   };
 
-  _measureThumb = x => {
+  _measureThumb = (x) => {
     this._handleMeasure("thumbSize", x);
   };
 
@@ -402,26 +533,26 @@ export default class Slider extends PureComponent {
         containerSize: this._containerSize,
         trackSize: this._trackSize,
         thumbSize: this._thumbSize,
-        allMeasured: true
+        allMeasured: true,
       });
     }
   };
 
-  _getRatio = value => {
+  _getRatio = (value) => {
     return (
       (value - this.props.minimumValue) /
       (this.props.maximumValue - this.props.minimumValue)
     );
   };
 
-  _getThumbLeft = value => {
+  _getThumbLeft = (value) => {
     var ratio = this._getRatio(value);
     return (
       ratio * (this.state.containerSize.width - this.state.thumbSize.width)
     );
   };
 
-  _getValue = gestureState => {
+  _getValue = (gestureState) => {
     var length = this.state.containerSize.width - this.state.thumbSize.width;
     var swipeMovement =
       this.props.orientation === "vertical" ? gestureState.dy : gestureState.dx;
@@ -459,11 +590,11 @@ export default class Slider extends PureComponent {
     return this.state.value.__getValue();
   };
 
-  _setCurrentValue = value => {
+  _setCurrentValue = (value) => {
     this.state.value.setValue(value);
   };
 
-  _setCurrentValueAnimated = value => {
+  _setCurrentValueAnimated = (value) => {
     var animationType = this.props.animationType;
     var animationConfig = Object.assign(
       {},
@@ -475,7 +606,7 @@ export default class Slider extends PureComponent {
     Animated[animationType](this.state.value, animationConfig).start();
   };
 
-  _fireChangeEvent = event => {
+  _fireChangeEvent = (event) => {
     if (this.props[event]) {
       this.props[event](this._getCurrentValue());
     }
@@ -522,7 +653,7 @@ export default class Slider extends PureComponent {
     return touchOverflowStyle;
   };
 
-  _thumbHitTest = e => {
+  _thumbHitTest = (e) => {
     var nativeEvent = e.nativeEvent;
     var thumbTouchRect = this._getThumbTouchRect();
     return thumbTouchRect.containsPoint(
@@ -547,13 +678,13 @@ export default class Slider extends PureComponent {
     );
   };
 
-  _renderDebugThumbTouchRect = thumbLeft => {
+  _renderDebugThumbTouchRect = (thumbLeft) => {
     var thumbTouchRect = this._getThumbTouchRect();
     var positionStyle = {
       left: thumbLeft,
       top: thumbTouchRect.y,
       width: thumbTouchRect.width,
-      height: thumbTouchRect.height
+      height: thumbTouchRect.height,
     };
 
     return (
@@ -583,19 +714,25 @@ export default class Slider extends PureComponent {
 }
 
 var defaultStyles = StyleSheet.create({
+  textStep: {
+    fontFamily: "OpenSans-Regular",
+                fontWeight: "400",
+                fontSize: 11,
+                color: "#FFFFFF",
+  },
   container: {
     height: 40,
-    justifyContent: "center"
+    justifyContent: "center",
   },
   track: {
     height: TRACK_SIZE,
-    borderRadius: TRACK_SIZE / 2
+    borderRadius: TRACK_SIZE / 2,
   },
   thumb: {
     position: "absolute",
     width: THUMB_SIZE,
     height: THUMB_SIZE,
-    borderRadius: THUMB_SIZE / 2
+    borderRadius: THUMB_SIZE / 2,
   },
   touchArea: {
     position: "absolute",
@@ -603,11 +740,11 @@ var defaultStyles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0
+    bottom: 0,
   },
   debugThumbTouchArea: {
     position: "absolute",
     backgroundColor: "green",
-    opacity: 0.5
-  }
+    opacity: 0.5,
+  },
 });

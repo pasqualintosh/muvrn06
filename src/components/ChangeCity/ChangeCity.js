@@ -15,7 +15,7 @@ import { data } from "./../../assets/ListCities";
 
 import MapView from "react-native-maps";
 import { updateState } from "./../../domains/register/ActionCreators";
-import { UpdateProfile } from "./../../domains/login/ActionCreators";
+import { updateProfileNew } from "./../../domains/login/ActionCreators";
 import { connect } from "react-redux";
 
 import { strings } from "../../config/i18n";
@@ -29,7 +29,7 @@ class ChangeCity extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("_123_select_your_cit")}
+          {strings("id_13_68")}
         </Text>
       )
     };
@@ -70,7 +70,7 @@ class ChangeCity extends React.Component {
       });
     }
   }
-  componentWillUnmount() { }
+  componentWillUnmount() {}
   renderScrollAutofocus(optionList) {
     if (this.state.showModal && this.state.result != "")
       return (
@@ -165,94 +165,94 @@ class ChangeCity extends React.Component {
     const result =
       this.state.cityName != ""
         ? JsonQuery(`cities[*name~/${this.state.cityName}/i]`, {
-          allowRegexp: true,
-          data: data
-        }).value
+            allowRegexp: true,
+            data: data
+          }).value
         : "";
     const optionList =
       result.length > 0
         ? result.map((item, index) => (
-          <TouchableWithoutFeedback
-            key={index}
-            onPress={() => {
-              // console.log("object");
-              // console.log(item);
-              this.setState({
-                cityName: item.name,
-                showModal: false,
-                latitude: item.lat,
-                longitude: item.lon,
-                point_lat: item.lat,
-                point_lon: item.lon,
-                selectedCityName: item.name
-              });
-              this.mapRef.animateToCoordinate(
-                {
+            <TouchableWithoutFeedback
+              key={index}
+              onPress={() => {
+                // console.log("object");
+                // console.log(item);
+                this.setState({
+                  cityName: item.name,
+                  showModal: false,
                   latitude: item.lat,
-                  longitude: item.lon
-                },
-                1000
-              );
-              if (this.props.navigation.state.params) {
-                this.props.navigation.state.params.changeState(
-                  item.name,
-                  "cityName",
-                  () => { }
+                  longitude: item.lon,
+                  point_lat: item.lat,
+                  point_lon: item.lon,
+                  selectedCityName: item.name
+                });
+                this.mapRef.animateToCoordinate(
+                  {
+                    latitude: item.lat,
+                    longitude: item.lon
+                  },
+                  1000
                 );
-              }
-              this.props.dispatch(
-                UpdateProfile({
-                  data: {
-                    public_profile: { city: item.id }
-                  }
-                })
-              );
-              // this.props.dispatch(
-              //   updateState({
-              //     cityName: item.name,
-              //     nearestCity: item.name,
-              //     city: item.name,
-              //     cityId: item.id,
-              //     nearestCityLat: item.lat,
-              //     nearestCityLon: item.lon,
-              //     autocompleteCityName: item.name
-              //   })
-              // );
-              // this.props.navigation.goBack();
-            }}
-          >
-            <View
-              style={{
-                borderBottomColor: "#3D3D3D20",
-                borderBottomWidth: 0.5,
-                width: Dimensions.get("window").width * 0.95,
-                height: 40,
-                borderRadius: 6,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "#fff"
-                // marginTop:
-                //   Platform.OS == "ios"
-                //     ? Dimensions.get("window").height === 812 ||
-                //       Dimensions.get("window").width === 812
-                //       ? 75
-                //       : 60
-                //     : 0
+                if (this.props.navigation.state.params) {
+                  this.props.navigation.state.params.changeState(
+                    item.name,
+                    "cityName",
+                    () => {}
+                  );
+                }
+                this.props.dispatch(
+                  updateProfileNew({
+                    data: {
+                      city: item.id
+                    }
+                  })
+                );
+                // this.props.dispatch(
+                //   updateState({
+                //     cityName: item.name,
+                //     nearestCity: item.name,
+                //     city: item.name,
+                //     cityId: item.id,
+                //     nearestCityLat: item.lat,
+                //     nearestCityLon: item.lon,
+                //     autocompleteCityName: item.name
+                //   })
+                // );
+                // this.props.navigation.goBack();
               }}
             >
-              <Text
+              <View
                 style={{
-                  fontFamily: "OpenSans-Regular",
-                  fontWeight: "400",
-                  color: "#3d3d3d95",
-                  fontSize: 16
+                  borderBottomColor: "#3D3D3D20",
+                  borderBottomWidth: 0.5,
+                  width: Dimensions.get("window").width * 0.95,
+                  height: 40,
+                  borderRadius: 6,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "#fff"
+                  // marginTop:
+                  //   Platform.OS == "ios"
+                  //     ? Dimensions.get("window").height === 812 ||
+                  //       Dimensions.get("window").width === 812
+                  //       ? 75
+                  //       : 60
+                  //     : 0
                 }}
               >
-                {item.name}
-              </Text>
-            </View>
-          </TouchableWithoutFeedback>
-        ))
+                <Text
+                  style={{
+                    fontFamily: "OpenSans-Regular",
+                    fontWeight: "400",
+                    color: "#3d3d3d95",
+                    fontSize: 16
+                  }}
+                >
+                  {item.name}
+                </Text>
+              </View>
+            </TouchableWithoutFeedback>
+          ))
         : [].map((item, index) => <Text key={index}>{item}</Text>);
 
     return (
@@ -291,7 +291,7 @@ class ChangeCity extends React.Component {
 
         <Input
           autoCorrect={false}
-          placeholder={strings("type_something_")}
+          placeholder={strings("id_13_69")}
           leftIcon={<Icon name="ios-search" size={18} color="#3D3D3D" />}
           containerStyle={{
             width: Dimensions.get("window").width * 0.95,
@@ -310,9 +310,9 @@ class ChangeCity extends React.Component {
             const flag = this.state.showModal;
             this.setState({ showModal: !flag });
           }}
-        // onEndEditing={() => {
-        //   this.setState({ showModal: false });
-        // }}
+          // onEndEditing={() => {
+          //   this.setState({ showModal: false });
+          // }}
         />
         {this.renderScrollAutofocus(optionList)}
         {/* 

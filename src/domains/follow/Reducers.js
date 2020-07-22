@@ -3,7 +3,8 @@ import {
   FETCHING_DATA_FOLLOW_COMPLETE,
   GET_FOLLOWING,
   GET_FOLLOWER,
-  SET_SELECTION_FOLLOW
+  SET_SELECTION_FOLLOW,
+  UPDATE_SPECIFIC_DATA
 } from "./ActionTypes";
 import DefaultState from "./DefaultState";
 import { LOG_OUT } from "../screen/ActionTypes";
@@ -75,6 +76,16 @@ export default (state = DefaultState, action) => {
         };
       }
       break;
+      case UPDATE_SPECIFIC_DATA:
+      {
+        return {
+          ...state,
+          ...action.info
+        };
+      }
+      break;
+
+      
 
     case LOG_OUT:
       {

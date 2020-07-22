@@ -18,35 +18,53 @@ export default (state = DefaultState, action) => {
   switch (action.type) {
     case GET_LEADBOARD:
       {
-        let infoUserGlobalClassification = { index: "-", points: 0, number: "-" };
+        // let infoUserGlobalClassification = { index: "-", points: 0, number: "-" };
 
-        for (index = 0; index < action.payload.length; index++) {
-          const condition =
-            action.payload[index].referred_route__user_id === action.user
-              ? true
-              : false;
-          if (condition) {
-            infoUserGlobalClassification = {
-              ...action.payload[index],
-              index,
-              number: action.payload.length
-            };
-            break;
-          }
+        // for (index = 0; index < action.payload.length; index++) {
+        //   const condition =
+        //     action.payload[index].referred_route__user_id === action.user
+        //       ? true
+        //       : false;
+        //   if (condition) {
+        //     infoUserGlobalClassification = {
+        //       ...action.payload[index],
+        //       index,
+        //       number: action.payload.length
+        //     };
+        //     break;
+        //   }
+        // }
+        // console.log(infoUserGlobalClassification);
+        if (action.offset) {
+          // nel caso in cui richiedo piu utenti di 100 
+           // tipo 100 * 1 = 100
+          let standingNew = [...state.standing]
+          // prendo quelli precedenti tipo 200 e ci aggiungo i nuovi 
+          standingNew = standingNew.slice(0, action.offset)
+          standingNew = [...standingNew, ...action.payload]
+          // sostituisco gli elementi da 99 - 199
+          // standingNew.splice((payload.limit * payload.offset) - 1, payload.limit, action.payload);
+          return {
+            ...state,
+            standing: standingNew,
+            // infoUserGlobalClassification,
+            error: false,
+            fetchingData: false
+          };
+        } else {
+          return {
+            ...state,
+            standing: [...action.payload],
+            // infoUserGlobalClassification,
+            error: false,
+            fetchingData: false
+          };
         }
-        console.log(infoUserGlobalClassification);
-        return {
-          ...state,
-          standing: [...action.payload],
-          infoUserGlobalClassification,
-          error: false,
-          fetchingData: false
-        };
       }
       break;
     case GET_LEADBOARD_BY_CITY:
       {
-        let infoUserCityClassification = { index: "-", points: 0,  number: "-"  };
+        let infoUserCityClassification = { index: "-", points: 0, number: "-" };
 
         for (index = 0; index < action.payload.length; index++) {
           const condition =
@@ -57,7 +75,7 @@ export default (state = DefaultState, action) => {
             infoUserCityClassification = {
               ...action.payload[index],
               index,
-              
+
               number: action.payload.length
             };
             break;
@@ -73,37 +91,43 @@ export default (state = DefaultState, action) => {
         };
       }
       break;
-      case GET_POSITION:
-        {
-          
-          let Classification = { index: "-", points: 0,  number: "-"  };
-  
-          try {
-            Classification = { index: action.payload.user_rank != '-' ? (action.payload.user_rank - 1) : action.payload.user_rank, points: action.payload.user_points,  number: action.payload.total_users  };
-          } catch {
-            Classification = { index: "-", points: 0,  number: "-"  };
-          }
+    case GET_POSITION:
+      {
+        let Classification = { index: "-", points: 0, number: "-" };
 
-          const typePosition = action.typePosition ? action.typePosition  : 'infoUserCityClassification'
-
-
-            
-            
-            
-          
-         
-          return {
-            ...state,
-            [typePosition]: Classification,
-            error: false,
-            fetchingData: false
+        try {
+          Classification = {
+            index:
+              action.payload.user_rank != "-"
+                ? action.payload.user_rank - 1
+                : action.payload.user_rank,
+            points: action.payload.user_points,
+            number: action.payload.total_users
           };
+        } catch {
+          Classification = { index: "-", points: 0, number: "-" };
         }
+
+        const typePosition = action.typePosition
+          ? action.typePosition
+          : "infoUserCityClassification";
+
+        return {
+          ...state,
+          [typePosition]: Classification,
+          error: false,
+          fetchingData: false
+        };
+      }
       break;
-      
+
     case GET_LEADBOARD_BY_COMMUNITY:
       {
-        let infoUserCommunityClassification = { index: "-", points: 0,  number: "-"  };
+        let infoUserCommunityClassification = {
+          index: "-",
+          points: 0,
+          number: "-"
+        };
 
         for (index = 0; index < action.payload.length; index++) {
           const condition =
@@ -113,7 +137,8 @@ export default (state = DefaultState, action) => {
           if (condition) {
             infoUserCommunityClassification = {
               ...action.payload[index],
-              index, number: action.payload.length
+              index,
+              number: action.payload.length
             };
             break;
           }
@@ -128,7 +153,7 @@ export default (state = DefaultState, action) => {
         };
       }
       break;
-      case GET_LEADBOARD_FRIEND:
+    case GET_LEADBOARD_FRIEND:
       {
         // let infoUserFriendsClassification = { index: "-", points: 0 };
 
@@ -156,10 +181,6 @@ export default (state = DefaultState, action) => {
         //   fetchingData: false
         // };
 
-        
-
-        
-       
         return {
           ...state,
           infoUserFriendsClassification: action.payload,

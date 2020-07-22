@@ -15,9 +15,10 @@ import { connect } from "react-redux";
 import WavyArea from "./../../components/WavyArea/WavyArea";
 import OwnIcon from "./../../components/OwnIcon/OwnIcon";
 import LinearGradient from "react-native-linear-gradient";
-import { UpdateProfile } from "./../../domains/login/ActionCreators";
+import { updateProfileNew } from "./../../domains/login/ActionCreators";
 import Emoji from "@ardentlabs/react-native-emoji";
 import Icon from "react-native-vector-icons/Ionicons";
+import { strings } from "../../config/i18n";
 
 class PersonalCarFuelScreen extends React.Component {
   constructor(props) {
@@ -34,6 +35,8 @@ class PersonalCarFuelScreen extends React.Component {
       ],
       ordered_car_fuel_possibilities: []
     };
+
+    this.go_to_moto = false;
   }
 
   static navigationOptions = {
@@ -77,8 +80,6 @@ class PersonalCarFuelScreen extends React.Component {
     let car_fuel_possibilities = this.props.loginState.car_properties
       .car_fuel_possibilities;
 
-    console.log(car_fuel_possibilities);
-
     let not_selectable_fuel = this.arr_diff(
       this.state.car_fuel_possibilities,
       car_fuel_possibilities
@@ -92,6 +93,12 @@ class PersonalCarFuelScreen extends React.Component {
         ...not_selectable_fuel
       ]
     });
+
+    try {
+      this.go_to_moto = this.props.navigation.state.params.go_to_moto;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   handleCarFuelChange = val => {
@@ -118,13 +125,11 @@ class PersonalCarFuelScreen extends React.Component {
           },
           () => {
             this.props.dispatch(
-              UpdateProfile({
+              updateProfileNew({
                 data: {
-                  public_profile: {
-                    car: this.state.car_id,
-                    car_owning_answer: this.props.loginState.car_properties
-                      .car_owning_answer
-                  }
+                  car_typology: this.state.car_id,
+                  car_user: this.props.loginState.car_properties
+                    .car_owning_answer
                 }
               })
             );
@@ -154,7 +159,11 @@ class PersonalCarFuelScreen extends React.Component {
         >
           {this.renderTarget(val)}
           <OwnIcon
-            name={`${val.toLowerCase()}_icn`}
+            name={
+              val.toLowerCase() == "petrol_hybrids"
+                ? `petrol_icn`
+                : `${val.toLowerCase()}_icn`
+            }
             size={62}
             color={
               this.state.car_fuel_possibilities.includes(val)
@@ -324,9 +333,7 @@ class PersonalCarFuelScreen extends React.Component {
                 />
               </View>
             </TouchableWithoutFeedback>
-            <Text style={styles.textHeader}>
-              Select your car fuel. <Emoji name="car" />
-            </Text>
+            <Text style={styles.textHeader}>{strings("id_0_53")}</Text>
           </View>
         </View>
         <View
@@ -396,22 +403,26 @@ class PersonalCarFuelScreen extends React.Component {
             }}
           >
             <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>
-                We need this information to estimate your CO2 emissions.
-              </Text>
+              <Text style={styles.textFooter}>{strings("id_0_64")}</Text>
             </View>
 
             <View style={[styles.buttonContainer]}>
               {/* <BoxShadow setting={shadowOpt} /> */}
               <TouchableWithoutFeedback
                 onPress={() => {
-                  this.props.navigation.navigate("PersonalMobilityDataScreen");
+                  if (this.go_to_moto) {
+                    this.props.navigation.navigate("PersonalMotoScreen");
+                  } else {
+                    this.props.navigation.navigate(
+                      "PersonalFrequentTripDataScreen"
+                    );
+                  }
                 }}
               >
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />

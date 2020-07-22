@@ -291,7 +291,13 @@ export default class PickerAndroid extends Component {
           </View>
         </View>
 
-        <View style={styles.middle}>
+        <View style={{height: 40,
+    width: this.props.width ? this.props.width : width,
+    overflow: "hidden",
+    backgroundColor: "transparent",
+    borderColor: "#aaa",
+    borderTopWidth: 1 / ratio,
+    borderBottomWidth: 1 / ratio}}>
           <View
             style={[styles.middleView, middleViewStyle]}
             ref={middle => {
@@ -317,7 +323,7 @@ export default class PickerAndroid extends Component {
   }
 }
 
-let width = Dimensions.get("window").width;
+let width = Dimensions.get("window").width
 let height = Dimensions.get("window").height;
 let ratio = PixelRatio.get();
 let styles = StyleSheet.create({

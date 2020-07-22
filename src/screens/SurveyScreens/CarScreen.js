@@ -37,7 +37,8 @@ class CarScreen extends React.Component {
     this.state = {
       car_id: null,
       car_owning_answer: 0, // 0 || 1 || 2
-      car_year: strings("choose"), // -> number
+      temp_car_year: strings("id_0_67"),
+      car_year: strings("id_0_67"), // -> number
       car_segment_answer: "", // "medium" || "large" || "mini" || "small"
       car_fuel: "", // 0 ... 5
       car_year_possibilities: ["-"],
@@ -100,10 +101,10 @@ class CarScreen extends React.Component {
               }
           });
 
-          console.log(props.registerState.get_mobility_car_values);
-          console.log(car_possibilities);
-          console.log(car_year_possibilities);
-          console.log(car_segment_possibilities);
+          // console.log(props.registerState.get_mobility_car_values);
+          // console.log(car_possibilities);
+          // console.log(car_year_possibilities);
+          // console.log(car_segment_possibilities);
 
           this.setState({ car_segment_possibilities }, () => {
             if (car_possibilities.length > 0) {
@@ -112,18 +113,12 @@ class CarScreen extends React.Component {
                   car: car_possibilities ? car_possibilities[0].id : null
                 })
               );
+              console.log(this.props.registerState["motorbike_flag"]);
 
-              if (
-                this.props.registerState[
-                  strings("motorbike").toLocaleLowerCase()
-                ] != undefined &&
-                this.props.registerState[
-                  strings("motorbike").toLocaleLowerCase()
-                ] == true
-              ) {
+              if (this.props.registerState["motorbike_flag"] == true) {
                 this.props.navigation.navigate("SurveyMotoSegment");
               } else {
-                this.props.navigation.navigate("SurveyUserData");
+                this.props.navigation.navigate("GDPRScreen");
               }
             }
           });
@@ -140,7 +135,7 @@ class CarScreen extends React.Component {
     } else {
       this.setState({
         car_owning_answer: val,
-        car_year: strings("choose"),
+        car_year: strings("id_0_67"),
         car_segment_answer: "",
         car_fuel: 0
       });
@@ -177,9 +172,6 @@ class CarScreen extends React.Component {
         }
     });
 
-    console.log(filtered_car_m_v);
-    console.log(car_segment_possibilities);
-
     this.setState({ car_segment_possibilities }, () => {
       if (car_segment_possibilities.length == 0) {
         const firstCar = filtered_car_m_v.length
@@ -191,7 +183,7 @@ class CarScreen extends React.Component {
           undefined
         )
           this.props.navigation.navigate("SurveyMotoSegment");
-        else this.props.navigation.navigate("SurveyUserData");
+        else this.props.navigation.navigate("GDPRScreen");
       }
     });
   };
@@ -252,7 +244,7 @@ class CarScreen extends React.Component {
                 start={{ x: 0.0, y: 0.0 }}
                 end={{ x: 0.0, y: 1 }}
                 locations={[0, 1.0]}
-                colors={["#E82F73", "#F49658"]}
+                colors={["#7D4D99", "#6497CC"]}
                 style={[
                   styles.checkboxesGradient,
                   {
@@ -280,9 +272,9 @@ class CarScreen extends React.Component {
           alignItems: "center"
         }}
       >
-        {this.renderCarOwningCheckbox(0, strings("no"))}
-        {this.renderCarOwningCheckbox(1, strings("yes"))}
-        {this.renderCarOwningCheckbox(2, strings("yes__it_is_at_m"))}
+        {this.renderCarOwningCheckbox(0, strings("id_0_54"))}
+        {this.renderCarOwningCheckbox(1, strings("id_0_55"))}
+        {this.renderCarOwningCheckbox(2, strings("id_0_56"))}
       </View>
     );
   }
@@ -292,23 +284,29 @@ class CarScreen extends React.Component {
       <View style={styles.buttonsContainer}>
         <TouchableWithoutFeedback
           onPress={() => {
-            this.setState({ modal_visible: false });
+            this.setState({
+              modal_visible: false
+            });
           }}
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
         <TouchableWithoutFeedback
           onPress={() => {
-            this.setState({ modal_visible: false }, () => {});
+            this.setState({
+              modal_visible: false,
+              car_year: this.state.temp_car_year
+            });
+            this.handleCarYearChange(this.state.temp_car_year);
           }}
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_67").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -323,8 +321,8 @@ class CarScreen extends React.Component {
         label={
           "" +
           element
-            .replace("2017-2019", strings("from_2017_onwar"))
-            .replace("up_to_1992", strings("up_to_1992"))
+            .replace("2017-2019", strings("id_0_77"))
+            .replace("up_to_1992", strings("id_0_70"))
             .replace(/_/g, " ")
         }
         value={"" + element}
@@ -351,11 +349,11 @@ class CarScreen extends React.Component {
               width: 250,
               height: 250
             }}
-            selectedValue={"" + this.state.car_year}
+            selectedValue={"" + this.state.temp_car_year}
             onValueChange={(itemValue, itemIndex) => {
-              console.log(itemValue);
               // this.setState({ modal_visible: false });
-              this.handleCarYearChange(itemValue);
+              this.setState({ temp_car_year: itemValue });
+              // this.handleCarYearChange(itemValue);
             }}
           >
             {values}
@@ -374,8 +372,8 @@ class CarScreen extends React.Component {
           onPress={() => {
             if (this.state.car_year_possibilities.length > 0)
               this.setState({
-                modal_visible: true,
-                car_year: this.state.car_year_possibilities[0]
+                modal_visible: true
+                // car_year: this.state.car_year_possibilities[0]
               });
           }}
         >
@@ -397,7 +395,7 @@ class CarScreen extends React.Component {
           >
             <Text>
               {this.state.car_year
-                .replace("2017-2019", strings("from_2017_onwar"))
+                .replace("2017-2019", strings("id_0_77"))
                 .replace(/_/g, " ")}
               &nbsp;
             </Text>
@@ -419,7 +417,7 @@ class CarScreen extends React.Component {
         <View key={index} style={styles.answerBoxes}>
           <TouchableWithoutFeedback
             onPress={() => {
-              if (this.state.car_year != strings("choose"))
+              if (this.state.car_year != strings("id_0_67"))
                 this.handleCarSegmentChange(element);
             }}
           >
@@ -429,7 +427,7 @@ class CarScreen extends React.Component {
                   styles.checkboxes,
                   {
                     backgroundColor:
-                      this.state.car_year != strings("choose")
+                      this.state.car_year != strings("id_0_67")
                         ? "#F7F8F9"
                         : "#F7F8F940"
                     // backgroundColor: this.props.checkboxColor
@@ -444,7 +442,7 @@ class CarScreen extends React.Component {
                   start={{ x: 0.0, y: 0.0 }}
                   end={{ x: 0.0, y: 1 }}
                   locations={[0, 1.0]}
-                  colors={["#E82F73", "#F49658"]}
+                  colors={["#7D4D99", "#6497CC"]}
                   style={[
                     styles.checkboxesGradient,
                     {
@@ -457,13 +455,39 @@ class CarScreen extends React.Component {
               <View
                 style={{ justifyContent: "center", alignContent: "center" }}
               >
-                <Text style={styles.checkboxesText}>{strings(element)}</Text>
+                <Text style={styles.checkboxesText}>
+                  {this.renderCarSegmentTranslated(element)}
+                </Text>
               </View>
             </View>
           </TouchableWithoutFeedback>
         </View>
       );
     });
+  }
+
+  renderCarSegmentTranslated(val) {
+    switch (val) {
+      case "small":
+        return strings("id_0_79");
+        break;
+
+      case "medium":
+        return strings("id_0_80");
+        break;
+
+      case "large":
+        return strings("id_0_81");
+        break;
+
+      case "mini":
+        return strings("id_0_82");
+        break;
+
+      default:
+        return val;
+        break;
+    }
   }
 
   render() {
@@ -554,10 +578,7 @@ class CarScreen extends React.Component {
                   />
                 </View>
               </TouchableWithoutFeedback>
-              <Text style={styles.textHeader}>
-                {/* Do you have a car? <Emoji name="car" /> <Emoji name="taxi" /> */}
-                {strings("do_you_have_a_c")}
-              </Text>
+              <Text style={styles.textHeader}>{strings("id_0_53")}</Text>
             </View>
           </View>
         </View>
@@ -585,7 +606,7 @@ class CarScreen extends React.Component {
               alignItems: "center"
             }}
           >
-            <Text style={styles.textSection}>{strings("year_of_vehicle")}</Text>
+            <Text style={styles.textSection}>{strings("id_0_66")}</Text>
             {this.renderCarYear()}
           </View>
           <View
@@ -602,7 +623,7 @@ class CarScreen extends React.Component {
                 alignItems: "center"
               }}
             >
-              <Text style={styles.textSection}>{strings("car_segment")}</Text>
+              <Text style={styles.textSection}>{strings("id_0_78")}</Text>
             </View>
             <View
               style={{
@@ -639,9 +660,7 @@ class CarScreen extends React.Component {
             }}
           >
             <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>
-                {strings("we_need_this_in")}
-              </Text>
+              <Text style={styles.textFooter}>{strings("id_0_64")}</Text>
             </View>
 
             <View style={[styles.buttonContainer]}>
@@ -660,25 +679,18 @@ class CarScreen extends React.Component {
                     this.state.car_year != "choose" &&
                     this.state.car_segment_answer != ""
                   ) {
-                    if (
-                      this.props.registerState[
-                        strings("motorbike").toLocaleLowerCase()
-                      ] != undefined &&
-                      this.props.registerState[
-                        strings("motorbike").toLocaleLowerCase()
-                      ] == true
-                    )
+                    if (this.props.registerState["motorbike_flag"] == true)
                       this.props.navigation.navigate("SurveyMotoSegment");
-                    else this.props.navigation.navigate("SurveyUserData");
+                    else this.props.navigation.navigate("GDPRScreen");
                   } else {
-                    Alert.alert("Oops", strings("seems_like_you_"));
+                    Alert.alert(strings("id_0_10"), strings("id_0_65"));
                   }
                 }}
               >
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />
@@ -759,7 +771,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

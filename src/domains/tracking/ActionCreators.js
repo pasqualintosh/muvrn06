@@ -2,7 +2,7 @@ import {
   Alert,
   Platform,
   InteractionManager,
-  AsyncStorage
+  AsyncStorage,
 } from "react-native";
 import {
   ADD_TRACKING,
@@ -18,11 +18,17 @@ import {
   COMPLETE_ROUTE,
   ADD_DAILY_ROUTINE,
   UPDATE_PREVIOUS_ROUTE,
+  UPDATE_SAMEID_PREVIOUS_ROUTE,
   CHANGE_ACTIVITY,
   RESET_PREVIOUS_ROUTE,
   ADD_WEATHER,
   STILL_NOTIFICATION_LOG,
-  ADD_REFER_PUBLIC_ROUTE
+  ADD_REFER_PUBLIC_ROUTE,
+  ADD_STATUS_ROUTE,
+  FIX_ROUTE_START,
+  UPDATE_TRIP_DATA,
+  UPDATE_TRIP_DATA_START_TIME_SUBTRIP,
+  ADD_CITY,
 } from "./ActionTypes";
 import { SET_SERIES } from "../login/ActionTypes";
 
@@ -33,22 +39,31 @@ import ActivityRecognition from "react-native-activity-recognition";
 import { pointActivityAnalyzed, calcolatePoints } from "./Reducers";
 import {
   saveRouteBackend,
-  GetListRoute,
-  getMostFrequentRoute,
   GetListRouteForCheckSeries,
-  forgetPassword,
-  setNotificationTime
+  createTrip,
+  createSubTrip,
+  getTrip,
+  getMultipliers,
+  requestNewBackend,
+  forceRefreshTokenWithCallback,
 } from "../login/ActionCreators";
 import { strings } from "../../config/i18n";
 
 import {
   checkEvent,
   checkEventRedux,
-  checkSpecialTrainingEvent
+  checkSpecialTrainingEvent,
 } from "../trainings/ActionCreators";
 import { pushNotifications } from "./../../services";
 import { convertWeather } from "./../../screens/Track/Track";
-import { getCalories, getIdModalType, getDefaultSpeed, getIdWeatherType } from "./Support";
+import {
+  getCalories,
+  getIdModalType,
+  getDefaultSpeed,
+  getIdWeatherType,
+} from "./Support";
+
+import { wsConnect } from "../connection/ActionCreators";
 
 import BackgroundFetch from "react-native-background-fetch";
 
@@ -61,10 +76,19 @@ import { lineString } from "@turf/helpers";
 import lineIntersect from "@turf/line-intersect";
 import buffer from "@turf/buffer";
 
+import WebService from "../../config/WebService";
 
-import { Client } from "bugsnag-react-native";
-const bugsnag = new Client("58b3b39beb78eba9efdc2d08aeb15d84");
-
+import { Client, Configuration } from "bugsnag-react-native";
+const configuration = new Configuration();
+configuration.apiKey = WebService.BugsnagAppId;
+const bugsnag = new Client(configuration);
+import {
+  check,
+  request,
+  PERMISSIONS,
+  RESULTS,
+  openSettings,
+} from "react-native-permissions";
 
 const LIMIT_TO_START_COUNTER_ACTIVITIES_STILL = 3;
 const LIMIT_TO_CHECK_COUNTER_ACTIVITIES_STILL = 3;
@@ -72,27 +96,32 @@ const MINUTES_TO_NOTIFY_ACTIVITIES_STILL = 1000 * 60 * 5; // 1000 ms * 60 (1 min
 let is_user_still_timer = null;
 let getWeather = false;
 
+import moment from "moment";
+
+import { store, dev_mode } from "../../store";
+
 export function addTracking(item, lastPos) {
   const newItem = generateItem(item, lastPos);
 
   return {
     type: ADD_TRACKING,
-    item: newItem
+    item: newItem,
   };
 }
 
 export function addActivity(itemActivity) {
   // aggiungo la data cosi posso suddividere le attivita in un certo intervallo di tempo in analogia di un intervallo di coordinate
+  console.log("addActivity");
 
   return {
     type: ADD_ACTIVITY,
-    itemActivity
+    itemActivity,
   };
 }
 
 export function resetTracking() {
   return {
-    type: RESET_TRACKING
+    type: RESET_TRACKING,
   };
 }
 
@@ -107,7 +136,7 @@ export function checkStateToValidateAndSave() {
       PreviousRoute,
       route,
       routeAnalyzed,
-      routeNotvalid
+      routeNotvalid,
     } = getState().tracking;
 
     if (route.length || routeAnalyzed.length || routeNotvalid.length) {
@@ -143,7 +172,7 @@ export function checkStateToValidateAndSave() {
 // @location {*} locazioni da controllare, prese da redux
 // con index specifico quale route aggiornare
 
-export function updateCordinate(index) {
+export function updateCordinate2(index) {
   // con index indico quale tratta sto elaborando
   // con 0 indico la tratta corrente, mentre > 0 indico le tratte passate
   // utile se una tratta passata non e stata validata tipo se manca internet
@@ -184,7 +213,7 @@ export function updateCordinate(index) {
       // prendo anche le info dell'utente utili per l'altezza ecc
       const infoProfile = {
         ...getState().login.infoProfile,
-        ...getState().login.infoProfileNotSave
+        ...getState().login.infoProfileNotSave,
       };
 
       // prima di fare i controlli devo avere qualcosa da controllare
@@ -205,7 +234,7 @@ export function updateCordinate(index) {
             NumRouteValid: 0,
             refTrasportRoute: [],
             infoProfile,
-            index
+            index,
           });
         }
 
@@ -250,7 +279,7 @@ export function updateCordinate(index) {
                 ValidRoute: location,
                 NumRouteValid: 0,
                 infoProfile,
-                index
+                index,
               });
             } else {
               // se non ho route di riferimenti, le richiedo e vedo
@@ -308,7 +337,7 @@ export function updateCordinate(index) {
                 ValidRoute: location,
                 NumRouteValid: 0,
                 infoProfile,
-                index
+                index,
               });
             } else if (
               refTrasportRoute.length < 3 &&
@@ -331,7 +360,7 @@ export function updateCordinate(index) {
                 ValidRoute: location,
                 NumRouteValid: 0,
                 infoProfile,
-                index
+                index,
               });
             } else {
               // se li ho faccio un confronto
@@ -340,7 +369,7 @@ export function updateCordinate(index) {
 
               if (locationNum === 4) {
                 linestringNew = lineString(
-                  location.map(elem => [elem.longitude, elem.latitude]),
+                  location.map((elem) => [elem.longitude, elem.latitude]),
                   { name: "line 1" }
                 );
                 console.log(linestringNew);
@@ -373,14 +402,14 @@ export function updateCordinate(index) {
                     backLocation = [
                       getState().tracking.PreviousRoute[index - 1]
                         .routeAnalyzed[numAnalyzedRoute - j],
-                      ...backLocation
+                      ...backLocation,
                     ];
                   }
                 } else {
                   for (j = 1; j <= locationNum; j++) {
                     backLocation = [
                       getState().tracking.routeAnalyzed[numAnalyzedRoute - j],
-                      ...backLocation
+                      ...backLocation,
                     ];
                   }
                 }
@@ -388,14 +417,14 @@ export function updateCordinate(index) {
                 console.log(backLocation);
 
                 linestringNew = lineString(
-                  backLocation.map(elem => [elem.longitude, elem.latitude]),
+                  backLocation.map((elem) => [elem.longitude, elem.latitude]),
                   { name: "line 1" }
                 );
                 console.log(linestringNew);
               }
 
               const PolygonNew = buffer(linestringNew, 0.01, {
-                units: "kilometers"
+                units: "kilometers",
               });
 
               // const bboxNew = bbox(linestringNew);
@@ -407,18 +436,32 @@ export function updateCordinate(index) {
               const AllReferPublicRoute = [
                 ...refTrasportRoute[0],
                 ...refTrasportRoute[1],
-                ...refTrasportRoute[2]
+                ...refTrasportRoute[2],
               ];
 
               const refTrasportRouteLength = AllReferPublicRoute.length
                 ? refTrasportRoute.length
                 : 0;
               try {
-                if (refTrasportRouteLength && PolygonNew) {
+                // se ho piu di 10 linee allora lo considero valido
+                if (AllReferPublicRoute.length > 10) {
+                  // mi salvo una unica intersezione
+                  let NumRouteValid = [1];
+
+                  dispatch({
+                    type: UPDATE_LOCATION,
+                    ValidRoute: location,
+                    NumRouteValid,
+                    infoProfile,
+                    index,
+                  });
+                } else if (refTrasportRouteLength && PolygonNew) {
                   // tolgo le linee dei mezzi pubblici in piu e unendo quelle trovate, nei primi 3 segment
                   AllReferPublicRouteReduce = AllReferPublicRoute.reduce(
                     (total, linea, index, array) => {
-                      if (!total.filter(elem => elem.id === linea.id).length) {
+                      if (
+                        !total.filter((elem) => elem.id === linea.id).length
+                      ) {
                         return [...total, linea];
                       }
                       return total;
@@ -445,7 +488,7 @@ export function updateCordinate(index) {
                       ValidRoute: location,
                       NumRouteValid,
                       infoProfile,
-                      index
+                      index,
                     });
                   } else {
                     dispatch({
@@ -453,7 +496,7 @@ export function updateCordinate(index) {
                       ValidRoute: location,
                       NumRouteValid: [-1],
                       infoProfile,
-                      index
+                      index,
                     });
                   }
                 } else {
@@ -462,23 +505,28 @@ export function updateCordinate(index) {
                     ValidRoute: location,
                     NumRouteValid: [-1],
                     infoProfile,
-                    index
+                    index,
                   });
                 }
               } catch (error) {
                 if (typeof error !== "Error") {
                   console.log(error);
                   msg = new Error(error);
-                  bugsnag.notify(msg);
+
+                  bugsnag.notify(msg, function (report) {
+                    report.metadata = { error: error };
+                  });
                 } else {
-                  bugsnag.notify(error);
+                  bugsnag.notify(error, function (report) {
+                    report.metadata = { error: error };
+                  });
                 }
                 dispatch({
                   type: UPDATE_LOCATION,
                   ValidRoute: location,
                   NumRouteValid: [-1],
                   infoProfile,
-                  index
+                  index,
                 });
               }
             }
@@ -523,7 +571,7 @@ export function updateCordinate(index) {
                 ValidRoute: location,
                 NumRouteValid: 0,
                 infoProfile,
-                index
+                index,
               });
             } else if (
               activityAuto &&
@@ -544,7 +592,7 @@ export function updateCordinate(index) {
                 ValidRoute: location,
                 NumRouteValid: 0,
                 infoProfile,
-                index
+                index,
               });
             } else {
               // se li ho faccio un confronto
@@ -553,7 +601,7 @@ export function updateCordinate(index) {
 
               if (locationNum === 4) {
                 linestringNew = lineString(
-                  location.map(elem => [elem.longitude, elem.latitude]),
+                  location.map((elem) => [elem.longitude, elem.latitude]),
                   { name: "line 1" }
                 );
                 console.log(linestringNew);
@@ -586,14 +634,14 @@ export function updateCordinate(index) {
                     backLocation = [
                       getState().tracking.PreviousRoute[index - 1]
                         .routeAnalyzed[numAnalyzedRoute - j],
-                      ...backLocation
+                      ...backLocation,
                     ];
                   }
                 } else {
                   for (j = 1; j <= locationNum; j++) {
                     backLocation = [
                       getState().tracking.routeAnalyzed[numAnalyzedRoute - j],
-                      ...backLocation
+                      ...backLocation,
                     ];
                   }
                 }
@@ -601,14 +649,14 @@ export function updateCordinate(index) {
                 console.log(backLocation);
 
                 linestringNew = lineString(
-                  backLocation.map(elem => [elem.longitude, elem.latitude]),
+                  backLocation.map((elem) => [elem.longitude, elem.latitude]),
                   { name: "line 1" }
                 );
                 console.log(linestringNew);
               }
 
               const PolygonNew = buffer(linestringNew, 0.01, {
-                units: "kilometers"
+                units: "kilometers",
               });
 
               // const bboxNew = bbox(linestringNew);
@@ -620,7 +668,7 @@ export function updateCordinate(index) {
               const AllReferPublicRoute = [
                 ...refTrasportRoute[0],
                 ...refTrasportRoute[1],
-                ...refTrasportRoute[2]
+                ...refTrasportRoute[2],
               ];
 
               const refTrasportRouteLength = AllReferPublicRoute.length
@@ -631,7 +679,9 @@ export function updateCordinate(index) {
                   // tolgo le linee dei mezzi pubblici in piu e unendo quelle trovate, nei primi 3 segment
                   AllReferPublicRouteReduce = AllReferPublicRoute.reduce(
                     (total, linea, index, array) => {
-                      if (!total.filter(elem => elem.id === linea.id).length) {
+                      if (
+                        !total.filter((elem) => elem.id === linea.id).length
+                      ) {
                         return [...total, linea];
                       }
                       return total;
@@ -658,7 +708,7 @@ export function updateCordinate(index) {
                       ValidRoute: location,
                       NumRouteValid,
                       infoProfile,
-                      index
+                      index,
                     });
                   } else {
                     dispatch({
@@ -666,7 +716,7 @@ export function updateCordinate(index) {
                       ValidRoute: location,
                       NumRouteValid: [-1],
                       infoProfile,
-                      index
+                      index,
                     });
                   }
                 } else {
@@ -675,23 +725,27 @@ export function updateCordinate(index) {
                     ValidRoute: location,
                     NumRouteValid: [-1],
                     infoProfile,
-                    index
+                    index,
                   });
                 }
               } catch (error) {
                 if (typeof error !== "Error") {
                   console.log(error);
                   msg = new Error(error);
-                  bugsnag.notify(msg);
+                  bugsnag.notify(msg, function (report) {
+                    report.metadata = { error: error };
+                  });
                 } else {
-                  bugsnag.notify(error);
+                  bugsnag.notify(error, function (report) {
+                    report.metadata = { error: error };
+                  });
                 }
                 dispatch({
                   type: UPDATE_LOCATION,
                   ValidRoute: location,
                   NumRouteValid: [-1],
                   infoProfile,
-                  index
+                  index,
                 });
               }
             }
@@ -711,6 +765,414 @@ export function updateCordinate(index) {
   };
 }
 
+// index quale tratta sto considerando
+// position quale attività invio
+export function updateActivity(index = 0, position = 0) {
+  // con index indico quale tratta sto elaborando
+  // con 0 indico la tratta corrente, mentre > 0 indico le tratte passate
+  // utile se una tratta passata non e stata validata tipo se manca internet
+
+  // prendo le attivita ancora non validate, le mando a router.project-osrm, sui dati openstreet
+  // che mi dice quale è la coordinata di una strada piu vicina alla cooordinata passata
+
+  // a seconda del tipo di attivita da riconoscere, faccio validazioni della tratta differenti
+
+  // passando getState mi permette di avere lo stato corrente relativo a redux
+  return function (dispatch, getState) {
+    const { isConnected } = getState().connection;
+    // se ho connessione
+    console.log("sono connesso?");
+    if (isConnected) {
+      console.log("connesso");
+      console.log(index);
+      console.log(position);
+      // dico che sto validando alla stato
+      dispatch(UpdateStatus("validation", index));
+
+      let activities = getState().tracking.activity;
+      let { sub_trip } = getState().tracking;
+
+      if (index != 0) {
+        activities = getState().tracking.PreviousRoute[index - 1].activity;
+
+        sub_trip = getState().tracking.PreviousRoute[index - 1].sub_trip;
+      }
+      console.log(activities);
+      console.log(sub_trip);
+
+      // prima di fare i controlli devo avere qualcosa da controllare
+      if (activities.length > position && sub_trip) {
+        console.log(activities[position]);
+        const { activity, time } = activities[position];
+
+        dispatch(
+          sendSocket((ws) => {
+            const activitySingle = JSON.stringify({
+              type: "activity",
+              body: { sub_trip: sub_trip.id, activity, time, os: Platform.OS },
+            });
+            // ed è attivo mando
+            console.log(activitySingle);
+            dispatch(ws.send(activitySingle)); // send a message
+          })
+        );
+      }
+    }
+    // se non ho connessione allora non effettuo nessuna validazione
+  };
+}
+
+// mando alla socket il pacchetto con la mia ultima posizione per cercare utenti nelle vicinanze
+export function sendLastPointforPooling(
+  ws,
+  dispatch,
+  getState,
+  objectParam = {}
+) {
+  console.log(objectParam);
+  const { longitude, latitude } = objectParam.lastPosition;
+  const lastPositionPackage = JSON.stringify({
+    type: "pooling_user",
+    point: {
+      longitude,
+      latitude,
+    },
+    time: moment().format(),
+  });
+  console.log(lastPositionPackage);
+  // ed è attivo mando
+  ws.send(lastPositionPackage); // send a message
+}
+
+// mando la mia ultima posizione per cerca utenti vicini
+export function searchUsersPoolingWithLastPoint() {
+  const { isConnected } = store.getState().connection;
+  // se ho connessione
+  console.log("sono connesso?");
+  if (isConnected) {
+    console.log("connesso");
+    // mi serve l'ultimo punto gps catturato
+    let lastPosition = null;
+
+    // vedo l'ultimo punto trovato
+
+    // prendo tutti i punti
+    let route = store.getState().tracking.route;
+    let routeAnalyzed = store.getState().tracking.routeAnalyzed;
+    let routeNotvalid = store.getState().tracking.routeNotvalid;
+    // prendo quello piu giovane in route
+    if (route.length) {
+      lastPosition = route[route.length - 1];
+    } else if (routeAnalyzed.length) {
+      lastPosition = routeAnalyzed[routeAnalyzed.length - 1];
+    }
+
+    // vedo se tra i punti ancora da controllare ci sia un punto piu vecchio
+
+    if (routeNotvalid.length) {
+      // prendo il piu vecchio
+      const maybeLastPoint = routeNotvalid[routeNotvalid.length - 1];
+      // se è piu vecchio o se non ho punti validi prendo quello non validato
+      if (!lastPosition || maybeLastPoint.time > lastPosition.time) {
+        lastPosition = maybeLastPoint;
+      }
+    }
+    // se ho il punto mando
+    if (lastPosition) {
+      store.dispatch(
+        sendSocket(sendLastPointforPooling, {
+          lastPosition,
+        })
+      );
+    }
+  }
+  // se non ho connessione allora mando nulla
+}
+
+// uso la posizione corrente del gps per cercare amici
+export function searchUsersPoolingWithCurrentPoint() {
+  const { isConnected } = store.getState().connection;
+  // se ho connessione
+  console.log("sono connesso?");
+  if (isConnected) {
+    navigator.geolocation.getCurrentPosition((position) => {
+      console.log(position);
+
+      const lastPosition = {
+        longitude: position.coords.longitude,
+        latitude: position.coords.latitude,
+        time: moment(position.timestamp).format(),
+      };
+
+      // {"type":"pooling_user","point":{"longitude":-122.01982651,"latitude":37.32795258},"time":"2020-07-08T18:34:44+02:00"}
+      store.dispatch(
+        sendSocket(sendLastPointforPooling, {
+          lastPosition,
+        })
+      );
+
+      //       coords:
+      // accuracy: 10
+      // altitude: 0
+      // altitudeAccuracy: -1
+      // heading: 272.97
+      // latitude: 37.324746
+      // longitude: -122.02160463
+      // speed: 3.05
+      // __proto__:
+      // constructor: ƒ Object()
+      // hasOwnProperty: ƒ hasOwnProperty()
+      // isPrototypeOf: ƒ isPrototypeOf()
+      // propertyIsEnumerable: ƒ propertyIsEnumerable()
+      // toLocaleString: ƒ toLocaleString()
+      // toString: ƒ toString()
+      // valueOf: ƒ valueOf()
+      // __defineGetter__: ƒ __defineGetter__()
+      // __defineSetter__: ƒ __defineSetter__()
+      // __lookupGetter__: ƒ __lookupGetter__()
+      // __lookupSetter__: ƒ __lookupSetter__()
+      // get __proto__: ƒ __proto__()
+      // set __proto__: ƒ __proto__()
+      // timestamp: 1594226226876.854
+    });
+  }
+  // se non ho connessione allora mando nulla
+}
+
+export function sendStopTrip(ws, dispatch, getState, objectParam = {}) {
+  console.log(objectParam);
+  const stopPackage = JSON.stringify({
+    type: "close_trip",
+    body: {
+      trip: objectParam.idTrip,
+      previous_sub_trip_id: objectParam.subTripId,
+      end_time: objectParam.end_time_subTrip,
+      multipliers: [
+        { id: 2, type_id: objectParam.peak_hours_type_id },
+        { id: 1, type_id: objectParam.IdWeather },
+      ],
+      time: objectParam.end_time_subTrip,
+      weather: objectParam.weather,
+      temperature: objectParam.temperature,
+    },
+  });
+  console.log(stopPackage);
+  // ed è attivo mando
+  ws.send(stopPackage); // send a message
+}
+
+export function sendGPS(ws, dispatch, getState, objectParam = {}) {
+  console.log("mando punti con socket");
+  // tratta corrente o passata
+  let location = getState().tracking.route;
+  let { sub_trip } = getState().tracking;
+
+  let index = objectParam.index ? objectParam.index : 0;
+  let position = objectParam.position ? objectParam.position : 0;
+  let activities = getState().tracking.activity;
+  if (index !== 0) {
+    location = getState().tracking.PreviousRoute[index - 1].route;
+    activities = getState().tracking.PreviousRoute[index - 1].activity;
+    sub_trip = getState().tracking.PreviousRoute[index - 1].sub_trip;
+  }
+  console.log(location);
+
+  console.log(sub_trip);
+
+  msg = new Error("gps point da inviare");
+  bugsnag.notify(msg, function (report) {
+    report.metadata.other = { location, activities, sub_trip };
+  });
+
+  // prendo i punti gps con time maggiore dell'ultima attivita mandata
+  if (activities.length) {
+    location = location.filter((elem) => activities[0].time > elem.time);
+  }
+  console.log(location);
+
+  const num_route = location.length;
+
+  // dispatch(UpdateStatus("send GPS", index));
+
+  // prima di fare i controlli devo avere qualcosa da controllare
+  if (sub_trip && position < num_route) {
+    // se ho soltanto un'attività, ne mando soltanto una
+    if (num_route == 1) {
+      console.log(location[0]);
+      const { longitude, latitude, speed, time, altitude } = location[0];
+
+      const positionGPS = JSON.stringify({
+        type: "gpspoint",
+        body: {
+          sub_trip: sub_trip.id,
+          point: { longitude, latitude },
+          speed,
+          time,
+          altitude: altitude ? parseInt(altitude) : -1,
+        },
+      });
+
+      msg = new Error("un gps point ");
+      bugsnag.notify(msg, function (report) {
+        report.metadata.other = { positionGPS };
+      });
+      // ed è attivo mando
+      ws.send(positionGPS); // send a message
+    } else {
+      // se ne ho piu di una
+
+      //  mando al massimo dieci
+      if (num_route > 30) {
+        location = location.slice(0, 30);
+      }
+
+      const locationMulti = JSON.stringify({
+        type: "gpspoint_multi",
+        time: moment().format(),
+        body: location.map((elem) => {
+          return {
+            sub_trip: sub_trip.id,
+            point: { longitude: elem.longitude, latitude: elem.latitude },
+            speed: elem.speed,
+            time: elem.time,
+            altitude: elem.altitude ? parseInt(elem.altitude) : -1,
+          };
+        }),
+      });
+      console.log(locationMulti);
+      msg = new Error("piu gps point ");
+      bugsnag.notify(msg, function (report) {
+        report.metadata.other = { locationMulti };
+      });
+      ws.send(locationMulti); // send a message
+    }
+  }
+  return {};
+}
+
+export function sendSingleGPS(ws, dispatch, getState, objectParam = {}) {
+  console.log("mando punti con socket");
+  // tratta corrente o passata
+  let location = getState().tracking.route;
+  let { sub_trip } = getState().tracking;
+
+  let index = objectParam.index ? objectParam.index : 0;
+  let position = objectParam.position ? objectParam.position : 0;
+  let activities = getState().tracking.activity;
+  if (index !== 0) {
+    location = getState().tracking.PreviousRoute[index - 1].route;
+    activities = getState().tracking.PreviousRoute[index - 1].activity;
+    sub_trip = getState().tracking.PreviousRoute[index - 1].sub_trip;
+  }
+  console.log(location);
+
+  console.log(sub_trip);
+
+  // dispatch(UpdateStatus("send GPS", index));
+
+  // prima di fare i controlli devo avere qualcosa da controllare
+
+  // mando il punto gps se ho gia mandato l'attività precedente quindi controllo i time
+  if (
+    location.length > position &&
+    sub_trip &&
+    (!activities.length || activities[0].time > location[position].time)
+  ) {
+    console.log(location[position]);
+    const { longitude, latitude, speed, time, altitude } = location[position];
+
+    const positionGPS = JSON.stringify({
+      type: "gpspoint",
+      body: {
+        sub_trip: sub_trip.id,
+        point: { longitude, latitude },
+        speed,
+        time,
+        altitude: altitude ? parseInt(altitude) : -1,
+      },
+    });
+    // ed è attivo mando
+    ws.send(positionGPS); // send a message
+  }
+  return {};
+}
+
+export function sendActivity(ws, dispatch, getState, objectParam = {}) {
+  console.log("mando attivita con socket");
+  // tratta corrente o passata
+
+  let { sub_trip } = getState().tracking;
+
+  let index = objectParam.index ? objectParam.index : 0;
+  let position = objectParam.position ? objectParam.position : 0;
+
+  let activities = getState().tracking.activity;
+  if (index != 0) {
+    activities = getState().tracking.PreviousRoute[index - 1].activity;
+
+    sub_trip = getState().tracking.PreviousRoute[index - 1].sub_trip;
+  }
+  console.log(activities);
+  console.log(sub_trip);
+
+  // dispatch(UpdateStatus("send activity", index));
+  const num_activity = activities.length;
+  console.log(num_activity);
+
+  if (sub_trip && position < num_activity) {
+    // for (position = 0; position < num_activity; position++) {
+
+    // se ho soltanto un'attività, ne mando soltanto una
+    if (num_activity == 1) {
+      console.log(activities[0]);
+      const { activity, time } = activities[0];
+      const activitySingle = JSON.stringify({
+        type: "activity",
+        body: { sub_trip: sub_trip.id, activity, time, os: Platform.OS },
+      });
+      // ed è attivo mando
+      console.log(activitySingle);
+      ws.send(activitySingle); // send a message
+    } else {
+      // se ne ho piu di una
+
+      // nme mando al massimo dieci
+      if (num_activity > 30) {
+        activities = activities.slice(0, 30);
+      }
+
+      const activityMulti = JSON.stringify({
+        type: "activity_multi",
+        time: moment().format(),
+        body: activities.map((elem) => {
+          return {
+            sub_trip: sub_trip.id,
+            activity: elem.activity,
+            time: elem.time,
+            os: Platform.OS,
+          };
+        }),
+      });
+      console.log(activityMulti);
+      ws.send(activityMulti); // send a message
+    }
+
+    // }
+  }
+  return {};
+}
+
+// index quale tratta sto considerando
+// position quale punto invio
+export function updateCordinate(index = 0, position = 0) {
+  // con index indico quale tratta sto elaborando
+  // con 0 indico la tratta corrente, mentre > 0 indico le tratte passate
+  // utile se una tratta passata non e stata validata tipo se manca internet
+  // prendo le coordinate ancora non validate, le mando a router.project-osrm, sui dati openstreet
+  // che mi dice quale è la coordinata di una strada piu vicina alla cooordinata passata
+  // a seconda del tipo di attivita da riconoscere, faccio validazioni della tratta differenti
+  // passando getState mi permette di avere lo stato corrente relativo a redux
+}
 /**
  * genero un nuono POJO sulla base dell'elemento da inserire,
  * le precedenti posizioni e il timestamp di quando l'attivita'
@@ -749,41 +1211,12 @@ function generateItem(item, lastPos) {
  */
 export function starton(type, coef, threshold) {
   // avvio la registrazione
-  // mando anche le route del db cosi le uso per sapere una distanza precedente fatta con lo stesso mezzo
-  return function (dispatch, getState) {
-    // avvio
-    dispatch({
-      type: START_LOCATION,
-      activityChoice: { type, coef, threshold },
-      routeSaved: getState().login.Route
-    });
 
-    const Now = new Date();
-    // se è un nuovo giorno rispetto all'ultimo che si e settata la serie
-    // ricalcolo
-    const dateDaySeries = getState().login.NumDaysRoute
-      ? getState().login.NumDaysRoute.day
-      : "Mon Sep 03 2018";
-    const diffDay = Now.toDateString() !== dateDaySeries;
-    if (diffDay) {
-      const numDay = getState().login.NumDaysRoute
-        ? getState().login.NumDaysRoute.numDay
-        : 0;
-      const NumDaysRoute = NumDaysRouteCalcolate(
-        getState,
-        Now,
-        dateDaySeries,
-        numDay,
-        [],
-        dispatch
-      );
-      dispatch({
-        type: SET_SERIES,
-        NumDaysRoute: NumDaysRoute
-      });
-    }
-    // cancello route salvate precedentemente nel db
-    dispatch(ResetPreviousRoute());
+  // avvio
+  return {
+    type: START_LOCATION,
+    activityChoice: { type, coef, threshold },
+    routeSaved: [],
   };
 }
 
@@ -861,92 +1294,7 @@ function NumDaysRouteCalcolate(
   if (DayNowFromMon === 5 || DayNowFromMon === 6 || DayNowFromMon === 0) {
     return { numDay: 0, day: Now.toDateString() };
   } else {
-    // devo ottenere il tempo per avere l'inizio settimana
-    // prima calcolo sulle route precedenti
-    for (route = 1; route <= Routes; route++) {
-      const Segment = PreviousRoute[route - 1]
-        ? PreviousRoute[route - 1]
-        : null;
-      // se il segmento esiste
-      if (Segment) {
-        const NumRoute = Segment.route.length;
-        // prendo la data dell'ultima posizione presa, che è presente su route
-        const end = Segment.route[NumRoute - 1].time;
-        // se è successo in questa settimana
-        if (end >= sogliaMinima) {
-          const day = new Date(end - 86400000).getDay();
-          dayInTheWeek = [...dayInTheWeek, day];
-        }
-      }
-    }
-    // poi sulle route del db
-
-    // ContinueSerch mi dice se dopo che controllo devo andare avanti oppure no
-    // se trovo quelle di lunedi ho finito oppure una supera la settimana non cerco piu
-    // se finisco che ancora ne mancano e per ogni giorno c'e una tratta significa che mi servono le altre tratte dal db
-    let ContinueSerch = true;
-    for (route = 1; route <= SavedRoute.length; route++) {
-      // prendo la data dalle info del db
-      // se esiste
-      if (SavedRoute[route - 1]) {
-        const end = new Date(SavedRoute[route - 1].end_time).getTime();
-        if (end >= sogliaMinima) {
-          const day = new Date(end - 86400000).getDay();
-
-          dayInTheWeek = [...dayInTheWeek, day];
-          // se trovo 0 ho finito di cercare
-          if (day) {
-            ContinueSerch = true;
-          } else {
-            ContinueSerch = false;
-          }
-        } else {
-          ContinueSerch = false;
-        }
-        if (!ContinueSerch) {
-          route = SavedRoute.length;
-        }
-      }
-    }
-    // ordino in ordine crescente
-    dayInTheWeek = dayInTheWeek.sort();
-    for (i = 0; i < dayInTheWeek.length - 1; i++) {
-      // calcolo la differenza due alla volta
-      const dif = dayInTheWeek[i + 1] - dayInTheWeek[i];
-      if (dif === 1) {
-        console.log("giorno passato");
-        // se cambia di uno allora è passato un giorno
-        NumDaysRoute += 1;
-      } else if (dif > 1) {
-        // se sono passati piu di un giorno la serie di interrompe
-        // e non devo fare altri ricerche
-        i = dayInTheWeek.length - 1;
-        ContinueSerch = false;
-      }
-    }
-
-    // si dovrebbe fare che se ContinueSerch è ancora vero allora devo richiedere altre route dal db
-    console.log("giorni trovati");
-    console.log(dayInTheWeek);
-    console.log(NumDaysRoute);
-    console.log(ContinueSerch);
-    // se vengo da una ricerca gia fatta all'interno di questa settimana non c'e bisogno di cercare indietro
-    ContinueSerch = newInterval > startWeek ? false : ContinueSerch;
-    if (ContinueSerch) {
-      // faccio un altra request per avere altre route dal db se esistono
-      // che aggiornano a sua volta numDay
-      dispatch(
-        GetListRouteForCheckSeries({
-          callbackToSeries,
-          oldRoute: NewRoute,
-          getState
-        })
-      );
-
-      return { numDay: NumDaysRoute, day: Now.toDateString() };
-    } else {
-      return { numDay: NumDaysRoute, day: Now.toDateString() };
-    }
+    return { numDay: NumDaysRoute, day: Now.toDateString() };
   }
 }
 
@@ -963,418 +1311,910 @@ function callbackToSeries(route, getState, dispatch) {
   );
   dispatch({
     type: SET_SERIES,
-    NumDaysRoute: NumDaysRoute
+    NumDaysRoute: NumDaysRoute,
   });
 }
 
-const writeStillNotifcationLog = dispatch => {
+const writeStillNotifcationLog = (dispatch) => {
   return function (log) {
     dispatch({
       type: STILL_NOTIFICATION_LOG,
-      payload: log
+      payload: log,
     });
   };
 };
 
-export function start(type, coef, threshold, navigation) {
+export function start(type, coef, threshold, navigation, resumeTrack = false) {
   // uso getState cosi ho variabili per sapere quante coordinate gps e attivita sono state catturate
-  return function (dispatch, getState) {
-    BackgroundGeolocation.configure({
-      desiredAccuracy: 10,
-      stationaryRadius: 50,
-      distanceFilter: 50,
-      debug: false,
-      startOnBoot: false,
-      stopOnTerminate: false,
-      locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
-      interval: 10000,
-      fastestInterval: 5000,
-      activitiesInterval: 10000,
-      stopOnStillActivity: true, // test per berto
-      startForeground: true,
-      notificationIconColor: "#e33",
-      notificationIconLarge: "ic_launcher",
-      notificationIconSmall: "ic_stat_muv_logo",
-      notificationTitle: "Muv",
-      notificationText: "Background tracking",
-      saveBatteryOnBackground: false,
-      activityType: type === "Public" ? "AutomotiveNavigation" : "Fitness"
-      // syncThreshold: 1
-    });
 
-    BackgroundFetch.configure(
-      {
-        minimumFetchInterval: 15 // <-- minutes (15 is minimum allowed) disabilitato perche' parte troppo presto (?)
-      },
-      () => {
-        dispatch({
-          type: STILL_NOTIFICATION_LOG,
-          payload: "[js] Received background-fetch event"
-        });
-        BackgroundFetch.finish(BackgroundFetch.FETCH_RESULT_NEW_DATA);
-      },
-      error => {
-        console.log("[js] RNBackgroundFetch failed to start");
-        dispatch({
-          type: STILL_NOTIFICATION_LOG,
-          payload:
-            "[js] RNBackgroundFetch failed to start " + JSON.stringify(error)
-        });
-      }
-    );
+  BackgroundGeolocation.configure({
+    desiredAccuracy: 10,
+    stationaryRadius: 50,
+    distanceFilter: 50,
+    debug: false,
+    startOnBoot: false,
+    stopOnTerminate: false,
+    locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
+    interval: 10000,
+    fastestInterval: 5000,
+    activitiesInterval: 10000,
+    stopOnStillActivity: true, // test per berto
+    startForeground: true,
+    notificationIconColor: "#e33",
+    notificationIconLarge: "ic_launcher",
+    notificationIconSmall: "ic_stat_muv_logo",
+    notificationTitle: "Muv",
+    notificationText: "Background tracking",
+    saveBatteryOnBackground: false,
+    activityType: type === "Public" ? "AutomotiveNavigation" : "Fitness",
+    // syncThreshold: 1
+  });
 
-    // utile per cambiare la notifica e in modo che la modifica non instauri una ricorsione del processo
-    let counter = 0;
+  /* BackgroundFetch.configure(
+    {
+      minimumFetchInterval: 15, // <-- minutes (15 is minimum allowed) disabilitato perche' parte troppo presto (?)
+    },
+    () => {
+      store.dispatch({
+        type: STILL_NOTIFICATION_LOG,
+        payload: "[js] Received background-fetch event",
+      });
+      BackgroundFetch.finish(BackgroundFetch.FETCH_RESULT_NEW_DATA);
+    },
+    (error) => {
+      console.log("[js] RNBackgroundFetch failed to start");
+      store.dispatch({
+        type: STILL_NOTIFICATION_LOG,
+        payload:
+          "[js] RNBackgroundFetch failed to start " + JSON.stringify(error),
+      });
+    }
+  ); */
 
+  // utile per cambiare la notifica e in modo che la modifica non instauri una ricorsione del processo
+  let counter = 0;
 
+  // per gestire la notifica se se fermo per un po di tempo
+  let durationStill = 0;
+  let lastStill = 0;
+  // quante volte è scatata la notifica, se scatta due volte allora interrompo
+  let counterStillNotification = 0;
+  const show_still_notification = store.getState().login.notification_still
+    ? store.getState().login.notification_still
+    : false;
 
-    // per gestire la notifica se se fermo per un po di tempo
-    let durationStill = 0;
-    let lastStill = 0;
-    const show_still_notification = getState().login.notification_still
-      ? getState().login.notification_still
-      : false;
+  // sottoscrizione al servizio di riconoscimento attività
+  this.unsubscribe = ActivityRecognition.subscribe((detected_activities) => {
+    // salvo la nuova attivita trovata
 
+    const key = +new Date();
+    const itemActivity = {
+      key,
+      activity: detected_activities.sorted,
+      time: moment(key).format(),
+    };
 
-    // sottoscrizione al servizio di riconoscimento attività
-    this.unsubscribe = ActivityRecognition.subscribe(detected_activities => {
+    store.dispatch(addActivity(itemActivity));
+    // const sub_trip = store.getState().tracking.sub_trip;
+    // if (sub_trip) {
+    //   store.dispatch(sendSocket(sendActivity, { index: 0 }));
+    // }
 
-      // salvo la nuova attivita trovata
+    // dispatch(sendSocket(
+    //   (ws, trip, sub_trip) => {
+    //     const activity = JSON.stringify({ type:"activity", "body":{ sub_trip: sub_trip, "activity": detected_activities.sorted, time: moment(key).format() , os: Platform.OS} })
+    //     // ed è attivo mando
+    //    ws.send(activity); // send a message
+    //   }
+    // ))
 
-      const key = +new Date();
-      const itemActivity = { key, activity: detected_activities.sorted };
-      dispatch(addActivity(itemActivity));
+    // controllo per notifica still
 
-      // controllo per notifica still 
+    // controllo se è still o stationary
+    if (show_still_notification) {
+      const most_probable_activity = detected_activities.sorted[0];
+      most_probable_ativity_type = most_probable_activity.type;
+      if (
+        most_probable_ativity_type == "UNKNOWN" ||
+        most_probable_ativity_type == "STATIONARY" ||
+        most_probable_ativity_type == "STILL" ||
+        most_probable_ativity_type == "TILTING"
+      ) {
+        // se è still aggiorno
+        // incremento il tempo che sono fermo
+        durationStill = lastStill ? durationStill + (key - lastStill) : 0;
+        lastStill = key;
+        console.log(durationStill);
+        console.log(lastStill);
+        if (durationStill > 360000) {
+          // se fermo piu di 6 min notifica
+          // notifica
 
-      // controllo se è still o stationary
-      if (show_still_notification) {
-        const most_probable_activity = detected_activities.sorted[0];
-        most_probable_ativity_type = most_probable_activity.type;
-        if (most_probable_ativity_type == "UNKNOWN" || most_probable_ativity_type == "STATIONARY" || most_probable_ativity_type == "STILL" || most_probable_ativity_type == "TILTING") {
-          // se è still aggiorno
-          // incremento il tempo che sono fermo
-          durationStill = lastStill ? durationStill + (key - lastStill) : 0;
-          lastStill = key;
-          console.log(durationStill)
-          console.log(lastStill)
-          if (durationStill > 360000) {
-            // se fermo piu di 6 min notifica
-            // notifica
-
-            // ricomincio a contare
-            durationStill = 0;
-            lastStill = 0;
-            // Alert.alert('fermo')
-            pushNotifications.configure();
-            pushNotifications.userIsStillNotification();
-          }
-        } else {
-          // non è fermo ricomincio da zero
+          // ricomincio a contare
           durationStill = 0;
           lastStill = 0;
+          // Alert.alert('fermo')
+
+          // se  è scatata la notifica gia una volta, stoppa
+          // altrimenti aumento il contatore
+
+          // if (counterStillNotification) {
+          //   // un altro tipo di notifica tipo abbiamo chiuso la tratta dato che sei fermo da molto tempo
+          //   pushNotifications.configure();
+          //   pushNotifications.userIsStillNotificationToStop();
+          //   stop();
+          // } else
+          // {
+          //   counterStillNotification += 1;
+          pushNotifications.configure();
+          pushNotifications.userIsStillNotification();
+          //}
         }
+      } else {
+        // non è fermo ricomincio da zero
+        durationStill = 0;
+        lastStill = 0;
+        counterStillNotification = 0;
       }
+    }
+  });
 
-
-
-
-    });
-
+  function activeActivityRecognition() {
     // attivo il servizio quando avvio l'attivita
-    const detection_interval_millis = 600;
-    ActivityRecognition.start(detection_interval_millis)
-      .then(d => {
-        console.log(d);
-      })
-      .catch(e => {
-        if (typeof e !== "Error") {
-          console.log(e);
-          msg = new Error(e);
-          bugsnag.notify(msg);
-        } else {
-          bugsnag.notify(e);
-        }
 
-        ActivityRecognition.start(detection_interval_millis)
-          .then(d => { })
-          .catch(e => {
-            if (typeof e !== "Error") {
-              console.log(e);
-              msg = new Error(e);
-              bugsnag.notify(msg);
-            } else {
-              bugsnag.notify(e);
-            }
-          });
-      });
+    const detection_interval_millis = 1000;
+    if (Platform.OS == "ios") {
+      check(PERMISSIONS.IOS.MOTION)
+        .then((result) => {
+          console.log(result);
+          switch (result) {
+            case RESULTS.UNAVAILABLE:
+              // simulatore
+              console.log(
+                "This feature is not available (on this device / in this context)"
+              );
+              break;
+            case RESULTS.DENIED:
+              console.log(
+                "The permission has not been requested / is denied but requestable"
+              );
+              request(PERMISSIONS.IOS.MOTION).then((result) => {
+                console.log(result);
+                if (result == "granted") {
+                  ActivityRecognition.start(detection_interval_millis)
+                    .then((d) => {
+                      console.log(d);
+                    })
+                    .catch((e) => {
+                      if (typeof e !== "Error") {
+                        console.log(e);
+                        msg = new Error(e);
+                        bugsnag.notify(msg, function (report) {
+                          report.metadata = { error: e };
+                        });
+                      } else {
+                        bugsnag.notify(e, function (report) {
+                          report.metadata = { error: e };
+                        });
+                      }
 
-    /* 
+                      ActivityRecognition.start(detection_interval_millis)
+                        .then((d) => {})
+                        .catch((e) => {});
+                    });
+                } else {
+                  stop();
+                }
+              });
+              break;
+            case RESULTS.GRANTED:
+              console.log("The permission is granted");
+              ActivityRecognition.start(detection_interval_millis)
+                .then((d) => {
+                  console.log(d);
+                })
+                .catch((e) => {
+                  if (typeof e !== "Error") {
+                    console.log(e);
+                    msg = new Error(e);
+                    bugsnag.notify(msg, function (report) {
+                      report.metadata = { error: e };
+                    });
+                  } else {
+                    bugsnag.notify(e, function (report) {
+                      report.metadata = { error: e };
+                    });
+                  }
+
+                  ActivityRecognition.start(detection_interval_millis)
+                    .then((d) => {})
+                    .catch((e) => {});
+                });
+              break;
+            case RESULTS.BLOCKED:
+              console.log(
+                "The permission is denied and not requestable anymore"
+              );
+              stop();
+              Alert.alert(
+                "Activity recognition is disabled",
+                "Would you like to open settings to active that option?",
+                [
+                  {
+                    text: strings("id_14_03"),
+                    onPress: () => {
+                      openSettings().catch(() =>
+                        console.warn("cannot open settings")
+                      );
+                    },
+                  },
+                  {
+                    text: strings("id_14_04"),
+
+                    style: "cancel",
+                  },
+                ]
+              );
+
+              break;
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          // …
+        });
+    } else {
+      ActivityRecognition.start(detection_interval_millis)
+        .then((d) => {
+          console.log(d);
+        })
+        .catch((e) => {
+          if (typeof e !== "Error") {
+            console.log(e);
+            msg = new Error(e);
+            bugsnag.notify(msg, function (report) {
+              report.metadata = { error: e };
+            });
+          } else {
+            bugsnag.notify(e, function (report) {
+              report.metadata = { error: e };
+            });
+          }
+
+          ActivityRecognition.start(detection_interval_millis)
+            .then((d) => {})
+            .catch((e) => {});
+        });
+    }
+
+    // check sul risparmio energetico, da testare su oneplus
+
+    // check(PERMISSIONS.ANDROID.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+    //   .then(result => {
+    //     console.log(result)
+    //     Alert.alert(result)
+    //     switch (result) {
+    //       case RESULTS.UNAVAILABLE:
+    //         // simulatore
+    //         console.log(
+    //           "This feature is not available (on this device / in this context)"
+    //         );
+    //         break;
+    //       case RESULTS.DENIED:
+    //         console.log(
+    //           "The permission has not been requested / is denied but requestable"
+    //         );
+
+    //         request(PERMISSIONS.ANDROID.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+    //         .then(result => {
+    //           console.log(result);
+    //           Alert.alert(result)
+    //           if (result == "granted") {
+
+    //           }
+    //         }).catch(error => {
+    //           console.log(error);
+    //           // …
+    //         });
+    //         break;
+    //       case RESULTS.GRANTED:
+    //         console.log("The permission is granted");
+
+    //         break;
+    //       case RESULTS.BLOCKED:
+    //         console.log(
+    //           "The permission is denied and not requestable anymore"
+    //         );
+    //         break;
+    //     }
+    //   })
+    //   .catch(error => {
+    //     console.log(error);
+    //     // …
+    //   });
+  }
+
+  // dopo che creo la tratta mando alcune info (attività e punto gps)
+  function sendInfoStart() {
+    console.log("infoStart");
+    store.dispatch(sendSocket(sendActivity, { index: 0 }));
+    store.dispatch(sendSocket(sendSingleGPS, { index: 0 }));
+  }
+
+  /* 
     BackgroundGeolocation.on("stationary", stationaryLocation => {
       // handle stationary locations here
     }); 
     */
 
-    // on location è la callback dove intercetti l'aggiornamento eventuale
-    // della posizione del `gps`
-    BackgroundGeolocation.on("location", location => {
-      BackgroundGeolocation.startTask(taskKey => {
-        if (Platform.OS === "ios") {
-          this.handleLocationChanging(location, dispatch);
+  // on location è la callback dove intercetti l'aggiornamento eventuale
+  // della posizione del `gps`
+  BackgroundGeolocation.on("location", (location) => {
+    BackgroundGeolocation.startTask((taskKey) => {
+      this.handleLocationChanging(location);
 
-          // vedo se il meteo è stato settato
-          const typeWeather = getState().tracking.typeWeather
-            ? getState().tracking.typeWeather.length
-            : 0;
+      // vedo se il meteo è stato settato
+      const typeWeather = store.getState().tracking.typeWeather
+        ? store.getState().tracking.typeWeather.length
+        : 0;
 
-          // se ancora non ho settato il meteo
-          if (!typeWeather) {
-            // getWeather = true;
-            dispatch(fetchWeatherAsync(location.latitude, location.longitude));
-          }
+      // se ancora non ho settato il meteo
+      if (!typeWeather) {
+        // getWeather = true;
+        store.dispatch(
+          fetchWeatherAsync(location.latitude, location.longitude)
+        );
+      }
 
-          // se ci sono almeno tot attivita e coordinate avvia la validazione
-          const num_cordinates = getState().tracking.route.length;
-          const num_activity = getState().tracking.activity.length;
+      // se non ho info sulla città d'appartenza
+      if (!store.getState().tracking.cityRoute) {
+        store.dispatch(getCityInfoForTrip(location, 0, false));
+      } else if (!store.getState().tracking.infoIdCity) {
+        // se ho le info sulla citta ma non quelle sull'id
+        store.dispatch(
+          createInfoCityIdForTrip(store.getState().tracking.cityRoute, 0, false)
+        );
+      }
 
-          // controllo se gia sto validando cosi non controllo
-          const validation = getState().tracking.status;
+      // se ci sono almeno tot attivita e coordinate avvia la validazione
+      const num_cordinates = store.getState().tracking.route.length;
 
-          // se non sto gia validando e ho almeno un po di attivita,  valido
-          if (
-            validation !== "validation" &&
-            num_activity >= 1 &&
-            num_cordinates >= 4
-          ) {
-            // aggiorno le coordinate trovate mediante la validazione
-            console.log("validazione in corso");
+      const sub_trip = store.getState().tracking.sub_trip;
 
-            dispatch(updateCordinate(0));
-          }
-        } else {
-          // per android per evitare che il processo sia chiuso
-          // ogni volta che prendo una posizione, vedo di configurare la notifica
-          // il cambio della notifica riavvia il processo quindi devo evitare ricorsioni
-          // solo quando l'evento è dispari, considero per la posizione e per aggiornare la notifica
-          // questo genera un nuovo evento pari da non considerare
-          counter++;
-          console.log(counter);
+      // se è gia una tratta con dei punti (quindi stop o cambio crea una altra tratta )
+      // creo un id per la tratta se non l'ho
+      if (num_cordinates > 2 && !sub_trip) {
+        // numSubTrip se è 0 significa che è la
+        const numSubTrip = store.getState().tracking.numSubTrip;
+        const activityChoice = store.getState().tracking.activityChoice;
+        const { isConnected } = store.getState().connection;
+        if (isConnected) {
+          if (!numSubTrip) {
+            // nuova tratta
 
-          if (counter % 2 == 1) {
-            const distance = getState().tracking.distanceLive;
-            const points = calcolatePoints(
-              distance,
-              getState().tracking.PrecDistanceSameMode,
-              getState().tracking.activityChoice.type
-            );
-            BackgroundGeolocation.configure({
-              notificationTitle:
-                "You've earned " + points.toFixed(0) + " Points",
-              notificationText:
-                "You've travelled " + distance.toFixed(2) + " Km"
-            });
+            const start_time_subTrip = store.getState().tracking
+              .start_time_subTrip;
+            const sendStartTime = store.getState().tracking.sendStartTime;
+            console.log(store.getState().tracking.groupPooling);
+            const car_pool =
+              store.getState().tracking.groupPooling &&
+              store.getState().tracking.groupPooling.length
+                ? store.getState().tracking.groupPooling[0].pool
+                : 0;
 
-            console.log("notification BackgroundGeolocation");
+            const infoIdCity = store.getState().tracking.infoIdCity;
+            console.log(car_pool);
+            console.log(activityChoice);
+            console.log(infoIdCity);
+            const now = new Date().getTime();
+            if (infoIdCity && (!sendStartTime || now > sendStartTime + 5000)) {
+              console.log(sendStartTime);
+              store.dispatch({
+                type: UPDATE_TRIP_DATA_START_TIME_SUBTRIP,
+                start_time_subTrip,
+                payload: {
+                  sendStartTime: now,
+                },
+              });
 
-            this.handleLocationChanging(location, dispatch);
+              const dataTrip =
+                activityChoice.type == "Carpooling" && !car_pool
+                  ? {
+                      ...activityChoice,
+                      start_time_subTrip,
+                      car_pool,
+                      location: infoIdCity,
+                      car_pool,
+                      type: "Car", // se ho car ma nessun gruppo, allora la tratta è car
+                    }
+                  : {
+                      ...activityChoice,
+                      car_pool,
+                      start_time_subTrip,
+                      car_pool,
+                      location: infoIdCity,
+                    };
 
-            // vedo se il meteo è stato settato
-            const typeWeather = getState().tracking.typeWeather
-              ? getState().tracking.typeWeather.length
-              : 0;
-
-            // se ancora non ho settato il meteo
-            if (!typeWeather) {
-              // getWeather = true;
-              dispatch(
-                fetchWeatherAsync(location.latitude, location.longitude)
-              );
+              store.dispatch(createTrip(dataTrip, 0, sendInfoStart()));
             }
+          } else {
+            const id = store.getState().tracking.id;
+            if (id) {
+              const PreviousRoute = store.getState().tracking.PreviousRoute;
+              // mi serve l'id della subtrip precedente per creare quella nuova e concludere quella precedente
+              let sub_trip = null;
+              let end_time_subTrip = null;
 
-            // se ci sono almeno tot attivita e coordinate avvia la validazione
-            const num_cordinates = getState().tracking.route.length;
-            const num_activity = getState().tracking.activity.length;
+              sub_trip = PreviousRoute[PreviousRoute.length - 1].sub_trip;
+              end_time_subTrip =
+                PreviousRoute[PreviousRoute.length - 1].end_time_subTrip;
 
-            // controllo se gia sto validando cosi non controllo
-            const validation = getState().tracking.status;
+              if (sub_trip) {
+                const sendStartTime =
+                  PreviousRoute[PreviousRoute.length - 1].sendStartTime;
+                const now = new Date().getTime();
+                if (!sendStartTime || now > sendStartTime + 5000) {
+                  const start_time_subTrip =
+                    PreviousRoute[PreviousRoute.length - 1].start_time_subTrip;
+                  store.dispatch({
+                    type: UPDATE_TRIP_DATA_START_TIME_SUBTRIP,
+                    start_time_subTrip,
+                    payload: {
+                      sendStartTime: now,
+                    },
+                  });
 
-            // se non sto gia validando e ho almeno un po di attivita,  valido
-            if (
-              validation !== "validation" &&
-              num_activity >= 1 &&
-              num_cordinates >= 4
-            ) {
-              // aggiorno le coordinate trovate mediante la validazione
-              console.log("validazione in corso");
+                  const car_pool =
+                    PreviousRoute[PreviousRoute.length - 1].groupPooling &&
+                    PreviousRoute[PreviousRoute.length - 1].groupPooling.length
+                      ? PreviousRoute[PreviousRoute.length - 1].groupPooling[0]
+                          .pool
+                      : 0;
 
-              dispatch(updateCordinate(0));
+                  const dataSubTrip =
+                    activityChoice.type == "Carpooling" && !car_pool
+                      ? {
+                          ...activityChoice,
+                          id: id,
+                          end_time_subTrip,
+                          sub_trip,
+                          car_pool,
+                          type: "Car", // se ho car ma nessun gruppo, allora la tratta è car
+                        }
+                      : {
+                          ...activityChoice,
+                          id: id,
+                          end_time_subTrip,
+                          sub_trip,
+                          car_pool
+                        };
+
+                  // nuova sottotratta
+                  store.dispatch(createSubTrip(dataSubTrip, 0));
+                }
+              }
             }
           }
         }
+      } else {
+        // se ho la tratta invio i dati, punti gps e attività
+        store.dispatch(sendSocket(sendActivity, { index: 0 }));
+        if (num_cordinates > 0) {
+          store.dispatch(sendSocket(sendGPS, { index: 0 }));
+        }
+      }
 
-        BackgroundGeolocation.endTask(taskKey);
+      BackgroundGeolocation.endTask(taskKey);
+    });
+  });
+
+  BackgroundGeolocation.on("authorization", (status) => {
+    console.log("auth");
+    console.log(status);
+
+    // controllo se c'e l'autorizzazione gps
+    if (status !== BackgroundGeolocation.AUTHORIZED) {
+      stop();
+      Alert.alert(
+        "Location services are disabled",
+        "Would you like to open location settings?",
+        [
+          {
+            text: strings("id_14_03"),
+            onPress: () =>
+              Platform.OS !== "ios"
+                ? Platform.Version < 23
+                  ? BackgroundGeolocation.showLocationSettings()
+                  : BackgroundGeolocation.showAppSettings()
+                : BackgroundGeolocation.showAppSettings(),
+          },
+          {
+            text: strings("id_14_04"),
+            onPress: () => alert("App requires gps to work"),
+            style: "cancel",
+          },
+        ]
+      );
+    } else if (Platform.OS !== "ios") {
+      // controllo se il gps è attivo
+      BackgroundGeolocation.checkStatus((status) => {
+        console.log("auth gps");
+        console.log(status);
+        if (!status.locationServicesEnabled) {
+          stop();
+          Alert.alert(
+            "Location services are disabled",
+            "Would you like to open location settings?",
+            [
+              {
+                text: strings("id_14_03"),
+                onPress: () =>
+                  Platform.OS !== "ios"
+                    ? Platform.Version < 23
+                      ? BackgroundGeolocation.showLocationSettings()
+                      : BackgroundGeolocation.showLocationSettings()
+                    : BackgroundGeolocation.showAppSettings(),
+              },
+              {
+                text: strings("id_14_04"),
+                onPress: () => alert("App requires gps to work"),
+                style: "cancel",
+              },
+            ]
+          );
+        }
       });
-    });
+    }
+  });
 
-    BackgroundGeolocation.on("authorization", status => {
-      console.log("auth");
-      console.log(status);
+  BackgroundGeolocation.on("background", () => {
+    console.log("[INFO] App is in background");
+  });
 
-      // controllo se c'e l'autorizzazione gps
-      if (status !== BackgroundGeolocation.AUTHORIZED) {
-        dispatch(stop());
-        Alert.alert(
-          "Location services are disabled",
-          "Would you like to open location settings?",
-          [
-            {
-              text: strings("yes"),
-              onPress: () =>
-                Platform.OS !== "ios"
-                  ? Platform.Version < 23
-                    ? BackgroundGeolocation.showLocationSettings()
-                    : BackgroundGeolocation.showAppSettings()
-                  : BackgroundGeolocation.showAppSettings()
-            },
-            {
-              text: strings("no"),
-              onPress: () => alert("App requires gps to work"),
-              style: "cancel"
-            }
-          ]
-        );
-      } else if (Platform.OS !== "ios") {
-        // controllo se il gps è attivo
-        BackgroundGeolocation.checkStatus(status => {
-          console.log("auth gps");
-          console.log(status);
-          if (!status.locationServicesEnabled) {
-            dispatch(stop());
-            Alert.alert(
-              "Location services are disabled",
-              "Would you like to open location settings?",
-              [
-                {
-                  text: strings("yes"),
-                  onPress: () =>
-                    Platform.OS !== "ios"
-                      ? Platform.Version < 23
-                        ? BackgroundGeolocation.showLocationSettings()
-                        : BackgroundGeolocation.showLocationSettings()
-                      : BackgroundGeolocation.showAppSettings()
-                },
-                {
-                  text: strings("no"),
-                  onPress: () => alert("App requires gps to work"),
-                  style: "cancel"
+  BackgroundGeolocation.on("foreground", () => {
+    console.log("[INFO] App is in foreground");
+  });
+
+  BackgroundGeolocation.on("start", () => {
+    console.log("[INFO] BackgroundGeolocation service has been started");
+    if (!resumeTrack) {
+      store.dispatch(starton(type, coef, threshold));
+    }
+    const Now = new Date();
+    // se è un nuovo giorno rispetto all'ultimo che si e settata la serie
+    // ricalcolo
+    const dateDaySeries = store.getState().login.NumDaysRoute
+      ? store.getState().login.NumDaysRoute.day
+      : "Mon Sep 03 2018";
+    const diffDay = Now.toDateString() !== dateDaySeries;
+    if (diffDay) {
+      const numDay = store.getState().login.NumDaysRoute
+        ? store.getState().login.NumDaysRoute.numDay
+        : 0;
+      const NumDaysRoute = NumDaysRouteCalcolate(
+        store.getState,
+        Now,
+        dateDaySeries,
+        numDay,
+        [],
+        store.dispatch
+      );
+      store.dispatch({
+        type: SET_SERIES,
+        NumDaysRoute: NumDaysRoute,
+      });
+    }
+    activeActivityRecognition();
+    // cancello route salvate precedentemente nel db
+    store.dispatch(ResetPreviousRoute());
+
+    if (navigation !== null) {
+      navigation.navigate("Track");
+    }
+
+    // vedo su android se il gps è settato anche in background per android 10 in su
+    if (Platform.OS != "ios" && Platform.Version >= 29) {
+      check(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION)
+        .then((result) => {
+          console.log(result);
+          switch (result) {
+            case RESULTS.UNAVAILABLE:
+              // simulatore
+              console.log(
+                "This feature is not available (on this device / in this context)"
+              );
+
+              break;
+            case RESULTS.DENIED:
+              console.log(
+                "The permission has not been requested / is denied but requestable"
+              );
+              request(PERMISSIONS.ANDROID.ACCESS_BACKGROUND_LOCATION).then(
+                (result) => {
+                  console.log(result);
+                  if (result == "granted") {
+                  } else {
+                    // stop la tratta
+                    stop();
+                    Alert.alert("GPS is disabled in background", "");
+                  }
                 }
-              ]
-            );
+              );
+              break;
+            case RESULTS.GRANTED:
+              console.log("The permission is granted");
+
+              break;
+            case RESULTS.BLOCKED:
+              console.log(
+                "The permission is denied and not requestable anymore"
+              );
+              // stop la tratta
+              stop();
+
+              Alert.alert(
+                "GPS is disabled",
+                "Would you like to open settings to active that option?",
+                [
+                  {
+                    text: strings("id_14_03"),
+                    onPress: () => {
+                      openSettings().catch(() =>
+                        console.warn("cannot open settings")
+                      );
+                    },
+                  },
+                  {
+                    text: strings("id_14_04"),
+
+                    style: "cancel",
+                  },
+                ]
+              );
+
+              break;
           }
+        })
+        .catch((error) => {
+          console.log(error);
+          // …
         });
-      }
+    }
+  });
+
+  BackgroundGeolocation.on("stop", () => {
+    console.log("[INFO] BackgroundGeolocation service has been stopped");
+    // BackgroundGeolocation.removeAllListeners();
+    stop();
+  });
+
+  BackgroundGeolocation.on("error", (error) => {
+    // se ho qualche problema mi arriva una segnalazione
+    console.log("[ERROR] BackgroundGeolocation error:", error);
+    if (typeof error !== "Error") {
+      console.log(error);
+      msg = new Error(error);
+      bugsnag.notify(msg, function (report) {
+        report.metadata = { error: error };
+      });
+    } else {
+      bugsnag.notify(error, function (report) {
+        report.metadata = { error: error };
+      });
+    }
+  });
+
+  BackgroundGeolocation.checkStatus((status) => {
+    console.log("stato gps");
+    console.log(status);
+    // per android devo vedere se il gps è attivo
+    if (Platform.OS !== "ios" && !status.locationServicesEnabled) {
+      stop();
+      Alert.alert(
+        "Location services are disabled",
+        "Would you like to open location settings?",
+        [
+          {
+            text: strings("id_14_03"),
+            onPress: () =>
+              Platform.OS !== "ios"
+                ? Platform.Version < 23
+                  ? BackgroundGeolocation.showLocationSettings()
+                  : BackgroundGeolocation.showLocationSettings()
+                : BackgroundGeolocation.showAppSettings(),
+          },
+          {
+            text: strings("id_14_04"),
+            onPress: () => alert("App requires gps to work"),
+            style: "cancel",
+          },
+        ]
+      );
+    } else if (!status.isRunning) {
+      // controllo se c'e il gps attivo
+      BackgroundGeolocation.start(); //triggers start on start event
+    } else {
+      // se è gia attivo ma premo play allora devo stopparlo e farlo ripartire
+      BackgroundGeolocation.stop(); //triggers start on start event
+      // richiamo l'intera funzione di nuovo
+      store.dispatch(start(type, coef, threshold, navigation));
+    }
+  });
+
+  // stillNotification.init();
+}
+
+function fakeActivityChoice(store) {
+  switch (store.getState().tracking.activityChoice.type) {
+    case "Walking":
+      return "WALKING";
+
+    case "Biking":
+      return Platform.OS == "ios" ? "CYCLING" : "ON_BICYCLE";
+
+    default:
+      return Platform.OS == "ios" ? "AUTOMOTIVE" : "IN_VEHICLE";
+  }
+}
+
+// via roma 38.114793, 13.364480
+// 13.366425
+// 13.366275
+// 13.365985
+function fakeGpsActivity(store, location) {
+  const key = +new Date();
+  let _key = +new Date(),
+    _activity = {
+      _key,
+      activity: [{ type: fakeActivityChoice(store), confidence: 2 }],
+      time: moment(_key).format(),
+    },
+    lastPosition = null,
+    route = store.getState().tracking.route,
+    routeAnalyzed = store.getState().tracking.routeAnalyzed,
+    routeNotvalid = store.getState().tracking.routeNotvalid,
+    { speed, time, longitude, latitude, altitude } = location;
+
+  if (route.length) {
+    lastPosition = route[route.length - 1];
+  } else if (routeAnalyzed.length) {
+    lastPosition = routeAnalyzed[routeAnalyzed.length - 1];
+  } else if (routeNotvalid.length) {
+    lastPosition = routeNotvalid[routeNotvalid.length - 1];
+  }
+
+  if (lastPosition) {
+    latitude = lastPosition.latitude - 0.0003999;
+    longitude = lastPosition.longitude - 0.0003999;
+  } else {
+    latitude = 38.114793;
+    longitude = 13.36448;
+  }
+
+  for (let index = 1; index < 2; index++) {
+    store.dispatch(addActivity(_activity));
+    store.dispatch({
+      type: ADD_TRACKING,
+      item: {
+        key: key + index,
+        speed: speed ? speed : 0,
+        time: moment(time).format(),
+        longitude: longitude - 0.0003999 * index,
+        latitude: latitude - 0.0003999 * index,
+        altitude: parseInt(altitude),
+      },
     });
-
-    BackgroundGeolocation.on("background", () => {
-      console.log("[INFO] App is in background");
-    });
-
-    BackgroundGeolocation.on("foreground", () => {
-      console.log("[INFO] App is in foreground");
-    });
-
-    BackgroundGeolocation.on("start", () => {
-      console.log("[INFO] BackgroundGeolocation service has been started");
-      dispatch(starton(type, coef, threshold));
-
-      if (navigation !== null) {
-        navigation.navigate("Track");
-      }
-    });
-
-    BackgroundGeolocation.on("stop", () => {
-      console.log("[INFO] BackgroundGeolocation service has been stopped");
-      // BackgroundGeolocation.removeAllListeners();
-      dispatch(stop());
-    });
-
-    BackgroundGeolocation.on("error", error => {
-      // se ho qualche problema mi arriva una segnalazione
-      console.log("[ERROR] BackgroundGeolocation error:", error);
-      if (typeof error !== "Error") {
-        console.log(error);
-        msg = new Error(error);
-        bugsnag.notify(msg);
-      } else {
-        bugsnag.notify(error);
-      }
-    });
-
-    BackgroundGeolocation.checkStatus(status => {
-      console.log("stato gps");
-      console.log(status);
-      // per android devo vedere se il gps è attivo
-      if (Platform.OS !== "ios" && !status.locationServicesEnabled) {
-        dispatch(stop());
-        Alert.alert(
-          "Location services are disabled",
-          "Would you like to open location settings?",
-          [
-            {
-              text: strings("yes"),
-              onPress: () =>
-                Platform.OS !== "ios"
-                  ? Platform.Version < 23
-                    ? BackgroundGeolocation.showLocationSettings()
-                    : BackgroundGeolocation.showLocationSettings()
-                  : BackgroundGeolocation.showAppSettings()
-            },
-            {
-              text: strings("no"),
-              onPress: () => alert("App requires gps to work"),
-              style: "cancel"
-            }
-          ]
-        );
-      } else if (!status.isRunning) {
-        // controllo se c'e il gps attivo
-        BackgroundGeolocation.start(); //triggers start on start event
-      } else {
-        // se è gia attivo ma premo play allora devo stopparlo e farlo ripartire
-        BackgroundGeolocation.stop(); //triggers start on start event
-        // richiamo l'intera funzione di nuovo
-        dispatch(start(type, coef, threshold, navigation));
-      }
-    });
-
-    // stillNotification.init();
-  };
+  }
 }
 
 /**
  * gestione del cambio di coordinate da parte del gps
  * e dispatch per aggiungere l'elemento coordinata all'array coordinate
  */
-handleLocationChanging = (location, dispatch) => {
+handleLocationChanging = (location) => {
   const key = +new Date();
-  const { speed, time, longitude, latitude, altitude } = location;
+  let { speed, time, longitude, latitude, altitude } = location;
 
-  // Alert.alert(longitude.toString(),latitude.toString());
+  if (dev_mode) {
+    fakeGpsActivity(store, location);
+  } else {
+    store.dispatch({
+      type: ADD_TRACKING,
+      item: {
+        key,
+        speed: speed ? speed : 0,
+        time: moment(time).format(),
+        longitude,
+        latitude,
+        altitude: parseInt(altitude),
+      },
+    });
+  }
 
-  dispatch({
-    type: ADD_TRACKING,
-    item: { key, speed, time, longitude, latitude, altitude }
-  });
+  // dispatch(sendSocket(
+  //   (ws, trip, sub_trip) => {
+  //     console.log(ws)
+  //      console.log(trip)
+  //      console.log(sub_trip)
+  //     const position = JSON.stringify({ type:"gpspoint", "body":{ sub_trip: sub_trip, point: { longitude, latitude}, speed, time: moment(time).format(), altitude} })
+  //     // ed è attivo mando
+  //    ws.send(position); // send a message
+  //   }
+  // ))
 };
+
+// mando le info attività catturate alla socket
+export function sendAllActivity() {
+  const sub_trip = store.getState().tracking.sub_trip;
+
+  if (sub_trip) {
+    const num_activity = store.getState().tracking.activity.length;
+    console.log(num_activity);
+
+    if (num_activity > 0) {
+      for (i = 0; i < num_activity; i++) {
+        console.log(i);
+        store.dispatch(updateActivity(0, i));
+      }
+    }
+  }
+}
+
+export function sendSocket(callback = () => {}, objectParam = {}) {
+  // faccio uno stop particolare ma cambio type
+  return function (dispatch, getState) {
+    // mando quello appena preso
+
+    const { isConnected, ws } = getState().connection;
+    console.log("controllo socket");
+    if (ws && isConnected) {
+      console.log("ho una socket");
+      // se c'e la socket
+      // se ho connessione
+      if (ws.readyState) {
+        if (ws.readyState == 1) {
+          console.log(callback);
+          console.log("socket attiva");
+
+          callback(ws, null, getState, objectParam);
+
+          // se ho dei punti precedenti gia salvati che non sono stati inviati, mando
+          // const num_cordinates = getState().tracking.route.length;
+          //   if (num_cordinates) {
+
+          //   }
+        } else if (ws.readyState == 2) {
+          console.log("si sta chiudendo, aspetto");
+          // si sta chiudendo, aspetto
+        } else if (ws.readyState == 3) {
+          // chiusa, riapro
+          console.log("si sta chiudendo, aspetto");
+          dispatch(wsConnect());
+        } else {
+        }
+      } else if (ws.readyState == 0) {
+        console.log("si sta aprendo, aspetto e faccio la richiesta");
+        setTimeout(() => {
+          dispatch(sendSocket(callback, objectParam));
+        }, 300);
+      } else {
+        dispatch(wsConnect());
+      }
+    } else if (isConnected) {
+      // se non ho riconnnetto
+      dispatch(wsConnect());
+    }
+    return {};
+  };
+}
 
 export function changeActivity(type, coef, threshold) {
   // faccio uno stop particolare ma cambio type
-  return function (dispatch) {
-    console.log("cambio");
-    console.log({ type, coef, threshold });
 
-    dispatch(stop(1, { type, coef, threshold }));
-  };
+  console.log("cambio");
+  console.log({ type, coef, threshold });
+
+  stop(1, { type, coef, threshold });
 }
 
 // con typestop indico il tipo di stop, se specificato tipo 2 allora non è un vero stop ma piu un cambio quindi deve fare le stesse cose
@@ -1382,90 +2222,99 @@ export function changeActivity(type, coef, threshold) {
 
 // data eventuali dati passata dallo stop
 export function stop(typeStop = 0, data) {
-  return function (dispatch, getState) {
-    // clearInterval(stillNotification.clear());
+  // clearInterval(stillNotification.clear());
 
-    // prima stoppo il servizio di geolocalizzazione
-    if (!typeStop) {
-      is_user_still_timer = null;
+  // // se chiudo o cambio tipologia, devo chiudere il pooling in corso
+  // if (store.getState().activityChoice.type == 'CarPooling') {
+  //   if (store.getState().groupPooling.length) {
+  //     DeleteUserInGroupPooling(store.getState().groupPooling[0].pool)
+  //   } else {
 
-      BackgroundGeolocation.checkStatus(({ isRunning, authorization }) => {
-        if (isRunning) {
-          console.log("stop");
-          BackgroundGeolocation.stop();
+  //   }
+  // }
 
-          // stop
-          console.log("controllo stop activity");
-          console.log(this.unsubscribe);
-          if (this.unsubscribe) {
-            console.log("stop activity");
-            this.unsubscribe();
-            ActivityRecognition.stop();
-          }
+  // prima stoppo il servizio di geolocalizzazione
+  if (!typeStop) {
+    is_user_still_timer = null;
 
-          // forse non conviene togliere i listeners
-          BackgroundGeolocation.events.forEach(event => {
-            BackgroundGeolocation.removeAllListeners(event);
-          });
+    BackgroundGeolocation.checkStatus(({ isRunning, authorization }) => {
+      if (isRunning) {
+        console.log("stop");
+        BackgroundGeolocation.stop();
 
-          // oppure BackgroundGeolocation.removeAllListeners();
+        // stop
+        console.log("controllo stop activity");
+        console.log(this.unsubscribe);
+        if (this.unsubscribe) {
+          console.log("stop activity");
+          this.unsubscribe();
+          ActivityRecognition.stop();
         }
-      });
 
-      BackgroundFetch.stop(
-        () => { },
-        error => {
-          dispatch({
-            type: STILL_NOTIFICATION_LOG,
-            payload:
-              "[js] RNBackgroundFetch failed to stop " + JSON.stringify(error)
-          });
-        }
-      );
-    }
+        // forse non conviene togliere i listeners
+        BackgroundGeolocation.events.forEach((event) => {
+          BackgroundGeolocation.removeAllListeners(event);
+        });
 
-    // cancella tutti i dati sulla tratta analizzata e le salvo in PreviousRoute cosi posso avviare un nuova tratta
-    // nuova tratta separata senza typeStop
-    // altrimenti un change
-    if (!typeStop) {
-      // dispatch({
-      //   type: STOP_LOCATION
-      // });
+        // oppure BackgroundGeolocation.removeAllListeners();
+      }
+    });
 
-      deleteTimeStartData();
-      console.log("cancello time");
+    /* BackgroundFetch.stop(
+      () => {},
+      (error) => {
+        store.dispatch({
+          type: STILL_NOTIFICATION_LOG,
+          payload:
+            "[js] RNBackgroundFetch failed to stop " + JSON.stringify(error),
+        });
+      }
+    ); */
+  }
 
-      // dopo aver spostato i dati li eloboro con resumeRoute
-      Promise.all([
-        dispatch({
-          type: STOP_LOCATION
-        })
-      ]).then(() => {
-        console.log("finito di spostare");
-        dispatch(resumeRoute());
-      });
-      console.log("ancora devo spostare");
+  // cancella tutti i dati sulla tratta analizzata e le salvo in PreviousRoute cosi posso avviare un nuova tratta
+  // nuova tratta separata senza typeStop
+  // altrimenti un change
+  if (!typeStop) {
+    // dispatch({
+    //   type: STOP_LOCATION
+    // });
 
-      // faccio l'analisi un po dopo, cosi ho i dati sicuramente pronti e l'app non si blocca quando premo stop
-      // su android do un po piu di tempo
-      // setTimeout(
-      //   () => {
-      //     dispatch(resumeRoute());
-      //   },
-      //   Platform.OS == "android" ? 500 : 0
-      // );
-    } else {
-      dispatch({
-        type: CHANGE_ACTIVITY,
-        activityChoice: data,
-        routeSaved: getState().login.Route
-      });
-    }
+    deleteTimeStartData();
+    console.log("cancello time");
 
-    // in caso devo richiedere il meteo se rinizio o faccio switch
-    getWeather = false;
-    // tolgo il valore di inizio della tratta dalla memoria
-  };
+    // dopo aver spostato i dati li eloboro con resumeRoute
+    Promise.all([
+      store.dispatch({
+        type: STOP_LOCATION,
+      }),
+    ]).then(() => {
+      console.log("finito di spostare");
+      store.dispatch(resumeRoute());
+      // lo stop è come la send quindi prima mando tutto e poi cancello
+      // dispatch(stopTrip({ end_time: new Date() }, 1));
+    });
+    console.log("ancora devo spostare");
+
+    // faccio l'analisi un po dopo, cosi ho i dati sicuramente pronti e l'app non si blocca quando premo stop
+    // su android do un po piu di tempo
+    // setTimeout(
+    //   () => {
+    //     dispatch(resumeRoute());
+    //   },
+    //   Platform.OS == "android" ? 500 : 0
+    // );
+  } else {
+    store.dispatch({
+      type: CHANGE_ACTIVITY,
+      activityChoice: data,
+      routeSaved: [],
+    });
+  }
+
+  // in caso devo richiedere il meteo se rinizio o faccio switch
+  getWeather = false;
+  // tolgo il valore di inizio della tratta dalla memoria
 }
 
 async function deleteTimeStartData() {
@@ -1522,7 +2371,7 @@ export function CompleteActivity(
       Saved,
       typeWeather,
       time_travelled,
-      modal_type
+      modal_type,
     } = getState().tracking.PreviousRoute[LastRoute - 1];
     // la distanza potrebbe essere modificata, sopratutto nel caso della metro
     let { totDistance } = getState().tracking.PreviousRoute[LastRoute - 1];
@@ -1531,9 +2380,8 @@ export function CompleteActivity(
     // prendo anche le info dell'utente utili per l'altezza ecc
     const infoProfile = {
       ...getState().login.infoProfile,
-      ...getState().login.infoProfileNotSave
+      ...getState().login.infoProfileNotSave,
     };
-    
 
     // avvio la validazione dopo un po
     if (!Saved && !modal_type) {
@@ -1555,65 +2403,95 @@ export function CompleteActivity(
         // vedo se è in treno, bus o metro
         let coef = activityChoice.coef;
 
-        // se è fundao do i punti in automatico
-        let city = 0
-        try {
-          city = infoProfile.city.id
-        } catch {
-          city = 0
-        }
-        console.log(city)
-
-        
-
+        // // se è fundao do i punti in automatico
+        // let city = 0
+        // try {
+        //   city = infoProfile.city.id
+        // } catch {
+        //   city = 0
+        // }
+        // console.log(city)
 
         // bus e train lavora nella parte conclusiva alla stessa maniera
         // analizzo nel caso della metro
-        // per la città di fundao considero tutte le tratte valide 
+        // per la città di fundao considero tutte le tratte valide
         // 1165
-        if (city == 1165) {
-          const totPointsNew = pointActivityAnalyzed(
-            [...activity, ...activityAnalyzed],
-            0,
-            totDistance,
-            activityChoice,
-            PrecDistanceSameMode,
-            0
-          );
-          // se non valida ovvero totPointsNew = 0, totPointsValid non lo aggiorno
-          if (totPointsNew !== 0) {
-            totPointsValid = totPointsNew;
-            validated = true;
-          }
-        } else if (coef === 1200) {
+        // if (city == 1165) {
+        //   const totPointsNew = pointActivityAnalyzed(
+        //     [...activity, ...activityAnalyzed],
+        //     0,
+        //     totDistance,
+        //     activityChoice,
+        //     PrecDistanceSameMode,
+        //     0
+        //   );
+        //   // se non valida ovvero totPointsNew = 0, totPointsValid non lo aggiorno
+        //   if (totPointsNew !== 0) {
+        //     totPointsValid = totPointsNew;
+        //     validated = true;
+        //   }
+        // } else
+        if (coef === 1200) {
           // se ho solo un riferimento per le linee allora ancora devo fare
           const { refTrasportRoute } = getState().tracking.PreviousRoute[
             LastRoute - 1
           ];
 
+          // ho fatto soltanto il test del primo match
+
           if (refTrasportRoute.length === 1) {
-            // prendo gli ultimi 4 punti e vedo se c'e una linea dell'autobus
-            const lastRouteEnd = [...routeAnalyzed, ...route].slice(0, 4);
-            dispatch(
-              requestTrasportRouteDedicatedFinal(
-                lastRouteEnd,
-                LastRoute,
-                infoProfile,
-                coef,
-                typeStop,
-                paramCallback,
-                callback
-              )
-            );
-            return true;
-            console.log("bravo");
+            // se ho un match all'inizio continuo l'analisi altrimenti non è valida
+            if (refTrasportRoute[refTrasportRoute.length - 1].length) {
+              // prendo gli ultimi 4 punti e vedo se c'e una linea dell'autobus
+              const lastRouteEnd = [...routeAnalyzed, ...route].slice(0, 4);
+              dispatch(
+                requestTrasportRouteDedicatedFinal(
+                  lastRouteEnd,
+                  LastRoute,
+                  infoProfile,
+                  coef,
+                  typeStop,
+                  paramCallback,
+                  callback
+                )
+              );
+              return true;
+            } else {
+              // se non c'e match allora non è valida
+              // per la metro calcolo la distanza tra il primo e l'ultimo punto
+              const routeComplete = [...routeAnalyzed, ...route];
+              const firstPoint = routeComplete[0];
+              const lastPoint = routeComplete[routeComplete.length - 1];
+              totDistance = parseFloat(
+                haversine(
+                  firstPoint.latitude,
+                  firstPoint.longitude,
+                  lastPoint.latitude,
+                  lastPoint.longitude
+                )
+              );
+              const totPointsNew = pointActivityAnalyzed(
+                [...activity, ...activityAnalyzed],
+                0,
+                totDistance,
+                activityChoice,
+                PrecDistanceSameMode,
+                0
+              );
+              // se non valida ovvero totPointsNew = 0, totPointsValid non lo aggiorno
+              if (totPointsNew !== 0) {
+                totPointsValid = totPointsNew;
+                validated = false;
+              }
+            }
           } else {
             if (
               refTrasportRoute.length > 1
                 ? refTrasportRoute[refTrasportRoute.length - 1].length &&
-                refTrasportRoute[refTrasportRoute.length - 2].length
+                  refTrasportRoute[refTrasportRoute.length - 2].length
                 : refTrasportRoute[refTrasportRoute.length - 1].length
             ) {
+              // valida perche ho due match
               // per la metro calcolo la distanza tra il primo e l'ultimo punto
               const routeComplete = [...routeAnalyzed, ...route];
               const firstPoint = routeComplete[0];
@@ -1639,6 +2517,33 @@ export function CompleteActivity(
                 totPointsValid = totPointsNew;
                 validated = true;
               }
+            } else {
+              // solo un match quindi non è valida
+              // per la metro calcolo la distanza tra il primo e l'ultimo punto
+              const routeComplete = [...routeAnalyzed, ...route];
+              const firstPoint = routeComplete[0];
+              const lastPoint = routeComplete[routeComplete.length - 1];
+              totDistance = parseFloat(
+                haversine(
+                  firstPoint.latitude,
+                  firstPoint.longitude,
+                  lastPoint.latitude,
+                  lastPoint.longitude
+                )
+              );
+              const totPointsNew = pointActivityAnalyzed(
+                [...activity, ...activityAnalyzed],
+                0,
+                totDistance,
+                activityChoice,
+                PrecDistanceSameMode,
+                0
+              );
+              // se non valida ovvero totPointsNew = 0, totPointsValid non lo aggiorno
+              if (totPointsNew !== 0) {
+                totPointsValid = totPointsNew;
+                validated = false;
+              }
             }
           }
         } else {
@@ -1649,7 +2554,7 @@ export function CompleteActivity(
             if (
               numValidRoute.length > 1
                 ? numValidRoute[numValidRoute.length - 1].indexOf(-1) === -1 ||
-                numValidRoute[numValidRoute.length - 2].indexOf(-1) === -1
+                  numValidRoute[numValidRoute.length - 2].indexOf(-1) === -1
                 : numValidRoute[numValidRoute.length - 1].indexOf(-1) === -1
             ) {
               // unisce tutte le linee mezzo che hanno fatto match
@@ -1790,23 +2695,23 @@ export function CompleteActivity(
       // eventuali bonus da dare alle tratte per le serie
       let bonus = 1.0;
       // parametri bonus per il backend
-      let weather_type = 0
-      let weather_points = 0
-      let peak_hours_points = 0
-      let day_series = 0
-      let day_series_points = 0
+      let weather_type = 0;
+      let weather_points = 0;
+      let peak_hours_points = 0;
+      let day_series = 0;
+      let day_series_points = 0;
 
       // prendo il meteo
       const typeWeatherBonus = convertWeather(typeWeather);
       // 5% per il meteo
       bonus += 0.05 * typeWeatherBonus;
       weather_type = getIdWeatherType(typeWeather);
-      weather_points = parseInt(0.05 * typeWeatherBonus * totPointsValid)
+      weather_points = parseInt(0.05 * typeWeatherBonus * totPointsValid);
       // per la serie
       if (numDay) {
         bonus += 0.05 * numDay;
-        day_series = numDay
-        day_series_points = parseInt(0.05 * numDay * totPointsValid)
+        day_series = numDay;
+        day_series_points = parseInt(0.05 * numDay * totPointsValid);
       }
 
       // orario di punta
@@ -1821,30 +2726,32 @@ export function CompleteActivity(
       let hoursTraffic = false;
       if (hour >= "07:30" && hour <= "09:00") {
         hoursTraffic = true;
-
       } else if (hour >= "17:00" && hour <= "18:30") {
         hoursTraffic = true;
       }
 
       bonus += 0.1 * hoursTraffic;
-      peak_hours_points = parseInt(0.1 * hoursTraffic * totPointsValid)
+      peak_hours_points = parseInt(0.1 * hoursTraffic * totPointsValid);
       console.log("bonus aggiuntivo");
       console.log(bonus);
 
-      // qui aggiungo eventuali nuovi bonus ottenuti con lo special trainining 
+      // qui aggiungo eventuali nuovi bonus ottenuti con lo special trainining
       // controllo se uno dei special trainings completati o/e riscattati ha un id specifico
 
-      // ogni id interessato ha anche un parametro bonus per sapere quanto devo assegnare 
+      // ogni id interessato ha anche un parametro bonus per sapere quanto devo assegnare
       // virtualReward = checkVirtualReward(special_training_sessions_completed)
       // if (virtualReward.bonus) {
       // bonus += virtualReward.bonus;
       // }
 
-
       // aggiorno le informazioni sulla tratta precedente
+
+      // punti senza bonus
+      // punti con bonus
 
       // anche la distanza perche sono ricalcolarla per la metro
       const info = {
+        totPointsWithoutBonus: totPointsValid,
         totPoints: totPointsValid * bonus,
         modal_type: activityChoice.type,
         validated,
@@ -1854,7 +2761,7 @@ export function CompleteActivity(
         weather_points,
         peak_hours_points,
         day_series,
-        day_series_points
+        day_series_points,
       };
       // salvo queste modifiche alla tratta cosi è anche pronta per essere salvata nel database
       dispatch(UpdatePreviousRoute(info, LastRoute));
@@ -1864,14 +2771,14 @@ export function CompleteActivity(
           let {
             PreviousRoute,
             route: routeNow,
-            routeAnalyzed: routeAnalyzedNow
+            routeAnalyzed: routeAnalyzedNow,
           } = getState().tracking;
           console.log([
             ...PreviousRoute,
             {
               route: routeNow,
-              routeAnalyzed: routeAnalyzedNow
-            }
+              routeAnalyzed: routeAnalyzedNow,
+            },
           ]);
           console.log(LastRoute);
 
@@ -1885,8 +2792,8 @@ export function CompleteActivity(
                 ...PreviousRoute,
                 {
                   route: routeNow,
-                  routeAnalyzed: routeAnalyzedNow
-                }
+                  routeAnalyzed: routeAnalyzedNow,
+                },
               ],
               LastRoute,
               true,
@@ -1934,6 +2841,8 @@ export function resumeRoute(limitMax, typeStop = 0) {
   console.log("rianalisi");
 
   return function (dispatch, getState) {
+    // dispatch(stopTrip( {end_time: new Date()}, 1));
+
     // prendo tutte le tratte precedenti e provo a validare quelle non validate
     const PreviousRoute = getState().tracking.PreviousRoute;
     let Routes = PreviousRoute.length;
@@ -1950,296 +2859,629 @@ export function resumeRoute(limitMax, typeStop = 0) {
 
     // mi conviene analizzare le tratte da quella piu antica cosi so che l'ultima tratta è quella senza segmento ed devo ancora completarla quindi la posso usare
     // come riferimento per creare le tratte multiple
-    if (1) {
+
+    try {
       for (routeId = 1; routeId <= Routes; routeId++) {
         console.log("tratta analizzata " + routeId);
-        const NumRoute = PreviousRoute[routeId - 1].route.length;
 
         // vedo se è gia stata salvata cosi la salto
         const Saved = PreviousRoute[routeId - 1].Saved;
+        const end_time_trip = PreviousRoute[routeId - 1].end_time;
 
         // se delle tratta ancora non validate o se è stata salvata
 
-        if (NumRoute > 1 && !Saved) {
-          console.log("validazione finale in corso");
+        if (!Saved) {
+          const NumRoute = PreviousRoute[routeId - 1].route.length;
+          const NumActivity = PreviousRoute[routeId - 1].activity.length;
+          const sub_trip = PreviousRoute[routeId - 1].sub_trip;
+          // vedo se ho già creato una trip o subtrip
+          console.log(sub_trip);
+          if (!sub_trip) {
+            console.log("creo trip");
+            // numSubTrip se è 0 significa che è la prima sub trip e quindi devo creare l'id della trip
+            const numSubTrip = PreviousRoute[routeId - 1].numSubTrip;
+            console.log("numSubTrip " + numSubTrip);
+            const activityChoice = PreviousRoute[routeId - 1].activityChoice;
 
-          // elabora ultima tratta salvata, che era quella la tratta corrente prima
-          dispatch(updateCordinate(routeId));
-          console.log(routeId);
-          // copio cosi anche se routeId aumenta, index è il valore precedente
-          const index = routeId;
+            if (!numSubTrip) {
+              console.log("creo nuova trip");
 
-          // eventuale parametro per non bloccare la validazione in validation
-          let indexResetValidation = 0;
+              // prima di controllare il time devo vedere se ho le info per recuperare le info sulla città
 
-          // prima di riniziare a validare tolgo l'eventuale validazione precedente
-          dispatch(UpdateStatus("", index));
+              //   se non ho info sulla città d'appartenza
+              if (!PreviousRoute[routeId - 1].cityRoute) {
+                dispatch(
+                  getCityInfoForTrip(
+                    PreviousRoute[routeId - 1].route[0],
+                    routeId,
+                    Routes
+                  )
+                );
+              } else if (!PreviousRoute[routeId - 1].infoIdCity) {
+                // se ho le info sulla citta ma non quelle sull'id
+                dispatch(
+                  createInfoCityIdForTrip(
+                    PreviousRoute[routeId - 1].cityRoute,
+                    routeId,
+                    Routes
+                  )
+                );
+              } else {
+                // nuova tratta
+                const start_time_subTrip =
+                  PreviousRoute[routeId - 1].start_time_subTrip;
+                const sendStartTime = PreviousRoute[routeId - 1].sendStartTime;
+                console.log(PreviousRoute[routeId - 1]);
 
-          // vedo il tipo d'attivita che sto validando cosi imposto il timer in modo differente essendo che public fa chiamata http
+                const car_pool =
+                  PreviousRoute[routeId - 1].groupPooling &&
+                  PreviousRoute[routeId - 1].groupPooling.length
+                    ? PreviousRoute[routeId - 1].groupPooling[0].pool
+                    : 0;
 
-          // 300 ms vanno bene per l'analisi non dei mezzi
-          // in public per le richieste https per le tratte aspetto 2 sec prima di riprovare
-          // se ho le linee o ho gia provato allora scendo a 500 millisec il tempo, sufficiente per le intersezioni
-          const timer =
-            PreviousRoute[routeId - 1].activityChoice.type === "Public"
-              ? getState().tracking.PreviousRoute[routeId - 1].refTrasportRoute
-                .length < 3
-                ? 4000
-                : 1000
-              : 500;
+                const now = new Date().getTime();
+                const infoIdCity = PreviousRoute[routeId - 1].infoIdCity;
+                console.log(car_pool);
+                console.log(activityChoice);
+                console.log(infoIdCity);
 
-          // imposto un timer che si ripete se ci sono piu coordinate, ovvero se ci sono 20 coordinate
-          // vengono valutate 10 alla volta quindi si ripete per due volte
+                // creo la tratta solo quando ho il car pool id definito
+                if (
+                  infoIdCity &&
+                  (!sendStartTime || now > sendStartTime + 5000)
+                ) {
+                  dispatch({
+                    type: UPDATE_TRIP_DATA_START_TIME_SUBTRIP,
+                    start_time_subTrip,
+                    payload: {
+                      sendStartTime: now,
+                    },
+                  });
 
-          LastValidResume = setInterval(() => {
-            const PreviousRoute = getState().tracking.PreviousRoute;
-            // valido eventuale tratta ancora non analizzata prima di fare una validazione complessiva
-            console.log(index);
-            // se l'utente fa il logout e il dato viene cancellato, cancello il timeout
-            if (PreviousRoute.length ? false : true) {
-              clearTimeout(LastValidResume);
-            } else {
-              const currentRoute = PreviousRoute[index - 1]
-                ? PreviousRoute[index - 1]
-                : false;
-              if (currentRoute) {
-                console.log(currentRoute);
-                const locationLength = currentRoute.route.length;
-                // controllo se gia sto validando cosi non controllo
-                const validation = currentRoute.status;
+                  const dataTrip =
+                    activityChoice.type == "Carpooling" && !car_pool
+                      ? {
+                          ...activityChoice,
+                          type: "Car", // se ho car ma nessun gruppo, allora la tratta è car
+                          start_time_subTrip,
+                          car_pool,
+                          location: infoIdCity,
+                        }
+                      : {
+                          ...activityChoice,
+                          start_time_subTrip,
+                          car_pool,
+                          location: infoIdCity,
+                        };
 
-                const typeActivity = currentRoute.activityChoice.type;
-                // dal modal type capisco se è stata completata
-                const modal_type = currentRoute.activityChoice.modal_type;
-
-                // controllo lo stato della linea prima di fare la validazione ogni volta con il timeout
-                const { isConnected } = getState().connection;
-                // se ho connessione
-                if (isConnected || typeActivity !== "Public") {
-                  // se ho almeno due posizioni deve validare
-                  if (validation !== "validation" && locationLength > 1) {
-                    // aggiorno le coordinate trovate mediante la validazione
-                    console.log(
-                      "validazione perche mancano ancora punti da validare"
-                    );
-
-                    dispatch(updateCordinate(index));
-                  } else if (validation === "validation") {
-                    // aspetto dato che sta ancora validando
-                    // eventuale parametro per non bloccare la validazione in validation
-
-                    console.log(indexResetValidation);
-                    indexResetValidation = indexResetValidation + 1;
-                    if (indexResetValidation > 10) {
-                      dispatch(UpdateStatus("", index));
-                      indexResetValidation = 0;
-                    }
-                  } else if (!modal_type) {
-                    // non ci sono piu locazioni d'analizzare
-                    // devo ancora validare
-                    // validazione finale
-
-                    dispatch(
-                      CompleteActivity(index, typeStop, Routes, resumeRoute)
-                    );
-                    clearTimeout(LastValidResume);
-                  } else {
-                    // è gia stata validata completamente devo solo inviarla
-                    clearTimeout(LastValidResume);
-                    dispatch(resumeRoute(Routes, typeStop));
-                  }
+                  dispatch(createTrip(dataTrip, routeId, () => {}, Routes));
+                  console.log("creata trip");
                 } else {
-                  // se non ho connesione cancello il Timeout e riprendero successivamente quando avro internet
-                  clearTimeout(LastValidResume);
+                  continue;
+                }
+              }
+            } else {
+              const id = PreviousRoute[routeId - 1].id;
+              if (id) {
+                console.log("creo nuova sub trip");
+                // mi serve l'id della sub trip precedente per chiuderla
+                if (routeId - 1) {
+                  // lo prendo dall'array, dalla trata precedente
+                  const sub_trip = PreviousRoute[routeId - 2].sub_trip;
+                  const end_time_subTrip =
+                    PreviousRoute[routeId - 2].end_time_subTrip;
+                  const sendStartTime =
+                    PreviousRoute[routeId - 1].sendStartTime;
+                  const now = new Date().getTime();
+                  if (!sendStartTime || now > sendStartTime + 5000) {
+                    const start_time_subTrip =
+                      PreviousRoute[routeId - 1].start_time_subTrip;
+                    dispatch({
+                      type: UPDATE_TRIP_DATA_START_TIME_SUBTRIP,
+                      start_time_subTrip,
+                      payload: {
+                        sendStartTime: now,
+                      },
+                    });
+                    const car_pool =
+                    PreviousRoute[routeId - 1].groupPooling &&
+                    PreviousRoute[routeId - 1].groupPooling.length
+                      ? PreviousRoute[routeId - 1].groupPooling[0]
+                          .pool
+                      : 0;
+
+                  const dataSubTrip =
+                    activityChoice.type == "Carpooling" && !car_pool
+                      ? {
+                        ...activityChoice,
+                        id: id,
+                        sub_trip,
+                        end_time_subTrip,
+                        car_pool,
+                          type: "Car", // se ho car ma nessun gruppo, allora la tratta è car
+                        }
+                      : {
+                        ...activityChoice,
+                        id: id,
+                        sub_trip,
+                        car_pool,
+                        end_time_subTrip,
+                      };
+                    // nuova sottotratta
+                    dispatch(
+                      createSubTrip(
+                        dataSubTrip,
+                        routeId,
+                        () => {},
+                        Routes
+                      )
+                    );
+                  }
                 }
               } else {
-                clearTimeout(LastValidResume);
+                // se non ho id vado avanti per crearlo con il primo sub trip
+                continue;
               }
             }
-          }, timer);
-          // stoppo la validazione di future tratte successive perche prima deve finire questa
-          // fermando il for
-          break;
-        } else if (!Saved) {
-          console.log("non ce validazione ");
-          // non fare niente poiche è stata gia validata
-          // vedo se e stato completamente validata o no
-          if (!getState().tracking.PreviousRoute[routeId - 1].modal_type) {
-            console.log("validazione completa ");
+            break;
+          } else if (NumActivity > 0) {
+            console.log("validazione finale in corso per le attivita");
 
-            dispatch(CompleteActivity(routeId, typeStop, Routes, resumeRoute));
+            // elabora ultima tratta salvata, che era quella la tratta corrente prima
+
+            console.log(routeId);
+            // copio cosi anche se routeId aumenta, index è il valore precedente
+            const index = routeId;
+
+            // eventuale parametro per non bloccare la validazione in validation
+            let indexResetValidation = 0;
+
+            // prima di riniziare a validare tolgo l'eventuale validazione precedente
+            // dispatch(UpdateStatus("", index));
+
+            // vedo il tipo d'attivita che sto validando cosi imposto il timer in modo differente essendo che public fa chiamata http
+
+            // 3 secondi per mandare tutte le attività
+            const timer = 1500;
+
+            // imposto un timer che si ripete se ci sono piu coordinate, ovvero se ci sono 20 coordinate
+            // vengono valutate 10 alla volta quindi si ripete per due volte
+
+            LastActivityResume = setInterval(() => {
+              const PreviousRoute = getState().tracking.PreviousRoute;
+              // valido eventuale tratta ancora non analizzata prima di fare una validazione complessiva
+              console.log(index);
+              // se l'utente fa il logout e il dato viene cancellato, cancello il timeout
+              if (PreviousRoute.length ? false : true) {
+                clearTimeout(LastActivityResume);
+              } else {
+                const currentRoute = PreviousRoute[index - 1]
+                  ? PreviousRoute[index - 1]
+                  : false;
+                if (currentRoute) {
+                  console.log(currentRoute);
+                  const activityLength = currentRoute.activity.length;
+                  // controllo se gia sto validando cosi non controllo
+                  const validation = currentRoute.status;
+
+                  // const typeActivity = currentRoute.activityChoice.type;
+                  // dal modal type capisco se è stata completata
+                  // const modal_type = currentRoute.activityChoice.modal_type;
+
+                  // controllo lo stato della linea prima di fare la validazione ogni volta con il timeout
+                  const { isConnected } = getState().connection;
+                  // se ho connessione
+                  if (isConnected) {
+                    // se ho almeno due posizioni deve validare
+                    if (activityLength > 0) {
+                      // aggiorno le coordinate trovate mediante la validazione
+                      console.log(
+                        "validazione perche mancano ancora punti da validare"
+                      );
+                      const sendActivityTime = currentRoute.sendActivityTime;
+                      const now = new Date().getTime();
+                      if (!sendActivityTime || now > sendActivityTime + 7500) {
+                        const start_time_subTrip =
+                          currentRoute.start_time_subTrip;
+                        dispatch({
+                          type: UPDATE_TRIP_DATA_START_TIME_SUBTRIP,
+                          start_time_subTrip,
+                          payload: {
+                            sendActivityTime: now,
+                          },
+                        });
+                        dispatch(sendSocket(sendActivity, { index }));
+                      }
+                    } else {
+                      // è gia stata validata completamente devo solo inviarla
+                      dispatch(resumeRoute(Routes, typeStop));
+                      clearTimeout(LastActivityResume);
+                    }
+                  } else {
+                    dispatch(resumeRoute(Routes, typeStop));
+                    // se non ho connesione cancello il Timeout e riprendero successivamente quando avro internet
+                    clearTimeout(LastActivityResume);
+                  }
+                } else {
+                  dispatch(resumeRoute(Routes, typeStop));
+                  clearTimeout(LastActivityResume);
+                }
+              }
+            }, timer);
             // stoppo la validazione di future tratte successive perche prima deve finire questa
             // fermando il for
             break;
-          } else if (
-            !getState().tracking.PreviousRoute[routeId - 1].Saved &&
-            !getState().tracking.PreviousRoute[routeId - 1].isSegment
-          ) {
-            console.log("invio ");
+          } else if (NumRoute > 0) {
+            // se delle tratta ancora non validate o se è stata salvata
+            console.log("validazione finale in corso");
 
-            // e ovviamente deve essere salvata nel db se non è salvata
-            // prima di rimandare, tolgo l'eventuale send se in caso non è stata inviata
-            // l'aggiornamneto dello status lo faccic nella send se ancora non ho inviato dopo 2000 ms
-            // dispatch(UpdateStatus("", routeId));
-            dispatch(sendRoute(routeId, Routes, resumeRoute));
-            break;
-          }
-          // altrimenti è gia stata completamente validata e salvata quindi non bisogna fare qualcosa
-        }
-        // controllo la successiva
-      }
-    } else {
-      for (routeId = Routes; routeId > 0; routeId--) {
-        console.log("tratta analizzata " + routeId);
-        const NumRoute = PreviousRoute[routeId - 1].route.length;
+            // elabora ultima tratta salvata, che era quella la tratta corrente prima
 
-        // vedo se è gia stata salvata cosi la salto
-        const Saved = PreviousRoute[routeId - 1].Saved;
+            console.log(routeId);
+            // copio cosi anche se routeId aumenta, index è il valore precedente
+            const index = routeId;
 
-        // se delle tratta ancora non validate o se è stata salvata
+            // eventuale parametro per non bloccare la validazione in validation
+            let indexResetValidation = 0;
 
-        if (NumRoute > 1 && !Saved) {
-          console.log("validazione finale in corso");
+            // prima di riniziare a validare tolgo l'eventuale validazione precedente
+            // dispatch(UpdateStatus("", index));
 
-          // elabora ultima tratta salvata, che era quella la tratta corrente prima
-          dispatch(updateCordinate(routeId));
-          console.log(routeId);
-          // copio cosi anche se routeId aumenta, index è il valore precedente
-          const index = routeId;
+            // vedo il tipo d'attivita che sto validando cosi imposto il timer in modo differente essendo che public fa chiamata http
 
-          // eventuale parametro per non bloccare la validazione in validation
-          let indexResetValidation = 0;
+            // 300 ms vanno bene per l'analisi non dei mezzi
+            // in public per le richieste https per le tratte aspetto 2 sec prima di riprovare
+            // se ho le linee o ho gia provato allora scendo a 500 millisec il tempo, sufficiente per le intersezioni
+            const timer = 1000;
 
-          // prima di riniziare a validare tolgo l'eventuale validazione precedente
-          dispatch(UpdateStatus("", index));
+            // imposto un timer che si ripete se ci sono piu coordinate, ovvero se ci sono 20 coordinate
+            // vengono valutate 10 alla volta quindi si ripete per due volte
 
-          // vedo il tipo d'attivita che sto validando cosi imposto il timer in modo differente essendo che public fa chiamata http
+            LastValidResume = setInterval(() => {
+              const PreviousRoute = getState().tracking.PreviousRoute;
+              // valido eventuale tratta ancora non analizzata prima di fare una validazione complessiva
+              console.log(index);
+              // se l'utente fa il logout e il dato viene cancellato, cancello il timeout
+              if (PreviousRoute.length ? false : true) {
+                clearTimeout(LastValidResume);
+              } else {
+                const currentRoute = PreviousRoute[index - 1]
+                  ? PreviousRoute[index - 1]
+                  : false;
+                msg = new Error("tratta d'analizzare");
+                bugsnag.notify(msg, function (report) {
+                  report.metadata = { currentRoute };
+                });
+                if (currentRoute) {
+                  console.log(currentRoute);
+                  const locationLength = currentRoute.route.length;
+                  // controllo se gia sto validando cosi non controllo
+                  const validation = currentRoute.status;
 
-          // 300 ms vanno bene per l'analisi non dei mezzi
-          // in public per le richieste https per le tratte aspetto 2 sec prima di riprovare
-          // se ho le linee o ho gia provato allora scendo a 500 millisec il tempo, sufficiente per le intersezioni
-          const timer =
-            PreviousRoute[routeId - 1].activityChoice.type === "Public"
-              ? getState().tracking.PreviousRoute[routeId - 1].refTrasportRoute
-                .length < 3
-                ? 4000
-                : 1000
-              : 500;
+                  // const typeActivity = currentRoute.activityChoice.type;
+                  // dal modal type capisco se è stata completata
+                  // const modal_type = currentRoute.activityChoice.modal_type;
 
-          // imposto un timer che si ripete se ci sono piu coordinate, ovvero se ci sono 20 coordinate
-          // vengono valutate 10 alla volta quindi si ripete per due volte
+                  // controllo lo stato della linea prima di fare la validazione ogni volta con il timeout
+                  const { isConnected } = getState().connection;
+                  // se ho connessione
+                  msg = new Error("connessione");
+                  bugsnag.notify(msg, function (report) {
+                    report.metadata.other = { isConnected };
+                  });
+                  if (isConnected) {
+                    // se ho almeno due posizioni deve validare
+                    if (locationLength > 0) {
+                      // aggiorno le coordinate trovate mediante la validazione
+                      console.log(
+                        "validazione perche mancano ancora punti da validare"
+                      );
 
-          LastValidResume = setInterval(() => {
-            const PreviousRoute = getState().tracking.PreviousRoute;
-            // valido eventuale tratta ancora non analizzata prima di fare una validazione complessiva
-            console.log(index);
-            // se l'utente fa il logout e il dato viene cancellato, cancello il timeout
-            if (PreviousRoute.length ? false : true) {
-              clearTimeout(LastValidResume);
-            } else {
-              const currentRoute = PreviousRoute[index - 1]
-                ? PreviousRoute[index - 1]
-                : false;
-              if (currentRoute) {
-                console.log(currentRoute);
-                const locationLength = currentRoute.route.length;
-                // controllo se gia sto validando cosi non controllo
-                const validation = currentRoute.status;
+                      const sendRouteTime = currentRoute.sendRouteTime;
+                      const now = new Date().getTime();
+                      if (!sendRouteTime || now > sendRouteTime + 7500) {
+                        const start_time_subTrip =
+                          currentRoute.start_time_subTrip;
+                        dispatch({
+                          type: UPDATE_TRIP_DATA_START_TIME_SUBTRIP,
+                          start_time_subTrip,
+                          payload: {
+                            sendRouteTime: now,
+                          },
+                        });
+                        dispatch(sendSocket(sendGPS, { index }));
+                      }
 
-                const typeActivity = currentRoute.activityChoice.type;
-                // dal modal type capisco se è stata completata
-                const modal_type = currentRoute.activityChoice.modal_type;
-
-                // controllo lo stato della linea prima di fare la validazione ogni volta con il timeout
-                const { isConnected } = getState().connection;
-                // se ho connessione
-                if (isConnected || typeActivity !== "Public") {
-                  // se ho almeno due posizioni deve validare
-                  if (validation !== "validation" && locationLength > 1) {
-                    // aggiorno le coordinate trovate mediante la validazione
-                    console.log(
-                      "validazione perche mancano ancora punti da validare"
-                    );
-
-                    dispatch(updateCordinate(index));
-                  } else if (validation === "validation") {
-                    // aspetto dato che sta ancora validando
-                    // eventuale parametro per non bloccare la validazione in validation
-
-                    console.log(indexResetValidation);
-                    indexResetValidation = indexResetValidation + 1;
-                    if (indexResetValidation > 10) {
-                      dispatch(UpdateStatus("", index));
-                      indexResetValidation = 0;
+                      console.log("inviato punto gps");
+                    } else {
+                      // è gia stata validata completamente devo solo inviarla
+                      dispatch(resumeRoute(Routes, typeStop));
+                      clearTimeout(LastValidResume);
                     }
-                  } else if (!modal_type) {
-                    // non ci sono piu locazioni d'analizzare
-                    // devo ancora validare
-                    // validazione finale
-
-                    dispatch(
-                      CompleteActivity(index, typeStop, Routes, resumeRoute)
-                    );
-                    clearTimeout(LastValidResume);
                   } else {
-                    // è gia stata validata completamente devo solo inviarla
-                    clearTimeout(LastValidResume);
                     dispatch(resumeRoute(Routes, typeStop));
+                    // se non ho connesione cancello il Timeout e riprendero successivamente quando avro internet
+                    clearTimeout(LastValidResume);
                   }
                 } else {
-                  // se non ho connesione cancello il Timeout e riprendero successivamente quando avro internet
+                  dispatch(resumeRoute(Routes, typeStop));
                   clearTimeout(LastValidResume);
                 }
-              } else {
-                clearTimeout(LastValidResume);
               }
-            }
-          }, timer);
-          // stoppo la validazione di future tratte successive perche prima deve finire questa
-          // fermando il for
-          break;
-        } else if (!Saved) {
-          console.log("non ce validazione ");
-          // non fare niente poiche è stata gia validata
-          // vedo se e stato completamente validata o no
-          if (!getState().tracking.PreviousRoute[routeId - 1].modal_type) {
-            console.log("validazione completa ");
-
-            dispatch(CompleteActivity(routeId, typeStop, Routes, resumeRoute));
+            }, timer);
             // stoppo la validazione di future tratte successive perche prima deve finire questa
             // fermando il for
             break;
-          } else if (
-            !getState().tracking.PreviousRoute[routeId - 1].Saved &&
-            !getState().tracking.PreviousRoute[routeId - 1].isSegment
-          ) {
-            console.log("invio ");
+          } else if (!NumActivity && !NumRoute) {
+            console.log("non ce validazione ");
+            // non fare niente poiche è stata gia validata
+            // vedo se e stato completamente validata o no
 
-            // e ovviamente deve essere salvata nel db se non è salvata
-            // prima di rimandare, tolgo l'eventuale send se in caso non è stata inviata
-            // l'aggiornamneto dello status lo faccic nella send se ancora non ho inviato dopo 2000 ms
-            // dispatch(UpdateStatus("", routeId));
-            dispatch(sendRoute(routeId, Routes, resumeRoute));
-            break;
+            const end_time_subTrip = getState().tracking.PreviousRoute[
+              routeId - 1
+            ].end_time_subTrip;
+            const numSubTripCurrent = getState().tracking.PreviousRoute[
+              routeId - 1
+            ].numSubTrip;
+            let numSubTripNext = 0;
+            if (routeId == Routes) {
+              // è l'ultima trip controllo la tratta in corso
+              numSubTripNext = getState().tracking.numSubTrip;
+            } else {
+              // controlla la successiva
+              numSubTripNext = getState().tracking.PreviousRoute[routeId]
+                .numSubTrip;
+            }
+
+            // se questa tratta ha concluso con lo stop e ed è l'ultima dato che la successiva ha numsub 0
+            if (end_time_subTrip && !numSubTripNext) {
+              console.log("invio ");
+
+              // e ovviamente deve essere salvata nel db se non è salvata
+              // prima di rimandare, tolgo l'eventuale send se in caso non è stata inviata
+              // l'aggiornamneto dello status lo faccic nella send se ancora non ho inviato dopo 2000 ms
+              // dispatch(UpdateStatus("", routeId));
+              // prendo tutti i segmenti
+
+              // quanti sub trip ho,
+              let numSegment = 0;
+              const idTrip = getState().tracking.PreviousRoute[routeId - 1].id;
+              const numTrip = getState().tracking.PreviousRoute[routeId - 1]
+                .numTrip;
+              let end_time_subTrip = getState().tracking.PreviousRoute[
+                routeId - 1
+              ].end_time_subTrip;
+              let subTripId = getState().tracking.PreviousRoute[routeId - 1]
+                .sub_trip.id;
+              // se posso inviare i segmenti
+              let infoReadySend = true;
+
+              for (
+                indexSegment = routeId - 1;
+                indexSegment >= 0;
+                indexSegment--
+              ) {
+                // devo quali sono le tratte con lo stesso id e con end_time
+                console.log(indexSegment);
+                console.log(numSegment);
+                console.log(infoReadySend);
+
+                if (indexSegment) {
+                  let routeObject = getState().tracking.PreviousRoute[
+                    indexSegment - 1
+                  ];
+                  console.log(routeObject);
+                  if (numTrip == routeObject.numTrip) {
+                    // ovvero è la seconda sub trip o successiva
+                    if (
+                      routeObject.sub_trip &&
+                      routeObject.end_time_subTrip &&
+                      !routeObject.route.length &&
+                      !routeObject.activity.length
+                    ) {
+                      numSegment = +1;
+                    } else {
+                      // riparto da zero che ancora non ho finito l'analisi
+                      infoReadySend = false;
+                      break;
+                    }
+                  } else {
+                    break;
+                  }
+                } else {
+                  // vedo se sono ancora in live controllando numTrip
+                  if (numTrip == getState().tracking.numTrip) {
+                    // riparto da zero che ho una tratta con piu al momento
+                    infoReadySend = false;
+                    break;
+                  }
+                }
+              }
+              console.log(numSegment);
+              console.log(infoReadySend);
+
+              // devo vedere prima se ho i moltiplicatori
+              if (
+                infoReadySend &&
+                (!getState().tracking.PreviousRoute[routeId - 1].sendStopTime ||
+                  new Date().getTime() >
+                    getState().tracking.PreviousRoute[routeId - 1]
+                      .sendStopTime +
+                      5000)
+              ) {
+                // se hai gia mandato lo stop, riprova tra 10 secondi
+                const multipliers = getState().login.multipliers;
+                if (multipliers) {
+                  // devo creare i moltiplicatori
+                  // typeWeather(pin):"Rain"
+                  const typeWeather = getState().tracking.PreviousRoute[
+                    routeId - 1
+                  ].typeWeather;
+                  const tempWeatherInC =
+                    getState().tracking.PreviousRoute[routeId - 1]
+                      .tempWeatherInC !== null
+                      ? parseInt(
+                          getState().tracking.PreviousRoute[routeId - 1]
+                            .tempWeatherInC
+                        )
+                      : "";
+                  // calcolo il gruppo d'appartenza per il meteo
+                  const multipliers = getState().login.multipliers;
+                  const weather_type = multipliers.weather_type;
+                  const peak_hours_type = multipliers.peak_hours_type;
+                  const IdWeatherFind = weather_type.find((weather) => {
+                    return weather.description == typeWeather;
+                  });
+
+                  // vedo se il meteo è stato trovato altrimenti match con l'ultima tipologia
+                  const IdWeather = IdWeatherFind
+                    ? IdWeatherFind.type_weather
+                    : weather_type[weather_type.length - 1].type_weather;
+                  console.log(IdWeatherFind);
+                  console.log(IdWeather);
+
+                  let peak_hours_type_id = 5;
+                  const start = Date.parse(new Date(numTrip));
+                  let start_time = new Date(start).toTimeString();
+                  start_time = start_time.substring(0, 8);
+                  console.log("inizio per il controllo delle ore di punta");
+
+                  // ottengo 11:30
+
+                  const last = Date.parse(new Date(end_time_subTrip));
+                  let end_time = new Date(last).toTimeString();
+                  end_time = end_time.substring(0, 8);
+                  for (i = 0; i < peak_hours_type.length; i++) {
+                    if (
+                      start_time >= peak_hours_type[i].start_time &&
+                      start_time <= peak_hours_type[i].end_time
+                    ) {
+                      peak_hours_type_id = peak_hours_type[i].type_peak_hours;
+                      break;
+                    } else if (
+                      end_time >= peak_hours_type[i].start_time &&
+                      end_time <= peak_hours_type[i].end_time
+                    ) {
+                      peak_hours_type_id = peak_hours_type[i].type_peak_hours;
+                      break;
+                    }
+                  }
+                  console.log(IdWeather);
+                  console.log(peak_hours_type_id);
+
+                  // close_trip: {"type":"close_trip","body":{"trip":14,"previous_sub_trip_id":1,"end_time":"2020-01-21T19:04:29.407Z","multipliers":[{"id":2,"type_id":4},{"id":1,"type_id":2}],"time":"2020-01-21T19:04:29.407Z"}}
+
+                  //   "multipliers": [
+                  //     {
+                  //       "id": 2,
+                  //       "type_id": 4
+                  //     },
+                  //     {
+                  //       "id": 1,
+                  //       "type_id": 2
+                  //     },
+                  // ]
+
+                  // day(pin):-1, numDay(pin):0
+                  // const series = getState().login.NumDaysRoute.numDay;
+
+                  dispatch({
+                    type: UPDATE_TRIP_DATA,
+                    trip: idTrip,
+                    playload: {
+                      sendStopTime: new Date().getTime(),
+                    },
+                  });
+                  dispatch(
+                    sendSocket(sendStopTrip, {
+                      end_time_subTrip,
+                      subTripId,
+                      idTrip,
+                      peak_hours_type_id,
+                      IdWeather,
+                      weather: typeWeather,
+                      temperature: tempWeatherInC,
+                    })
+                  );
+                  // dispatch(
+                  //   stopTrip(
+                  //     { end_time_subTrip, subTripId, idTrip },
+                  //     routeId - numSegment,
+                  //     numSegment,
+                  //     Routes
+                  //   )
+                  // );
+                  continue;
+                } else {
+                  console.log("richiedo i moltiplicatori");
+                  // richiedo i moltiplicatori
+                  dispatch(getMultipliers());
+                }
+              } else {
+                dispatch(resumeRoute(Routes, typeStop));
+                break;
+              }
+            }
+            // else if (!numSubTrip) {
+            //   // metto il end time adesso
+            //   dispatch(stopTrip({ end_time: new Date() }, routeId, 0, Routes))
+            // }
+            // altrimenti è gia stata completamente validata e salvata quindi non bisogna fare qualcosa
           }
-          // altrimenti è gia stata completamente validata e salvata quindi non bisogna fare qualcosa
+          // controllo la successiva
         }
-        // controllo la successiva
+
+        // vedo se è stata validata almeno
+
+        const validation = PreviousRoute[routeId - 1].validation;
+        if (Saved && (!validation || validation == 3)) {
+          // se non ho validazione oppure sta ancora validando anche la tratta (status 3 pending)
+
+          let numSubTripNext = 0;
+          if (routeId == Routes) {
+            // è l'ultima trip controllo la tratta in corso
+            numSubTripNext = getState().tracking.numSubTrip;
+          } else {
+            // controlla la successiva
+            numSubTripNext = getState().tracking.PreviousRoute[routeId]
+              .numSubTrip;
+          }
+
+          // se questa tratta ha concluso con lo stop e ed è l'ultima dato che la successiva ha numsub 0
+          if (!numSubTripNext) {
+            // chiedo se ci sono aggiornamenti
+            dispatch(getTrip({ id: PreviousRoute[routeId - 1].id }));
+          }
+        }
       }
+    } catch (error) {
+      bugsnag.notify(error, function (report) {
+        report.metadata = { error };
+      });
     }
-    // se ho controllato tutto cancello
     dispatch(ResetPreviousRoute());
+    return {};
+    // se ho controllato tutto cancello
   };
 }
 
 export function UpdatePreviousRoute(info, index) {
   // per aggiornare una tratta precedente e assegnare eventuali nuovi punti
-  // se è valida con l'attivita scelta
-  // se è coerente con qualche routine
+
   return {
     type: UPDATE_PREVIOUS_ROUTE,
     info,
-    index
+    index,
+  };
+}
+
+export function UpdateIdSameRoute(info, index) {
+  // per aggiornare una tratta precedente e le stesse con lo stesso id
+
+  return {
+    type: UPDATE_SAMEID_PREVIOUS_ROUTE,
+    info,
+    index,
   };
 }
 
@@ -2250,14 +3492,14 @@ export function UpdateStatus(status, index) {
   return {
     type: UPDATE_STATUS,
     status,
-    index
+    index,
   };
 }
 
 export function addDailyRoutine(route) {
   return {
     type: ADD_DAILY_ROUTINE,
-    route
+    route,
   };
 }
 
@@ -2277,20 +3519,20 @@ function FinalValidateAnalyzed(activity, activityChoice) {
   // ovviamente il secondo potrebbe essere anche still quindi lo tolgo anche
   // doppio controllo, prima di controllare il secondo valore controllo se c'e
 
-  const CleanActivity = activity.filter(value =>
+  const CleanActivity = activity.filter((value) =>
     value.activity[0].type !== "UNKNOWN" &&
-      value.activity[0].type !== "STATIONARY" &&
-      value.activity[0].type !== "STILL" &&
-      value.activity[0].type !== "TILTING"
+    value.activity[0].type !== "STATIONARY" &&
+    value.activity[0].type !== "STILL" &&
+    value.activity[0].type !== "TILTING"
       ? value
       : value.activity[1]
-        ? value.activity[1].type !== "UNKNOWN" &&
-          value.activity[1].type !== "STATIONARY" &&
-          value.activity[1].type !== "STILL" &&
-          value.activity[1].type !== "TILTING"
-          ? value.activity.splice(0, 1)
-          : value.activity.splice(0, 2)
-        : null
+      ? value.activity[1].type !== "UNKNOWN" &&
+        value.activity[1].type !== "STATIONARY" &&
+        value.activity[1].type !== "STILL" &&
+        value.activity[1].type !== "TILTING"
+        ? value.activity.splice(0, 1)
+        : value.activity.splice(0, 2)
+      : null
   );
   const lengthActivity = CleanActivity.length;
   console.log(CleanActivity);
@@ -2307,7 +3549,7 @@ function FinalValidateAnalyzed(activity, activityChoice) {
             console.log(CleanActivity[i].activity[0]);
 
             CleanActivity[i].activity[0].type === "ON_BICYCLE" ||
-              CleanActivity[i].activity[0].type === "CYCLING"
+            CleanActivity[i].activity[0].type === "CYCLING"
               ? ++myActivity
               : myActivity;
           }
@@ -2320,8 +3562,8 @@ function FinalValidateAnalyzed(activity, activityChoice) {
             console.log(CleanActivity[i].activity[0]);
 
             CleanActivity[i].activity[0].type === "ON_FOOT" ||
-              CleanActivity[i].activity[0].type === "RUNNING" ||
-              CleanActivity[i].activity[0].type === "WALKING"
+            CleanActivity[i].activity[0].type === "RUNNING" ||
+            CleanActivity[i].activity[0].type === "WALKING"
               ? ++myActivity
               : myActivity;
           }
@@ -2336,7 +3578,7 @@ function FinalValidateAnalyzed(activity, activityChoice) {
             console.log(CleanActivity[i].activity[0]);
 
             CleanActivity[i].activity[0].type === "IN_VEHICLE" ||
-              CleanActivity[i].activity[0].type === "AUTOMOTIVE"
+            CleanActivity[i].activity[0].type === "AUTOMOTIVE"
               ? ++myActivity
               : myActivity;
           }
@@ -2373,15 +3615,13 @@ function FinalValidateAnalyzed(activity, activityChoice) {
   return false;
 }
 
-
-
 // calcolo delle calorie che tiene anche della velocità e altezza
 /* export function getCalories(pounds, minutes, exercise, speed, height) {
   // parametro se stai guardando la tv
   let level = 0.008;
-
+ 
   // devo fare un check sulla velocita dato che puo avere il valore -1 ovvero non è disponibile
-
+ 
   if (exercise == "Biking") {
     level = 0.048;
   } else if (exercise == "Walking") {
@@ -2391,33 +3631,31 @@ function FinalValidateAnalyzed(activity, activityChoice) {
     level = 0.026;
     // oppure uso un valore intermedio tra guardare la tv e camminare lentamente
   }
-
+ 
   // se non abbiamo altre info la calcoliamo cosi
-
+ 
   let aux_calories = pounds * 2.2 * minutes * level;
   // formula piu dettagliata
   //  (0.035 * body weight in kg) + ((Velocity in m/s ^ 2) / Height in m)) * (0.029) * (body weight in kg)
   // se ho l'altezza e velocita media
-
+ 
   // speed  Number  Speed if it is available, in meters/second over ground.
   aux_calories =
     (level * pounds + ((speed ^ 2) / height) * 0.029 * pounds) * minutes;
-
+ 
   // Women: BMR = 655 + (9.6 x weight in kg) + (1.8 x height in cm) - (4.7 x age in years)
-
+ 
   // Men: BMR = 66 + (13.7 x weight in kg) + (5 x height in cm) - (6.8 x age in years)
-
+ 
   aux_calories = Math.round(aux_calories * 10) / 10;
-
+ 
   if (aux_calories < 0) {
     // se negativo lo faccio diventare positivo
     aux_calories = Math.abs(aux_calories);
   }
-
+ 
   return aux_calories;
 } */
-
-
 
 export function ResetPreviousRoute() {
   console.log("cancello tutto");
@@ -2433,13 +3671,17 @@ export function ResetPreviousRoute() {
 
       // se delle tratta ancora non salvate nel db,
 
-      if (!NumRoute.Saved) {
+      if (!NumRoute.Saved || !NumRoute.validation) {
         break;
-      } else if (route === numLengthRoute && NumRoute.Saved) {
+      } else if (
+        route === numLengthRoute &&
+        NumRoute.Saved &&
+        NumRoute.validation
+      ) {
         // tutte sono state mandate al server, posso cancellare tutte le previuos route
         console.log("tutte salvate");
         dispatch({
-          type: RESET_PREVIOUS_ROUTE
+          type: RESET_PREVIOUS_ROUTE,
         });
       }
     }
@@ -2503,11 +3745,14 @@ export function sendRoute(LastRoute, paramCallback, callback) {
             let typeWeatherStart = "";
 
             // bonus da mandare
-            let weather_type_final = 0
-            let weather_points_final = 0
-            let peak_hours_points_final = 0
-            let day_series_final = 0
-            let day_series_points_final = 0
+            let weather_type_final = 0;
+            let weather_points_final = 0;
+            let peak_hours_points_final = 0;
+            let day_series_final = 0;
+            let day_series_points_final = 0;
+
+            // punti totali senza bonus
+            let totPointsWithoutBonusTot = 0;
 
             for (i = LastRoute - NumSegmentNotValid; i <= LastRoute; i++) {
               const {
@@ -2528,6 +3773,7 @@ export function sendRoute(LastRoute, paramCallback, callback) {
                 peak_hours_points,
                 day_series,
                 day_series_points,
+                totPointsWithoutBonus,
               } = PreviousRoute[i - 1];
 
               // prendo i dati di una tratta
@@ -2545,15 +3791,15 @@ export function sendRoute(LastRoute, paramCallback, callback) {
               // creo la linestring da log, lat, alt
               // da routeAnalyzed e route
 
-              const triple = Segment.map(elem => [
+              const triple = Segment.map((elem) => [
                 elem.longitude,
                 elem.latitude,
-                elem.altitude ? elem.altitude : 0
+                elem.altitude ? elem.altitude : 0,
               ]);
 
               const geojson = {
                 coordinates: triple,
-                type: "LineString"
+                type: "LineString",
               };
               const linestring = parse.stringify(geojson);
               console.log(linestring);
@@ -2569,7 +3815,7 @@ export function sendRoute(LastRoute, paramCallback, callback) {
                   time: parseInt(elem.key / 1000),
                   modality: elem.modality,
                   speed: elem.speed,
-                  calories: parseInt(elem.calories)
+                  calories: parseInt(elem.calories),
                 };
               });
               // aggiungo le info dell'ultimo punto
@@ -2591,8 +3837,8 @@ export function sendRoute(LastRoute, paramCallback, callback) {
                     route_positions_info[route_positions_info.length - 1]
                       .calories,
                   time: parseInt(route[0].key / 1000),
-                  speed: route[0].speed
-                }
+                  speed: route[0].speed,
+                },
               ];
 
               // creo il pacchetto data
@@ -2611,18 +3857,27 @@ export function sendRoute(LastRoute, paramCallback, callback) {
                 time_travelled: parseInt(time_travelled / 1000),
                 route: linestring,
                 route_positions_info,
-                end_time
+                end_time,
               };
 
-              weather_type_final = weather_type ? weather_type > weather_type_final ? weather_type : weather_type_final : weather_type_final,
-                weather_points_final += weather_points ? weather_points : 0
-              peak_hours_points_final += peak_hours_points ? peak_hours_points : 0
-              day_series_final = day_series ? day_series : 0
-              day_series_points_final += day_series_points ? day_series_points : 0
+              // totPointsWithoutBonus
 
-
-
-
+              (weather_type_final = weather_type
+                ? weather_type > weather_type_final
+                  ? weather_type
+                  : weather_type_final
+                : weather_type_final),
+                (weather_points_final += weather_points ? weather_points : 0);
+              peak_hours_points_final += peak_hours_points
+                ? peak_hours_points
+                : 0;
+              day_series_final = day_series ? day_series : 0;
+              day_series_points_final += day_series_points
+                ? day_series_points
+                : 0;
+              totPointsWithoutBonusTot += totPointsWithoutBonus
+                ? totPointsWithoutBonus
+                : 0;
 
               console.log(data);
               postData = [...postData, data];
@@ -2638,7 +3893,6 @@ export function sendRoute(LastRoute, paramCallback, callback) {
               end_point_now
             );
 
-
             // calcolo i dati di recap dati dalle sottotrace
             // se una sottotrace è valida, l'intera route è valida
             const recap = postData.reduce(
@@ -2650,7 +3904,8 @@ export function sendRoute(LastRoute, paramCallback, callback) {
                   calories: total.calories + info.calories,
                   coins: total.coins + info.coins,
                   points: total.points + info.points,
-                  time_travelled: total.time_travelled + info.time_travelled,
+                  time_travelled:
+                    total.time_travelled + Math.abs(info.time_travelled),
                 };
               },
               {
@@ -2663,16 +3918,27 @@ export function sendRoute(LastRoute, paramCallback, callback) {
               }
             );
 
+            // bonus se è frequent trips do il 10%
+            let frequent_trips_points = 0;
+            if (IdRoutine) {
+              frequent_trips_points = totPointsWithoutBonusTot
+                ? parseInt(totPointsWithoutBonusTot * 0.1)
+                : 0;
+              recap.points = recap.points + frequent_trips_points;
+            }
 
             // in recap manca il referred_most_freq_route_Id, che sara preso dall'ultima sottotrace oppure viene salvata in tutte le sottotrace
 
             postData = {
-              ...recap, segment: postData, referred_most_freq_route: IdRoutine,
+              ...recap,
+              segment: postData,
+              referred_most_freq_route: IdRoutine,
               weather_type: weather_type_final,
               weather_points: weather_points_final,
               peak_hours_points: peak_hours_points_final,
               day_series: day_series_final,
               day_series_points: day_series_points_final,
+              // frequent_trips_points: frequent_trips_points
             };
             console.log(postData);
             console.log(JSON.stringify(postData));
@@ -2898,8 +4164,6 @@ export function sumRoute(route, Position, WithOutValidation, TimeCrescent) {
   /* console.log(route); */
 }
 
-
-
 // nuova richieste con i mezzi suddivisi e considerando un area direttamente più grande data dall'unione dei tre segmenti
 export function requestTrasportRouteDedicated(
   location,
@@ -2927,8 +4191,8 @@ export function requestTrasportRouteDedicated(
 
     // controllo qual'è il piu grande di latitudine, poiche il primo parametro deve essere maggiore del secondo per la richiesta
 
-    const allLat = location.map(position => parseFloat(position.latitude));
-    const allLog = location.map(position => parseFloat(position.longitude));
+    const allLat = location.map((position) => parseFloat(position.latitude));
+    const allLog = location.map((position) => parseFloat(position.longitude));
     let lat1 = Math.max(...allLat) + 0.01;
     let lat2 = Math.min(...allLat) - 0.01;
     let log1 = Math.max(...allLog) + 0.01;
@@ -2959,7 +4223,7 @@ export function requestTrasportRouteDedicated(
 
     // preparo le richieste da fare
 
-    let promiseArray = urlArray.map(url => axios.get(url));
+    let promiseArray = urlArray.map((url) => axios.get(url));
 
     // creo una variabile per sapere quante volte sono sulla tratta del trasporto pubblico
     let numRouteTrasport = 0;
@@ -2975,7 +4239,7 @@ export function requestTrasportRouteDedicated(
       .all(promiseArray)
       .then(function (results) {
         // prendo tutte le risposte
-        let temp = results.map(response => {
+        let temp = results.map((response) => {
           // per ogni risposta
 
           if (response.status === 200) {
@@ -2991,7 +4255,7 @@ export function requestTrasportRouteDedicated(
 
               ReferPublicRoute = [
                 ...ReferPublicRoute,
-                ...NewReferPublicRoute.features
+                ...NewReferPublicRoute.features,
               ];
             }
           } else {
@@ -3028,19 +4292,223 @@ export function requestTrasportRouteDedicated(
             NumRouteValid: 0,
             refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
             index,
-            infoProfile
+            infoProfile,
           });
         } else {
           // una delle tre delle  risposte non è arrivata quindi devo rimandare
           dispatch(UpdateStatus("", index));
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         dispatch(UpdateStatus("error request validation trasport ", index));
       });
   };
 }
+
+// export function requestTrasportRouteDedicatedStart(
+//   location,
+//   index,
+//   infoProfile,
+//   coef
+// ) {
+//   return function (dispatch, getState) {
+//     let api = "https://overpass.kumi.systems/api/interpreter";
+//     // creo un valore random cosi uso un servizio differente ogni volta
+//     // gli do una probabilita piu bassa mettendo un intervallo piu grande ma solo alcuni corrispondono ad altri server
+//     const random = getRandomIntInclusive(0, 15);
+//     if (random === 1) {
+//       api = "https://lz4.overpass-api.de/api/interpreter";
+//     } else if (random === 2) {
+//       api = "https://z.overpass-api.de/api/interpreter";
+//     } else if (random === 3) {
+//       api = "https://overpass-api.de/api/interpreter";
+//     }
+
+//     // tipo se scelto autobus, metro , tram fai questa chiamata invece della pulizia della tratta
+
+//     // preparo le richieste da fare nell'array
+//     let urlArray = [];
+
+//     // controllo qual'è il piu grande di latitudine, poiche il primo parametro deve essere maggiore del secondo per la richiesta
+
+//     const allLat = location.map(position => parseFloat(position.latitude));
+//     const allLog = location.map(position => parseFloat(position.longitude));
+//     let lat1 = Math.max(...allLat) + 0.01;
+//     let lat2 = Math.min(...allLat) - 0.01;
+//     let log1 = Math.max(...allLog) + 0.01;
+//     let log2 = Math.min(...allLog) - 0.01;
+//     console.log(`${lat2}%2C${log2}%2C${lat1}%2C${log1}`);
+
+//     // chiamate differente se è bus/tram, train o metro
+
+//     // metro light_rail e railway
+//     let urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22light_rail%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22subway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//     if (coef === 400) {
+//       // train e railway
+//       urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//     }
+//     if (coef === 800) {
+//       // bus e tram
+//       urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//       // tutti i mezzi
+//       // urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//     }
+//     console.log(urlTrasport);
+//     // test con coordinate di autobus
+//     // const urlTrasport =
+//     // ("https://overpass.kumi.systems/api/interpreter?data=%2F*%0AThis%20has%20been%20generated%20by%20the%20overpass-turbo%20wizard.%0AThe%20original%20search%20was%3A%0A“type%3Droute%20%26%20route%3Dbus”%0Atrain%20%0Atram%0A%0A*%2F%0A%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%0A%2F%2F%20gather%20results%0A%28%0A%20%20%2F%2F%20query%20part%20for%3A%20“type%3Droute%20and%20route%3Dbus”%0A%20%20relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%2838.11117707359793%2C13.365438133478165%2C38.11219850069204%2C13.36685299873352%29%3B%0A%29%3B%0A%2F%2F%20print%20results%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B");
+
+//     urlArray.push(urlTrasport);
+
+//     // preparo le richieste da fare
+
+//     let promiseArray = urlArray.map(url => axios.get(url));
+
+//     // creo una variabile per sapere quante volte sono sulla tratta del trasporto pubblico
+//     let numRouteTrasport = 0;
+
+//     // array per memorizzare dati da varie risposte
+
+//     let ReferPublicRoute = [];
+//     // per considerare se le tre risposte sono arrivate correttamente
+//     let checkResponse = true;
+
+//     // faccio le richieste
+//     axios
+//       .all(promiseArray)
+//       .then(function (results) {
+//         // prendo tutte le risposte
+//         let temp = results.map(response => {
+//           // per ogni risposta
+
+//           if (response.status === 200) {
+//             // la risposta se va bene contiene degli elements
+//             // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
+//             console.log(response);
+//             console.log(response.data);
+//             if (response.data.elements.length !== 0) {
+//               // tratte trovate
+
+//               // let NewReferPublicRoute = osmtogeojson(response.data);
+//               // console.log(NewReferPublicRoute);
+
+//               ReferPublicRoute = [
+//                 "Trovata linea"
+//                 // ...NewReferPublicRoute.features
+//               ];
+//             }
+//           } else {
+//             // la risposta non è arrivata quindi devo rivalutare
+//             checkResponse = false;
+//           }
+//         });
+
+//         // presa la lista, tolgo eventuali linee ripetute
+
+//         if (checkResponse && ReferPublicRoute.length) {
+//           // se dei dati vado avanti, altrimenti richiedo  i dati delle stazioni presenti
+//           // adesso è un unica richiesta quindi non ci sono ripetizione
+
+//           // tolgo le linee dei mezzi pubblici in piu
+//           // ReferPublicRoute = ReferPublicRoute.reduce(
+//           //   (total, linea, index, array) => {
+//           //     if (!total.filter(elem => elem.id === linea.id).length) {
+//           //       return [...total, linea];
+//           //     }
+//           //     return total;
+//           //   },
+//           //   []
+//           // );
+
+//           console.log(ReferPublicRoute);
+
+//           // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
+//           // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
+//           // anche la lista della lista degli autobus o altri mezzi
+
+//           dispatch({
+//             type: UPDATE_LOCATION,
+//             ValidRoute: location,
+//             NumRouteValid: 0,
+//             refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+//             index,
+//             infoProfile
+//           });
+//         } else if (checkResponse && !ReferPublicRoute.length) {
+//           // ho ricevuto risposta ma non ho le tratte, provo a cercare le stazioni
+//           // http://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Bway%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Brelation%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A
+//           let urlStation = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Bway%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//           urlArray = [];
+//           urlArray.push(urlStation);
+//           // preparo le richieste da fare per le stazioni
+//           promiseArray = urlArray.map(url => axios.get(url));
+//           checkResponse = true;
+//           axios
+//             .all(promiseArray)
+//             .then(function (results) {
+//               // prendo tutte le risposte
+//               temp = results.map(response => {
+//                 // per ogni risposta
+
+//                 if (response.status === 200) {
+//                   // la risposta se va bene contiene degli elements
+//                   // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
+//                   console.log(response);
+//                   console.log(response.data);
+//                   if (response.data.elements.length !== 0) {
+//                     // tratte trovate
+
+//                     // let NewReferPublicRoute = osmtogeojson(response.data);
+//                     // console.log(NewReferPublicRoute);
+
+//                     ReferPublicRoute = [
+//                       "Trovata stazione"
+//                       // ...NewReferPublicRoute.features
+//                     ];
+//                   }
+//                 } else {
+//                   // la risposta non è arrivata quindi devo rivalutare
+//                   checkResponse = false;
+//                 }
+//               });
+//               if (checkResponse) {
+//                 // ho cercato anche le stazioni
+
+//                 console.log(ReferPublicRoute);
+
+//                 // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
+//                 // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
+//                 // anche la lista della lista degli autobus o altri mezzi
+
+//                 dispatch({
+//                   type: UPDATE_LOCATION,
+//                   ValidRoute: location,
+//                   NumRouteValid: 0,
+//                   refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+//                   index,
+//                   infoProfile
+//                 });
+//               } else {
+//                 // una delle tre delle  risposte non è arrivata quindi devo rimandare
+//                 dispatch(UpdateStatus("", index));
+//               }
+//             })
+//             .catch(err => {
+//               console.log(err);
+//               dispatch(UpdateStatus("error request station trasport ", index));
+//             });
+//         } else {
+//           // una delle tre delle  risposte non è arrivata quindi devo rimandare
+//           dispatch(UpdateStatus("", index));
+//         }
+//       })
+//       .catch(err => {
+//         console.log(err);
+//         dispatch(UpdateStatus("error request validation trasport ", index));
+//       });
+//   };
+// }
 
 export function requestTrasportRouteDedicatedStart(
   location,
@@ -3048,205 +4516,211 @@ export function requestTrasportRouteDedicatedStart(
   infoProfile,
   coef
 ) {
-  return function (dispatch, getState) {
-    let api = "https://overpass.kumi.systems/api/interpreter";
-    // creo un valore random cosi uso un servizio differente ogni volta
-    // gli do una probabilita piu bassa mettendo un intervallo piu grande ma solo alcuni corrispondono ad altri server
-    const random = getRandomIntInclusive(0, 15);
-    if (random === 1) {
-      api = "https://lz4.overpass-api.de/api/interpreter";
-    } else if (random === 2) {
-      api = "https://z.overpass-api.de/api/interpreter";
-    } else if (random === 3) {
-      api = "https://overpass-api.de/api/interpreter";
-    }
+  return async function (dispatch, getState) {
+    let response = null;
+    let responseLines = null;
+    try {
+      let api = "https://overpass.kumi.systems/api/interpreter";
+      // creo un valore random cosi uso un servizio differente ogni volta
+      // gli do una probabilita piu bassa mettendo un intervallo piu grande ma solo alcuni corrispondono ad altri server
+      const random = getRandomIntInclusive(0, 15);
+      if (random === 1) {
+        api = "https://lz4.overpass-api.de/api/interpreter";
+      } else if (random === 2) {
+        api = "https://z.overpass-api.de/api/interpreter";
+      } else if (random === 3) {
+        api = "https://overpass-api.de/api/interpreter";
+      }
 
-    // tipo se scelto autobus, metro , tram fai questa chiamata invece della pulizia della tratta
+      // tipo se scelto autobus, metro , tram fai questa chiamata invece della pulizia della tratta
 
-    // preparo le richieste da fare nell'array
-    let urlArray = [];
+      // controllo qual'è il piu grande di latitudine, poiche il primo parametro deve essere maggiore del secondo per la richiesta
 
-    // controllo qual'è il piu grande di latitudine, poiche il primo parametro deve essere maggiore del secondo per la richiesta
-
-    const allLat = location.map(position => parseFloat(position.latitude));
-    const allLog = location.map(position => parseFloat(position.longitude));
-    let lat1 = Math.max(...allLat) + 0.01;
-    let lat2 = Math.min(...allLat) - 0.01;
-    let log1 = Math.max(...allLog) + 0.01;
-    let log2 = Math.min(...allLog) - 0.01;
-    console.log(`${lat2}%2C${log2}%2C${lat1}%2C${log1}`);
-
-    // chiamate differente se è bus/tram, train o metro
-
-    // metro light_rail e railway
-    let urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22light_rail%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22subway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-    if (coef === 400) {
-      // train e railway
-      urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-    }
-    if (coef === 800) {
-      // bus e tram
-      urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-      // tutti i mezzi
-      // urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-    }
-    console.log(urlTrasport);
-    // test con coordinate di autobus
-    // const urlTrasport =
-    // ("https://overpass.kumi.systems/api/interpreter?data=%2F*%0AThis%20has%20been%20generated%20by%20the%20overpass-turbo%20wizard.%0AThe%20original%20search%20was%3A%0A“type%3Droute%20%26%20route%3Dbus”%0Atrain%20%0Atram%0A%0A*%2F%0A%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%0A%2F%2F%20gather%20results%0A%28%0A%20%20%2F%2F%20query%20part%20for%3A%20“type%3Droute%20and%20route%3Dbus”%0A%20%20relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%2838.11117707359793%2C13.365438133478165%2C38.11219850069204%2C13.36685299873352%29%3B%0A%29%3B%0A%2F%2F%20print%20results%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B");
-
-    urlArray.push(urlTrasport);
-
-    // preparo le richieste da fare
-
-    let promiseArray = urlArray.map(url => axios.get(url));
-
-    // creo una variabile per sapere quante volte sono sulla tratta del trasporto pubblico
-    let numRouteTrasport = 0;
-
-    // array per memorizzare dati da varie risposte
-
-    let ReferPublicRoute = [];
-    // per considerare se le tre risposte sono arrivate correttamente
-    let checkResponse = true;
-
-    // faccio le richieste
-    axios
-      .all(promiseArray)
-      .then(function (results) {
-        // prendo tutte le risposte
-        let temp = results.map(response => {
-          // per ogni risposta
-
-          if (response.status === 200) {
-            // la risposta se va bene contiene degli elements
-            // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
-            console.log(response);
-            console.log(response.data);
-            if (response.data.elements.length !== 0) {
-              // tratte trovate
-
-              // let NewReferPublicRoute = osmtogeojson(response.data);
-              // console.log(NewReferPublicRoute);
-
-              ReferPublicRoute = [
-                "Trovata linea"
-                // ...NewReferPublicRoute.features
-              ];
-            }
-          } else {
-            // la risposta non è arrivata quindi devo rivalutare
-            checkResponse = false;
-          }
+      // bugfix momentaneo
+      if (location.length) {
+        // location = [location[0][0],location[0][1],location[0][2],location[0][3]]
+        // fix da array a singolo elemento
+        dispatch({
+          type: FIX_ROUTE_START,
+          index,
         });
+      }
+      console.log(location);
 
-        // presa la lista, tolgo eventuali linee ripetute
+      const allLat = location.map((position) => parseFloat(position.latitude));
+      const allLog = location.map((position) => parseFloat(position.longitude));
+      let lat1 = Math.max(...allLat) + 0.01;
+      let lat2 = Math.min(...allLat) - 0.01;
+      let log1 = Math.max(...allLog) + 0.01;
+      let log2 = Math.min(...allLog) - 0.01;
+      console.log(`${lat2}%2C${log2}%2C${lat1}%2C${log1}`);
 
-        if (checkResponse && ReferPublicRoute.length) {
-          // se dei dati vado avanti, altrimenti richiedo  i dati delle stazioni presenti
-          // adesso è un unica richiesta quindi non ci sono ripetizione
+      // array per memorizzare dati da varie risposte
 
-          // tolgo le linee dei mezzi pubblici in piu
-          // ReferPublicRoute = ReferPublicRoute.reduce(
-          //   (total, linea, index, array) => {
-          //     if (!total.filter(elem => elem.id === linea.id).length) {
-          //       return [...total, linea];
-          //     }
-          //     return total;
-          //   },
-          //   []
-          // );
+      let ReferPublicRoute = [];
+      // Per sapere se ho gia cercato la stazioni
+      let checkResponseStations = location[0].SearchStations ? true : false;
 
-          console.log(ReferPublicRoute);
+      // se non ho cercato le stazioni le cerco
+      if (!checkResponseStations) {
+        // provo a cercare le stazioni
+        // http://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Bway%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Brelation%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A
+        let urlStation = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Bway%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
 
-          // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
-          // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
-          // anche la lista della lista degli autobus o altri mezzi
+        response = await axios.get(urlStation);
+        // risposta delle stazioni
 
-          dispatch({
-            type: UPDATE_LOCATION,
-            ValidRoute: location,
-            NumRouteValid: 0,
-            refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
-            index,
-            infoProfile
-          });
-        } else if (checkResponse && !ReferPublicRoute.length) {
-          // ho ricevuto risposta ma non ho le tratte, provo a cercare le stazioni
-          // http://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Bway%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Brelation%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A
-          let urlStation = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Bway%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-          urlArray = [];
-          urlArray.push(urlStation);
-          // preparo le richieste da fare per le stazioni
-          promiseArray = urlArray.map(url => axios.get(url));
-          checkResponse = true;
-          axios
-            .all(promiseArray)
-            .then(function (results) {
-              // prendo tutte le risposte
-              temp = results.map(response => {
-                // per ogni risposta
+        // prendo la risposta
 
-                if (response.status === 200) {
-                  // la risposta se va bene contiene degli elements
-                  // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
-                  console.log(response);
-                  console.log(response.data);
-                  if (response.data.elements.length !== 0) {
-                    // tratte trovate
+        if (response.status === 200) {
+          // la risposta se va bene contiene degli elements
+          // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non ci sono stazioni quindi cerco le linee
+          console.log(response);
+          console.log(response.data);
+          if (response.data.elements.length !== 0) {
+            // stazioni trovate trovate
+            // risposta falsa cosi non cerco le linee
+            checkResponseStations = false;
 
-                    // let NewReferPublicRoute = osmtogeojson(response.data);
-                    // console.log(NewReferPublicRoute);
-
-                    ReferPublicRoute = [
-                      "Trovata stazione"
-                      // ...NewReferPublicRoute.features
-                    ];
-                  }
-                } else {
-                  // la risposta non è arrivata quindi devo rivalutare
-                  checkResponse = false;
-                }
-              });
-              if (checkResponse) {
-                // ho cercato anche le stazioni
-
-                console.log(ReferPublicRoute);
-
-                // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
-                // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
-                // anche la lista della lista degli autobus o altri mezzi
-
-                dispatch({
-                  type: UPDATE_LOCATION,
-                  ValidRoute: location,
-                  NumRouteValid: 0,
-                  refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
-                  index,
-                  infoProfile
-                });
-              } else {
-                // una delle tre delle  risposte non è arrivata quindi devo rimandare
-                dispatch(UpdateStatus("", index));
-              }
-            })
-            .catch(err => {
-              console.log(err);
-              dispatch(UpdateStatus("error request station trasport ", index));
+            ReferPublicRoute = ["Trovata stazione"];
+            dispatch({
+              type: UPDATE_LOCATION,
+              ValidRoute: location,
+              NumRouteValid: 0,
+              refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+              index,
+              infoProfile,
             });
+          } else {
+            // se non ci sono stazioni vado alla ricerca delle linee e mi salvo che ho cercato le stazioni
+            checkResponseStations = true;
+            dispatch({
+              type: ADD_STATUS_ROUTE,
+              property: "SearchStations",
+              index,
+              position: 0,
+            });
+          }
         } else {
-          // una delle tre delle  risposte non è arrivata quindi devo rimandare
+          // la risposta non è arrivata quindi devo rimandare
           dispatch(UpdateStatus("", index));
         }
-      })
-      .catch(err => {
-        console.log(err);
-        dispatch(UpdateStatus("error request validation trasport ", index));
-      });
+      }
+      // se ho cercato le stazioni e non basta
+      if (checkResponseStations) {
+        // chiamate differente se è bus/tram, train o metro
+
+        // metro light_rail e railway
+        let urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22light_rail%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22subway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+        if (coef === 400) {
+          // train e railway
+          urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+        }
+        if (coef === 800) {
+          // bus e tram
+          urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+          // tutti i mezzi
+          // urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+        }
+        console.log(urlTrasport);
+        // test con coordinate di autobus
+        // const urlTrasport =
+        // ("https://overpass.kumi.systems/api/interpreter?data=%2F*%0AThis%20has%20been%20generated%20by%20the%20overpass-turbo%20wizard.%0AThe%20original%20search%20was%3A%0A“type%3Droute%20%26%20route%3Dbus”%0Atrain%20%0Atram%0A%0A*%2F%0A%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%0A%2F%2F%20gather%20results%0A%28%0A%20%20%2F%2F%20query%20part%20for%3A%20“type%3Droute%20and%20route%3Dbus”%0A%20%20relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%2838.11117707359793%2C13.365438133478165%2C38.11219850069204%2C13.36685299873352%29%3B%0A%29%3B%0A%2F%2F%20print%20results%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B");
+
+        // faccio le richieste
+        responseLines = await axios.get(urlTrasport);
+
+        if (responseLines.status === 200) {
+          // la risposta se va bene contiene degli elements
+          // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
+          console.log(responseLines);
+          console.log(responseLines.data);
+          if (responseLines.data.elements.length !== 0) {
+            // tratte trovate
+
+            ReferPublicRoute = ["Trovata linea"];
+
+            // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
+            // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
+            // anche la lista della lista degli autobus o altri mezzi
+
+            dispatch({
+              type: UPDATE_LOCATION,
+              ValidRoute: location,
+              NumRouteValid: 0,
+              refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+              index,
+              infoProfile,
+            });
+          } else {
+            // niente linee ne stazioni
+            dispatch({
+              type: ADD_STATUS_ROUTE,
+              property: "SearchLines",
+              index,
+              position: 0,
+            });
+            dispatch({
+              type: UPDATE_LOCATION,
+              ValidRoute: location,
+              NumRouteValid: 0,
+              refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+              index,
+              infoProfile,
+            });
+          }
+        } else {
+          // la risposta non è arrivata quindi devo rivalutare
+          dispatch(UpdateStatus("", index));
+        }
+      }
+    } catch (error) {
+      if (typeof error !== "Error") {
+        console.log(error);
+        msg = new Error(error);
+
+        bugsnag.notify(msg, function (report) {
+          report.metadata = {
+            error: error,
+            input: getState().login,
+            response: response
+              ? response
+              : responseLines
+              ? responseLines
+              : null,
+            location,
+          };
+        });
+      } else {
+        bugsnag.notify(error, function (report) {
+          report.metadata = {
+            error: error,
+            input: getState().login,
+            response: response
+              ? response
+              : responseLines
+              ? responseLines
+              : null,
+            location,
+          };
+        });
+      }
+    }
   };
 }
 
 // nuova richieste con i mezzi suddivisi e considerando un area direttamente più grande data dall'unione dei tre segmenti
+
+/* 
+location: punti gps da usare per la ricerca
+index: quale tratta è,
+infoProfile: info utente,
+coef: tipo di tratta pubblica,
+typeStop: stop o vado avanti
+paramCallback e callback: funzione dopo la richiesta ,
+ResponseStations: essendo una funzione ricorsiva piu essere utile sapere cosa ho gia cercato  
+*/
+
 export function requestTrasportRouteDedicatedFinal(
   location,
   index,
@@ -3254,206 +4728,460 @@ export function requestTrasportRouteDedicatedFinal(
   coef,
   typeStop,
   paramCallback,
-  callback
+  callback,
+  ResponseStations = false
 ) {
-  return function (dispatch, getState) {
-    let api = "https://overpass.kumi.systems/api/interpreter";
-    // creo un valore random cosi uso un servizio differente ogni volta
-    // gli do una probabilita piu bassa mettendo un intervallo piu grande ma solo alcuni corrispondono ad altri server
-    const random = getRandomIntInclusive(0, 15);
-    if (random === 1) {
-      api = "https://lz4.overpass-api.de/api/interpreter";
-    } else if (random === 2) {
-      api = "https://z.overpass-api.de/api/interpreter";
-    } else if (random === 3) {
-      api = "https://overpass-api.de/api/interpreter";
-    }
+  return async function (dispatch, getState) {
+    let response = null;
+    let responseLines = null;
 
-    // tipo se scelto autobus, metro , tram fai questa chiamata invece della pulizia della tratta
+    try {
+      let api = "https://overpass.kumi.systems/api/interpreter";
+      // creo un valore random cosi uso un servizio differente ogni volta
+      // gli do una probabilita piu bassa mettendo un intervallo piu grande ma solo alcuni corrispondono ad altri server
+      const random = getRandomIntInclusive(0, 15);
+      if (random === 1) {
+        api = "https://lz4.overpass-api.de/api/interpreter";
+      } else if (random === 2) {
+        api = "https://z.overpass-api.de/api/interpreter";
+      } else if (random === 3) {
+        api = "https://overpass-api.de/api/interpreter";
+      }
 
-    // preparo le richieste da fare nell'array
-    let urlArray = [];
-
-    // controllo qual'è il piu grande di latitudine, poiche il primo parametro deve essere maggiore del secondo per la richiesta
-
-    const allLat = location.map(position => parseFloat(position.latitude));
-    const allLog = location.map(position => parseFloat(position.longitude));
-    let lat1 = Math.max(...allLat) + 0.01;
-    let lat2 = Math.min(...allLat) - 0.01;
-    let log1 = Math.max(...allLog) + 0.01;
-    let log2 = Math.min(...allLog) - 0.01;
-    console.log(`${lat2}%2C${log2}%2C${lat1}%2C${log1}`);
-
-    // chiamate differente se è bus/tram, train o metro
-
-    // metro light_rail e railway
-    // subway
-    let urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22light_rail%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22subway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-    if (coef === 400) {
-      // train e railway
-      urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-    }
-    if (coef === 800) {
-      // bus e tram
-      urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-      // tutti i mezzi
-      // urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-    }
-    console.log(urlTrasport);
-    // test con coordinate di autobus
-    // const urlTrasport =
-    // ("https://overpass.kumi.systems/api/interpreter?data=%2F*%0AThis%20has%20been%20generated%20by%20the%20overpass-turbo%20wizard.%0AThe%20original%20search%20was%3A%0A“type%3Droute%20%26%20route%3Dbus”%0Atrain%20%0Atram%0A%0A*%2F%0A%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%0A%2F%2F%20gather%20results%0A%28%0A%20%20%2F%2F%20query%20part%20for%3A%20“type%3Droute%20and%20route%3Dbus”%0A%20%20relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%2838.11117707359793%2C13.365438133478165%2C38.11219850069204%2C13.36685299873352%29%3B%0A%29%3B%0A%2F%2F%20print%20results%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B");
-
-    urlArray.push(urlTrasport);
-
-    // preparo le richieste da fare
-
-    let promiseArray = urlArray.map(url => axios.get(url));
-
-    // creo una variabile per sapere quante volte sono sulla tratta del trasporto pubblico
-    let numRouteTrasport = 0;
-
-    // array per memorizzare dati da varie risposte
-
-    let ReferPublicRoute = [];
-    // per considerare se le tre risposte sono arrivate correttamente
-    let checkResponse = true;
-
-    // faccio le richieste
-    axios
-      .all(promiseArray)
-      .then(function (results) {
-        // prendo tutte le risposte
-        let temp = results.map(response => {
-          // per ogni risposta
-
-          if (response.status === 200) {
-            // la risposta se va bene contiene degli elements
-            // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
-            console.log(response);
-            console.log(response.data);
-            if (response.data.elements.length !== 0) {
-              // tratte trovate
-
-              // let NewReferPublicRoute = osmtogeojson(response.data);
-              // console.log(NewReferPublicRoute);
-
-              ReferPublicRoute = [
-                "Trovata linea"
-                // ...NewReferPublicRoute.features
-              ];
-            }
-          } else {
-            // la risposta non è arrivata quindi devo rivalutare
-            checkResponse = false;
-          }
+      if (location.length) {
+        // location = [location[0][0],location[0][1],location[0][2],location[0][3]]
+        // fix da array a singolo elemento
+        dispatch({
+          type: FIX_ROUTE_START,
+          index,
         });
+      }
 
-        // presa la lista, tolgo eventuali linee ripetute
+      // tipo se scelto autobus, metro , tram fai questa chiamata invece della pulizia della tratta
 
-        if (checkResponse && ReferPublicRoute.length) {
-          // se dei dati vado avanti, altrimenti richiedo  i dati delle stazioni presenti
-          // adesso è un unica richiesta quindi non ci sono ripetizione
+      // controllo qual'è il piu grande di latitudine, poiche il primo parametro deve essere maggiore del secondo per la richiesta
 
-          // tolgo le linee dei mezzi pubblici in piu
-          // ReferPublicRoute = ReferPublicRoute.reduce(
-          //   (total, linea, index, array) => {
-          //     if (!total.filter(elem => elem.id === linea.id).length) {
-          //       return [...total, linea];
-          //     }
-          //     return total;
-          //   },
-          //   []
-          // );
+      const allLat = location.map((position) => parseFloat(position.latitude));
+      const allLog = location.map((position) => parseFloat(position.longitude));
+      let lat1 = Math.max(...allLat) + 0.01;
+      let lat2 = Math.min(...allLat) - 0.01;
+      let log1 = Math.max(...allLog) + 0.01;
+      let log2 = Math.min(...allLog) - 0.01;
+      console.log(`${lat2}%2C${log2}%2C${lat1}%2C${log1}`);
 
-          console.log(ReferPublicRoute);
+      // array per memorizzare dati da varie risposte
 
-          // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
-          // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
-          // anche la lista della lista degli autobus o altri mezzi
+      let ReferPublicRoute = [];
+      // Per sapere se ho gia cercato la stazioni
+      // controllo l'ultimo, dato che è l'ultima analisi, quindi route ha solo un elemento ma viene usato insieme a routeAnaly quindi prendo l'ultimo di location
+      let checkResponseStations = location[location.length - 1].SearchStations
+        ? true
+        : ResponseStations;
 
-          dispatch({
-            type: ADD_REFER_PUBLIC_ROUTE,
+      // se non ho cercato le stazioni le cerco
+      if (!checkResponseStations) {
+        // provo a cercare le stazioni
+        // http://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Bway%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Brelation%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A
+        let urlStation = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Bway%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
 
-            refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
-            index
-          });
-          dispatch(CompleteActivity(index, typeStop, paramCallback, callback));
-        } else if (checkResponse && !ReferPublicRoute.length) {
-          // ho ricevuto risposta ma non ho le tratte, provo a cercare le stazioni
-          // http://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Bway%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Brelation%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A
-          let urlStation = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Bway%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
-          urlArray = [];
-          urlArray.push(urlStation);
-          // preparo le richieste da fare per le stazioni
-          promiseArray = urlArray.map(url => axios.get(url));
-          checkResponse = true;
-          axios
-            .all(promiseArray)
-            .then(function (results) {
-              // prendo tutte le risposte
-              temp = results.map(response => {
-                // per ogni risposta
+        response = await axios.get(urlStation);
+        // risposta delle stazioni
 
-                if (response.status === 200) {
-                  // la risposta se va bene contiene degli elements
-                  // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
-                  console.log(response);
-                  console.log(response.data);
-                  if (response.data.elements.length !== 0) {
-                    // tratte trovate
+        // prendo la risposta
 
-                    // let NewReferPublicRoute = osmtogeojson(response.data);
-                    // console.log(NewReferPublicRoute);
+        if (response.status === 200) {
+          // la risposta se va bene contiene degli elements
+          // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non ci sono stazioni quindi cerco le linee
+          console.log(response);
+          console.log(response.data);
+          if (response.data.elements.length !== 0) {
+            // stazioni trovate trovate
+            // risposta falsa cosi non cerco le linee
+            checkResponseStations = false;
 
-                    ReferPublicRoute = [
-                      "Trovata stazione"
-                      // ...NewReferPublicRoute.features
-                    ];
-                  }
-                } else {
-                  // la risposta non è arrivata quindi devo rivalutare
-                  checkResponse = false;
-                }
-              });
-              if (checkResponse) {
-                // ho cercato anche le stazioni
+            ReferPublicRoute = ["Trovata stazione"];
+            dispatch({
+              type: ADD_REFER_PUBLIC_ROUTE,
 
-                console.log(ReferPublicRoute);
-
-                // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
-                // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
-                // anche la lista della lista degli autobus o altri mezzi
-
-                dispatch({
-                  type: ADD_REFER_PUBLIC_ROUTE,
-
-                  refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
-                  index
-                });
-                dispatch(
-                  CompleteActivity(index, typeStop, paramCallback, callback)
-                );
-              } else {
-                // una delle tre delle  risposte non è arrivata quindi devo rimandare
-                dispatch(UpdateStatus("", index));
-              }
-            })
-            .catch(err => {
-              console.log(err);
-              dispatch(UpdateStatus("error request station trasport ", index));
+              refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+              index,
             });
+            dispatch(
+              CompleteActivity(index, typeStop, paramCallback, callback)
+            );
+          } else {
+            // se non ci sono stazioni vado alla ricerca delle linee e mi salvo che ho cercato le stazioni
+            checkResponseStations = true;
+            dispatch({
+              type: ADD_STATUS_ROUTE,
+              property: "SearchStations",
+              index,
+              position: 0,
+            });
+          }
         } else {
-          // una delle tre delle  risposte non è arrivata quindi devo rimandare
+          // la risposta non è arrivata quindi devo rimandare
           dispatch(UpdateStatus("", index));
+          dispatch(
+            requestTrasportRouteDedicatedFinal(
+              location,
+              index,
+              infoProfile,
+              coef,
+              typeStop,
+              paramCallback,
+              callback,
+              checkResponseStations
+            )
+          );
         }
-      })
-      .catch(err => {
-        console.log(err);
-        dispatch(UpdateStatus("error request validation trasport ", index));
-      });
+      }
+      // se ho cercato le stazioni e non basta
+      if (checkResponseStations) {
+        // chiamate differente se è bus/tram, train o metro
+
+        // metro light_rail e railway
+        let urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22light_rail%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22subway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+        if (coef === 400) {
+          // train e railway
+          urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+        }
+        if (coef === 800) {
+          // bus e tram
+          urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+          // tutti i mezzi
+          // urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+        }
+        console.log(urlTrasport);
+        // test con coordinate di autobus
+        // const urlTrasport =
+        // ("https://overpass.kumi.systems/api/interpreter?data=%2F*%0AThis%20has%20been%20generated%20by%20the%20overpass-turbo%20wizard.%0AThe%20original%20search%20was%3A%0A“type%3Droute%20%26%20route%3Dbus”%0Atrain%20%0Atram%0A%0A*%2F%0A%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%0A%2F%2F%20gather%20results%0A%28%0A%20%20%2F%2F%20query%20part%20for%3A%20“type%3Droute%20and%20route%3Dbus”%0A%20%20relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%2838.11117707359793%2C13.365438133478165%2C38.11219850069204%2C13.36685299873352%29%3B%0A%29%3B%0A%2F%2F%20print%20results%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B");
+
+        // faccio le richieste
+        responseLines = await axios.get(urlTrasport);
+
+        if (responseLines.status === 200) {
+          // la risposta se va bene contiene degli elements
+          // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
+          console.log(responseLines);
+          console.log(responseLines.data);
+          if (responseLines.data.elements.length !== 0) {
+            // tratte trovate
+
+            ReferPublicRoute = ["Trovata linea"];
+
+            // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
+            // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
+            // anche la lista della lista degli autobus o altri mezzi
+
+            dispatch({
+              type: ADD_REFER_PUBLIC_ROUTE,
+
+              refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+              index,
+            });
+            dispatch(
+              CompleteActivity(index, typeStop, paramCallback, callback)
+            );
+          } else {
+            // niente linee ne stazioni
+            dispatch({
+              type: ADD_STATUS_ROUTE,
+              property: "SearchLines",
+              index,
+              position: 0,
+            });
+            dispatch({
+              type: ADD_REFER_PUBLIC_ROUTE,
+
+              refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+              index,
+            });
+            dispatch(
+              CompleteActivity(index, typeStop, paramCallback, callback)
+            );
+          }
+        } else {
+          // la risposta non è arrivata quindi devo rivalutare
+          dispatch(UpdateStatus("", index));
+          dispatch(
+            requestTrasportRouteDedicatedFinal(
+              location,
+              index,
+              infoProfile,
+              coef,
+              typeStop,
+              paramCallback,
+              callback,
+              checkResponseStations
+            )
+          );
+        }
+      }
+    } catch (error) {
+      if (typeof error !== "Error") {
+        console.log(error);
+        msg = new Error(error);
+
+        bugsnag.notify(msg, function (report) {
+          report.metadata = {
+            error: error,
+            input: getState().login,
+            response: response
+              ? response
+              : responseLines
+              ? responseLines
+              : null,
+            location,
+          };
+        });
+      } else {
+        bugsnag.notify(error, function (report) {
+          report.metadata = {
+            error: error,
+            input: getState().login,
+            response: response
+              ? response
+              : responseLines
+              ? responseLines
+              : null,
+            location,
+          };
+        });
+      }
+
+      console.log(error);
+      dispatch(
+        requestTrasportRouteDedicatedFinal(
+          location,
+          index,
+          infoProfile,
+          coef,
+          typeStop,
+          paramCallback,
+          callback
+        )
+      );
+    }
   };
 }
+
+// nuova richieste con i mezzi suddivisi e considerando un area direttamente più grande data dall'unione dei tre segmenti
+// export function requestTrasportRouteDedicatedFinal(
+//   location,
+//   index,
+//   infoProfile,
+//   coef,
+//   typeStop,
+//   paramCallback,
+//   callback
+// ) {
+//   return function (dispatch, getState) {
+
+//     let api = "https://overpass.kumi.systems/api/interpreter";
+//     // creo un valore random cosi uso un servizio differente ogni volta
+//     // gli do una probabilita piu bassa mettendo un intervallo piu grande ma solo alcuni corrispondono ad altri server
+//     const random = getRandomIntInclusive(0, 15);
+//     if (random === 1) {
+//       api = "https://lz4.overpass-api.de/api/interpreter";
+//     } else if (random === 2) {
+//       api = "https://z.overpass-api.de/api/interpreter";
+//     } else if (random === 3) {
+//       api = "https://overpass-api.de/api/interpreter";
+//     }
+
+//     // tipo se scelto autobus, metro , tram fai questa chiamata invece della pulizia della tratta
+
+//     // preparo le richieste da fare nell'array
+//     let urlArray = [];
+
+//     // controllo qual'è il piu grande di latitudine, poiche il primo parametro deve essere maggiore del secondo per la richiesta
+
+//     const allLat = location.map(position => parseFloat(position.latitude));
+//     const allLog = location.map(position => parseFloat(position.longitude));
+//     let lat1 = Math.max(...allLat) + 0.01;
+//     let lat2 = Math.min(...allLat) - 0.01;
+//     let log1 = Math.max(...allLog) + 0.01;
+//     let log2 = Math.min(...allLog) - 0.01;
+//     console.log(`${lat2}%2C${log2}%2C${lat1}%2C${log1}`);
+
+//     // chiamate differente se è bus/tram, train o metro
+
+//     // metro light_rail e railway
+//     // subway
+//     let urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22light_rail%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22subway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//     if (coef === 400) {
+//       // train e railway
+//       urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22railway%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//     }
+//     if (coef === 800) {
+//       // bus e tram
+//       urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//       // tutti i mezzi
+//       // urlTrasport = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A100%5D%3B%28relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22tram%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22train%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//     }
+//     console.log(urlTrasport);
+//     // test con coordinate di autobus
+//     // const urlTrasport =
+//     // ("https://overpass.kumi.systems/api/interpreter?data=%2F*%0AThis%20has%20been%20generated%20by%20the%20overpass-turbo%20wizard.%0AThe%20original%20search%20was%3A%0A“type%3Droute%20%26%20route%3Dbus”%0Atrain%20%0Atram%0A%0A*%2F%0A%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%0A%2F%2F%20gather%20results%0A%28%0A%20%20%2F%2F%20query%20part%20for%3A%20“type%3Droute%20and%20route%3Dbus”%0A%20%20relation%5B%22type%22%3D%22route%22%5D%5B%22route%22%3D%22bus%22%5D%2838.11117707359793%2C13.365438133478165%2C38.11219850069204%2C13.36685299873352%29%3B%0A%29%3B%0A%2F%2F%20print%20results%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B");
+
+//     urlArray.push(urlTrasport);
+
+//     // preparo le richieste da fare
+
+//     let promiseArray = urlArray.map(url => axios.get(url));
+
+//     // creo una variabile per sapere quante volte sono sulla tratta del trasporto pubblico
+//     let numRouteTrasport = 0;
+
+//     // array per memorizzare dati da varie risposte
+
+//     let ReferPublicRoute = [];
+//     // per considerare se le tre risposte sono arrivate correttamente
+//     let checkResponse = true;
+
+//     // faccio le richieste
+//     axios
+//       .all(promiseArray)
+//       .then(function (results) {
+//         // prendo tutte le risposte
+//         let temp = results.map(response => {
+//           // per ogni risposta
+
+//           if (response.status === 200) {
+//             // la risposta se va bene contiene degli elements
+//             // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
+//             console.log(response);
+//             console.log(response.data);
+//             if (response.data.elements.length !== 0) {
+//               // tratte trovate
+
+//               // let NewReferPublicRoute = osmtogeojson(response.data);
+//               // console.log(NewReferPublicRoute);
+
+//               ReferPublicRoute = [
+//                 "Trovata linea"
+//                 // ...NewReferPublicRoute.features
+//               ];
+//             }
+//           } else {
+//             // la risposta non è arrivata quindi devo rivalutare
+//             checkResponse = false;
+//           }
+//         });
+
+//         // presa la lista, tolgo eventuali linee ripetute
+
+//         if (checkResponse && ReferPublicRoute.length) {
+//           // se dei dati vado avanti, altrimenti richiedo  i dati delle stazioni presenti
+//           // adesso è un unica richiesta quindi non ci sono ripetizione
+
+//           // tolgo le linee dei mezzi pubblici in piu
+//           // ReferPublicRoute = ReferPublicRoute.reduce(
+//           //   (total, linea, index, array) => {
+//           //     if (!total.filter(elem => elem.id === linea.id).length) {
+//           //       return [...total, linea];
+//           //     }
+//           //     return total;
+//           //   },
+//           //   []
+//           // );
+
+//           console.log(ReferPublicRoute);
+
+//           // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
+//           // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
+//           // anche la lista della lista degli autobus o altri mezzi
+
+//           dispatch({
+//             type: ADD_REFER_PUBLIC_ROUTE,
+
+//             refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+//             index
+//           });
+//           dispatch(CompleteActivity(index, typeStop, paramCallback, callback));
+//         } else if (checkResponse && !ReferPublicRoute.length) {
+//           // ho ricevuto risposta ma non ho le tratte, provo a cercare le stazioni
+//           // http://overpass-api.de/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Bway%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3Brelation%5B%22railway%22%3D%22station%22%5D%2838%2E064040835819%2C13%2E34358215332%2C38%2E129290511881%2C13%2E434133529663%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A
+//           let urlStation = `${api}?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3B%28node%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Bway%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3Brelation%5B%22railway%22%3D%22station%22%5D%28${lat2}%2C${log2}%2C${lat1}%2C${log1}%29%3B%29%3Bout%3B%3E%3Bout%20skel%20qt%3B%0A`;
+//           urlArray = [];
+//           urlArray.push(urlStation);
+//           // preparo le richieste da fare per le stazioni
+//           promiseArray = urlArray.map(url => axios.get(url));
+//           checkResponse = true;
+//           axios
+//             .all(promiseArray)
+//             .then(function (results) {
+//               // prendo tutte le risposte
+//               temp = results.map(response => {
+//                 // per ogni risposta
+
+//                 if (response.status === 200) {
+//                   // la risposta se va bene contiene degli elements
+//                   // se vuoti, significa che in quel segmento di tratta tra le coordinate gps non c'e un tratta del tram occ
+//                   console.log(response);
+//                   console.log(response.data);
+//                   if (response.data.elements.length !== 0) {
+//                     // tratte trovate
+
+//                     // let NewReferPublicRoute = osmtogeojson(response.data);
+//                     // console.log(NewReferPublicRoute);
+
+//                     ReferPublicRoute = [
+//                       "Trovata stazione"
+//                       // ...NewReferPublicRoute.features
+//                     ];
+//                   }
+//                 } else {
+//                   // la risposta non è arrivata quindi devo rivalutare
+//                   checkResponse = false;
+//                 }
+//               });
+//               if (checkResponse) {
+//                 // ho cercato anche le stazioni
+
+//                 console.log(ReferPublicRoute);
+
+//                 // mandiamo un azione dicendo le tratte analizzate e il numero di tratte riconosciute valide di quelle analizzate
+//                 // e quale tratta sto analizzando con index, cosi aggiorno i dati di quella route
+//                 // anche la lista della lista degli autobus o altri mezzi
+
+//                 dispatch({
+//                   type: ADD_REFER_PUBLIC_ROUTE,
+
+//                   refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
+//                   index
+//                 });
+//                 dispatch(
+//                   CompleteActivity(index, typeStop, paramCallback, callback)
+//                 );
+//               } else {
+//                 // una delle tre delle  risposte non è arrivata quindi devo rimandare
+//                 dispatch(UpdateStatus("", index));
+//               }
+//             })
+//             .catch(err => {
+//               console.log(err);
+//               dispatch(UpdateStatus("error request station trasport ", index));
+//             });
+//         } else {
+//           // una delle tre delle  risposte non è arrivata quindi devo rimandare
+//           dispatch(UpdateStatus("", index));
+//         }
+//       })
+//       .catch(err => {
+//         console.log(err);
+//         dispatch(UpdateStatus("error request validation trasport ", index));
+//       });
+//   };
+// }
+
+// Carpooling
+// 	Train
+// 	Metro
+// 	Bus
+// 	Biking
+// 	Walking
 
 // metodo che calcolo l'attivita dall'id attivita
 // e utile quando si riceve il dato dal db
@@ -3462,11 +5190,11 @@ export function getModalType(modal_id) {
     "Other",
     "Walking",
     "Biking",
-    "Public",
-    "Pooling",
     "Bus",
+    "Metro",
     "Train",
-    "Metro"
+    "Carpooling",
+    "Car",
   ];
   return modal_type[modal_id];
 }
@@ -3539,7 +5267,7 @@ export function requestTrasportRoute(location, index, infoProfile) {
 
     // preparo le richieste da fare
 
-    let promiseArray = urlArray.map(url => axios.get(url));
+    let promiseArray = urlArray.map((url) => axios.get(url));
 
     // creo una variabile per sapere quante volte sono sulla tratta del trasporto pubblico
     let numRouteTrasport = 0;
@@ -3555,7 +5283,7 @@ export function requestTrasportRoute(location, index, infoProfile) {
       .all(promiseArray)
       .then(function (results) {
         // prendo tutte le risposte
-        let temp = results.map(response => {
+        let temp = results.map((response) => {
           // per ogni risposta
 
           if (response.status === 200) {
@@ -3571,7 +5299,7 @@ export function requestTrasportRoute(location, index, infoProfile) {
 
               ReferPublicRoute = [
                 ...ReferPublicRoute,
-                ...NewReferPublicRoute.features
+                ...NewReferPublicRoute.features,
               ];
             }
           } else {
@@ -3586,7 +5314,7 @@ export function requestTrasportRoute(location, index, infoProfile) {
           // tolgo le linee dei mezzi pubblici in piu
           ReferPublicRoute = ReferPublicRoute.reduce(
             (total, linea, index, array) => {
-              if (!total.filter(elem => elem.id === linea.id).length) {
+              if (!total.filter((elem) => elem.id === linea.id).length) {
                 return [...total, linea];
               }
               return total;
@@ -3606,14 +5334,14 @@ export function requestTrasportRoute(location, index, infoProfile) {
             NumRouteValid: 0,
             refTrasportRoute: ReferPublicRoute ? ReferPublicRoute : [],
             index,
-            infoProfile
+            infoProfile,
           });
         } else {
           // una delle tre delle  risposte non è arrivata quindi devo rimandare
           dispatch(UpdateStatus("", index));
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         dispatch(UpdateStatus("error request validation trasport ", index));
       });
@@ -3634,7 +5362,7 @@ function checkIfUserIsStill(arrayActivities, show) {
 
   let stasisArray = ["UNKNOWN", "STILL", "STATIONARY"];
 
-  arrayActivities.forEach(element => {
+  arrayActivities.forEach((element) => {
     if (stasisArray.includes(element)) countStillElements++;
   });
 
@@ -3656,9 +5384,9 @@ function checkIfUserIsStill(arrayActivities, show) {
       "CYCLING",
       "IN_VEHICLE",
       "ON_BICYCLE",
-      "ON_FOOT"
+      "ON_FOOT",
     ];
-    arrayActivities.forEach(element => {
+    arrayActivities.forEach((element) => {
       if (movementArray.includes(element)) countAllElements++;
     });
     if (countAllElements > 1) {
@@ -3694,7 +5422,7 @@ export function fetchWeatherAsync(lat = 40, lon = 40) {
     try {
       const response = await axios({
         method: "get",
-        url: `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${API_KEY}`
+        url: `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${API_KEY}`,
       });
       console.log(response);
 
@@ -3702,6 +5430,9 @@ export function fetchWeatherAsync(lat = 40, lon = 40) {
         // se risponde correttamente setto un valore da 1 a 3 per dire che il meteo è stato settato
 
         const weather = response.data.weather[0].main;
+        // temperatura corrente in Kelvin a celsius
+
+        const tempWeatherInC = response.data.main.temp - 273.15;
         /* Rain: {
             color: '#005BEA',
               title: 'Raining',
@@ -3755,13 +5486,303 @@ export function fetchWeatherAsync(lat = 40, lon = 40) {
 
         dispatch({
           type: ADD_WEATHER,
-          typeWeather: weather
+          typeWeather: weather,
+          tempWeatherInC,
         });
       } else {
         // se non risponde correttamente setto il valore a -1 per dire che non è stato aggiornato
         dispatch({
           type: ADD_WEATHER,
-          typeWeather: ""
+          typeWeather: "",
+          tempWeatherInC: null,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+}
+
+export function getCityInfoForTrip(
+  position = { latitude: 40, longitude: 40 },
+  LastRoute = 0,
+  resume = 0
+) {
+  return async function (dispatch) {
+    // preparo la richiesta
+    console.log("meteo async");
+    try {
+      const response = await axios({
+        method: "get",
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=${WebService.API_KEY_Google}&language=it`,
+      });
+      console.log(response);
+
+      if (response.status === 200) {
+        // metto un valore di default per sapere che almeno ho cercato ma non ho trovato nulla
+        let localityName = "";
+        let administrativeName = "";
+        let countryName = "";
+
+        let administrative_area_level_3_city_name = "";
+        let administrative_area_level_2_city_name = "";
+        let administrative_area_level_1_city_name = "";
+        let country_city_name = "";
+
+        if (response.data.results) {
+          // se ho dei risultati
+          // prendo quelle liste che hanno come granualità piu grande la citta locale
+          const cityLisy = response.data.results.filter(
+            (elem) =>
+              elem.address_components &&
+              elem.address_components.length &&
+              elem.address_components[0].types[0] == "locality"
+          );
+          console.log(cityLisy);
+
+          if (cityLisy.length) {
+            // prendo l'ultima città
+            const cityFind = cityLisy[cityLisy.length - 1];
+            for (i = 0; i < cityFind.address_components.length; i++) {
+              // cerco le info che mi interessano
+              const address_component = cityFind.address_components[i];
+              if (address_component.types && address_component.types.length) {
+                if (address_component.types[0] == "locality") {
+                  localityName = address_component.long_name;
+                } else if (
+                  address_component.types[0] == "administrative_area_level_3"
+                ) {
+                  administrative_area_level_3_city_name =
+                    address_component.long_name;
+                } else if (
+                  address_component.types[0] == "administrative_area_level_2"
+                ) {
+                  administrative_area_level_2_city_name =
+                    address_component.long_name;
+                  administrativeName = address_component.long_name;
+                } else if (
+                  address_component.types[0] == "administrative_area_level_1"
+                ) {
+                  administrative_area_level_1_city_name =
+                    address_component.long_name;
+                } else if (address_component.types[0] == "country") {
+                  countryName = address_component.long_name;
+                  country_city_name = address_component.long_name;
+                }
+              }
+            }
+          }
+        }
+
+        const cityRoute = {
+          administrative_area_level_3_city_name,
+          administrative_area_level_2_city_name,
+          administrative_area_level_1_city_name,
+          country_city_name,
+        };
+
+        dispatch(
+          UpdatePreviousRoute(
+            {
+              cityRoute,
+            },
+            LastRoute
+          )
+        );
+        dispatch(createInfoCityIdForTrip(cityRoute, LastRoute, resume));
+      } else {
+        // se non risponde correttamente setto i valore a ""
+
+        dispatch(
+          UpdatePreviousRoute(
+            {
+              cityRoute: {
+                administrative_area_level_3_city_name: "",
+                administrative_area_level_2_city_name: "",
+                administrative_area_level_1_city_name: "",
+                country_city_name: "",
+              },
+            },
+            LastRoute
+          )
+        );
+
+        const msg = new Error("getCityInfoForTrip fail");
+        bugsnag.notify(msg, function (report) {
+          report.metadata = { problem: response };
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+}
+
+// dati sulla citta che sto creando, per ottenre un id univoco per le tratte
+export function createInfoCityIdForTrip(infoCity, LastRoute = 0, resume = 0) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    console.log("createInfoCityIdForTrip");
+    console.log(infoCity);
+    let { access_token } = getState().login;
+
+    try {
+      const response = await requestNewBackend(
+        "post",
+        "/api/v1/tools/gmaps/",
+        access_token,
+        infoCity,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 201 || response.status === 200) {
+        // mi salvo l'id della città che devo usare poi nella post
+
+        dispatch(UpdatePreviousRoute({ infoIdCity: response.data }, LastRoute));
+
+        if (resume) {
+          dispatch(resumeRoute(resume));
+        }
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(
+          forceRefreshTokenWithCallback(
+            createInfoCityIdForTrip(infoCity, LastRoute, resume)
+          )
+        );
+      } else {
+        const msg = new Error("createInfoCityIdForTrip fail");
+        bugsnag.notify(msg, function (report) {
+          report.metadata = { problem: response };
+        });
+        // dispatch({
+        //   type: FAIL_LOGIN,
+        //   payload: { error_description: "error" },
+        // });
+      }
+
+      // in caso di errore, mando anche l'errore utile per sapere cosa sbaglio tipo email
+      /* dispatch({
+          type: FAIL_LOGIN,
+          payload: error.response.data
+        }); */
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        // dispatch({
+        //   type: START_LOGIN,
+        //   payload: {
+        //     status: "",
+        //   },
+        // });
+      } else {
+        console.log(error.message);
+      }
+      // dispatch({
+      //   type: FAIL_LOGIN,
+      //   payload: { error_description: "error catch createInfoCityIdForTrip" },
+      // });
+      console.log(error.config);
+    }
+  };
+}
+
+// prendo la città, dove si sta effettuando la tratta
+// richiedere la città dalla posizione
+// https://maps.googleapis.com/maps/api/geocode/json?latlng=40.714224,-73.961452&key=YOUR_API_KEY
+export function fetchCityAsync(lat = 40, lon = 40) {
+  return async function (dispatch) {
+    // preparo la richiesta
+    console.log("meteo async");
+    try {
+      const response = await axios({
+        method: "get",
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${WebService.API_KEY_Google}`,
+      });
+      console.log(response);
+
+      if (response.status === 200) {
+        // metto un valore di default per sapere che almeno ho cercato ma non ho trovato nulla
+        let localityName = "";
+        let administrativeName = "";
+        let countryName = "";
+
+        let administrative_area_level_3_city_name = "";
+        let administrative_area_level_2_city_name = "";
+        let administrative_area_level_1_city_name = "";
+        let country_city_name = "";
+
+        if (response.data.results) {
+          // se ho dei risultati
+          // prendo quelle liste che hanno come granualità piu grande la citta locale
+          const cityLisy = response.data.results.filter(
+            (elem) =>
+              elem.address_components &&
+              elem.address_components.length &&
+              elem.address_components[0].types[0] == "locality"
+          );
+          console.log(cityLisy);
+
+          if (cityLisy.length) {
+            // prendo l'ultima città
+            const cityFind = cityLisy[cityLisy.length - 1];
+            for (i = 0; i < cityFind.address_components.length; i++) {
+              // cerco le info che mi interessano
+              const address_component = cityFind.address_components[i];
+              if (address_component.types && address_component.types.length) {
+                if (address_component.types[0] == "locality") {
+                  localityName = address_component.long_name;
+                } else if (
+                  address_component.types[0] == "administrative_area_level_3"
+                ) {
+                  administrative_area_level_3_city_name =
+                    address_component.long_name;
+                } else if (
+                  address_component.types[0] == "administrative_area_level_2"
+                ) {
+                  administrative_area_level_2_city_name =
+                    address_component.long_name;
+                  administrativeName = address_component.long_name;
+                } else if (
+                  address_component.types[0] == "administrative_area_level_1"
+                ) {
+                  administrative_area_level_1_city_name =
+                    address_component.long_name;
+                } else if (address_component.types[0] == "country") {
+                  countryName = address_component.long_name;
+                  country_city_name = address_component.long_name;
+                }
+              }
+            }
+          }
+        }
+
+        dispatch({
+          type: ADD_CITY,
+          administrative_area_level_3_city_name,
+          administrative_area_level_2_city_name,
+          administrative_area_level_1_city_name,
+          country_city_name,
+        });
+      } else {
+        // se non risponde correttamente setto il valore a -1 per dire che non è stato aggiornato
+        dispatch({
+          type: ADD_CITY,
+
+          administrative_area_level_3_city_name: "",
+          administrative_area_level_2_city_name: "",
+          administrative_area_level_1_city_name: "",
+          country_city_name: "",
         });
       }
     } catch (error) {
@@ -3771,17 +5792,20 @@ export function fetchWeatherAsync(lat = 40, lon = 40) {
 }
 
 export function fetchWeather(lat = 40, lon = 40) {
-  return dispatch => {
+  return (dispatch) => {
     console.log("meteo");
     axios
       .get(
         `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${API_KEY}`
       )
-      .then(res => {
+      .then((res) => {
         console.log(res);
         // se risponde correttamente setto un valore da 1 a 3 per dire che il meteo è stato settato
         if (res.status === 200) {
           const weather = res.data.weather[0].main;
+          // temperatura corrente in Kelvin a celsius
+
+          const tempWeatherInC = response.data.main.temp - 273.15;
           /* Rain: {
             color: '#005BEA',
               title: 'Raining',
@@ -3835,18 +5859,33 @@ export function fetchWeather(lat = 40, lon = 40) {
 
           dispatch({
             type: ADD_WEATHER,
-            typeWeather: weather
+            typeWeather: weather,
+            tempWeatherInC,
           });
         } else {
           // se non risponde correttamente setto il valore a -1 per dire che non è stato aggiornato
           dispatch({
             type: ADD_WEATHER,
-            typeWeather: ""
+            typeWeather: "",
+            tempWeatherInC: null,
           });
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
       });
+  };
+}
+
+export function playFromNotification() {
+  return function (dispatch) {
+    alert("playFromNotification");
+    try {
+      dispatch({
+        type: PLAY_FROM_NOTIFICATION,
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 }

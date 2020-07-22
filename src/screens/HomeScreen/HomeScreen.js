@@ -6,7 +6,7 @@ import {
   findNodeHandle,
   Alert,
   TouchableOpacity,
-  Text
+  Text,
 } from "react-native";
 import { styles } from "./Style";
 import { connect } from "react-redux";
@@ -32,12 +32,15 @@ import {
   setFirstConfiguration,
   UpdateProfile,
   setSessionToken,
-  getTypeformSoddFrust
+  getTypeformSoddFrust,
+  savePositionUsage,
+  saveAppVersionUsage,
+  updateProfileNew,
 } from "./../../domains/login/ActionCreators";
 import {
   resumeRoute,
   ResetPreviousRoute,
-  CheckStateToValidateAndSave
+  CheckStateToValidateAndSave,
 } from "./../../domains/tracking/ActionCreators";
 import { getStats } from "./../../domains/statistics/ActionCreators";
 import { getSpecificLeaderboard } from "./../../domains/standings/ActionCreators";
@@ -46,19 +49,19 @@ import {
   emptyOfflineSTReward,
   getSpecialTrainingSessions,
   getSpecialTrainingSessionSubscribed,
-  setNewStPivots
+  setNewStPivots,
 } from "./../../domains/trainings/ActionCreators";
 
 import { createSelector } from "reselect";
 
-Array.prototype.clone = function() {
+Array.prototype.clone = function () {
   return this.slice(0);
 };
 
 import { pushNotifications } from "./../../services/";
 import { Tester } from "./../../config/Tester";
 import branch, { BranchEvent } from "react-native-branch";
-import DeviceInfo from "react-native-device-info";
+import { getDevice } from "../../helpers/deviceInfo";
 
 const SUNDAY_NOTIFICATION = "15:30";
 
@@ -80,48 +83,48 @@ class HomeScreen extends React.Component {
       load: false,
       data: [
         {
-          value: 10
+          value: 10,
         },
         {
-          value: 5
+          value: 5,
         },
         {
-          value: 2
+          value: 2,
         },
         {
-          value: 6
+          value: 6,
         },
         {
-          value: 8
+          value: 8,
         },
         {
-          value: 1
-        }
+          value: 1,
+        },
       ],
       newData: [
         {
-          value: 2
+          value: 2,
         },
         {
-          value: 8
+          value: 8,
         },
         {
-          value: 6
+          value: 6,
         },
         {
-          value: 1
+          value: 1,
         },
         {
-          value: 9
+          value: 9,
         },
         {
-          value: 1
-        }
+          value: 1,
+        },
       ],
       animate: false,
       ValueBlur: 0,
       viewRef: null,
-      refreshing: false
+      refreshing: false,
     };
   }
 
@@ -148,7 +151,7 @@ class HomeScreen extends React.Component {
   }
 
   // metodo per gestire il blur con l'aumentare dello scroll
-  onScrollBlur = event => {
+  onScrollBlur = (event) => {
     //console.log(event.nativeEvent.contentOffset.y);
     const offsetY = event.nativeEvent.contentOffset.y;
 
@@ -156,31 +159,31 @@ class HomeScreen extends React.Component {
     if (ValueBlur > 6) {
       ValueBlur = 6;
       if (this.state.ValueBlur !== 6)
-        this.setState(prevState => {
+        this.setState((prevState) => {
           return { ValueBlur };
         });
     } else if (ValueBlur === 0) {
       ValueBlur = 0;
       if (this.state.ValueBlur !== 0)
-        this.setState(prevState => {
+        this.setState((prevState) => {
           return { ValueBlur };
         });
     } else if (ValueBlur < 0) {
       ValueBlur = 1;
       if (this.state.ValueBlur !== 1)
-        this.setState(prevState => {
+        this.setState((prevState) => {
           return { ValueBlur };
         });
     } else {
       // se il valore nuovo è diverso da quello corrente allora aggiorna
       if (this.state.ValueBlur !== ValueBlur)
-        this.setState(prevState => {
+        this.setState((prevState) => {
           return { ValueBlur };
         });
     }
   };
 
-  setIntervalCheck = time => {
+  setIntervalCheck = (time) => {
     Check = setTimeout(() => {
       console.log("riprendi");
       const prova = this.props.dispatch(CheckStateToValidateAndSave());
@@ -206,7 +209,7 @@ class HomeScreen extends React.Component {
     try {
       let timing =
         this.props.registerState.frequent_trip_start_time != null &&
-        this.props.registerState.frequent_trip_start_time != undefined
+          this.props.registerState.frequent_trip_start_time != undefined
           ? this.props.registerState.frequent_trip_start_time
           : "07:30";
       if (
@@ -215,10 +218,10 @@ class HomeScreen extends React.Component {
       ) {
         pushNotifications.cancelAllLocalNotifications();
         this.props.dispatch(
-          UpdateProfile({
+          updateProfileNew({
             data: {
-              public_profile: { notification_schedule: timing }
-            }
+              notification_schedule: timing,
+            },
           })
         );
         let ids = [];
@@ -230,7 +233,7 @@ class HomeScreen extends React.Component {
             true,
             true,
             true,
-            false
+            false,
           ]);
         } else {
           ids = pushNotifications.localNotificationSchedule(timing, [
@@ -240,7 +243,7 @@ class HomeScreen extends React.Component {
             true,
             true,
             true,
-            false
+            false,
           ]);
         }
         this.props.dispatch(setScheduledNotificationIds(ids));
@@ -264,45 +267,32 @@ class HomeScreen extends React.Component {
     }
   };
 
-  responseCommunity = community => {
+  responseCommunity = (community) => {
     console.log("community");
     console.log(community);
   };
 
-  createRef = ref => {
+  createRef = (ref) => {
     this.setState({ viewRef: findNodeHandle(ref) });
   };
 
-  updateUserAgent() {
-    const systemName = DeviceInfo.getSystemName();
-    const systemVersion = DeviceInfo.getSystemVersion();
-    const model = DeviceInfo.getModel();
-    const manufacturer = DeviceInfo.getManufacturer();
-    const deviceId = DeviceInfo.getDeviceId();
-    const device =
-      systemName +
-      " " +
-      systemVersion +
-      " " +
-      model +
-      " " +
-      deviceId +
-      " " +
-      manufacturer;
+  updateUserAgent = async () => {
+    const device = await getDevice();
 
     if (this.props.profileState.user_agent != device) {
       console.log("!=");
+
       this.props.dispatch(
-        UpdateProfile({
+        updateProfileNew({
           data: {
-            public_profile: { user_agent: device }
-          }
+            user_agent: device,
+          },
         })
       );
     } else {
       console.log("==");
     }
-  }
+  };
 
   componentDidMount() {
     // quando ho caricato il componente, posso dire a blur che è possibile fare il blur usando questa variabile
@@ -311,15 +301,16 @@ class HomeScreen extends React.Component {
     // }
 
     this.setState({
-      load: true
+      load: true,
     });
 
-    setTimeout(() => {
-      this.setLocalNotifications();
-    }, 1000 * 20);
+    // setTimeout(() => {
+    //   if (this.props.notification_scheduled_ids == undefined)
+    //     this.setLocalNotifications();
+    // }, 1000 * 20);
 
     console.log("mount Home screen");
-    this.updateUserAgent();
+
     // this.props.dispatch(emptyOfflineSTReward());
 
     if (Tester.includes(this.props.username)) {
@@ -363,6 +354,10 @@ class HomeScreen extends React.Component {
       }
     }
 
+    savePositionUsage();
+    saveAppVersionUsage();
+    // recupero delle invio che potrebbero cambiare ogni tanto come la posizione dell'utente e la versione dell'app
+
     // avvio un timer che controlla se sta validando o se ho inviato tratte che non sto validando
 
     // this.setIntervalCheck(50000);
@@ -404,42 +399,59 @@ class HomeScreen extends React.Component {
         console.log("Error from Branch: " + error);
         return;
       }
+      console.log(params);
 
-      if (params["+clicked_branch_link"]) {
-        console.log("Received link response from Branch");
-        // alert("Received link response from Branch \n" + JSON.stringify(params));
+      /* $ios_passive_deepview: "branch_passive_default"
+$marketing_title: "Test con parametro"
+$og_description: "The MUV base game mechanism is extremely simple.The user, once downloaded the smartphone application, automatically becomes a player and he/she can earn points by moving throughout the city in a sustainable way."
+$og_title: "MUV Mobility Urban Values"
+$one_time_use: false
++click_timestamp: 1593792516
++clicked_branch_link: true
++is_first_session: false
++match_guaranteed: true
+codice: "1111111"
+~creation_source: 1
+~feature: "Share"
+~id: "807629657545347338"
+~marketing: true
+~referring_link: "https://muv.app.link/CZZVIbd7O7" */
 
-        // se non è stato settato nella registrazione
-        // let link = params["~referring_link"];
-        let sender_id = params.sender_id;
+      // if (params["+clicked_branch_link"]) {
+      //   console.log("Received link response from Branch");
+      //   // alert("Received link response from Branch \n" + JSON.stringify(params));
 
-        console.log("params: " + JSON.stringify(params));
-        console.log(sender_id);
+      //   // se non è stato settato nella registrazione
+      //   // let link = params["~referring_link"];
+      //   let sender_id = params.sender_id;
 
-        // se è il mio stesso invito, quindi stesso id, vado nel mio profilo
-        if (sender_id == this.props.user_id) {
-          // this.props.dispatch(changeScreenProfile("myself"));
-          this.props.navigation.navigate("Info");
-        } else {
-          this.props.navigation.navigate("FriendDetail", {
-            friendData: params,
-            can_follow: true
-          });
-        }
+      //   console.log("params: " + JSON.stringify(params));
+      //   console.log(sender_id);
 
-        // alert(link);
-        // alert(sender_id);
+      //   // se è il mio stesso invito, quindi stesso id, vado nel mio profilo
+      //   if (sender_id == this.props.user_id) {
+      //     // this.props.dispatch(changeScreenProfile("myself"));
+      //     this.props.navigation.navigate("Info");
+      //   } else {
+      //     this.props.navigation.navigate("FriendDetailFromGlobal", {
+      //       friendData: params,
+      //       can_follow: true
+      //     });
+      //   }
 
-        // this.props.dispatch(
-        //   postFollowUser({
-        //     followed_user_id: sender_id,
-        //     referral_url: link,
-        //     link_status: 0,
-        //     coin_followed_earned: 0,
-        //     coin_follower_earned: 0
-        //   })
-        // );
-      }
+      //   // alert(link);
+      //   // alert(sender_id);
+
+      //   // this.props.dispatch(
+      //   //   postFollowUser({
+      //   //     followed_user_id: sender_id,
+      //   //     referral_url: link,
+      //   //     link_status: 0,
+      //   //     coin_followed_earned: 0,
+      //   //     coin_follower_earned: 0
+      //   //   })
+      //   // );
+      // }
     });
 
     // if (this.props.sessionTokenState)
@@ -450,7 +462,7 @@ class HomeScreen extends React.Component {
     //     // token valido
     //   }
     // else this.props.dispatch(setSessionToken());
-    this.props.dispatch(getTypeformSoddFrust(getTypeformUrl));
+    //  this.props.dispatch(getTypeformSoddFrust(getTypeformUrl));
   }
 
   componentWillUnmount() {
@@ -578,9 +590,7 @@ class HomeScreen extends React.Component {
           <Aux>
             <InfoCityTournamentUserHome
               createRef={this.createRef}
-              avatarId={this.props.avatar}
               navigation={this.props.navigation}
-              // avatarId={this.props.avatar}
             />
 
             <BlurHome
@@ -621,11 +631,11 @@ function getTypeformUrl() {
   }
 }
 
-const getProfileInfo = state => state.login.infoProfile;
-const getProfileNotSave = state => state.login.infoProfileNotSave;
-const getStatus = state => state.login.status;
-const getInfo = state => state.login;
-const getLocalSession = state =>
+const getProfileInfo = (state) => state.login.infoProfile;
+const getProfileNotSave = (state) => state.login.infoProfileNotSave;
+const getStatus = (state) => state.login.status;
+const getInfo = (state) => state.login;
+const getLocalSession = (state) =>
   state.login.sessionToken ? state.login.sessionToken : null;
 
 const getProfileState = createSelector(
@@ -635,54 +645,38 @@ const getProfileState = createSelector(
     return {
       ...infoProfile,
       ...infoProfileNotSave,
-      city: infoProfile.city
+      city: infoProfile.city,
     };
   }
 );
 
-const getAvatarState = createSelector(
-  [getProfileInfo],
-  infoProfile => (infoProfile.avatar ? infoProfile.avatar : 1)
+const getUserState = createSelector([getProfileInfo], (infoProfile) =>
+  infoProfile.user_id ? infoProfile.user_id : 1
 );
 
-const getUserState = createSelector(
-  [getProfileInfo],
-  infoProfile => (infoProfile.user_id ? infoProfile.user_id : 1)
-);
-
-const getUsernameState = createSelector(
-  [getInfo],
-  info => info.username
-);
+const getUsernameState = createSelector([getInfo], (info) => info.username);
 const getRemote_notification_configuredState = createSelector(
   [getInfo],
-  info => info.remote_notification_configured
+  (info) => info.remote_notification_configured
 );
 
 const getRemote_notification_sender_idState = createSelector(
   [getInfo],
-  info => info.remote_notification_sender_id
+  (info) => info.remote_notification_sender_id
 );
 
 const getFirst_configuration_v5State = createSelector(
   [getInfo],
-  info => info.first_configuration_v5
+  (info) => info.first_configuration_v5
 );
 
-const getStatusState = createSelector(
-  [getStatus],
-  status => status
-);
+const getStatusState = createSelector([getStatus], (status) => status);
 
-const getSessionToken = createSelector(
-  [getLocalSession],
-  s => s
-);
+const getSessionToken = createSelector([getLocalSession], (s) => s);
 
-const Recap = connect(state => {
+const Recap = connect((state) => {
   return {
     status: getStatusState(state),
-    avatar: getAvatarState(state),
     user_id: getUserState(state),
     username: getUsernameState(state),
     remote_notification_configured: getRemote_notification_configuredState(
@@ -693,7 +687,8 @@ const Recap = connect(state => {
     registerState: state.register,
     trainingsState: state.trainings,
     sessionTokenState: getSessionToken(state),
-    profileState: state.login.infoProfile
+    profileState: state.login.infoProfile,
+    notification_scheduled_ids: state.login.notification_scheduled_ids,
   };
 });
 

@@ -20,8 +20,7 @@ import AnimateNumber from "react-native-animate-number";
 
 import Aux from "../../helpers/Aux";
 import { Header } from "react-navigation";
-
-
+import { strings } from "../../config/i18n";
 
 class TrackGuide extends React.Component {
   // play: per sapere se sono in modalita di play con il tipo di mezzo o di pausa con stop e riprendi
@@ -72,7 +71,7 @@ class TrackGuide extends React.Component {
     // iphone x, x max
     if (
       Platform.OS === "ios" &&
-      (height === 812 || width === 812 || (height === 896 || width === 896))
+      (height === 812 || width === 812 || height === 896 || width === 896)
     ) {
       extra = 35;
       style = {
@@ -166,8 +165,8 @@ class TrackGuide extends React.Component {
   };
 
   nextTutorial2 = () => {
-    this.props.nextTutorial2()
-  }
+    this.props.nextTutorial2();
+  };
 
   changeGuide = state => {
     this.setState(state);
@@ -321,12 +320,14 @@ class TrackGuide extends React.Component {
                     textAlign: "center",
                     color: "white",
                     marginBottom: 5,
-                    fontSize: 32
+                    fontSize: 32,
+                    width: Dimensions.get("window").width * 0.8,
+                    alignSelf: "center"
                   }}
                 >
                   {this.state.animated
-                    ? "the greener it is,\nmost point you get.".toUpperCase()
-                    : "NOW THE APP IS TRACKING YOUR TRIP…"}
+                    ? strings("id_16_04")
+                    : strings("id_16_03")}
                 </Text>
               </View>
             </View>
@@ -384,7 +385,6 @@ class TrackGuide extends React.Component {
                   >
                     <TouchableHighlight
                       style={{
-                        
                         height: 60,
                         width: 60,
 
@@ -393,9 +393,7 @@ class TrackGuide extends React.Component {
                         alignSelf: "center",
 
                         flexDirection: "column",
-                        justifyContent: "center",
-
-                       
+                        justifyContent: "center"
                       }}
                       onPress={this.nextTutorial}
                     >
@@ -444,10 +442,12 @@ class TrackGuide extends React.Component {
                     textAlign: "center",
                     color: "white",
                     marginBottom: 5,
-                    fontSize: 32
+                    fontSize: 32,
+                    width: Dimensions.get("window").width * 0.8,
+                    alignSelf: "center"
                   }}
                 >
-                  {"but points depend also\nto weather conditions,\npeak hours and\nfrequency of playing".toUpperCase()}
+                  {strings("id_16_05")}
                 </Text>
               </View>
 
@@ -515,22 +515,22 @@ class TrackGuide extends React.Component {
               </View>
             </View>
             <View
-                style={{
-                  position: "absolute",
+              style={{
+                position: "absolute",
 
-                  bottom: 18 + this.state.extra,
-                  left: Dimensions.get("window").width / 2 - 30
+                bottom: 18 + this.state.extra,
+                left: Dimensions.get("window").width / 2 - 30
+              }}
+            >
+              <View
+                style={{
+                  position: "relative",
+                  height: 70,
+                  width: 60,
+                  top: 10
                 }}
               >
-                <View
-                  style={{
-                    position: "relative",
-                    height: 70,
-                    width: 60,
-                    top: 10
-                  }}
-                >
-                  {/* {Platform.OS == "android" ? (
+                {/* {Platform.OS == "android" ? (
             <BoxShadow
               setting={{
                 height: 60,
@@ -554,37 +554,34 @@ class TrackGuide extends React.Component {
           ) : (
             <View />
           )} */}
-                  <View
+                <View
+                  style={{
+                    position: "relative"
+                  }}
+                >
+                  <TouchableHighlight
                     style={{
-                      position: "relative"
+                      height: 60,
+                      width: 60,
+
+                      alignContent: "center",
+                      alignItems: "center",
+                      alignSelf: "center",
+
+                      flexDirection: "column",
+                      justifyContent: "center"
                     }}
+                    onPress={this.nextTutorial2}
                   >
-                    <TouchableHighlight
-                      style={{
-                       
-                        height: 60,
-                        width: 60,
-
-                        alignContent: "center",
-                        alignItems: "center",
-                        alignSelf: "center",
-
-                        flexDirection: "column",
-                        justifyContent: "center",
-
-                       
-                      }}
-                      onPress={this.nextTutorial2}
-                    >
-                      <OwnIcon
-                        name="arrow_tutorial"
-                        size={40}
-                        color={"#ffffff"}
-                      />
-                    </TouchableHighlight>
-                  </View>
+                    <OwnIcon
+                      name="arrow_tutorial"
+                      size={40}
+                      color={"#ffffff"}
+                    />
+                  </TouchableHighlight>
                 </View>
               </View>
+            </View>
           </Aux>
         )}
       </Aux>

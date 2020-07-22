@@ -90,19 +90,19 @@ class InviteNoFriendScreen extends React.PureComponent {
         first_name: this.props.infoProfile.first_name,
         last_name: this.props.infoProfile.last_name,
         avatar: this.props.infoProfile.avatar,
-        points: this.props.Points,
+        points: 0,
         role: this.props.infoProfile.role,
         coins: this.props.infoProfile.coins,
         level: JSON.stringify(this.props.infoProfile.level),
         roleIndex: JSON.stringify(this.props.roleAll),
         city: this.props.infoProfile.city
+          ? this.props.infoProfile.city.city_name
             ? this.props.infoProfile.city.city_name
-                ? this.props.infoProfile.city.city_name
-                : ""
             : ""
+          : ""
         // roleUser: this.props.loginState.role.roleUser,
         // indexRole: this.props.loginState.role.indexRole
-    };
+      };
       let result = await this.buo.generateShortUrl({}, linkProperties);
 
       // console.log("generateShortUrl", result);
@@ -229,7 +229,7 @@ class InviteNoFriendScreen extends React.PureComponent {
                     fontSize: 14
                   }}
                 >
-                  {strings('invite')}
+                  {strings("invite")}
                 </Text>
               ) : (
                 <ActivityIndicator size="small" color="white" />
@@ -255,13 +255,7 @@ class InviteNoFriendScreen extends React.PureComponent {
 
 const withConnect = connect(state => {
   return {
-      roleAll: state.login.role,
-      Points:
-          state.statistics.statistics === []
-              ? 0
-              : state.statistics.statistics.reduce((total, elem, index, array) => {
-                  return total + elem.points;
-              }, 0)
+    roleAll: state.login.role
   };
 });
 

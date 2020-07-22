@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
   TouchableWithoutFeedback,
   NativeModules,
-  Image
+  Image,
 } from "react-native";
 import Svg, {
   G,
@@ -26,7 +26,7 @@ import Svg, {
   Polygon,
   Gradient,
   Clips,
-  DashedLine
+  DashedLine,
 } from "react-native-svg";
 import { createSelector } from "reselect";
 
@@ -37,11 +37,11 @@ import PieChart from "./../../components/AreaStack/PieChart";
 import { connect } from "react-redux";
 import {
   getStats,
-  changeScreenStatistics
+  changeScreenStatistics,
 } from "./../../domains/statistics/ActionCreators";
 import {
   deleteMostFrequentRoute,
-  getMostFrequentRoute
+  getMostFrequentRoute,
 } from "./../../domains/login/ActionCreators";
 import { checkPublic } from "./../../domains/trainings/ActionCreators";
 import DescriptionIcon from "../../components/DescriptionIcon/DescriptionIcon";
@@ -53,20 +53,24 @@ import WebService from "./../../config/WebService";
 import { thisExpression } from "@babel/types";
 import AppleHealthKit from "rn-apple-healthkit";
 import GoogleFit, { Scopes } from "react-native-google-fit";
-import { AreaChart, Grid, YAxis, XAxis } from "react-native-svg-charts";
+import { AreaChart, Grid, YAxis, XAxis,  BarChart } from "react-native-svg-charts";
 import * as shape from "d3-shape";
 import { Calendar, CalendarList, Agenda } from "react-native-calendars";
 import Aux from "../../helpers/Aux";
 import moment from "moment";
 import pointsDecimal from "../../helpers/pointsDecimal";
 import Icon from "react-native-vector-icons/Ionicons";
-const XDate = require('xdate');
+import { store } from "../../store";
+const XDate = require("xdate");
 
 function weekDayNames(firstDayOfWeek = 0) {
+  firstDayOfWeek = new Date().getDay();
   let weekDaysNames = XDate.locales[XDate.defaultLocale].dayNamesShort;
   const dayShift = firstDayOfWeek % 7;
   if (dayShift) {
-    weekDaysNames = weekDaysNames.slice(dayShift).concat(weekDaysNames.slice(0, dayShift));
+    weekDaysNames = weekDaysNames
+      .slice(dayShift)
+      .concat(weekDaysNames.slice(0, dayShift));
   }
   return weekDaysNames;
 }
@@ -85,9 +89,8 @@ class ChartsWavesScreen extends React.Component {
 
     const now = new Date();
 
-
-
     this.state = {
+      averageDifference: "0deg", // 90deg negativo , -90deg positivo
       page: "DAILY",
       showLoading: true,
       refreshing: false,
@@ -124,10 +127,13 @@ class ChartsWavesScreen extends React.Component {
         0,
         0,
         0,
-        0
+        0,
       ],
       dayActivities: 0,
       weekActivities: [],
+      averageActivity: [0, 0, 0, 0, 0, 0, 0],
+      dayActivity: [0, 0, 0, 0, 0, 0, 0],
+      averageActivityValue: 0,
       data2: [
         1,
         1,
@@ -156,7 +162,7 @@ class ChartsWavesScreen extends React.Component {
         1,
         1,
         1,
-        1
+        1,
       ],
       activitiesDay: "",
       timeActivity: [],
@@ -165,7 +171,7 @@ class ChartsWavesScreen extends React.Component {
       markedDates: {},
       minutesActivities: 0,
       calories: 0,
-      maxY: 10
+      maxY: 10,
       // data: [
       //   0,
       //   0,
@@ -188,18 +194,18 @@ class ChartsWavesScreen extends React.Component {
     };
   }
 
-  DescriptionIconModal = typeIcon => {
+  DescriptionIconModal = (typeIcon) => {
     // Alert.alert("weather");
     this.setState({
       modalActive: true,
-      iconChoose: typeIcon
+      iconChoose: typeIcon,
     });
   };
 
   DeleteDescriptionIconModal = () => {
     // Alert.alert("weather");
     this.setState({
-      modalActive: false
+      modalActive: false,
     });
   };
 
@@ -209,8 +215,73 @@ class ChartsWavesScreen extends React.Component {
     //   Alert.alert("Oops", "Seems like an error occured");
   }
 
+  calcolateActivitiesWeekFromState = () => {
+    // prendo le attività
+    const weekActivities = store.getState().statistics.weekActivities;
+    console.log(weekActivities);
+    // considero da ieri fino a 7 giorni prima di ieri
+    const daysConsidered = 8;
+    const now = moment().format("YYYY-MM-DD");
+    const lastDayConsidered = moment()
+      .subtract(daysConsidered, "days")
+      .format("YYYY-MM-DD");
+      console.log(now)
+      console.log(lastDayConsidered)
+    const ActivitiesConsidered = weekActivities.filter(
+      (elem) =>
+        elem.activities_day > lastDayConsidered && elem.activities_day < now
+    );
+
+    console.log(ActivitiesConsidered);
+    // ho i giorni attinenti
+    let dayActivity = [0, 0, 0, 0, 0, 0, 0];
+    const a = moment();
+    for (i = 0; i < ActivitiesConsidered.length; i++) {
+      // devo vedere che giorno è
+      console.log(ActivitiesConsidered[i].activities_day);
+
+      const b = moment(ActivitiesConsidered[i].activities_day);
+
+      const different = a.diff(b, "days"); // 1
+      console.log(different);
+      dayActivity[dayActivity.length - different] =
+        ActivitiesConsidered[i].activities_minutes;
+    }
+    // const list = dayActivity.filter((elem) => elem !== 0);
+    const averageActivityValue =
+      dayActivity.reduce((prev, curr) => prev + curr) / dayActivity.length;
+
+    // ora calcolo la media nella settimana considerando ieri
+    ;
+    const yesterday = moment().subtract(1, "days").format("YYYY-MM-DD");
+    const lastDayConsideredYesterday = moment()
+      .subtract(daysConsidered + 1, "days")
+      .format("YYYY-MM-DD");
+    const ActivitiesConsideredYesterday = weekActivities.filter(
+      (elem) =>
+        elem.activities_day > lastDayConsideredYesterday && elem.activities_day < yesterday
+    );
+    const averageActivityValueYesterday = ActivitiesConsideredYesterday.reduce((prev, curr) => prev + curr.activities_minutes, 0) / 7;
+    console.log(averageActivityValueYesterday)
+    let averageDifference = "-90deg" // 90deg negativo , -90deg positivo
+    if (averageActivityValueYesterday < averageActivityValue) {
+      averageDifference = "90deg" 
+    }
+
+
+    this.setState({
+      dayActivity,
+      showLoading: false,
+      averageActivityValue,
+      averageActivityValueYesterday,
+      averageDifference
+
+    });
+  };
+
   componentDidMount() {
-    this.askForFitAuth();
+    // this.askForFitAuthWeek();
+    this.calcolateActivitiesWeekFromState();
     // setTimeout(
     //   () =>
     //     this.setState({
@@ -220,619 +291,145 @@ class ChartsWavesScreen extends React.Component {
     // );
   }
 
-  componentWillReceiveProps(props) {
-   
-  }
-
-
+  componentWillReceiveProps(props) {}
 
   askForFitAuth() {
     this.setState({
-      calories: 0
-    })
-    
-      if (Platform.OS == "ios") {
-        let perm = {
-          permissions: {
-            read: [
-              "AppleExerciseTime",
+      calories: 0,
+    });
+
+    if (Platform.OS == "ios") {
+      let perm = {
+        permissions: {
+          read: [
+            "AppleExerciseTime",
             "ActiveEnergyBurned",
             "DistanceCycling",
             "DistanceWalkingRunning",
             "StepCount",
-            ]
-          }
-        };
-        let options = {
-          startDate: new Date(new Date().toDateString()).toISOString(), // required
-          endDate: new Date().toISOString(), // optional; default now
-          // ascending: false, // optional; default false
-          // limit: 10, // optional; default no limit,
-          // type: 'Walking',
-        };
+          ],
+        },
+      };
+      let options = {
+        startDate: new Date(new Date().toDateString()).toISOString(), // required
+        endDate: new Date().toISOString(), // optional; default now
+        // ascending: false, // optional; default false
+        // limit: 10, // optional; default no limit,
+        // type: 'Walking',
+      };
 
-        AppleHealthKit.initHealthKit(perm, (err, results) => {
+      AppleHealthKit.initHealthKit(perm, (err, results) => {
+        if (err) {
+          let data = Array.from({ length: 24 }, (_, idx) =>
+            idx < Hours ? 1 : 0
+          );
+
+          this.setState({ data: data, showLoading: false });
+
+          console.log("error initializing Healthkit: ", err);
+          return;
+        }
+
+        AppleHealthKit.getActiveEnergyBurned(options, (err, results) => {
           if (err) {
+            console.log("errore");
+            console.log(err);
+            this.setState({ activitiesApple: JSON.stringify(err) });
+            return;
+          }
+          console.log("risultati");
+          console.log(results);
+
+          let calories = 0;
+          results.forEach((elem) => {
+            calories += elem.value;
+          });
+
+          this.setState({
+            calories: Math.round(calories),
+          });
+        });
+
+        AppleHealthKit.getSamples(options, (err, results) => {
+          if (err) {
+            console.log("errore");
+            console.log(err);
 
             let data = Array.from({ length: 24 }, (_, idx) =>
-                idx < Hours ? 1 : 0
-              );
+              idx < Hours ? 1 : 0
+            );
 
-              this.setState({ data: data, showLoading: false, });
-
-            console.log("error initializing Healthkit: ", err);
-            return;
-          }
-
-          
-
-          AppleHealthKit.getActiveEnergyBurned(
-            options,
-            (err, results) => {
-              if (err) {
-                console.log('errore');
-                console.log(err);
-                this.setState({ activitiesApple: JSON.stringify(err) });
-                return;
-              }
-              console.log('risultati');
-              console.log(results);
-
-              let calories = 0
-              results.forEach( elem => 
-                {
-                  calories += elem.value
-                })
-
-                this.setState({
-                  
-                  calories: Math.round(calories),
-                 
-                });
-
-            }
-          );
-
-          AppleHealthKit.getSamples(
-            options,
-            (err, results) => {
-              if (err) {
-                console.log('errore');
-                console.log(err);
-                
-                let data = Array.from({ length: 24 }, (_, idx) =>
-                idx < Hours ? 1 : 0
-              );
-
-              this.setState({ data: data, showLoading: false, activitiesApple: JSON.stringify(err) });
-                return;
-              }
-              console.log('risultati');
-              console.log(results);
-              const Hours = new Date().getHours();
-
-              // metto il grafico con valore iniziale a 1 fino all'ora corrente, per il futuro metto 0
-              let data = Array.from({ length: 24 }, (_, idx) =>
-                idx < Hours ? 1 : 0
-              );
-
-              console.log(results);
-              console.log(err);
-
-              // controllo se hai il watch 
-              let checkWatch = ''
-              for (i = 0; i < results.length; i++) {
-                if (results[i].device.search('Watch') >= 0) {
-                  checkWatch = results[i].device;
-                  break
-                }
-              }
-              console.warn('dati', checkWatch)
-              let timeActivity = results
-              if (checkWatch.length) {
-                timeActivity = results.filter(elem => elem.device == checkWatch)
-              }
-              console.warn('dati', timeActivity)
-              timeActivity.forEach((elem, index) => {
-                if (elem.end && elem.start) {
-                  
-                
-                  const end =  moment(elem.end)
-                  const start =  moment(elem.start)
-                  
-                 
-                  const time = (end + start) / 2;
-                  const activities = (end - start) / 60000;
-                 
-                  const hour = new Date(time).getHours();
-                  
-                  data[hour] = Math.round(activities) + data[hour];
-                  
-                } 
-              });
-              console.warn('dati', data)
-              this.setState({ activitiesApple: JSON.stringify(results), data: data, showLoading: false, 
-                maxY: Math.max(...data)});
-              
-            }
-          );
-
-
-
-
-
-        });
-      } else {
-        // The list of available scopes inside of src/scopes.js file
-        const options = {
-          scopes: [
-            Scopes.FITNESS_ACTIVITY_READ,
-            Scopes.FITNESS_ACTIVITY_READ_WRITE,
-            Scopes.FITNESS_BODY_READ,
-            Scopes.FITNESS_BODY_READ_WRITE,
-            Scopes.FITNESS_NUTRITION_READ,
-            Scopes.FITNESS_LOCATION_READ_WRITE
-          ]
-        };
-        GoogleFit.authorize(options)
-          .then(res => {
-            console.log("authorized >>>", res);
-            this.setState({ log: "authorized >>> " + JSON.stringify(res) });
-
-            let Now = new Date();
-
-            const millisecond = Now.getTime();
-            // vedo che giorno è oggi
-            // Sunday is 0, Monday is 1, and so on.
-            // tolgo un giorno cosi quando è lunedi da 0 e domenica da 6
-            const millisecondMon = millisecond - 86400000;
-            // calcolo il tempo iniziale della settimana
-            const DayNowFromMon = new Date(millisecondMon).getDay();
-
-            let optDay = {
-              startDate: new Date(new Date().toDateString()).valueOf(),
-              endDate: new Date().valueOf()
-            };
-
-            GoogleFit.getActivitySamples(optDay, (err, res) => {
-              const Hours = new Date().getHours();
-              // let data = [
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1,
-              //   1
-              // ];
-
-              // metto il grafico con valore iniziale a 1 fino all'ora corrente, per il futuro metto 0
-              let data = Array.from({ length: 24 }, (_, idx) =>
-                idx < Hours ? 1 : 0
-              );
-
-              console.log(res);
-              console.log(err);
-              console.warn("risultati oggi",res);
-              const resFilter = res.filter(
-                elem => elem.activityName != 'still' && elem.activityName != 'unknown'
-              );
-
-              let calories = 0;
-
-              resFilter.forEach((elem, index) => {
-                if (elem.end && elem.start) {
-                  const time = (elem.end + elem.start) / 2;
-                  const activities = (elem.end - elem.start) / 60000;
-                  const day = new Date(time).toLocaleString();
-                  const hour = new Date(time).getHours();
-                  data[hour] = Math.round(activities) + data[hour];
-                  calories += elem.calories ? elem.calories : 0;
-
-                }
-              })
-
-              console.warn('dati', data)
-
-              this.setState({
-                activitiesDay:
-                  "activitiesDay >>> " + JSON.stringify(res ? res : err),
-                calories: Math.round(calories),
-                showLoading: false ,
-                // timeActivity: timeActivity,
-                data,
-                maxY: Math.max(...data) / 2 + 10
-              });
+            this.setState({
+              data: data,
+              showLoading: false,
+              activitiesApple: JSON.stringify(err),
             });
-          })
-          .catch(err => {
-            console.log("err >>> ", err);
-            this.setState({ log: "err >>> " + JSON.stringify(err) });
-          });
-      }
-  }
-
-  daysInMonth = (month, year) => {
-    //     // July
-    // daysInMonth(7,2009); // 31
-    // // February
-    // daysInMonth(2,2009); // 28
-    // daysInMonth(2,2008); // 29
-    return new Date(year, month, 0).getDate();
-  }
-
-  askForFitAuthMonthly() {
-    this.setState({
-      calories: 0
-    })
-
-    
-      if (Platform.OS == "ios") {
-        let perm = {
-          permissions: {
-            read: [
-              "AppleExerciseTime",
-            "ActiveEnergyBurned",
-            "DistanceCycling",
-            "DistanceWalkingRunning",
-            "StepCount",
-            ]
-          }
-        };
-        const Days = new Date().getDate();
-        dayCurrent =
-          new Date(new Date().toDateString()).valueOf() -
-          86400000 * (Days - 1);
-        let options = {
-          startDate: new Date(dayCurrent).toISOString(), // required
-          endDate: new Date().toISOString(), // optional; default now
-          // ascending: false, // optional; default false
-          // limit: 10 // optional; default no limit
-        };
-        AppleHealthKit.initHealthKit(perm, (err, results) => {
-          if (err) {
-            err;
-            console.log("error initializing Healthkit: ", err);
             return;
           }
+          console.log("risultati");
+          console.log(results);
+          const Hours = new Date().getHours();
 
-          const optWeek = {
-            startDate: new Date(
-              new Date(new Date().toDateString()).valueOf() -
-              86400000 * (Days - 1)
-            ).toISOString(),
-            endDate: new Date().toISOString()
-          };
-
-          AppleHealthKit.getActiveEnergyBurned(
-            optWeek,
-            (err, results) => {
-              if (err) {
-                console.log('errore');
-                console.log(err);
-                this.setState({ activitiesApple: JSON.stringify(err) });
-                return;
-              }
-              console.log('risultati');
-              console.log(results);
-
-              let calories = 0
-              results.forEach( elem => 
-                {
-                  calories += elem.value
-                })
-
-                this.setState({
-                  
-                  calories: Math.round(calories),
-                 
-                });
-
-            }
+          // metto il grafico con valore iniziale a 1 fino all'ora corrente, per il futuro metto 0
+          let data = Array.from({ length: 24 }, (_, idx) =>
+            idx < Hours ? 1 : 0
           );
 
-          AppleHealthKit.getAppleExerciseTime(
-            options,
-            (err, results) => {
-              if (err) {
-                console.log('errore');
-                console.log(err);
-                this.setState({ activitiesApple: JSON.stringify(err) });
-                return;
-              }
-              console.log('risultati');
-              console.log(results);
-             
-              let resultsMin = results.map(elem => {
-                const d = new Date(moment(elem.startDate));
-                const datestring =
-                  d.getFullYear() +
-                  "-" +
-                  ("0" + (d.getMonth() + 1)).slice(-2) +
-                  "-" +
-                  ("0" + d.getDate()).slice(-2);
-                return ({
-                  date: datestring,
-                  value: Math.round(elem.value / 60),
-                  
-                })
-              })
-              
+          console.log(results);
+          console.log(err);
 
-
-
-
-              this.setState(state => {
-
-                const dateValue = [
-                  ...state.dateValue,
-                  ...resultsMin
-                ];
-                console.log(dateValue);
-
-                let minutesActivities = 0;
-               
-                
-                let dateArray = dateValue.map(elem => {
-                  let value = elem.value;
-                  minutesActivities += value;
-                  
-                  let color = '#F39558'
-                  if (value > 29 && value < 60) {
-                    color = '#EF7361'
-                  } else if (value > 59 && value < 90) {
-                    color = '#EB506A'
-                  } else if (value > 59) {
-                    color = '#E82F72'
-                  }
-                  // return {
-                  //   [elem.date]: {
-                  //     customStyles: {
-                  //       container: {
-                  //         backgroundColor: color
-                  //       },
-                  //       text: {
-                  //         color: 'white',
-
-                  //       },
-                  //     }
-                  //   }
-                  // };
-                  return {
-                    [elem.date]:
-                    {
-                      customStyles: {
-                        container: {
-                          backgroundColor: color
-                        },
-                        text: {
-                          color: 'white',
-
-                        },
-                      }
-
-                    }
-                  };
-                });
-
-                
-               
-
-                dateArray = dateArray.map(a => {
-                  return JSON.stringify(a).slice(1, -1);
-                });
-
-                let arrString = dateArray.join(",");
-                let markedDates = JSON.parse("{" + arrString + "}");
-                console.log(markedDates);
-                return { markedDates, dateValue, minutesActivities,   };
-              });
+          // controllo se hai il watch
+          let checkWatch = "";
+          for (i = 0; i < results.length; i++) {
+            if (results[i].device.search("Watch") >= 0) {
+              checkWatch = results[i].device;
+              break;
             }
-          );
+          }
+          console.warn("dati", checkWatch);
+          let timeActivity = results;
+          if (checkWatch.length) {
+            timeActivity = results.filter((elem) => elem.device == checkWatch);
+          }
+          console.warn("dati", timeActivity);
+          timeActivity.forEach((elem, index) => {
+            if (elem.end && elem.start) {
+              const end = moment(elem.end);
+              const start = moment(elem.start);
 
+              const time = (end + start) / 2;
+              const activities = (end - start) / 60000;
+
+              const hour = new Date(time).getHours();
+
+              data[hour] = Math.round(activities) + data[hour];
+            }
+          });
+          console.warn("dati", data);
+          this.setState({
+            activitiesApple: JSON.stringify(results),
+            data: data,
+            showLoading: false,
+            maxY: Math.max(...data),
+          });
         });
-      } else {
-        // The list of available scopes inside of src/scopes.js file
-        const options = {
-          scopes: [
-            Scopes.FITNESS_ACTIVITY_READ,
-            Scopes.FITNESS_ACTIVITY_READ_WRITE,
-            Scopes.FITNESS_BODY_READ,
-            Scopes.FITNESS_BODY_READ_WRITE,
-            Scopes.FITNESS_NUTRITION_READ,
-            Scopes.FITNESS_LOCATION_READ_WRITE
-          ]
-        };
-
-        GoogleFit.authorize(options)
-          .then(res => {
-            console.log("authorized >>>", res);
-            this.setState({ log: "authorized >>> " + JSON.stringify(res) });
-
-            let Now = new Date();
-
-            const millisecond = Now.getTime();
-            // vedo che giorno è oggi
-            // Sunday is 0, Monday is 1, and so on.
-            // tolgo un giorno cosi quando è lunedi da 0 e domenica da 6
-            const millisecondMon = millisecond - 86400000;
-            // calcolo il tempo iniziale della settimana
-            const Days = new Date().getDate();
-            console.log(Days)
-
-            for (dayIndex = 0; dayIndex < Days; dayIndex++) {
-              let dayCurrent = new Date(new Date().toDateString()).valueOf();
-              const indexDay = dayIndex;
-              let optDay = {
-                startDate: dayCurrent,
-                endDate: new Date().valueOf()
-              };
-              if (indexDay < Days - 1) {
-                dayCurrent =
-                  new Date(new Date().toDateString()).valueOf() -
-                  86400000 * (Days - indexDay - 1);
-                optDay = {
-                  startDate: dayCurrent,
-                  endDate: dayCurrent + 86400000
-                };
-              }
-              console.log(optDay)
-
-              GoogleFit.getActivitySamples(optDay, (err, res) => {
-                let data = 0;
-
-                console.log(res);
-                console.log(err);
-                const resFilter = res.filter(
-                  elem => elem.activityName != 'still' && elem.activityName != 'unknown'
-                );
-
-                let calories = 0
-
-                let timeActivity = resFilter.map((elem, index) => {
-                  if (elem.end && elem.start) {
-                    const activities = (elem.end - elem.start) / 60000;
-
-                    data = Math.round(activities) + data;
-                    calories +=  elem.calories ? elem.calories : 0
-
-                    return { activities };
-                  } else {
-                    return { activities: 0 };
-                  }
-                });
-                console.log(data)
-
-                // se ho un'attività ovvero almeno 1 min 
-                if (data) {
-                  this.setState(state => {
-                    const d = new Date(dayCurrent);
-                    const datestring =
-                      d.getFullYear() +
-                      "-" +
-                      ("0" + (d.getMonth() + 1)).slice(-2) +
-                      "-" +
-                      ("0" + d.getDate()).slice(-2);
-                    const dateValue = [
-                      ...state.dateValue,
-                      {
-                        date: datestring,
-                        value: data,
-                        calories: calories
-                       
-                      }
-                    ];
-                    console.log(dateValue);
-  
-                    let minutesActivities = 0;
-                    let caloriesTot = 0;
-                   
-                    let dateArray = dateValue.map(elem => {
-                      let value = elem.value;
-                      caloriesTot += elem.calories;
-                      minutesActivities += value;
-                      let color = '#F39558'
-                      if (value > 29 && value < 60) {
-                        color = '#EF7361'
-                      } else if (value > 59 && value < 90) {
-                        color = '#EB506A'
-                      } else if (value > 59) {
-                        color = '#E82F72'
-                      }
-                      // return {
-                      //   [elem.date]: {
-                      //     customStyles: {
-                      //       container: {
-                      //         backgroundColor: color
-                      //       },
-                      //       text: {
-                      //         color: 'white',
-  
-                      //       },
-                      //     }
-                      //   }
-                      // };
-                      return {
-                        [elem.date]:
-                        {
-                          customStyles: {
-                            container: {
-                              backgroundColor: color
-                            },
-                            text: {
-                              color: 'white',
-    
-                            },
-                          }
-    
-                        }
-                      };
-                    });
-  
-                    dateArray = dateArray.map(a => {
-                      return JSON.stringify(a).slice(1, -1);
-                    });
-  
-                    let arrString = dateArray.join(",");
-                    let markedDates = JSON.parse("{" + arrString + "}");
-                    console.log(markedDates);
-                    return { markedDates, dateValue, minutesActivities, calories: Math.round(caloriesTot), };
-                  });
-                }
-
-                
-              });
-            }
-          })
-          .catch(err => {
-            console.log("err >>> ", err);
-            this.setState({ log: "err >>> " + JSON.stringify(err) });
-          });
-      }
-  }
-
-  askForFitAuthWeek() {
-    this.setState({
-      calories: 0
-    })
-    
-      if (Platform.OS == "ios") {
-        let perm = {
-          permissions: {
-            read: [
-              "AppleExerciseTime",
-              "ActiveEnergyBurned",
-              "DistanceCycling",
-              "DistanceWalkingRunning",
-              "StepCount",
-              
-            ]
-          }
-        };
-
-        AppleHealthKit.initHealthKit(perm, (err, results) => {
-          if (err) {
-            err;
-            console.log("error initializing Healthkit: ", err);
-            return;
-          }
+      });
+    } else {
+      // The list of available scopes inside of src/scopes.js file
+      const options = {
+        scopes: [
+          Scopes.FITNESS_ACTIVITY_READ,
+          Scopes.FITNESS_ACTIVITY_READ_WRITE,
+          Scopes.FITNESS_BODY_READ,
+          Scopes.FITNESS_BODY_READ_WRITE,
+          Scopes.FITNESS_NUTRITION_READ,
+          Scopes.FITNESS_LOCATION_READ_WRITE,
+        ],
+      };
+      GoogleFit.authorize(options)
+        .then((res) => {
+          console.log("authorized >>>", res);
+          this.setState({ log: "authorized >>> " + JSON.stringify(res) });
 
           let Now = new Date();
 
@@ -844,15 +441,440 @@ class ChartsWavesScreen extends React.Component {
           // calcolo il tempo iniziale della settimana
           const DayNowFromMon = new Date(millisecondMon).getDay();
 
-          const optWeek = {
-            startDate: new Date(
-              new Date(new Date().toDateString()).valueOf() -
-              86400000 * (DayNowFromMon)
-            ).toISOString(),
-            endDate: new Date().toISOString()
+          let optDay = {
+            startDate: new Date(new Date().toDateString()).valueOf(),
+            endDate: new Date().valueOf(),
           };
 
-          AppleHealthKit.getActiveEnergyBurned(
+          GoogleFit.getActivitySamples(optDay, (err, res) => {
+            const Hours = new Date().getHours();
+            // let data = [
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1,
+            //   1
+            // ];
+
+            // metto il grafico con valore iniziale a 1 fino all'ora corrente, per il futuro metto 0
+            let data = Array.from({ length: 24 }, (_, idx) =>
+              idx < Hours ? 1 : 0
+            );
+
+            console.log(res);
+            console.log(err);
+            console.warn("risultati oggi", res);
+            const resFilter = res.filter(
+              (elem) =>
+                elem.activityName != "still" && elem.activityName != "unknown"
+            );
+
+            let calories = 0;
+
+            resFilter.forEach((elem, index) => {
+              if (elem.end && elem.start) {
+                const time = (elem.end + elem.start) / 2;
+                const activities = (elem.end - elem.start) / 60000;
+                const day = new Date(time).toLocaleString();
+                const hour = new Date(time).getHours();
+                data[hour] = Math.round(activities) + data[hour];
+                calories += elem.calories ? elem.calories : 0;
+              }
+            });
+
+            console.warn("dati", data);
+
+            this.setState({
+              activitiesDay:
+                "activitiesDay >>> " + JSON.stringify(res ? res : err),
+              calories: Math.round(calories),
+              showLoading: false,
+              // timeActivity: timeActivity,
+              data,
+              maxY: Math.max(...data) / 2 + 10,
+            });
+          });
+        })
+        .catch((err) => {
+          console.log("err >>> ", err);
+          this.setState({ log: "err >>> " + JSON.stringify(err) });
+        });
+    }
+  }
+
+  daysInMonth = (month, year) => {
+    //     // July
+    // daysInMonth(7,2009); // 31
+    // // February
+    // daysInMonth(2,2009); // 28
+    // daysInMonth(2,2008); // 29
+    return new Date(year, month, 0).getDate();
+  };
+
+  askForFitAuthMonthly() {
+    this.setState({
+      calories: 0,
+    });
+
+    if (Platform.OS == "ios") {
+      let perm = {
+        permissions: {
+          read: [
+            "AppleExerciseTime",
+            "ActiveEnergyBurned",
+            "DistanceCycling",
+            "DistanceWalkingRunning",
+            "StepCount",
+          ],
+        },
+      };
+      const Days = new Date().getDate();
+      dayCurrent =
+        new Date(new Date().toDateString()).valueOf() - 86400000 * (Days - 1);
+      let options = {
+        startDate: new Date(dayCurrent).toISOString(), // required
+        endDate: new Date().toISOString(), // optional; default now
+        // ascending: false, // optional; default false
+        // limit: 10 // optional; default no limit
+      };
+      AppleHealthKit.initHealthKit(perm, (err, results) => {
+        if (err) {
+          err;
+          console.log("error initializing Healthkit: ", err);
+          return;
+        }
+
+        const optWeek = {
+          startDate: new Date(
+            new Date(new Date().toDateString()).valueOf() -
+              86400000 * (Days - 1)
+          ).toISOString(),
+          endDate: new Date().toISOString(),
+        };
+
+        AppleHealthKit.getActiveEnergyBurned(optWeek, (err, results) => {
+          if (err) {
+            console.log("errore");
+            console.log(err);
+            this.setState({ activitiesApple: JSON.stringify(err) });
+            return;
+          }
+          console.log("risultati");
+          console.log(results);
+
+          let calories = 0;
+          results.forEach((elem) => {
+            calories += elem.value;
+          });
+
+          this.setState({
+            calories: Math.round(calories),
+          });
+        });
+
+        // AppleHealthKit.getAppleExerciseTime(options, (err, results) => {
+        //   if (err) {
+        //     console.log("errore");
+        //     console.log(err);
+        //     this.setState({ activitiesApple: JSON.stringify(err) });
+        //     return;
+        //   }
+        //   console.log("risultati");
+        //   console.log(results);
+
+        //   let resultsMin = results.map((elem) => {
+        //     const d = new Date(moment(elem.startDate));
+        //     const datestring =
+        //       d.getFullYear() +
+        //       "-" +
+        //       ("0" + (d.getMonth() + 1)).slice(-2) +
+        //       "-" +
+        //       ("0" + d.getDate()).slice(-2);
+        //     return {
+        //       date: datestring,
+        //       value: Math.round(elem.value / 60),
+        //     };
+        //   });
+
+        //   this.setState((state) => {
+        //     const dateValue = [...state.dateValue, ...resultsMin];
+        //     console.log(dateValue);
+
+        //     let minutesActivities = 0;
+
+        //     let dateArray = dateValue.map((elem) => {
+        //       let value = elem.value;
+        //       minutesActivities += value;
+
+        //       let color = "#F39558";
+        //       if (value > 29 && value < 60) {
+        //         color = "#EF7361";
+        //       } else if (value > 59 && value < 90) {
+        //         color = "#EB506A";
+        //       } else if (value > 59) {
+        //         color = "#E82F72";
+        //       }
+        //       // return {
+        //       //   [elem.date]: {
+        //       //     customStyles: {
+        //       //       container: {
+        //       //         backgroundColor: color
+        //       //       },
+        //       //       text: {
+        //       //         color: 'white',
+
+        //       //       },
+        //       //     }
+        //       //   }
+        //       // };
+        //       return {
+        //         [elem.date]: {
+        //           customStyles: {
+        //             container: {
+        //               backgroundColor: color,
+        //             },
+        //             text: {
+        //               color: "white",
+        //             },
+        //           },
+        //         },
+        //       };
+        //     });
+
+        //     dateArray = dateArray.map((a) => {
+        //       return JSON.stringify(a).slice(1, -1);
+        //     });
+
+        //     let arrString = dateArray.join(",");
+        //     let markedDates = JSON.parse("{" + arrString + "}");
+        //     console.log(markedDates);
+        //     return { markedDates, dateValue, minutesActivities };
+        //   });
+        // });
+      });
+    } else {
+      // The list of available scopes inside of src/scopes.js file
+      const options = {
+        scopes: [
+          Scopes.FITNESS_ACTIVITY_READ,
+          Scopes.FITNESS_ACTIVITY_READ_WRITE,
+          Scopes.FITNESS_BODY_READ,
+          Scopes.FITNESS_BODY_READ_WRITE,
+          Scopes.FITNESS_NUTRITION_READ,
+          Scopes.FITNESS_LOCATION_READ_WRITE,
+        ],
+      };
+
+      GoogleFit.authorize(options)
+        .then((res) => {
+          console.log("authorized >>>", res);
+          this.setState({ log: "authorized >>> " + JSON.stringify(res) });
+
+          let Now = new Date();
+
+          const millisecond = Now.getTime();
+          // vedo che giorno è oggi
+          // Sunday is 0, Monday is 1, and so on.
+          // tolgo un giorno cosi quando è lunedi da 0 e domenica da 6
+          const millisecondMon = millisecond - 86400000;
+          // calcolo il tempo iniziale della settimana
+          const Days = new Date().getDate();
+          console.log(Days);
+
+          for (dayIndex = 0; dayIndex < Days; dayIndex++) {
+            let dayCurrent = new Date(new Date().toDateString()).valueOf();
+            const indexDay = dayIndex;
+            let optDay = {
+              startDate: dayCurrent,
+              endDate: new Date().valueOf(),
+            };
+            if (indexDay < Days - 1) {
+              dayCurrent =
+                new Date(new Date().toDateString()).valueOf() -
+                86400000 * (Days - indexDay - 1);
+              optDay = {
+                startDate: dayCurrent,
+                endDate: dayCurrent + 86400000,
+              };
+            }
+            console.log(optDay);
+
+            GoogleFit.getActivitySamples(optDay, (err, res) => {
+              let data = 0;
+
+              console.log(res);
+              console.log(err);
+              const resFilter = res.filter(
+                (elem) =>
+                  elem.activityName != "still" && elem.activityName != "unknown"
+              );
+
+              let calories = 0;
+
+              let timeActivity = resFilter.map((elem, index) => {
+                if (elem.end && elem.start) {
+                  const activities = (elem.end - elem.start) / 60000;
+
+                  data = Math.round(activities) + data;
+                  calories += elem.calories ? elem.calories : 0;
+
+                  return { activities };
+                } else {
+                  return { activities: 0 };
+                }
+              });
+              console.log(data);
+
+              // se ho un'attività ovvero almeno 1 min
+              if (data) {
+                this.setState((state) => {
+                  const d = new Date(dayCurrent);
+                  const datestring =
+                    d.getFullYear() +
+                    "-" +
+                    ("0" + (d.getMonth() + 1)).slice(-2) +
+                    "-" +
+                    ("0" + d.getDate()).slice(-2);
+                  const dateValue = [
+                    ...state.dateValue,
+                    {
+                      date: datestring,
+                      value: data,
+                      calories: calories,
+                    },
+                  ];
+                  console.log(dateValue);
+
+                  let minutesActivities = 0;
+                  let caloriesTot = 0;
+
+                  let dateArray = dateValue.map((elem) => {
+                    let value = elem.value;
+                    caloriesTot += elem.calories;
+                    minutesActivities += value;
+                    let color = "#F39558";
+                    if (value > 29 && value < 60) {
+                      color = "#EF7361";
+                    } else if (value > 59 && value < 90) {
+                      color = "#EB506A";
+                    } else if (value > 59) {
+                      color = "#E82F72";
+                    }
+                    // return {
+                    //   [elem.date]: {
+                    //     customStyles: {
+                    //       container: {
+                    //         backgroundColor: color
+                    //       },
+                    //       text: {
+                    //         color: 'white',
+
+                    //       },
+                    //     }
+                    //   }
+                    // };
+                    return {
+                      [elem.date]: {
+                        customStyles: {
+                          container: {
+                            backgroundColor: color,
+                          },
+                          text: {
+                            color: "white",
+                          },
+                        },
+                      },
+                    };
+                  });
+
+                  dateArray = dateArray.map((a) => {
+                    return JSON.stringify(a).slice(1, -1);
+                  });
+
+                  let arrString = dateArray.join(",");
+                  let markedDates = JSON.parse("{" + arrString + "}");
+                  console.log(markedDates);
+                  return {
+                    markedDates,
+                    dateValue,
+                    minutesActivities,
+                    calories: Math.round(caloriesTot),
+                  };
+                });
+              }
+            });
+          }
+        })
+        .catch((err) => {
+          console.log("err >>> ", err);
+          this.setState({ log: "err >>> " + JSON.stringify(err) });
+        });
+    }
+  }
+
+  askForFitAuthWeek() {
+    this.setState({
+      calories: 0,
+    });
+
+    if (Platform.OS == "ios") {
+      let perm = {
+        permissions: {
+          read: [
+            "AppleExerciseTime",
+            "ActiveEnergyBurned",
+            "DistanceCycling",
+            "DistanceWalkingRunning",
+            "StepCount",
+          ],
+        },
+      };
+
+      AppleHealthKit.initHealthKit(perm, (err, results) => {
+        if (err) {
+          err;
+          console.log("error initializing Healthkit: ", err);
+          return;
+        }
+
+        let Now = new Date();
+
+        const millisecond = Now.getTime();
+        // vedo che giorno è oggi
+        // Sunday is 0, Monday is 1, and so on.
+        // tolgo un giorno cosi quando è lunedi da 0 e domenica da 6
+        const millisecondMon = millisecond - 86400000;
+        // calcolo il tempo iniziale della settimana
+        const DayNowFromMon = new Date(millisecondMon).getDay();
+
+        const optWeek = {
+          startDate: new Date(
+            new Date(new Date().toDateString()).valueOf() -
+              86400000 * DayNowFromMon
+          ).toISOString(),
+          endDate: new Date().toISOString(),
+        };
+
+        /*  AppleHealthKit.getActiveEnergyBurned(
             optWeek,
             (err, results) => {
               if (err) {
@@ -877,194 +899,211 @@ class ChartsWavesScreen extends React.Component {
                 });
 
             }
-          );
+          ); */
+
+        for (dayIndex = 0; dayIndex <= DayNowFromMon; dayIndex++) {
+          const indexDay = dayIndex;
+          let optDayIos = {
+            startDate: new Date(new Date().toDateString()).toISOString(),
+            endDate: new Date().toISOString(),
+          };
+          if (indexDay != DayNowFromMon) {
+            optDayIos = {
+              startDate: new Date(
+                new Date(new Date().toDateString()).valueOf() -
+                  86400000 * (DayNowFromMon - indexDay)
+              ).toISOString(),
+              endDate: new Date(
+                new Date(new Date().toDateString()).valueOf() -
+                  86400000 * (DayNowFromMon - indexDay - 1)
+              ).toISOString(),
+            };
+          }
+          AppleHealthKit.getSamples(optDayIos, (err, results) => {
+            if (err) {
+              console.log("errore");
+              console.log(err);
+              this.setState({ activitiesApple: JSON.stringify(err) });
+              return;
+            }
+
+            let data = [1, 1, 1, 1];
+
+            console.log(results);
+            console.log(err);
+
+            // controllo se hai il watch
+            let checkWatch = "";
+            for (i = 0; i < results.length; i++) {
+              if (results[i].device.search("Watch" > 0)) {
+                checkWatch = results[i].device;
+                break;
+              }
+            }
+            let timeActivity = results;
+            if (checkWatch) {
+              timeActivity = results.filter(
+                (elem) => elem.device == checkWatch
+              );
+            }
+
+            timeActivity = timeActivity.map((elem, index) => {
+              if (elem.end && elem.start) {
+                const end = moment(elem.end);
+                const start = moment(elem.start);
+                const time = (end + start) / 2;
+                const activities = (end - start) / 60000;
+                const day = new Date(time).toLocaleString();
+                const hour = new Date(time).getHours();
+                if (hour < 6) {
+                  data[0] = Math.round(activities) + data[0];
+                } else if (hour < 12) {
+                  data[1] = Math.round(activities) + data[1];
+                } else if (hour < 18) {
+                  data[2] = Math.round(activities) + data[2];
+                } else {
+                  data[3] = Math.round(activities) + data[3];
+                }
+
+                return { time, activities };
+              } else {
+                return { time: 0, activities: 0, day: 0 };
+              }
+            });
+            this.setState((state) => {
+              let data2 = state.data2;
+              data2[indexDay * 4] = data[0];
+              data2[indexDay * 4 + 1] = data[1];
+              data2[indexDay * 4 + 2] = data[2];
+              data2[indexDay * 4 + 3] = data[3];
+              let averageActivity = state.averageActivity;
+              averageActivity[indexDay] = data[0] + data[1] + data[2] + data[3];
+              const list = averageActivity.filter((elem) => elem !== 0);
+              const averageActivityValue =
+                list.reduce((prev, curr) => prev + curr) / list.length / 2;
+
+              return {
+                data2: data2,
+                averageActivity,
+                averageActivityValue,
+                showLoading: false,
+              };
+            });
+          });
+        }
+      });
+    } else {
+      // The list of available scopes inside of src/scopes.js file
+      const options = {
+        scopes: [
+          Scopes.FITNESS_ACTIVITY_READ,
+          Scopes.FITNESS_ACTIVITY_READ_WRITE,
+          Scopes.FITNESS_BODY_READ,
+          Scopes.FITNESS_BODY_READ_WRITE,
+          Scopes.FITNESS_NUTRITION_READ,
+          Scopes.FITNESS_LOCATION_READ_WRITE,
+        ],
+      };
+      GoogleFit.authorize(options)
+        .then((res) => {
+          console.log("authorized >>>", res);
+          this.setState({ log: "authorized >>> " + JSON.stringify(res) });
+
+          let Now = new Date();
+
+          const millisecond = Now.getTime();
+          // vedo che giorno è oggi
+          // Sunday is 0, Monday is 1, and so on.
+          // tolgo un giorno cosi quando è lunedi da 0 e domenica da 6
+          const millisecondMon = millisecond - 86400000;
+          // calcolo il tempo iniziale della settimana
+          const DayNowFromMon = new Date(millisecondMon).getDay();
 
           for (dayIndex = 0; dayIndex <= DayNowFromMon; dayIndex++) {
             const indexDay = dayIndex;
-            let optDayIos = {
-              startDate: new Date(new Date().toDateString()).toISOString(),
-              endDate: new Date().toISOString()
+            let optDay = {
+              startDate: new Date(new Date().toDateString()).valueOf(),
+              endDate: new Date().valueOf(),
             };
             if (indexDay != DayNowFromMon) {
-              optDayIos = {
+              optDay = {
                 startDate: new Date(
                   new Date(new Date().toDateString()).valueOf() -
-                  86400000 * (DayNowFromMon - indexDay)
-                ).toISOString(),
+                    86400000 * (DayNowFromMon - indexDay)
+                ).valueOf(),
                 endDate: new Date(
                   new Date(new Date().toDateString()).valueOf() -
-                  86400000 * (DayNowFromMon - indexDay - 1)
-                ).toISOString()
-              };
-            }
-            AppleHealthKit.getSamples(
-              optDayIos,
-              (err, results) => {
-                if (err) {
-                  console.log('errore');
-                  console.log(err);
-                  this.setState({ activitiesApple: JSON.stringify(err) });
-                  return;
-                }
-
-
-                let data = [1, 1, 1, 1];
-
-                console.log(results);
-                console.log(err);
-
-                // controllo se hai il watch 
-                let checkWatch = ''
-                for (i = 0; i < results.length; i++) {
-                  if (results[i].device.search('Watch' > 0)) {
-                    checkWatch = results[i].device;
-                    break
-                  }
-
-                }
-                let timeActivity = results
-                if (checkWatch) {
-                  timeActivity = results.filter(elem => elem.device == checkWatch)
-                }
-                
-
-                timeActivity = timeActivity.map((elem, index) => {
-                  if (elem.end && elem.start) {
-                    const end =  moment(elem.end)
-                    const start =  moment(elem.start)
-                    const time = (end + start) / 2;
-                    const activities = (end - start) / 60000;
-                    const day = new Date(time).toLocaleString();
-                    const hour = new Date(time).getHours();
-                    if (hour < 6) {
-                      data[0] = Math.round(activities) + data[0];
-                    } else if (hour < 12) {
-                      data[1] = Math.round(activities) + data[1];
-                    } else if (hour < 18) {
-                      data[2] = Math.round(activities) + data[2];
-                    } else {
-                      data[3] = Math.round(activities) + data[3];
-                    }
-
-
-                    return { time, activities, };
-                  } else {
-                    return { time: 0, activities: 0, day: 0 };
-                  }
-                });
-                this.setState(state => {
-                  let data2 = state.data2;
-                  data2[indexDay * 4] = data[0];
-                  data2[indexDay * 4 + 1] = data[1];
-                  data2[indexDay * 4 + 2] = data[2];
-                  data2[indexDay * 4 + 3] = data[3];
-                  return { data2: data2,  };
-                });
-              }
-            );
-          }
-
-
-        });
-      } else {
-        // The list of available scopes inside of src/scopes.js file
-        const options = {
-          scopes: [
-            Scopes.FITNESS_ACTIVITY_READ,
-            Scopes.FITNESS_ACTIVITY_READ_WRITE,
-            Scopes.FITNESS_BODY_READ,
-            Scopes.FITNESS_BODY_READ_WRITE,
-            Scopes.FITNESS_NUTRITION_READ,
-            Scopes.FITNESS_LOCATION_READ_WRITE
-          ]
-        };
-        GoogleFit.authorize(options)
-          .then(res => {
-            console.log("authorized >>>", res);
-            this.setState({ log: "authorized >>> " + JSON.stringify(res) });
-
-            let Now = new Date();
-
-            const millisecond = Now.getTime();
-            // vedo che giorno è oggi
-            // Sunday is 0, Monday is 1, and so on.
-            // tolgo un giorno cosi quando è lunedi da 0 e domenica da 6
-            const millisecondMon = millisecond - 86400000;
-            // calcolo il tempo iniziale della settimana
-            const DayNowFromMon = new Date(millisecondMon).getDay();
-
-            for (dayIndex = 0; dayIndex <= DayNowFromMon; dayIndex++) {
-              const indexDay = dayIndex;
-              let optDay = {
-                startDate: new Date(new Date().toDateString()).valueOf(),
-                endDate: new Date().valueOf()
-              };
-              if (indexDay != DayNowFromMon) {
-                optDay = {
-                  startDate: new Date(
-                    new Date(new Date().toDateString()).valueOf() -
-                    86400000 * (DayNowFromMon - indexDay)
-                  ).valueOf(),
-                  endDate: new Date(
-                    new Date(new Date().toDateString()).valueOf() -
                     86400000 * (DayNowFromMon - indexDay - 1)
-                  ).valueOf()
-                };
-              }
-              GoogleFit.getActivitySamples(optDay, (err, res) => {
-                let data = [1, 1, 1, 1];
-
-                console.log(res);
-                console.log(err);
-                const resFilter = res.filter(
-                  elem => elem.activityName != 'still' && elem.activityName != 'unknown'
-                );
-
-                let calories = 0
-                    
-
-                let timeActivity = resFilter.map((elem, index) => {
-                  if (elem.end && elem.start) {
-                    const time = (elem.end + elem.start) / 2;
-                    const activities = (elem.end - elem.start) / 60000;
-                    const day = new Date(time).toLocaleString();
-                    const hour = new Date(time).getHours();
-                    calories +=  elem.calories ? elem.calories : 0
-                    if (hour < 6) {
-                      data[0] = Math.round(activities) + data[0];
-                    } else if (hour < 12) {
-                      data[1] = Math.round(activities) + data[1];
-                    } else if (hour < 18) {
-                      data[2] = Math.round(activities) + data[2];
-                    } else {
-                      data[3] = Math.round(activities) + data[3];
-                    }
-
-                    return { time, activities, day };
-                  } else {
-                    return { time: 0, activities: 0, day: 0 };
-                  }
-                });
-
-                this.setState(state => {
-                  let data2 = state.data2;
-                  data2[indexDay * 4] = data[0];
-                  data2[indexDay * 4 + 1] = data[1];
-                  data2[indexDay * 4 + 2] = data[2];
-                  data2[indexDay * 4 + 3] = data[3];
-                  return { data2: data2, activitiesDay:
-                    "activitiesDay >>> " + JSON.stringify(res ? res : err), 
-                    calories: state.calories + Math.round(calories)
-                  };
-                });
-              });
+                ).valueOf(),
+              };
             }
-          })
-          .catch(err => {
-            console.log("err >>> ", err);
-            this.setState({ log: "err >>> " + JSON.stringify(err) });
-          });
-      }
+            GoogleFit.getActivitySamples(optDay, (err, res) => {
+              let data = [1, 1, 1, 1];
+
+              console.log(res);
+              console.log(err);
+              const resFilter = res.filter(
+                (elem) =>
+                  elem.activityName != "still" && elem.activityName != "unknown"
+              );
+
+              let calories = 0;
+
+              let timeActivity = resFilter.map((elem, index) => {
+                if (elem.end && elem.start) {
+                  const time = (elem.end + elem.start) / 2;
+                  const activities = (elem.end - elem.start) / 60000;
+                  const day = new Date(time).toLocaleString();
+                  const hour = new Date(time).getHours();
+                  calories += elem.calories ? elem.calories : 0;
+                  if (hour < 6) {
+                    data[0] = Math.round(activities) + data[0];
+                  } else if (hour < 12) {
+                    data[1] = Math.round(activities) + data[1];
+                  } else if (hour < 18) {
+                    data[2] = Math.round(activities) + data[2];
+                  } else {
+                    data[3] = Math.round(activities) + data[3];
+                  }
+
+                  return { time, activities, day };
+                } else {
+                  return { time: 0, activities: 0, day: 0 };
+                }
+              });
+
+              this.setState((state) => {
+                let data2 = state.data2;
+                data2[indexDay * 4] = data[0];
+                data2[indexDay * 4 + 1] = data[1];
+                data2[indexDay * 4 + 2] = data[2];
+                data2[indexDay * 4 + 3] = data[3];
+
+                let averageActivity = state.averageActivity;
+                averageActivity[indexDay] =
+                  data[0] + data[1] + data[2] + data[3];
+                const list = averageActivity.filter((elem) => elem !== 0);
+                const averageActivityValue =
+                  list.reduce((prev, curr) => prev + curr) / list.length;
+
+                return {
+                  data2: data2,
+                  averageActivity,
+                  averageActivityValue,
+                  activitiesDay:
+                    "activitiesDay >>> " + JSON.stringify(res ? res : err),
+                  calories: state.calories + Math.round(calories),
+                  showLoading: false,
+                };
+              });
+            });
+          }
+        })
+        .catch((err) => {
+          console.log("err >>> ", err);
+          this.setState({ log: "err >>> " + JSON.stringify(err) });
+        });
+    }
   }
 
   onRefresh() {
@@ -1073,14 +1112,12 @@ class ChartsWavesScreen extends React.Component {
     // if (this.props.statisticsState.error)
     //   Alert.alert("Oops", "Seems like an error occured");
     const loading = setInterval(() => {
-  
-        this.setState({ refreshing: false });
-        clearTimeout(loading);
-      
+      this.setState({ refreshing: false });
+      clearTimeout(loading);
     }, 1000);
   }
 
-  handleChangePage = page => {
+  handleChangePage = (page) => {
     if (page == "WEEKLY") {
       this.askForFitAuthWeek();
     } else if (page == "DAILY") {
@@ -1102,9 +1139,9 @@ class ChartsWavesScreen extends React.Component {
     else return -y + value * 0.5;
   };
 
-  goToDetailFrequentRoutine = elem => {
+  goToDetailFrequentRoutine = (elem) => {
     this.props.navigation.navigate("FrequentRoutineMapDetail", {
-      routine: elem
+      routine: elem,
     });
   };
 
@@ -1123,13 +1160,13 @@ class ChartsWavesScreen extends React.Component {
                   ({
                     text: "Cancel",
                     onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
+                    style: "cancel",
                   },
-                    {
-                      text: strings("ok").toLocaleUpperCase(),
-                      onPress: () =>
-                        this.props.dispatch(deleteMostFrequentRoute({}, id))
-                    })
+                  {
+                    text: strings("id_0_12").toLocaleUpperCase(),
+                    onPress: () =>
+                      this.props.dispatch(deleteMostFrequentRoute({}, id)),
+                  }),
                 ],
                 { cancelable: false }
               );
@@ -1145,7 +1182,7 @@ class ChartsWavesScreen extends React.Component {
                 borderRadius: 1,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 0.01 },
-                shadowOpacity: 0.2
+                shadowOpacity: 0.2,
               }}
             >
               <Text style={styles.iconText}>x</Text>
@@ -1165,7 +1202,7 @@ class ChartsWavesScreen extends React.Component {
             borderRadius: 1,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 0.01 },
-            shadowOpacity: 0.2
+            shadowOpacity: 0.2,
           }}
         />
       );
@@ -1181,7 +1218,7 @@ class ChartsWavesScreen extends React.Component {
             <Text
               style={[
                 styles.text,
-                { color: this.state.page == "DAILY" ? "#3D3D3D" : "#9D9B9C" }
+                { color: this.state.page == "DAILY" ? "#3D3D3D" : "#9D9B9C" },
               ]}
             >
               DAILY
@@ -1191,8 +1228,8 @@ class ChartsWavesScreen extends React.Component {
                 styles.underline,
                 {
                   backgroundColor:
-                    this.state.page == "DAILY" ? "#3D3D3D" : "#9D9B9C"
-                }
+                    this.state.page == "DAILY" ? "#3D3D3D" : "#9D9B9C",
+                },
               ]}
             />
           </View>
@@ -1204,7 +1241,7 @@ class ChartsWavesScreen extends React.Component {
             <Text
               style={[
                 styles.text,
-                { color: this.state.page == "WEEKLY" ? "#3D3D3D" : "#9D9B9C" }
+                { color: this.state.page == "WEEKLY" ? "#3D3D3D" : "#9D9B9C" },
               ]}
             >
               WEEKLY
@@ -1214,8 +1251,8 @@ class ChartsWavesScreen extends React.Component {
                 styles.underline,
                 {
                   backgroundColor:
-                    this.state.page == "WEEKLY" ? "#3D3D3D" : "#9D9B9C"
-                }
+                    this.state.page == "WEEKLY" ? "#3D3D3D" : "#9D9B9C",
+                },
               ]}
             />
           </View>
@@ -1227,7 +1264,7 @@ class ChartsWavesScreen extends React.Component {
             <Text
               style={[
                 styles.text,
-                { color: this.state.page == "MONTHLY" ? "#3D3D3D" : "#9D9B9C" }
+                { color: this.state.page == "MONTHLY" ? "#3D3D3D" : "#9D9B9C" },
               ]}
             >
               MONTHLY
@@ -1237,8 +1274,8 @@ class ChartsWavesScreen extends React.Component {
                 styles.underline,
                 {
                   backgroundColor:
-                    this.state.page == "MONTHLY" ? "#3D3D3D" : "#9D9B9C"
-                }
+                    this.state.page == "MONTHLY" ? "#3D3D3D" : "#9D9B9C",
+                },
               ]}
             />
           </View>
@@ -1254,8 +1291,9 @@ class ChartsWavesScreen extends React.Component {
 
     const CustomGrid = ({ x, y, data, ticks }) => (
       <G>
-        {// Vertical grid
-          [0, 3.5, 7.5, 11.5, 15.5, 19.5, 23.5, 27.5].map((data, index) => (
+        {
+          // Vertical grid
+          [0, 1, 2, 3, 4, 5, 6, 7].map((data, index) => (
             <Line
               key={data}
               y1={"0%"}
@@ -1272,9 +1310,31 @@ class ChartsWavesScreen extends React.Component {
               strokeLinecap="round"
               strokeDasharray="0, 10"
             />
-          ))}
+          ))
+        }
+        {
+          // horizzontal grid
+
+          <Line
+            x1={"0%"}
+            x2={"100%"}
+            y1={y(this.state.averageActivityValue)}
+            y2={y(this.state.averageActivityValue)}
+            stroke="#FFFFFF"
+            // strokeHeight="2"
+            strokeWidth="3"
+            fill="none"
+            strokeLinecap="square"
+            // strokeLinejoin='bevel'
+            // strokeDashoffset='8'
+            strokeDasharray={[9]}
+
+            // strokeDasharray="0, 20"
+          />
+        }
       </G>
     );
+    console.log(this.state.dayActivity);
     return (
       <Aux>
         <View
@@ -1284,39 +1344,69 @@ class ChartsWavesScreen extends React.Component {
             width: Dimensions.get("window").width,
             alignContent: "center",
             justifyContent: "center",
-            alignItems: "center"
+            alignItems: "center",
           }}
         >
-          <YAxis
-            data={[0, 10, 20, 30, 40, 50, 60]}
-            style={{ height: 220 }}
+          {/* <YAxis
+            data={[30, 60, 90]}
+            style={{ height: 150 }}
             contentInset={contentInset}
             svg={{
               fill: "#3D3D3D",
-              fontSize: 10
+              fontSize: 10,
             }}
-            numberOfTicks={6}
-            formatLabel={value => `${value}'`}
-          />
+            numberOfTicks={3}
+            formatLabel={(value) => `${value}'`}
+          /> */}
+          <View
+            style={{
+              height: 220,
+              width: 20,
+              flexDirection: "column",
+              alignContent: "center",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            {[120, 90, 60, 30, 0].map((value) => (
+              <Text
+                key={value}
+                style={{
+                  
+                  fontSize: 10,
+                  fontFamily: "OpenSans-Regular",
+                  textAlign: "left",
+
+                  color: "#3F3F3F",
+                  fontSize: 9,
+                  fontWeight: "bold",
+                }}
+              >
+                {value && value !== 120 ? value + "'" : ""}
+              </Text>
+            ))}
+          </View>
 
           <AreaChart
             style={{
               height: 200,
               width: Dimensions.get("window").width * 0.8,
               backgroundColor: "#f6f6f6",
-              marginLeft: 16
+              marginLeft: 16,
             }}
-            data={this.state.data2}
+            data={this.state.dayActivity}
             // contentInset={{ top: 30, bottom: 30 }}
             // curve={shape.curveStep}
             curve={shape.curveNatural}
             yMin={0}
-            yMax={60}
+            yMax={120}
+            min={0}
+            max={120}
             //svg={{ fill: 'rgba(134, 65, 244, 0.8)' }}
             animate={true}
-            contentInset={{ top: 100, bottom: 0 }}
+            // contentInset={{ top: 100, bottom: 0 }}
             svg={{
-              fill: "url(#gradient)"
+              fill: "url(#gradient)",
               // clipPath: 'url(#clip-path-1)',
             }}
             numberOfTicks={18}
@@ -1372,66 +1462,269 @@ class ChartsWavesScreen extends React.Component {
             width: Dimensions.get("window").width * 0.8,
             // marginLeft: 25,
             // marginLeft: 32 + Dimensions.get("window").width * 0.1,
-            marginLeft: 32 + Dimensions.get("window").width * 0.1,
+            marginLeft: 0 + Dimensions.get("window").width * 0.1,
             flexDirection: "row",
             // justifyContent: 'space-around'
             justifyContent: "space-between",
-            alignContent: "center"
+            alignContent: "center",
           }}
         >
-          {
-            weekDayNames(1).map((elem) => { console.warn('giorno', elem);
-             return( <View
-              style={{
-                height: 22,
-                width: 22,
-               
-                alignContent: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                alignItems: "center"
+          {weekDayNames(1).map((elem) => {
+            console.warn("giorno", elem);
+            return (
+              <View
+                key={elem}
+                style={{
+                  height: 22,
+                  width: 22,
+
+                  alignContent: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    
+                    fontSize: 10,
+                    fontFamily: "OpenSans-Regular",
+                    textAlign: "center",
+
+                    color: "#9D9B9C",
+                    fontSize: 9,
+                    fontWeight: "300",
+                  }}
+                >
+                  {elem}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </Aux>
+    );
+  };
+
+  renderWeeklyIstogram = () => {
+    const contentInset = { top: 10, bottom: 10 };
+    const contentInsetX = { left: 10, right: 10 };
+    const data = [0, 4, 8, 12, 16, 20, 24, 28];
+
+    const CustomGrid = ({ x, y, data, ticks }) => (
+      <G>
+        {
+          // Vertical grid
+          [0, 1, 2, 3, 4, 5, 6, 7].map((data, index) => (
+            <Line
+              key={data}
+              y1={"0%"}
+              y2={"100%"}
+              x1={x(data)}
+              x2={x(data)}
+              stroke="#3d3d3d"
+              strokeWidth="2"
+              fill="none"
+              // strokeLinecap='round'
+              // strokeLinejoin='bevel'
+              // strokeDashoffset='8'
+              // strokeDasharray={[2,2,2,2,2,2,2,2]}
+              strokeLinecap="round"
+              strokeDasharray="0, 10"
+            />
+          ))
+        }
+        {
+          // horizzontal grid
+
+          <Line
+            x1={"0%"}
+            x2={"100%"}
+            y1={y(this.state.averageActivityValue)}
+            y2={y(this.state.averageActivityValue)}
+            stroke="#FFFFFF"
+            // strokeHeight="2"
+            strokeWidth="3"
+            fill="none"
+            strokeLinecap="square"
+            // strokeLinejoin='bevel'
+            // strokeDashoffset='8'
+            strokeDasharray={[9]}
+
+            // strokeDasharray="0, 20"
+          />
+        }
+      </G>
+    );
+    const fill = 'rgb(134, 65, 244)'
+    // console.log(this.state.dayActivity);
+    return (
+      <Aux>
+        <View
+          style={{
+            
+            flexDirection: "row",
+            width: Dimensions.get("window").width,
+            alignContent: "center",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {/* <View
+            style={{
+              height: 220,
+              width: 20,
+              flexDirection: "column",
+              alignContent: "center",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            {[120, 90, 60, 30, 0].map((value) => (
+              <Text
+                key={value}
+                style={{
+                  
+                  fontSize: 10,
+                  fontFamily: "OpenSans-Regular",
+                  textAlign: "left",
+
+                  color: "#3F3F3F",
+                  fontSize: 9,
+                  fontWeight: "bold",
+                }}
+              >
+                {value && value !== 120 ? value + "'" : ""}
+              </Text>
+            ))}
+          </View> */}
+          
+          <YAxis
+                    data={this.state.dayActivity}
+                    style={{height: 200,
+                      marginTop: 15,
+                      
               }}
-            ><Text style={{ fontSize: 10, color: "#9D9B9C" }}>{elem}</Text></View>)}
-          )}
+                    
+                    svg={{
+                        fill: 'grey',
+                        fontSize: 10,
+                    }}
+                    contentInset={{ top: 10, bottom: 10 }}
+                    min={0}
+                    numberOfTicks={5}
+                    formatLabel={(value) => `${value}`}
+                />
+
+          <BarChart style={{  height: 200, width: Dimensions.get("window").width * 0.8,
+              backgroundColor: "#f6f6f6", marginLeft: 16,}} data={this.state.dayActivity} svg={{ fill }} contentInset={{ top: 30, bottom: 0 }}>
+               
+            </BarChart>
+        </View>
+        {/* <XAxis
+          style={{
+            marginHorizontal: -10,
+            width: Dimensions.get("window").width * 0.8 + 20,
+            marginLeft: 25
+          }}
+          data={[0, 4, 8, 12, 16, 20, 24]}
+          formatLabel={index => `${4 * index}`}
+          contentInset={{
+            left: 10,
+            right: 10,
+            height: 50,
+            width: 50,
+            borderRadius: 25,
+            backgroundColor: "#EB436E"
+          }}
+          svg={{ fontSize: 10, cx: "50", cy: "50", r: "30", fill: "black" }}
+          // numberOfTicks={4}
+          contentInset={contentInsetX}
+        /> */}
+        <View
+          style={{
+            // marginHorizontal: -10,
+            width: Dimensions.get("window").width * 0.8,
+            // marginLeft: 25,
+            // marginLeft: 32 + Dimensions.get("window").width * 0.1,
+            marginLeft: 0 + Dimensions.get("window").width * 0.1,
+            flexDirection: "row",
+            // justifyContent: 'space-around'
+            flex: 7,
+            justifyContent: "space-between",
+            alignContent: "center",
+          }}
+        >
+          {weekDayNames(1).map((elem) => {
+            console.warn("giorno", elem);
+            return (
+              <View
+                key={elem}
+                style={{
+                  height: 22,
+                  width: 22,
+                  flex: 1,
+
+                  alignContent: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    
+                    fontSize: 10,
+                    fontFamily: "OpenSans-Regular",
+                    textAlign: "center",
+
+                    color: "#9D9B9C",
+                    fontSize: 9,
+                    fontWeight: "300",
+                  }}
+                >
+                  {elem}
+                </Text>
+              </View>
+            );
+          })}
         </View>
       </Aux>
     );
   };
 
   calcolateActivities = (month) => {
-    // cancello gli altri mesi 
-    console.log(month)
-    console.log(this.state.yearNow)
-    console.log(this.state.monthNow)
+    // cancello gli altri mesi
+    console.log(month);
+    console.log(this.state.yearNow);
+    console.log(this.state.monthNow);
     this.setState({
-      markedDates: {}, dateValue: [], minutesActivitie: 0, calories: 0
-    })
+      markedDates: {},
+      dateValue: [],
+      minutesActivitie: 0,
+      calories: 0,
+    });
     const monthNow = month.month;
     const year = month.year;
 
-    // se metto l'anno e il mese corrente 
+    // se metto l'anno e il mese corrente
     if (year == this.state.yearNow && monthNow == this.state.monthNow) {
       this.askForFitAuthMonthly();
     } else {
+      const Days = this.daysInMonth(monthNow, year);
 
-    
-
-    const Days = this.daysInMonth(monthNow, year);
-
-    
       if (Platform.OS == "ios") {
         let perm = {
           permissions: {
             read: [
               "AppleExerciseTime",
-            "ActiveEnergyBurned",
-            "DistanceCycling",
-            "DistanceWalkingRunning",
-            "StepCount",
-            ]
-          }
+              "ActiveEnergyBurned",
+              "DistanceCycling",
+              "DistanceWalkingRunning",
+              "StepCount",
+            ],
+          },
         };
-
 
         let dayFirstMonthly = new Date(year, monthNow - 1, 1).toISOString();
         let dayLastMonthly = new Date(year, monthNow - 1, Days).toISOString();
@@ -1448,125 +1741,105 @@ class ChartsWavesScreen extends React.Component {
             return;
           }
 
-         
-
-          AppleHealthKit.getActiveEnergyBurned(
-            options,
-            (err, results) => {
-              if (err) {
-                console.log('errore');
-                console.log(err);
-                this.setState({ activitiesApple: JSON.stringify(err) });
-                return;
-              }
-              console.log('risultati');
-              console.log(results);
-
-              let calories = 0
-              results.forEach( elem => 
-                {
-                  calories += elem.value
-                })
-
-                this.setState({
-                  
-                  calories: Math.round(calories),
-                 
-                });
-
+          AppleHealthKit.getActiveEnergyBurned(options, (err, results) => {
+            if (err) {
+              console.log("errore");
+              console.log(err);
+              this.setState({ activitiesApple: JSON.stringify(err) });
+              return;
             }
-          );
+            console.log("risultati");
+            console.log(results);
 
-          AppleHealthKit.getAppleExerciseTime(
-            options,
-            (err, results) => {
-              if (err) {
-                console.log('errore');
-                console.log(err);
-                this.setState({ activitiesApple: JSON.stringify(err) });
-                return;
-              }
-              console.log('risultati');
-              console.log(results);
+            let calories = 0;
+            results.forEach((elem) => {
+              calories += elem.value;
+            });
 
-              let resultsMin = results.map(elem => {
-                const d = new Date(moment(elem.startDate));
-                const datestring =
-                  d.getFullYear() +
-                  "-" +
-                  ("0" + (d.getMonth() + 1)).slice(-2) +
-                  "-" +
-                  ("0" + d.getDate()).slice(-2);
-                return ({
-                  date: datestring,
-                  value: Math.round(elem.value / 60)
-                })
-              })
+            this.setState({
+              calories: Math.round(calories),
+            });
+          });
 
+          // AppleHealthKit.getAppleExerciseTime(options, (err, results) => {
+          //   if (err) {
+          //     console.log("errore");
+          //     console.log(err);
+          //     this.setState({ activitiesApple: JSON.stringify(err) });
+          //     return;
+          //   }
+          //   console.log("risultati");
+          //   console.log(results);
 
-              this.setState(state => {
+          //   let resultsMin = results.map((elem) => {
+          //     const d = new Date(moment(elem.startDate));
+          //     const datestring =
+          //       d.getFullYear() +
+          //       "-" +
+          //       ("0" + (d.getMonth() + 1)).slice(-2) +
+          //       "-" +
+          //       ("0" + d.getDate()).slice(-2);
+          //     return {
+          //       date: datestring,
+          //       value: Math.round(elem.value / 60),
+          //     };
+          //   });
 
-                const dateValue = [
-                  ...state.dateValue,
-                  ...resultsMin
-                ];
-                console.log(dateValue);
+          //   this.setState((state) => {
+          //     const dateValue = [...state.dateValue, ...resultsMin];
+          //     console.log(dateValue);
 
-                let minutesActivities = 0
+          //     let minutesActivities = 0;
 
-                let dateArray = dateValue.map(elem => {
-                  let value = elem.value;
-                  minutesActivities += value;
-                  let color = '#F39558'
-                  if (value > 29 && value < 60) {
-                    color = '#EF7361'
-                  } else if (value > 59 && value < 90) {
-                    color = '#EB506A'
-                  } else if (value > 59) {
-                    color = '#E82F72'
-                  }
-                  // return {
-                  //   [elem.date]: {
-                  //     customStyles: {
-                  //       container: {
-                  //         backgroundColor: color
-                  //       },
-                  //       text: {
-                  //         color: 'white',
+          //     let dateArray = dateValue.map((elem) => {
+          //       let value = elem.value;
+          //       minutesActivities += value;
+          //       let color = "#F39558";
+          //       if (value > 29 && value < 60) {
+          //         color = "#EF7361";
+          //       } else if (value > 59 && value < 90) {
+          //         color = "#EB506A";
+          //       } else if (value > 59) {
+          //         color = "#E82F72";
+          //       }
+          //       // return {
+          //       //   [elem.date]: {
+          //       //     customStyles: {
+          //       //       container: {
+          //       //         backgroundColor: color
+          //       //       },
+          //       //       text: {
+          //       //         color: 'white',
 
-                  //       },
-                  //     }
-                  //   }
-                  // };
+          //       //       },
+          //       //     }
+          //       //   }
+          //       // };
 
-                  return {
-                    [elem.date]:
-                    {
-                      customStyles: {
-                        container: {
-                          backgroundColor: color
-                        },
-                        text: {
-                          color: 'white'
-                        },
-                      }
-                    }
-                  };
-                });
+          //       return {
+          //         [elem.date]: {
+          //           customStyles: {
+          //             container: {
+          //               backgroundColor: color,
+          //             },
+          //             text: {
+          //               color: "white",
+          //             },
+          //           },
+          //         },
+          //       };
+          //     });
 
-                dateArray = dateArray.map(a => {
-                  return JSON.stringify(a).slice(1, -1);
-                });
+          //     dateArray = dateArray.map((a) => {
+          //       return JSON.stringify(a).slice(1, -1);
+          //     });
 
-                let arrString = dateArray.join(",");
-                let markedDates = JSON.parse("{" + arrString + "}");
-                console.log(markedDates);
-                return { markedDates, dateValue, minutesActivities };
-              });
-            }
-          );
-
-
+          //     let arrString = dateArray.join(",");
+          //     let markedDates = JSON.parse("{" + arrString + "}");
+          //     console.log(markedDates);
+          //     return { markedDates, dateValue, minutesActivities };
+          //   });
+          // });
         });
       } else {
         // The list of available scopes inside of src/scopes.js file
@@ -1577,24 +1850,27 @@ class ChartsWavesScreen extends React.Component {
             Scopes.FITNESS_BODY_READ,
             Scopes.FITNESS_BODY_READ_WRITE,
             Scopes.FITNESS_NUTRITION_READ,
-            Scopes.FITNESS_LOCATION_READ_WRITE
-          ]
+            Scopes.FITNESS_LOCATION_READ_WRITE,
+          ],
         };
 
         GoogleFit.authorize(options)
-          .then(res => {
+          .then((res) => {
             console.log("authorized >>>", res);
             this.setState({ log: "authorized >>> " + JSON.stringify(res) });
 
             let Now = new Date();
 
             for (dayIndex = 0; dayIndex < Days; dayIndex++) {
-
               const indexDay = dayIndex;
-              let dayCurrent = new Date(year, monthNow - 1, indexDay + 1).valueOf();
+              let dayCurrent = new Date(
+                year,
+                monthNow - 1,
+                indexDay + 1
+              ).valueOf();
               let optDay = {
                 startDate: dayCurrent,
-                endDate: dayCurrent + 86400000
+                endDate: dayCurrent + 86400000,
               };
               // if (indexDay < Days - 1) {
               //   dayCurrent =
@@ -1611,15 +1887,17 @@ class ChartsWavesScreen extends React.Component {
                 console.log(res);
                 console.log(err);
                 const resFilter = res.filter(
-                  elem => elem.activityName != 'still' && elem.activityName != 'unknown'
+                  (elem) =>
+                    elem.activityName != "still" &&
+                    elem.activityName != "unknown"
                 );
 
-                let calories = 0
+                let calories = 0;
 
                 let timeActivity = resFilter.map((elem, index) => {
                   if (elem.end && elem.start) {
                     const activities = (elem.end - elem.start) / 60000;
-                    calories +=  elem.calories ? elem.calories : 0
+                    calories += elem.calories ? elem.calories : 0;
 
                     data = Math.round(activities) + data;
 
@@ -1630,7 +1908,7 @@ class ChartsWavesScreen extends React.Component {
                 });
 
                 if (data) {
-                  this.setState(state => {
+                  this.setState((state) => {
                     const d = new Date(dayCurrent);
                     const datestring =
                       d.getFullYear() +
@@ -1642,21 +1920,21 @@ class ChartsWavesScreen extends React.Component {
                       ...state.dateValue,
                       {
                         date: datestring,
-                        value: data
-                      }
+                        value: data,
+                      },
                     ];
                     console.log(dateValue);
                     let minutesActivities = 0;
-                    let dateArray = dateValue.map(elem => {
+                    let dateArray = dateValue.map((elem) => {
                       let value = elem.value;
                       minutesActivities += value;
-                      let color = '#F39558'
+                      let color = "#F39558";
                       if (value > 29 && value < 60) {
-                        color = '#EF7361'
+                        color = "#EF7361";
                       } else if (value > 59 && value < 90) {
-                        color = '#EB506A'
+                        color = "#EB506A";
                       } else if (value > 59) {
-                        color = '#E82F72'
+                        color = "#E82F72";
                       }
                       // return {
                       //   [elem.date]: {
@@ -1666,54 +1944,50 @@ class ChartsWavesScreen extends React.Component {
                       //       },
                       //       text: {
                       //         color: 'white',
-  
+
                       //       },
                       //     }
                       //   }
                       // };
                       return {
-                        [elem.date]:
-                        {
+                        [elem.date]: {
                           customStyles: {
                             container: {
-                              backgroundColor: color
+                              backgroundColor: color,
                             },
                             text: {
-                              color: 'white',
-    
+                              color: "white",
                             },
-                          }
-    
-                        }
+                          },
+                        },
                       };
                     });
-  
-                    dateArray = dateArray.map(a => {
+
+                    dateArray = dateArray.map((a) => {
                       return JSON.stringify(a).slice(1, -1);
                     });
-  
+
                     let arrString = dateArray.join(",");
                     let markedDates = JSON.parse("{" + arrString + "}");
                     console.log(markedDates);
-                    return { 
-                      markedDates, 
-                      dateValue, 
-                      minutesActivities,  
-                      calories: state.calories + Math.round(calories) };
+                    return {
+                      markedDates,
+                      dateValue,
+                      minutesActivities,
+                      calories: state.calories + Math.round(calories),
+                    };
                   });
                 }
               });
             }
           })
-          .catch(err => {
+          .catch((err) => {
             console.log("err >>> ", err);
             this.setState({ log: "err >>> " + JSON.stringify(err) });
           });
       }
     }
-
-
-  }
+  };
 
   renderDay = () => {
     const contentInset = { top: 10, bottom: 10 };
@@ -1727,7 +2001,7 @@ class ChartsWavesScreen extends React.Component {
             width: Dimensions.get("window").width,
             alignContent: "center",
             justifyContent: "center",
-            alignItems: "center"
+            alignItems: "center",
           }}
         >
           <YAxis
@@ -1736,10 +2010,10 @@ class ChartsWavesScreen extends React.Component {
             contentInset={contentInset}
             svg={{
               fill: "#3D3D3D",
-              fontSize: 10
+              fontSize: 10,
             }}
             numberOfTicks={6}
-            formatLabel={value => `${value}'`}
+            formatLabel={(value) => `${value}'`}
           />
 
           <AreaChart
@@ -1747,7 +2021,7 @@ class ChartsWavesScreen extends React.Component {
               height: 200,
               width: Dimensions.get("window").width * 0.8,
               backgroundColor: "#f6f6f6",
-              marginLeft: 16
+              marginLeft: 16,
             }}
             data={this.state.data}
             // contentInset={{ top: 30, bottom: 30 }}
@@ -1760,7 +2034,7 @@ class ChartsWavesScreen extends React.Component {
             animate={true}
             contentInset={{ top: 100, bottom: 0 }}
             svg={{
-              fill: "url(#gradient)"
+              fill: "url(#gradient)",
               // clipPath: 'url(#clip-path-1)',
             }}
             extras={[Gradient, Clips, Line, DashedLine]}
@@ -1787,10 +2061,10 @@ class ChartsWavesScreen extends React.Component {
           style={{
             marginHorizontal: -10,
             width: Dimensions.get("window").width * 0.8 + 20,
-            marginLeft: 25
+            marginLeft: 25,
           }}
           data={[0, 4, 8, 12, 16, 20, 24]}
-          formatLabel={index => `${4 * index}`}
+          formatLabel={(index) => `${4 * index}`}
           contentInset={{ left: 10, right: 10 }}
           svg={{ fontSize: 10, fill: "#3D3D3D" }}
           // numberOfTicks={4}
@@ -1801,7 +2075,6 @@ class ChartsWavesScreen extends React.Component {
   };
 
   renderChartsScreen() {
-
     return (
       <ScrollView
         refreshControl={
@@ -1813,7 +2086,7 @@ class ChartsWavesScreen extends React.Component {
         style={{
           backgroundColor: "#fff",
           height: Dimensions.get("window").height,
-          width: Dimensions.get("window").width
+          width: Dimensions.get("window").width,
         }}
         contentContainerStyle={{
           alignItems: "center",
@@ -1821,12 +2094,119 @@ class ChartsWavesScreen extends React.Component {
           justifyContent: "flex-start",
           alignItems: "center",
           width: Dimensions.get("window").width,
-          paddingBottom: 30
+          paddingBottom: 30,
 
           // height: Dimensions.get("window").height
         }}
       >
-        {this.header()}
+        <View
+          style={{
+            alignItems: "center",
+            backgroundColor: "#fff",
+            justifyContent: "center",
+            alignItems: "center",
+            width: Dimensions.get("window").width * 0.8,
+            paddingBottom: 20,
+            paddingTop: 20,
+
+            // height: Dimensions.get("window").height
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "OpenSans-Regular",
+              color: "#3D3D3D",
+              fontSize: 15,
+              textAlign: "center",
+              textAlignVertical: "center",
+            }}
+          >
+            Eget risus varius blandit sit amet non magna. Etiam porta sem
+            malesuada magna mollis euismod. Sed posuere consectetur est at
+            lobortis.
+          </Text>
+        </View>
+        {this.renderWeeklyIstogram()}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#fff",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: Dimensions.get("window").width * 0.9,
+            paddingBottom: 20,
+            paddingTop: 20,
+
+            // height: Dimensions.get("window").height
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: "Montserrat-ExtraBold",
+              color: "#3D3D3D",
+              fontSize: 17,
+              textAlign: "left",
+              textAlignVertical: "center",
+            }}
+          >
+            MEDIA
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#fff",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                padding: 10,
+                borderBottomColor: "#FAB21E",
+                borderBottomWidth: 2,
+              }}
+            >
+              <Text>
+                <Text
+                  style={{
+                    fontFamily: "Montserrat-ExtraBold",
+                    color: "#3D3D3D",
+                    fontSize: 15,
+                    textAlign: "center",
+                    textAlignVertical: "center",
+                  }}
+                >
+                  {parseInt(this.state.averageActivityValue)}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: "OpenSans-Regular",
+                    color: "#9D9B9C",
+                    fontSize: 10,
+                    textAlign: "center",
+                    textAlignVertical: "center",
+                  }}
+                >
+                  {" "}
+                  min/d
+                </Text>
+              </Text>
+            </View>
+            <View style={{ paddingLeft: 20 }}>
+              <View
+                style={{
+                  transform: [{ rotateZ: this.state.averageDifference }],
+                }}
+              >
+                <Icon name="md-arrow-forward" size={18} color="#FAB21E" />
+              </View>
+            </View>
+          </View>
+        </View>
+        {/* {this.header()}
         {this.state.page == "DAILY" ? (
           this.renderDay()
         ) : this.state.page == "WEEKLY" ? (
@@ -1913,119 +2293,93 @@ class ChartsWavesScreen extends React.Component {
                 // Handler which gets executed when press arrow icon left. It receive a callback can go next month
                 onPressArrowRight={addMonth => addMonth()}
               />
-            )}
-            {this.renderCaloriesBurned()}
-        {this.renderHealthData()}
+            )} */}
+        {/* {this.renderCaloriesBurned()}
+        {this.renderHealthData()}  */}
       </ScrollView>
     );
   }
 
   renderCaloriesBurned() {
-    return(
+    return (
       <View>
-           <View style={styles.headerContainer}>
+        <View style={styles.headerContainer}>
           <Text style={styles.headerText}>CALORIES BURNED</Text>
-          <Icon
-              name="md-arrow-forward"
-              size={18}
-              color="#FAB21E"
-              style={{}}
-            />
+          <Icon name="md-arrow-forward" size={18} color="#FAB21E" style={{}} />
           <View style={styles.caloriesContainer}>
-          <Text style={styles.caloriesText}>{this.state.calories} Kcal</Text>
+            <Text style={styles.caloriesText}>{this.state.calories} Kcal</Text>
           </View>
-          
         </View>
         <View style={styles.headerContainer}>
-        <View style={styles.caloriesStartEndIconContainer} >
-        <Icon
+          <View style={styles.caloriesStartEndIconContainer}>
+            <Icon
               name="md-arrow-forward"
               size={20}
               color="#6497CC"
               style={{}}
             />
-             <Icon
-              name="md-close"
-              size={15}
-              color="#3D3D3D"
-              style={{}}
-            />
+            <Icon name="md-close" size={15} color="#3D3D3D" style={{}} />
             <Text style={styles.headerText}>13</Text>
-        </View>
-          <View style={styles.caloriesCenterIconContainer} >
-          <Icon
-              name="md-arrow-forward"
-              size={20}
-              color="#6497CC"
-              style={{}}
-            />
-             <Icon
-              name="md-close"
-              size={15}
-              color="#3D3D3D"
-              style={{}}
-            />
-            <Text style={styles.headerText}>13</Text>
-        </View>
-          <View style={styles.caloriesStartEndIconContainer} >
-          <Icon
-              name="md-arrow-forward"
-              size={20}
-              color="#6497CC"
-              style={{}}
-            />
-             <Icon
-              name="md-close"
-              size={15}
-              color="#3D3D3D"
-              style={{}}
-            />
-            <Text style={styles.headerText}>13</Text>
-        </View>
-         
-         
-        </View>
           </View>
-    )
+          <View style={styles.caloriesCenterIconContainer}>
+            <Icon
+              name="md-arrow-forward"
+              size={20}
+              color="#6497CC"
+              style={{}}
+            />
+            <Icon name="md-close" size={15} color="#3D3D3D" style={{}} />
+            <Text style={styles.headerText}>13</Text>
+          </View>
+          <View style={styles.caloriesStartEndIconContainer}>
+            <Icon
+              name="md-arrow-forward"
+              size={20}
+              color="#6497CC"
+              style={{}}
+            />
+            <Icon name="md-close" size={15} color="#3D3D3D" style={{}} />
+            <Text style={styles.headerText}>13</Text>
+          </View>
+        </View>
+      </View>
+    );
   }
-
 
   renderHealthData() {
-     
-      if (Platform.OS == "ios")
-        return (
-          <View>
-            <Text>{this.state.healthkit}</Text>
-            <Text>{this.state.calories}</Text>
-            <Text>{this.state.activitiesApple}</Text>
-            <Text>{this.state.activitiesApple2}</Text>
-          </View>
-        );
-      else
-        return (
-          <View>
-            <Text>{this.state.log}</Text>
-            <Text>{this.state.calories}</Text>
-            <Text>{this.state.activitiesDay}</Text>
-            {this.state.timeActivity2.map(elem => (
-              <Text>
-                {elem.time} {elem.activities} {elem.day}
-              </Text>
-            ))}
-            {this.state.timeActivity.map(elem => (
-              <Text>
-                {elem.time} {elem.activities} {elem.day}
-              </Text>
-            ))}
-            <Text>{this.state.activities}</Text>
-            <Text>{this.state.steps}</Text>
-          </View>
-        );
-    
+    if (Platform.OS == "ios")
+      return (
+        <View>
+          <Text>{this.state.healthkit}</Text>
+          <Text>{this.state.calories}</Text>
+          <Text>{this.state.activitiesApple}</Text>
+          <Text>{this.state.activitiesApple2}</Text>
+        </View>
+      );
+    else
+      return (
+        <View>
+          <Text>{this.state.log}</Text>
+          <Text>{this.state.calories}</Text>
+          <Text>{this.state.activitiesDay}</Text>
+          {this.state.timeActivity2.map((elem) => (
+            <Text>
+              {elem.time} {elem.activities} {elem.day}
+            </Text>
+          ))}
+          {this.state.timeActivity.map((elem) => (
+            <Text>
+              {elem.time} {elem.activities} {elem.day}
+            </Text>
+          ))}
+          <Text>{this.state.activities}</Text>
+          <Text>{this.state.steps}</Text>
+        </View>
+      );
   }
   render() {
-    console.log(this.props.page);
-    if (this.state.statusLoad == 'Error') {
+    // console.log(this.props.page);
+    if (this.state.statusLoad == "Error") {
       Alert.alert("Oops", "Seems like an error occured, pull to refresh");
       return <View />;
     } else {
@@ -2042,7 +2396,7 @@ class ChartsWavesScreen extends React.Component {
               style={{
                 backgroundColor: "#fff",
                 height: Dimensions.get("window").height,
-                width: Dimensions.get("window").width
+                width: Dimensions.get("window").width,
               }}
               contentContainerStyle={{
                 alignItems: "center",
@@ -2051,7 +2405,7 @@ class ChartsWavesScreen extends React.Component {
                 alignItems: "center",
                 width: Dimensions.get("window").width,
                 paddingBottom: 30,
-                height: Dimensions.get("window").height
+                height: Dimensions.get("window").height,
               }}
             >
               <View
@@ -2063,7 +2417,7 @@ class ChartsWavesScreen extends React.Component {
                   position: "relative",
 
                   alignItems: "center",
-                  alignSelf: "center"
+                  alignSelf: "center",
                 }}
               >
                 <View>
@@ -2073,7 +2427,7 @@ class ChartsWavesScreen extends React.Component {
                       flex: 1,
 
                       alignItems: "center",
-                      alignSelf: "center"
+                      alignSelf: "center",
                     }}
                     size="large"
                     color="#3D3D3D"
@@ -2082,8 +2436,8 @@ class ChartsWavesScreen extends React.Component {
               </View>
             </ScrollView>
           ) : (
-              this.renderChartsScreen()
-            )}
+            this.renderChartsScreen()
+          )}
         </View>
       );
     }
@@ -2098,7 +2452,7 @@ const styles = StyleSheet.create({
     // height: 50,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   caloriesContainer: {
     // width: Dimensions.get("window").width * 0.8,
@@ -2108,8 +2462,8 @@ const styles = StyleSheet.create({
     paddingTop: 5,
     justifyContent: "space-between",
     alignItems: "center",
-    borderBottomColor: '#FAB21E',
-    borderBottomWidth: 1
+    borderBottomColor: "#FAB21E",
+    borderBottomWidth: 1,
   },
   caloriesStartEndIconContainer: {
     width: Dimensions.get("window").width * 0.3 - 1,
@@ -2119,7 +2473,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    borderBottomColor: '#3d3d3d',
+    borderBottomColor: "#3d3d3d",
     borderBottomWidth: 1,
   },
   caloriesCenterIconContainer: {
@@ -2130,11 +2484,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    borderBottomColor: '#3d3d3d',
+    borderBottomColor: "#3d3d3d",
     borderBottomWidth: 1,
-    borderRightColor: '#3d3d3d',
+    borderRightColor: "#3d3d3d",
     borderRightWidth: 1,
-    borderLeftColor: '#3d3d3d',
+    borderLeftColor: "#3d3d3d",
     borderLeftWidth: 1,
   },
   headerText: {
@@ -2142,18 +2496,18 @@ const styles = StyleSheet.create({
     color: "#3F3F3F",
     fontSize: 20,
     textAlign: "left",
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   caloriesText: {
     fontFamily: "OpenSans-Regular",
     color: "#9D9B9C",
     fontSize: 10,
     textAlign: "center",
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   centerTextContainer: {
     position: "absolute",
-    top: 120
+    top: 120,
   },
 
   centerCircleValue: {
@@ -2161,25 +2515,25 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 49,
     textAlign: "center",
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   centerCircleContainer: {
     position: "absolute",
-    top: 140
+    top: 140,
   },
   centerTextCircleParam: {
     fontFamily: "Montserrat-ExtraBold",
     textAlign: "center",
 
     color: "#ffffff",
-    fontSize: 11
+    fontSize: 11,
   },
   centerValue: {
     fontFamily: "Montserrat-ExtraBold",
     color: "#3F3F3F",
     fontSize: 37,
     textAlign: "center",
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   centerTextParam: {
     fontFamily: "OpenSans-Regular",
@@ -2187,25 +2541,25 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: "#9D9B9C",
     fontSize: 9,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   iconText: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     color: "#fff",
     fontSize: 10,
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   mfrText: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "bold",
     color: "#3D3D3D",
     fontSize: 13,
-    marginRight: 0
+    marginRight: 0,
   },
   deleteContainer: {
     width: 18,
-    height: 18
+    height: 18,
   },
   mainContainer: {
     width: Dimensions.get("window").width,
@@ -2213,7 +2567,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   sideContainer: {
     width: Dimensions.get("window").width / 3,
@@ -2221,20 +2575,20 @@ const styles = StyleSheet.create({
     // backgroundColor: "#6397CB",
     flexDirection: "column",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   text: {
     fontFamily: "Montserrat-ExtraBold",
     color: "#fff",
     fontSize: 10,
-    marginVertical: 1
+    marginVertical: 1,
   },
   underline: {
     width: Dimensions.get("window").width * 0.25,
     height: 6,
     backgroundColor: "#FFFFFF",
-    marginVertical: 4
-  }
+    marginVertical: 4,
+  },
 });
 
 if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
@@ -2242,34 +2596,27 @@ if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
     deleteContainer: {
       width: 18,
       height: 18,
-      right: 35
-    }
+      right: 35,
+    },
   });
 }
 
 // trofei
-const getTrophies = state => state.standings.trophies;
-const getScreen = state => state.statistics.selectedScreen;
+const getTrophies = (state) => state.standings.trophies;
+const getScreen = (state) => state.statistics.selectedScreen;
 
 // prendo i trofei
 // reverse cosi metto prima quelli nuovi
-const getTrophiesState = createSelector(
-  [getTrophies],
-  trophies => (trophies ? trophies.reverse() : [])
+const getTrophiesState = createSelector([getTrophies], (trophies) =>
+  trophies ? trophies.reverse() : []
 );
 
-const getScreenState = createSelector(
-  [getScreen],
-  screen => (screen ? screen : "trophies")
+const getScreenState = createSelector([getScreen], (screen) =>
+  screen ? screen : "trophies"
 );
 
-const withData = connect(state => {
-  return {
-    // routine: state.login.mostFrequentRoute ? state.login.mostFrequentRoute : [],
-    // statisticsState: state.statistics ? state.statistics : []
-    // trophies: getTrophiesState(state),
-    // page: getScreenState(state)
-  };
+const withData = connect((state) => {
+  return {};
 });
 
 export default withData(ChartsWavesScreen);

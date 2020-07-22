@@ -1,11 +1,16 @@
 import React, { Component } from "react";
 import ComponentAnimatedPlay from "../ComponentAnimatedPlay/ComponentAnimatedPlay";
+import ComponentAnimatedPlayWithAuto from "../ComponentAnimatedPlayWithAuto/ComponentAnimatedPlayWithAuto";
 import ComponentAnimatedStop from "../ComponentAnimatedStop/ComponentAnimatedStop";
-import BackgroundGeolocation from './../../helpers/geolocation';
+import ComponentAnimatedStopWithAuto from "../ComponentAnimatedStopWithAuto/ComponentAnimatedStopWithAuto";
+import BackgroundGeolocation from "./../../helpers/geolocation";
 import { connect } from "react-redux";
 
 import { start, stop } from "./../../domains/tracking/ActionCreators";
-import { getPlayState, getPlayPreviousState} from "./../../domains/tracking/Selectors"
+import {
+  getPlayState,
+  getPlayPreviousState
+} from "./../../domains/tracking/Selectors";
 
 // import { html } from "../../helpers/BackgroundTaskRunner";
 import Aux from "../../helpers/Aux";
@@ -38,14 +43,14 @@ class ButtonPlayOrStop extends React.Component {
   // ovviamente se è gia attivo non c'e bisogno che controllo lo status ma controllo il play ovvero è gia stato attivato una volta
   handleChangeButton = (type, coef, threshold, navigation) => {
     if (!this.props.play) {
-      this.props.dispatch(start(type, coef, threshold, navigation));
+      start(type, coef, threshold, navigation);
       this.setState(prevState => {
-        return { type , coef};
+        return { type, coef };
       });
     } else {
-      this.props.dispatch(stop());
+      stop();
       this.setState(prevState => {
-        return { type , coef};
+        return { type, coef };
       });
     }
   };
@@ -69,10 +74,9 @@ class ButtonPlayOrStop extends React.Component {
   // (8, ‘Metro’)
   // (9, ‘Bus_Tram’)
 
-
   changeStatusButton = play => {
     Pulsante = (
-      <ComponentAnimatedPlay
+      <ComponentAnimatedPlayWithAuto
         style={{
           ...this.props.style
         }}
@@ -84,7 +88,7 @@ class ButtonPlayOrStop extends React.Component {
     );
     if (play) {
       Pulsante = (
-        <ComponentAnimatedStop
+        <ComponentAnimatedStopWithAuto
           style={{
             ...this.props.style
           }}
@@ -102,7 +106,6 @@ class ButtonPlayOrStop extends React.Component {
     return <Aux>{this.state.Pulsante}</Aux>;
   }
 }
-
 
 const startAndStop = connect(state => {
   // se l'attivita è stata settata allra deve spuntare il tasto stop e non il play

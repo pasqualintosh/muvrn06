@@ -100,10 +100,10 @@ class ChangeFrequentTripFromRecapScreen extends React.Component {
       case this.state.frequent_type[11]:
         return 11;
         break;
-        case this.state.frequent_type[12]:
+      case this.state.frequent_type[12]:
         return 12;
         break;
-        case this.state.frequent_type[13]:
+      case this.state.frequent_type[13]:
         return 13;
         break;
 
@@ -304,7 +304,7 @@ class ChangeFrequentTripFromRecapScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -315,7 +315,7 @@ class ChangeFrequentTripFromRecapScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -550,7 +550,7 @@ class ChangeFrequentTripFromRecapScreen extends React.Component {
                       "ChangeFrequentTripModalSplitScreen"
                     );
                   } else {
-                    Alert.alert("Oops", strings("seems_like_you_"));
+                    Alert.alert("Oops", strings("id_0_46"));
                   }
                 }}
                 disabled={this.props.status === "In register" ? true : false}
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

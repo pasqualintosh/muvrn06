@@ -5,43 +5,36 @@ import {
   View,
   Dimensions,
   Platform,
-  findNodeHandle
+  findNodeHandle,
 } from "react-native";
-
 import Aux from "../../helpers/Aux";
-
 import Blur from "../../components/Blur/Blur";
-
 import NotificationPoint from "./../../components/NotificationPoint/NotificationPoint";
+import TournamentsScreen from "../TournamentsScreen/TournamentsScreen";
+import ChooseTeamScreen from "../ChooseTeamScreen/ChooseTeamScreen";
+import TeamScreen from "../TeamScreen/TeamScreen";
 
-import CitiesTournamentScreen from "../CitiesTournamentScreen/CitiesTournamentScreen";
-import EmptyCityTournament from "../EmptyCityTournament/EmptyCityTournament";
-import CitiesTournamentEndScreen from "../CitiesTournamentEndScreen/CitiesTournamentEndScreen";
-
-import DeviceInfo from "react-native-device-info";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 import IconMenuDrawer from "./../../components/IconMenuDrawer/IconMenuDrawer";
 import { connect } from "react-redux";
+import { createSelector } from "reselect";
 
 import {
   citiesImage,
   imagesCity,
-  TournamentCities
+  TournamentCities,
 } from "./../../components/FriendItem/FriendItem";
 import { getProfile } from "./../../domains/login/Selectors";
-
 import { strings } from "../../config/i18n";
-
 import Settings from "./../../config/Settings";
 import {
   GoogleAnalyticsTracker,
   GoogleTagManager,
-  GoogleAnalyticsSettings
+  GoogleAnalyticsSettings,
 } from "react-native-google-analytics-bridge";
-
 let Tracker = new GoogleAnalyticsTracker(Settings.analyticsCode);
-
 import analytics from "@react-native-firebase/analytics";
+import EmptyTournament from "../EmptyTournament/EmptyTournament";
 async function trackScreenView(screen) {
   // Set & override the MainActivity screen name
   await analytics().setCurrentScreen(screen, screen);
@@ -51,22 +44,22 @@ class CitiesTournamentBlur extends React.Component {
   constructor(props) {
     super(props);
 
-    // data d'inizio secondo torneo
-    // 2019-09-23T04:30:00Z
-    // 2019-09-16T04:00:00Z
+    this.state = {
+      show_university_screen: false,
+      university: {},
+      allowed_tournament: {}, // SINGOLARE
+      // allowed_tournaments: [], // PLURALE
+      teams_by_tournament: [],
+    };
+
     let startTournament = new Date("2019-09-23T04:30:00Z").getTime();
-    console.log(startTournament);
-
     let today = new Date();
-
     let e_msec = startTournament - today;
-    console.log(e_msec);
     let e_mins = Math.floor(e_msec / 60000);
     let e_hrs = Math.floor(e_mins / 60);
     let e_days = Math.floor(e_hrs / 24);
     let e_a_hrs = e_hrs - e_days * 24;
     let e_a_mins = Math.floor(e_msec / 60000) - e_hrs * 60;
-    console.log(e_a_mins);
 
     if (e_days < 0) {
       this.state = { viewRef: null, startTournament: true };
@@ -75,127 +68,222 @@ class CitiesTournamentBlur extends React.Component {
     }
   }
 
-  static navigationOptions = props => {
+  static navigationOptions = (props) => {
     return {
       headerTitle: (
         <Text
           style={{
-            left: Platform.OS == "android" ? 20 : 0
+            left: Platform.OS == "android" ? 20 : 0,
           }}
         >
-          {"Sustainable City Tournament"}
+          {strings("id_2_01")}
         </Text>
       ),
 
-      headerRight: <IconMenuDrawer navigation={props.navigation} />
+      headerRight: <IconMenuDrawer navigation={props.navigation} />,
     };
   };
 
   startOpenTournament = () => {
     this.setState({
-      startTournament: true
+      startTournament: true,
     });
   };
+
+  componentWillReceiveProps(nextProps) {
+    this.setState(
+      {
+        allowed_tournament: nextProps.allowedTournamentState,
+        teams_by_tournament: [...nextProps.teamsByTournamentState],
+      },
+      () => {
+        try {
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    );
+  }
 
   componentWillMount() {
     Tracker.trackScreenView("CitiesTournamentBlur.js");
     trackScreenView("CitiesTournamentBlur.js");
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // const screenView = new GAHits.ScreenView(
-    //   Settings.analyticsAppName,
-    //   this.constructor.name,
-    //   DeviceInfo.getReadableVersion(),
-    //   DeviceInfo.getBundleId()
-    // );
-    // ga.send(screenView);
+    this.setState(
+      {
+        allowed_tournament: this.props.allowedTournamentState,
+        teams_by_tournament: [...this.props.teamsByTournamentState],
+      },
+      () => {
+        try {
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    );
   }
 
   componentDidMount() {
-    // quando ho caricato il componente, posso dire a blur che è possibile fare il blur usando questa variabile
     this.setState({ viewRef: findNodeHandle(this.view) });
   }
 
-  render() {
-    let city = this.props.infoProfile.city
-      ? this.props.infoProfile.city.city_name
-        ? this.props.infoProfile.city.city_name
-        : ""
-      : "";
-    let id = 1;
-
-    if (city.length) {
-      // vedo se è tra le città pilota
-      id = citiesImage(city);
-    }
-    const cityInTournament = TournamentCities(city);
-
-    return (
-      <Aux>
-        <NotificationPoint navigation={this.props.navigation} />
-        {cityInTournament ? (
-          this.state.startTournament ? (
-            <CitiesTournamentScreen
-              ref={view => {
-                this.view = view;
-              }}
-              navigation={this.props.navigation}
-              infoProfile={this.props.infoProfile}
-              cityInTournament={cityInTournament}
-              id={id}
-              city={city}
-            />
-          ) : (
-            <EmptyCityTournament
-              ref={view => {
-                this.view = view;
-              }}
-              navigation={this.props.navigation}
-              infoProfile={this.props.infoProfile}
-              cityInTournament={cityInTournament}
-              id={id}
-              city={city}
-              // startOpenTournament={this.startOpenTournament()}
-            />
-          )
-        ) : (
-          <EmptyCityTournament
-            ref={view => {
-              this.view = view;
-            }}
-            navigation={this.props.navigation}
-            infoProfile={this.props.infoProfile}
-            cityInTournament={cityInTournament}
-            id={id}
-            city={city}
-          />
-        )}
-
-        {/* <CitiesTournamentEndScreen
-          ref={view => {
+  renderUniversityListOrDetail() {
+    if (this.state.show_university_screen) {
+      return (
+        <TeamScreen
+          ref={(view) => {
             this.view = view;
           }}
           navigation={this.props.navigation}
-          infoProfile={this.props.infoProfile}
-          cityInTournament={cityInTournament}
-          id={id}
-          city={city}
-        /> */}
+          university={this.state.university}
+        />
+      );
+    } else if (this.state.allowed_tournament.length > 0) {
+      return (
+        <ChooseTeamScreen
+          ref={(view) => {
+            this.view = view;
+          }}
+          navigation={this.props.navigation}
+        />
+      );
+    } else
+      return (
+        <TournamentsScreen
+          ref={(view) => {
+            this.view = view;
+          }}
+          navigation={this.props.navigation}
+        />
+      );
+  }
 
-        <Blur viewRef={this.state.viewRef} />
+  renderAllTournamentOrMyTournament() {
+    if (this.state.show_university_screen) {
+      return (
+        <TeamScreen
+          ref={(view) => {
+            this.view = view;
+          }}
+          navigation={this.props.navigation}
+          university={this.state.university}
+        />
+      );
+    } else {
+      return (
+        <TournamentsScreen
+          ref={(view) => {
+            this.view = view;
+          }}
+          navigation={this.props.navigation}
+        />
+      );
+    }
+  }
+
+  render() {
+    return (
+      <Aux>
+        <NotificationPoint navigation={this.props.navigation} />
+        {this.renderUniversityListOrDetail()}
+        {/* <EmptyTournament /> */}
+
+        <Blur
+          viewRef={this.state.viewRef}
+          ref={(view) => {
+            this.view = view;
+          }}
+          navigation={this.props.navigation}
+        />
       </Aux>
     );
   }
 }
 
-const withData = connect(state => {
+const getAllowedTournaments = (state) =>
+  state.tournaments.allowed_tournaments
+    ? state.tournaments.allowed_tournaments
+    : [];
+
+const getTeamsByTournaments = (state) =>
+  state.tournaments.teams_by_tournament
+    ? state.tournaments.teams_by_tournament
+    : [];
+
+const getTeamsEnrolled = (state) =>
+  state.tournaments.tournament_qualification_scores
+    ? state.tournaments.tournament_qualification_scores
+    : [];
+
+/**
+ * per facilitarmi la vita per ora ritorno solo il 1mo elemento
+ */
+const getAllowedTournamentsState = createSelector(
+  getAllowedTournaments,
+  (allowed_tournaments) => {
+    if (allowed_tournaments.length > 0) return allowed_tournaments[0];
+    else return {};
+  }
+);
+
+/**
+ * per facilitarmi la vita per ora ritorno solo team del 1mo torneo
+ */
+const getTeamsByTournamentsState = createSelector(
+  [getAllowedTournaments, getTeamsByTournaments],
+  (allowed_tournaments, teams_by_tournament) => {
+    if (allowed_tournaments.length > 0) {
+      let first_tournament = allowed_tournaments[0].id;
+      return filterTeamsByTournament(
+        teams_by_tournament,
+        first_tournament
+      ).reverse();
+    } else return [];
+  }
+);
+
+/**
+ * per facilitarmi la vita per ora ritorno solo team del 1mo torneo
+ */
+const getEnrolledTeamsState = createSelector(
+  [getAllowedTournaments, getTeamsByTournaments, getTeamsEnrolled],
+  (
+    allowed_tournaments,
+    teams_by_tournament,
+    tournament_qualification_scores
+  ) => {
+    if (allowed_tournaments.length > 0) {
+      let first_tournament = allowed_tournaments[0].id;
+      return filterEnrolledTeamsByTournament(
+        tournament_qualification_scores,
+        first_tournament
+      ).reverse();
+    } else return [];
+  }
+);
+
+function filterTeamsByTournament(teams = [], tournament = 1) {
+  if (teams.length > 0) {
+    return teams.filter((e) => {
+      return e.tournament == tournament;
+    });
+  } else return [];
+}
+
+function filterEnrolledTeamsByTournament(teams = [], tournament = 1) {
+  if (teams.length > 0) {
+    return teams.filter((e) => {
+      return e.tournament == tournament && e.team != null;
+    });
+  } else return [];
+}
+
+const withData = connect((state) => {
   // prendo il profilo
   return {
-    infoProfile: getProfile(state)
+    infoProfile: getProfile(state),
+    allowedTournamentState: getAllowedTournamentsState(state),
+    teamsByTournamentState: getTeamsByTournamentsState(state),
+    enrolledTeamsState: getEnrolledTeamsState(state),
   };
 });
 

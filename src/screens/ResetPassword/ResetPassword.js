@@ -6,24 +6,30 @@ import {
   Image,
   TouchableHighlight,
   ImageBackground,
+  TouchableWithoutFeedback,
+  Keyboard,
   Platform,
   ActivityIndicator,
-  Alert
+  Alert,
+  SafeAreaView,
+  TouchableOpacity,
+  TextInput,
+  ScrollView
 } from "react-native";
 
-import LinearGradient from "react-native-linear-gradient";
-
-import InputEmail from "../../components/InputLogin/InputEmail";
-import { Input } from "react-native-elements";
+import Icon from "react-native-vector-icons/Ionicons";
+import IconBack from "react-native-vector-icons/Ionicons";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
 import { connect } from "react-redux";
 
-import { ResetPasswordWithEmail } from "./../../domains/login/ActionCreators";
+import { ResetPasswordWithEmailNew } from "./../../domains/login/ActionCreators";
 
 import { START_LOGIN } from "../../domains/login/ActionTypes";
 
 import { strings } from "../../config/i18n";
+import { getStatusBarHeight } from "./../../helpers/notch";
+import LinearGradient from "react-native-linear-gradient";
 
 class ResetPassword extends React.Component {
   // Costruttore per creare lo stato che poi contiene email e password
@@ -32,22 +38,13 @@ class ResetPassword extends React.Component {
     super();
     this.state = {
       email: "",
-      validationEmail: false
+      validationEmail: false,
+      placeholderEmail: strings("email_address")
     };
   }
 
-  static navigationOptions = ({ navigation }) => {
-    return {
-      headerTitle: (
-        <Text
-          style={{
-            left: Platform.OS == "android" ? 20 : 0
-          }}
-        >
-          {strings("reset_password")}
-        </Text>
-      )
-    };
+  static navigationOptions = {
+    header: null
   };
 
   componentDidMount() {
@@ -72,18 +69,18 @@ class ResetPassword extends React.Component {
   };
 
   showAlert = msg => {
-    Alert.alert("Oops", msg);
+    Alert.alert(strings("id_0_10"), msg);
   };
   handleResetPassword = () => {
     const { email, validationEmail } = this.state;
 
     if (!validationEmail) {
-      this.showAlert("Please, provide an email address");
+      this.showAlert(strings('id_0_22'));
     } else {
       // recupero password
       this.props.dispatch(
-        ResetPasswordWithEmail(
-          email,
+        ResetPasswordWithEmailNew(
+          email.toLowerCase(),
           this.props.navigation.navigate("CheckEmail")
         )
       );
@@ -97,82 +94,147 @@ class ResetPassword extends React.Component {
       validationEmail
     } = this.state;
     return (
-      <View>
-        <ImageBackground
-          source={require("../../assets/images/purple_bg.png")}
+      <LinearGradient
+          start={{ x: 0.0, y: 0.0 }}
+          end={{ x: 0.0, y: 1.0 }}
+          locations={[0, 1.0]}
+          colors={["#7D4D99", "#6497CC"]}
           style={styles.sfondo}
         >
-          <View style={styles.center}>
-            <Image
-              source={require("../../assets/images/lostpassword.png")}
-              style={{
-                width: 80,
-                height: 80
-              }}
-            />
-            <View style={{ alignContent: "center" }}>
-              <Text style={styles.textResetPassword}>
-                {strings("hey__it_happens")}
-              </Text>
-              <Text style={styles.textResetPassword}>
-                {strings("just_let_us_kno")}
-              </Text>
-              <Text style={styles.textResetPassword}>
-                {strings("and_we_ll_send_")}
-              </Text>
-            </View>
-            <View>
-              <InputEmail
-                leftIcon={<OwnIcon name="mail_icn" size={40} color="#E82F73" />}
-                ValidationEmail={true}
-                email={email}
-                handleEmail={this.handleEmail}
-                returnKeyType={"done"}
-                blurOnSubmit={false}
-                onSubmitEditing={this.handleResetPassword}
-                secondTextInput={this.secondTextInput}
-                styleForm={{ borderRadius: 10 }}
-              />
-            </View>
-
-            <LinearGradient
-              start={{ x: 0.0, y: 0.0 }}
-              end={{ x: 1.0, y: 0.0 }}
-              locations={[0, 1.0]}
-              colors={["#e82f73", "#f49658"]}
-              style={styles.button}
-            >
-              <TouchableHighlight
-                onPress={this.handleResetPassword}
-                style={{
-                  width: Dimensions.get("window").width * 0.3,
-                  height: Dimensions.get("window").height / 20,
-                  borderRadius: 5,
-                  alignItems: "center",
-                  shadowRadius: 5
+         <ImageBackground
+            source={require("./../../assets/images/profile_card_bg_muver.png")}
+            style={styles.sfondo}
+          >
+          <SafeAreaView
+            style={{
+              flex: 1,
+                flexDirection: "column",
+                alignContent: "center",
+                justifyContent: "space-between",
+            }}
+          >
+           <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{
+                  paddingBottom: 100,
+                  lexDirection: "column",
+                  alignContent: "center",
+                  justifyContent: "center",
                 }}
-                disabled={this.props.status === "In connect" ? true : false}
               >
+              <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+              <View>
+            
+            <View>
+              <View style={styles.icon}>
+              <View style={styles.textHeaderContainer}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          this.props.navigation.goBack(null);
+                        }}
+                      >
+                        <View style={{ width: 30, height: 30, marginLeft: 10 }}>
+                          <Icon
+                            name="md-arrow-forward"
+                            size={18}
+                            color="#ffffff"
+                            style={{ transform: [{ rotateZ: "180deg" }] }}
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                <View style={{ height: 24 }}></View>
+                <Image
+                  source={require("../../assets/images/lostpassword.png")}
+                  style={{
+                    width: Dimensions.get("window").width * 0.7 - 100,
+                    height: Dimensions.get("window").width * 0.7 - 100
+                  }}
+                />
+                <View style={{ height: 24 }}></View>
                 <View
                   style={{
-                    height: Dimensions.get("window").height / 20,
-                    alignItems: "center",
-                    justifyContent: "center",
                     alignContent: "center",
-                    flexDirection: "row"
+                    width: Dimensions.get("window").width * 0.85,
+                    alignItems: "center",
+                    flexDirection: "column"
                   }}
                 >
-                  {this.props.status !== "Reset Password" ? (
-                    <Text style={{ color: "#FFFFFF" }}>{strings("send")}</Text>
-                  ) : (
-                      <ActivityIndicator size="small" color="white" />
-                    )}
+                  <Text style={styles.textResetPassword}>
+                    {strings("id_0_130")}
+                  </Text>
+                  <Text style={styles.textResetPassword}>
+                    {strings("id_0_131")}
+                  </Text>
                 </View>
-              </TouchableHighlight>
-            </LinearGradient>
-          </View>
-        </ImageBackground>
-      </View>
+                <View style={{ height: 24 }}></View>
+                <View style={styles.input}>
+                  <OwnIcon
+                    name="mail_icn"
+                    size={40}
+                    color={"#FFFFFF"}
+                    style={{ paddingLeft: 10 }}
+                  />
+
+                  <TextInput
+                    value={this.state.email}
+                    autoCapitalize="none"
+                    placeholder={strings("id_0_06")}
+                    placeholderTextColor={"#FFFFFF"}
+                    displayError={!this.state.ValidationEmail}
+                    errorStyle={{ color: "red" }}
+                    errorMessage="Email is invalid"
+                    style={styles.inputText}
+                    onChangeText={this.handleEmail}
+                    blurOnSubmit={false}
+                    onSubmitEditing={this.handleResetPassword}
+                    keyboardType="email-address"
+                    autoCorrect={false}
+                    returnKeyType={"done"}
+                    selectionColor={"#ffffff"}
+                    onFocus={() => {
+                      this.setState({ placeholderEmail: "" });
+                    }}
+                    onBlur={() => {
+                      this.setState({
+                        placeholderEmail: strings("email_address")
+                      });
+                    }}
+                  />
+                </View>
+                <View style={{ height: 24 }}></View>
+                <View>
+                  <TouchableOpacity
+                    disabled={
+                      this.props.status === "Reset Password" ? true : false
+                    }
+                    onPress={this.handleResetPassword}
+                    style={styles.buttonRegister}
+                  >
+                    {this.props.status !== "Reset Password" ? (
+                      <Text
+                        style={{
+                          // margin: 10,
+                          color: "#FFFFFF",
+                          fontFamily: "OpenSans-Regular",
+                          fontWeight: "400",
+                          fontSize: 15,
+                          textAlignVertical: "center",
+                          textAlign: "center"
+                        }}
+                      >
+                        {strings("id_0_132")}
+                      </Text>
+                    ) : (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+                <View style={{ height: 24 }}></View>
+              </View>
+            </View>
+            </View></TouchableWithoutFeedback></ScrollView></SafeAreaView>
+          </ImageBackground></LinearGradient>
     );
   }
 }
@@ -250,9 +312,213 @@ const styles = {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     textAlign: "center",
-    fontSize: 12,
+    fontSize: 15,
     color: "#FFFFFF"
-  }
+  },
+  backgroundImageWave: {
+    height: 90,
+    width: Dimensions.get("window").width,
+    position: "absolute",
+    top: getStatusBarHeight()
+  },
+  textHeaderContainer: {
+    flexDirection: "row",
+    width: Dimensions.get("window").width,
+    height: 90
+  },
+  input: {
+    width: Dimensions.get("window").width * 0.85,
+    height: 44,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    // backgroundColor: "transparent",
+    // opacity: 0.15,
+    // borderRadius: 4
+    borderColor: "#FFFFFF",
+    borderWidth: 1
+
+    // marginVertical: 4
+  },
+  inputText: {
+    // textDecorationColor: '#FFFFFF',
+    color: "#ffffff",
+    flex: 1,
+    fontFamily: "OpenSans-Regular",
+    fontWeight: "400",
+    textAlign: "left",
+    fontSize: 16
+  },
+  backgroundImageWaveDown: {
+    height: 80,
+    width: Dimensions.get("window").width
+  },
+  sfondo: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height
+  },
+  icon: {
+    width: Dimensions.get("window").width,
+    justifyContent: "center",
+    alignSelf: "center",
+    alignContent: "center",
+    flexDirection: "column",
+    alignItems: "center"
+  },
+  buttonRegister: {
+    width: Dimensions.get("window").width * 0.3,
+    height: 44,
+    borderRadius: 22,
+    borderColor: "#FFFFFF",
+    borderWidth: 1,
+
+    justifyContent: "center",
+    alignSelf: "center",
+    alignContent: "center",
+    flexDirection: "column",
+    alignItems: "center"
+  },
+  backgroundImage: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height
+  },
+  topOverlayWave: {
+    position: "absolute",
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height * 0.2,
+    top: Platform.OS == "ios" ? 0 : -30
+  },
+  bottomOverlayWave: {
+    position: "absolute",
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height * 0.2,
+    top: Dimensions.get("window").height * 0.8
+  },
+  textHeader: {
+    fontFamily: "OpenSans-ExtraBold",
+    color: "#3d3d3d",
+    fontSize: 15,
+    fontWeight: "bold"
+  },
+  textFooterContainer: {
+    width: Dimensions.get("window").width * 0.6,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    alignSelf: "center"
+  },
+  textFooter: {
+    fontFamily: "OpenSans-Regular",
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "400",
+    textAlign: "left"
+  },
+  buttonContainer: {
+    width: Dimensions.get("window").width * 0.3,
+    height: 60,
+    backgroundColor: "transparent",
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center"
+  },
+  buttonBox: {
+    width: Dimensions.get("window").width * 0.2,
+    height: 40,
+    backgroundColor: "#ffffff",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 20,
+    shadowRadius: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.5,
+    elevation: 1
+  },
+  buttonGoOnText: {
+    color: "#3363AD",
+    fontFamily: "OpenSans-Regular",
+    fontSize: 14
+  },
+  checkboxesContainer: {
+    height: Dimensions.get("window").height * 0.85,
+    width: Dimensions.get("window").width * 0.85,
+    // backgroundColor: "transparent",
+    // position: "absolute",
+    // top: Dimensions.get("window").height * 0.75,
+    flexDirection: "column",
+    justifyContent: "space-around",
+    alignItems: "center",
+    // backgroundColor: "#3e3",
+    marginTop: 5
+  },
+  checkboxContainer: {
+    width: Dimensions.get("window").width * 0.85,
+    marginVertical: 5
+  },
+  sfondo: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height
+  },
+  buttonText: {
+    fontSize: 18,
+    fontFamily: "Gill Sans",
+    textAlign: "center",
+    margin: 10,
+    color: "#ffffff",
+    backgroundColor: "transparent"
+  },
+  image: {
+    width: Dimensions.get("window").width / 2,
+    height: Dimensions.get("window").height / 3
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "space-around"
+  },
+  button: {
+    width: Dimensions.get("window").width * 0.3,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center"
+  },
+  buttonShadow: {
+    width: Dimensions.get("window").width * 0.3,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    shadowRadius: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.5,
+    elevation: 2
+  },
+  buttonLoginSocial: {
+    width: Dimensions.get("window").width / 2.3,
+    height: Dimensions.get("window").height / 20,
+    borderRadius: 3
+  },
+  buttonLoginGoogle: {
+    width: Dimensions.get("window").width / 2.3,
+    height: Dimensions.get("window").height / 20,
+    borderRadius: 5,
+    shadowRadius: 5
+  },
+  login: {
+    width: Dimensions.get("window").width / 1.2,
+    height: Dimensions.get("window").height / 15,
+    alignItems: "center",
+
+    borderColor: "#f7f8f9",
+    borderWidth: 1
+  },
+  buttonPrecedente: {
+    width: Dimensions.get("window").width / 1.5,
+    height: Dimensions.get("window").height / 20,
+    alignItems: "center",
+    margin: 10
+  },
+  containerFBLogin: {}
 };
 
 const ConnectLogin = connect(state => {

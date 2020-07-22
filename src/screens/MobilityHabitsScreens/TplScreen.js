@@ -127,7 +127,7 @@ class TplScreen extends React.Component {
           <View style={styles.boxesContainer}>
             {this.renderCheckbox(
               0,
-              strings("no"),
+              strings("id_0_54"),
               () => {
                 this.setState({ public_local_transport_subscriber: 0 });
               },
@@ -164,7 +164,7 @@ class TplScreen extends React.Component {
           <View style={styles.boxesContainer}>
             {this.renderCheckbox(
               0,
-              strings("no"),
+              strings("id_0_54"),
               () => {
                 this.setState({ public_train_transport_subscriber: 0 });
               },

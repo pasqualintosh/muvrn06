@@ -22,24 +22,20 @@ import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import InputEmail from "../../components/InputLogin/InputEmail";
 import InputPassword from "../../components/InputLogin/InputPassword";
 import GoogleLogin from "../../components/GoogleLogin/GoogleLogin";
-// import * as Keychain from "react-native-keychain";
+import * as Keychain from "react-native-keychain";
 // import { FBLoginManager } from "react-native-facebook-login";
-
-import FacebookLoginButton from "./../../components/FacebookLoginButton/FacebookLoginButton";
+import WebService from "../../config/WebService";
+import { Client } from "bugsnag-react-native";
+const bugsnag = new Client(WebService.BugsnagAppId);
 
 import { connect } from "react-redux";
-import {
-  TestToken,
-  startLoginWithFacebook,
-  startLoginWithGoogle,
-  startApp
-} from "./../../domains/login/ActionCreators";
+import { startLoginNew } from "./../../domains/login/ActionCreators";
 
 import {
-  startLogin,
-  getProfile,
-  refreshToken
-} from "./../../domains/login/ActionCreators";
+  updateState,
+  checkEmail,
+  createAccountNewSocial
+} from "./../../domains/register/ActionCreators";
 
 import { saveBranchTempData } from "./../../domains/register/ActionCreators";
 
@@ -53,12 +49,13 @@ import { START_LOGIN } from "../../domains/login/ActionTypes";
 
 import { BoxShadow } from "react-native-shadow";
 
-import branch, { BranchEvent } from "react-native-branch";
+// import branch, { BranchEvent } from "react-native-branch";
 
 import { strings } from "../../config/i18n";
 import { getMaintenance } from "./../../domains/login/ActionCreators";
 
 import Settings from "./../../config/Settings";
+import FacebookLinkButton from "./../../components/FacebookLinkButton/FacebookLinkButton";
 
 import {
   GoogleAnalyticsTracker,
@@ -83,6 +80,7 @@ class Login extends React.Component {
       email: "",
       ValidationEmail: true,
       password: "",
+      passwordKeystone: "", // password recuperata dalla memoria tipo con face id
       ValidationPassword: true,
       showPassword: false,
       loggedInFromFb: false,
@@ -98,41 +96,82 @@ class Login extends React.Component {
     header: null
   };
 
-  // async loadIcloud() {
-  //   try {
-  //     // Retreive the credentials
-  //     const credentials = await Keychain.getGenericPassword();
-  //     if (credentials) {
-  //       console.log(
-  //         "Credentials successfully loaded for user " + credentials.username
-  //       );
-  //       this.setState({
-  //         email: credentials.username,
+  async loadIcloud() {
+    try {
+      // Retreive the credentials
+      console.log("provs");
+      const perm = await Keychain.getSupportedBiometryType();
+      const security = await Keychain.getSecurityLevel();
 
-  //         password: credentials.password
-  //       });
-  //     } else {
-  //       console.log("No credentials stored");
-  //     }
-  //   } catch (error) {
-  //     console.log("Keychain couldn't be accessed!", error);
-  //   }
-  // }
+      console.log(perm);
+      console.log(security);
+      // Alert.alert("perm: " + perm , "security: " + security);
 
-  // onFocus = () => {
-  //   if (!this.state.email.length) {
-  //     try {
-  //       this.loadIcloud()
-  //       .then()
-  //       .catch();
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
+      if (perm || security == "SECURE_HARDWARE") {
+        const AUTH_OPTIONS = {
+          accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
+          accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED,
+          authenticationPrompt: strings("id_0_133"),
+          authenticateType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS
+        };
+        const credentials = await Keychain.getGenericPassword(AUTH_OPTIONS);
+        if (credentials && credentials.email) {
+          console.log(
+            "Credentials successfully loaded for user " + credentials.email
+          );
+          console.log(
+            "Credentials successfully loaded for password " +
+              credentials.password
+          );
+          this.setState({
+            email: credentials.email,
 
-  //   }
-  // };
+            password: "XXXXXXXXXXXX",
+            passwordKeystone: credentials.password
+          });
+
+          if (Platform.OS === "ios") {
+            // solo con iphone faccio il login automatico
+            this.props.dispatch(
+              startLoginNew(
+                {
+                  email: credentials.email,
+                  password: credentials.password,
+                  keychain: true
+                },
+                true
+              )
+            );
+          }
+
+          setTimeout(() => {
+            Keyboard.dismiss();
+          }, 1000);
+        } else {
+          console.log("No credentials stored");
+        }
+      }
+    } catch (error) {
+      console.log("Keychain couldn't be accessed!", error);
+    }
+  }
+
+  onFocus = () => {
+    if (!this.state.email.length) {
+      try {
+        this.loadIcloud()
+          .then()
+          .catch();
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
 
   componentDidMount() {
+    // this.props.dispatch(
+    // createAccountNewSocial()
+    // )
     Tracker.trackScreenView("Login.js");
     trackScreenView("Login.js");
     // this.setupGoogleSignin();
@@ -160,36 +199,36 @@ class Login extends React.Component {
     //   console.log("params: " + JSON.stringify(params));
     // });
 
-    branch.subscribe(({ error, params }) => {
-      if (error) {
-        console.log("Error from Branch: " + error);
-        return;
-      }
+    // branch.subscribe(({ error, params }) => {
+    //   if (error) {
+    //     console.log("Error from Branch: " + error);
+    //     return;
+    //   }
 
-      if (params["+clicked_branch_link"]) {
-        console.log("Received link response from Branch");
-        // alert("Received link response from Branch \n" + JSON.stringify(params));
+    //   if (params["+clicked_branch_link"]) {
+    //     console.log("Received link response from Branch");
+    //     // alert("Received link response from Branch \n" + JSON.stringify(params));
 
-        let link = params["~referring_link"];
-        let sender_id = params.sender_id;
+    //     let link = params["~referring_link"];
+    //     let sender_id = params.sender_id;
 
-        // alert(link);
-        // alert(sender_id);
+    //     // alert(link);
+    //     // alert(sender_id);
 
-        // this.props.dispatch(
-        //   postFollowUser({
-        //     followed_user_id: sender_id,
-        //     referral_url: link,
-        //     link_status: 3
-        //   })
-        // );
-        this.props.dispatch(saveBranchTempData(sender_id, link, 0));
-      }
+    //     // this.props.dispatch(
+    //     //   postFollowUser({
+    //     //     followed_user_id: sender_id,
+    //     //     referral_url: link,
+    //     //     link_status: 3
+    //     //   })
+    //     // );
+    //     this.props.dispatch(saveBranchTempData(sender_id, link, 0));
+    //   }
 
-      console.log("params: " + JSON.stringify(params));
-    });
+    //   console.log("params: " + JSON.stringify(params));
+    // });
     // alert("a");
-    this.props.dispatch(getMaintenance());
+    // this.props.dispatch(getMaintenance());
   }
 
   componentWillUnmount() {
@@ -256,22 +295,33 @@ class Login extends React.Component {
 
     const RisValid = text.length > 8 ? true : false;
 
-    this.setState({ password: text, ValidationPassword: length || RisValid });
+    this.setState({
+      password: text,
+      ValidationPassword: length || RisValid,
+      passwordKeystone: ""
+    });
   };
 
   // il click al tasto Login
   handleLogin = () => {
     Keyboard.dismiss();
-    const { email, password, ValidationEmail, ValidationPassword } = this.state;
+    const {
+      email,
+      password,
+      ValidationEmail,
+      ValidationPassword,
+      passwordKeystone
+    } = this.state;
 
     // setto loginAction a false per evitare che venga
     // azionato durante la registrazione
     // DA TOGLIERE IN FUTURO E LASCIARE SOLO SU SIGN_UP
     this.setState({ loginAction: false });
     // controllo che i dati inseriri non siano nulli
+
     if (!email.length) {
       setTimeout(() => {
-        this.showAlert("Please, provide an email address");
+        this.showAlert(strings('id_0_22'));
       }, 50);
       // Keyboard.dismiss()
     } else if (!password.length) {
@@ -280,7 +330,12 @@ class Login extends React.Component {
       }, 50);
     } else {
       setTimeout(() => {
-        this.props.dispatch(startLogin({ username: email, password }, true));
+        this.props.dispatch(
+          startLoginNew(
+            { email, password: passwordKeystone ? passwordKeystone : password },
+            true
+          )
+        );
       }, 50);
     }
   };
@@ -305,89 +360,6 @@ class Login extends React.Component {
     // cambia schermata o manda un azione di recupero
     this.props.navigation.navigate("ResetPassword");
   };
-
-  /**
-   * lettura del token e chiamata alle api di facebook per
-   * leggere il profilo utente
-   */
-  handleFacebookLogin = data => {
-    if (this.state.loginAction === true && Platform.OS === "ios") {
-      var api = `https://graph.facebook.com/v2.3/me?fields=id,email,first_name,last_name&redirect=false&access_token=${data.token}`;
-      fetch(api)
-        .then(response => response.json())
-        .then(responseData => {
-          this.setState({
-            loggedInFromFb: true
-          });
-          let { first_name: name, last_name: surname, email } = responseData;
-          const password = name + "." + surname;
-          this.props.dispatch(
-            startLogin({
-              username: email,
-              password,
-              afterCallback: this.moveHome
-            })
-          );
-        })
-        .catch(err => {
-          Alert.alert("Facebook Error", JSON.stringify(err));
-        })
-        .done(data => {
-          FBLoginManager.logout((err, data) => {
-            this.setState({
-              loggedInFromFb: false
-            });
-          });
-        });
-    } else if (this.state.loginAction === true) {
-      this.setState({
-        loggedInFromFb: true
-      });
-      let { first_name: name, last_name: surname, email } = data.profile;
-      const password = name + "." + surname;
-      this.props.dispatch(
-        startLogin({ username: email, password, afterCallback: startApp })
-      );
-      FBLoginManager.logout((err, data) => {
-        this.setState({
-          loggedInFromFb: false
-        });
-      });
-    }
-  };
-
-  /**
-   * attualmente cambia solo il testo del pulsante
-   */
-  handleFacebookLogout = () => {
-    this.setState({ loggedInFromFb: false });
-  };
-
-  // handleGoogleLogin = () => {
-  //   if (this.state.loginAction === true) {
-  //     GoogleSignin.signIn()
-  //       .then(user => {
-  //         const { familyName: surname, givenName: name, email } = user;
-  //         const password = name + "." + surname;
-  //         this.props.dispatch(startLogin({ username: email, password }));
-  //       })
-  //       .catch(err => {
-  //         console.log("WRONG SIGNIN", err);
-  //       })
-  //       .done(() => {
-  //         this.handleGoogleLogout();
-  //       });
-  //   }
-  // };
-
-  // handleGoogleLogout = () => {
-  //   GoogleSignin.revokeAccess()
-  //     .then(() => GoogleSignin.signOut())
-  //     .then(() => {
-  //       this.setState({ user: null });
-  //     })
-  //     .done();
-  // };
 
   moveHome = () => {
     this.props.navigation.navigate("Welcome");
@@ -484,7 +456,7 @@ class Login extends React.Component {
                     borderBottomColor: "#E8E8E8",
                     elevation: 1
                   }}
-                  // onFocus={this.onFocus}
+                  onFocus={this.onFocus}
                 />
                 <InputPassword
                   name={"Password"}
@@ -556,13 +528,13 @@ class Login extends React.Component {
                 </View>
               </TouchableWithoutFeedback>
 
-              {/* 
-            <View>
-              <Text style={{ margin: 10, color: "#3D3D3D", fontSize: 15 }}>
-                Or
-              </Text>
-            </View> 
-            */}
+              <View>
+                <Text style={{ margin: 10, color: "#3D3D3D", fontSize: 15 }}>
+                  Or
+                </Text>
+              </View>
+              <FacebookLinkButton dispatch={this.props.dispatch} />
+              <GoogleLogin dispatch={this.props.dispatch} />
 
               {/* 
             <View

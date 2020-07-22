@@ -24,7 +24,6 @@ import { strings } from "../../config/i18n";
 
 import BackgroundGeolocation from "./../../helpers/geolocation";
 
-
 class SelectNewRoutine extends React.Component {
   constructor(props) {
     super(props);
@@ -266,7 +265,7 @@ class SelectNewRoutine extends React.Component {
       mostFrequentRaceModalSplit: this.state.progress,
       mostFrequentRaceFrequency: this.state.mostFrequentRaceFrequency
     });
-    this.props.dispatch(postMostFrequentRoute());
+    // this.props.dispatch(postMostFrequentRoute());
     // devo vedere se in questo momento c'e il live tracking attivo, se si non stop il gps
     if (!this.props.live) {
       BackgroundGeolocation.stop();
@@ -361,7 +360,7 @@ class SelectNewRoutine extends React.Component {
           <View style={[styles.buttonContainer]}>
             <TouchableWithoutFeedback onPress={() => this.ConfermNewRoutine()}>
               <View style={styles.buttonBox}>
-                <Text style={styles.buttonGoOnText}>{strings("ok")}</Text>
+                <Text style={styles.buttonGoOnText}>{strings("id_0_12")}</Text>
               </View>
             </TouchableWithoutFeedback>
           </View>
@@ -369,7 +368,7 @@ class SelectNewRoutine extends React.Component {
           <View style={[styles.buttonContainer, { opacity: 0.4 }]}>
             <TouchableWithoutFeedback onPress={() => {}}>
               <View style={styles.buttonBox}>
-                <Text style={styles.buttonGoOnText}>{strings("ok")}</Text>
+                <Text style={styles.buttonGoOnText}>{strings("id_0_12")}</Text>
               </View>
             </TouchableWithoutFeedback>
           </View>

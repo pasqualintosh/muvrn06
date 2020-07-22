@@ -50,6 +50,10 @@ import {
   deleteMostFrequentRoute,
   getMostFrequentRoute
 } from "./../../domains/login/ActionCreators";
+import {
+  frequentTripsState,
+  frequentTripsNotSaveState
+} from "./../../domains/login/Selectors.js";
 
 import { strings } from "../../config/i18n";
 
@@ -163,15 +167,15 @@ class PersonalMobilityDataScreen extends React.Component {
 
     let setted_tpl = false;
     if (
-      infoProfile.public_local_transport_subscriber != undefined &&
-      infoProfile.public_train_transport_subscriber != undefined
+      infoProfile.lpt_user != undefined &&
+      infoProfile.train_user != undefined
     )
       setted_tpl = true;
 
     let setted_pooling = false;
     if (
-      infoProfile.pooling_pilot != undefined &&
-      infoProfile.pooling_passenger != undefined
+      infoProfile.car_pooler != undefined &&
+      infoProfile.moto_pooler != undefined
     )
       setted_pooling = true;
 
@@ -179,7 +183,7 @@ class PersonalMobilityDataScreen extends React.Component {
     if (
       infoProfile.bike_sharing_user != undefined &&
       infoProfile.car_sharing_user != undefined &&
-      infoProfile.ride_sharing_user != undefined
+      infoProfile.scooter_sharing_user != undefined
     )
       setted_sharing = true;
 
@@ -216,10 +220,10 @@ class PersonalMobilityDataScreen extends React.Component {
             : 0
           : 0,
         trainTransportSubscriberChoose: this.getLocalTransportChoose(
-          infoProfile.public_local_transport_subscriber
+          infoProfile.lpt_user
         ),
         localTransportSubscriberChoose: this.getLocalTransportChoose(
-          infoProfile.public_train_transport_subscriber
+          infoProfile.lpt_user
         ),
         BikeSharingChoose: infoProfile.bike_sharing_user ? "Yes" : "No",
         CarSharingChoose: infoProfile.car_sharing_user ? "Yes" : "No",
@@ -232,13 +236,16 @@ class PersonalMobilityDataScreen extends React.Component {
           ? this.getPoolingChoose(infoProfile.moto_pooling)
           : "No",
         rideSharingChoose: infoProfile.ride_sharing_user ? "Yes" : "No",
-        bikeChoose: infoProfile.bike
-          ? select.bikeChoose[infoProfile.bike]
+        bikeChoose: infoProfile.bike_tipology
+          ? select.bikeChoose[infoProfile.bike_tipology]
           : "No",
         setted_car:
-          infoProfile.car != {} && infoProfile.car != undefined ? true : false,
+          infoProfile.car_user != {} && infoProfile.car_user != undefined
+            ? true
+            : false,
         setted_moto:
-          infoProfile.moto != {} && infoProfile.moto != undefined
+          infoProfile.motorbike_user != {} &&
+          infoProfile.motorbike_user != undefined
             ? true
             : false,
         setted_bike: infoProfile.bike != undefined ? true : false,
@@ -250,11 +257,6 @@ class PersonalMobilityDataScreen extends React.Component {
         console.log(this.state);
       }
     );
-  }
-
-  componentWillUnmount() {
-    console.log("aggiornamento dati ");
-    this.sendNewChange();
   }
 
   ConfermNewAvatar = avatar => {
@@ -428,39 +430,6 @@ class PersonalMobilityDataScreen extends React.Component {
     });
   };
 
-  changeNotificationScheduleTime = (h, m, notification_set, type, callback) => {
-    const value = `${h}:${m}`;
-
-    this.props.dispatch(
-      setNotificationTime(value, this.state.choosed_week_days)
-    );
-
-    this.props.dispatch(setWeekDaysNotification(this.state.choosed_week_days));
-
-    this.props.dispatch(
-      UpdateProfile({
-        data: {
-          public_profile: {
-            notification_schedule: this.state.notification_schedule
-          }
-        }
-      })
-    );
-
-    this.setState(prevState => {
-      return {
-        [type]: value,
-        notification_set,
-        data: {
-          ...prevState.data,
-          [type]:
-            callback && typeof callback === "function" ? callback(value) : value
-        }
-      };
-    });
-    this.sendNewChange();
-  };
-
   ConvertId = value => {
     if (value === "Male") {
       return 1;
@@ -468,64 +437,6 @@ class PersonalMobilityDataScreen extends React.Component {
       return 2;
     } else {
       return 0;
-    }
-  };
-
-  // manda al db le nuove modifiche fatte alle info dell'utente
-  sendNewChange = () => {
-    // preparo i dati che sono cambiati
-    // se esistono le info dell'utente
-    if (this.props.user.infoProfile) {
-      // se qualche dato è cambiato
-      // se vuoto da 0
-      if (Object.keys(this.state.data).length) {
-        // this.props.dispatch(
-        //   setNotificationBoolean(this.state.notification_set)
-        // );
-
-        this.props.dispatch(
-          UpdateProfile({
-            data: {
-              ...this.state.data,
-              public_profile: {
-                bike_sharing_user:
-                  this.state.BikeSharingChoose == "Yes" ? true : false,
-                car_sharing_user:
-                  this.state.CarSharingChoose == "Yes" ? true : false,
-                pooling_pilot:
-                  this.state.poolingPilotChoose == "Yes" ? true : false,
-                ride_sharing_user:
-                  this.state.rideSharingChoose == "Yes" ? 1 : 0,
-                pooling_passenger:
-                  this.state.poolingPassengerChoose == "Yes" ? true : false,
-                public_local_transport_subscriber: this.getLocalTransportValue(
-                  this.state.localTransportSubscriberChoose
-                ),
-                public_train_transport_subscriber: this.getLocalTransportValue(
-                  this.state.trainTransportSubscriberChoose
-                ),
-                car_pooling: this.getPoolingValue(this.state.carPoolingChoose),
-                moto_pooling: this.getPoolingValue(
-                  this.state.motoPoolingChoose
-                ),
-                bike: this.getBikeValue(this.state.bikeChoose)
-              }
-            }
-          })
-        );
-        // this.props.dispatch(
-        //   UpdateProfile({
-        //     data: {
-        //       bike_sharing_user:
-        //         this.state.BikeSharingChoose == "yes" ? true : false
-        //     }
-        //   })
-        // );
-        // inviati cancello i dati
-        this.setState({
-          data: {}
-        });
-      }
     }
   };
 
@@ -541,208 +452,6 @@ class PersonalMobilityDataScreen extends React.Component {
       } else if (type === 4) {
         return { Bikesharing: !prevState.Bikesharing };
       }
-    });
-  };
-
-  getNotificationHour = () => {
-    if (this.state.notification_schedule != null) {
-      const stringH = this.state.notification_schedule.substr(0, 2);
-      return Number.parseInt(stringH);
-    } else {
-      return new Date().getHours();
-      // return new Date().getHours() > 12
-      //   ? new Date().getHours() - 12
-      //   : new Date().getHours();
-    }
-  };
-
-  getNotificationMinute = () => {
-    if (this.state.notification_schedule != null) {
-      let stringM = "";
-
-      if (this.getNotificationHour() < 10)
-        stringM = this.state.notification_schedule.substr(2, 2);
-      else stringM = this.state.notification_schedule.substr(3, 2);
-
-      return Number.parseInt(stringM);
-    } else {
-      return new Date().getMinutes();
-    }
-  };
-
-  renderDeleteBtn(index, id) {
-    const numFrequentTrips = this.props.routine.length;
-    // al momento il tasto x non c'e
-    if (numFrequentTrips > 1)
-      return (
-        <View
-          style={{
-            width: 18,
-            height: 18
-          }}
-        >
-          <TouchableWithoutFeedback
-            onPress={() => {
-              Alert.alert(
-                strings("frequent_trip"),
-                strings("delete_this_fre"),
-                [
-                  {
-                    text: "Cancel",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
-                  },
-                  {
-                    text: strings("ok").toLocaleUpperCase(),
-                    onPress: () =>
-                      this.props.dispatch(deleteMostFrequentRoute({}, id))
-                  }
-                ],
-                { cancelable: false }
-              );
-            }}
-          >
-            <View
-              style={{
-                width: 18,
-                height: 18,
-                backgroundColor: "#FC6754",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: 1,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 0.01 },
-                shadowOpacity: 0.2
-              }}
-            >
-              <Text style={styles.iconText}>x</Text>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      );
-    else
-      return (
-        <View
-          style={{
-            width: 18,
-            height: 18,
-            backgroundColor: "transparent",
-            justifyContent: "center",
-            alignItems: "center",
-            right: -5,
-            borderRadius: 1,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 0.01 },
-            shadowOpacity: 0.2
-          }}
-        />
-      );
-  }
-
-  renderNotificationSchedulePointer() {
-    return (
-      <View
-        style={{
-          width: 8,
-          height: 8,
-          alignSelf: "center",
-          position: "absolute",
-          left: -60
-        }}
-      >
-        <TouchableWithoutFeedback
-          onPress={() => {
-            if (this.state.notification_set) {
-              Alert.alert(
-                "Cancel all the notification schedule",
-                "Are you sure? :/",
-                [
-                  {
-                    text: "Yes",
-                    onPress: () => {
-                      pushNotifications.cancelAllLocalNotifications();
-                      // this.props.dispatch(
-                      //   setNotificationTime(
-                      //     "--:--",
-                      //     this.state.choosed_week_days
-                      //   )
-                      // );
-                      this.setState({
-                        notification_set: false,
-                        notification_schedule: null
-                      });
-                      this.changeState(false, "notification_set", null);
-                      // this.changeNotificationScheduleTime(
-                      //   "--",
-                      //   "--",
-                      //   false,
-                      //   "notification_schedule",
-                      //   null
-                      // );
-                      this.props.dispatch(
-                        UpdateProfile({
-                          data: {
-                            public_profile: { notification_schedule: null }
-                          }
-                        })
-                      );
-                    }
-                  },
-                  { text: "No" }
-                ],
-                { cancelable: false }
-              );
-            }
-          }}
-        >
-          <View
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 5,
-              backgroundColor: this.state.notification_set
-                ? "#87D99A"
-                : "#FC6754"
-            }}
-          />
-        </TouchableWithoutFeedback>
-      </View>
-    );
-  }
-
-  renderNotificationScheduleSettings() {
-    // if (Tester.includes(this.props.user.username)) {
-    return (
-      <View style={styles.other}>
-        <Text style={styles.Left}>Schedule notification</Text>
-        <View
-          style={{
-            justifyContent: "center",
-            alignItems: "center"
-          }}
-        >
-          {this.renderNotificationSchedulePointer()}
-          <TimePicker
-            value={
-              this.state.notification_schedule
-                ? this.state.notification_schedule
-                : strings("to_fill")
-            }
-            mode="time"
-            type="notification_schedule"
-            changeState={this.changeNotificationScheduleTime}
-            hour={this.getNotificationHour()}
-            minute={this.getNotificationMinute()}
-            choosedWeekDays={this.state.choosed_week_days}
-          />
-        </View>
-      </View>
-    );
-    // }
-  }
-  goToDetailFrequentRoutine = elem => {
-    this.props.navigation.navigate("FrequentRoutineMapDetail", {
-      routine: elem
     });
   };
 
@@ -1109,18 +818,10 @@ class PersonalMobilityDataScreen extends React.Component {
 const withData = connect(state => {
   // prendo solo le routine
   return {
-    routine: state.login.mostFrequentRoute ? state.login.mostFrequentRoute : [],
-    routineNotSave: state.login.mfr_modal_split_NotSave
-      ? state.login.mfr_modal_split_NotSave
-      : [],
+    routine: frequentTripsState(state),
+    routineNotSave: frequentTripsNotSaveState(state),
     user: state.login,
-    infoProfile: state.login.infoProfile,
-    points:
-      state.statistics.statistics === []
-        ? 0
-        : state.statistics.statistics.reduce((total, elem, index, array) => {
-            return total + elem.points;
-          }, 0)
+    infoProfile: state.login.infoProfile
   };
 });
 

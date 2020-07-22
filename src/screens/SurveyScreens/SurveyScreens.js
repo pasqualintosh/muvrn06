@@ -2,7 +2,7 @@ import React from "react";
 import { Dimensions } from "react-native";
 import AppIntroSlider from "./../../components/AppIntroSlider/AppIntroSlider";
 import CustomSurveySlide from "./../../components/CustomSurveySlide/CustomSurveySlide";
-import BackgroundGeolocation from './../../helpers/geolocation';
+import BackgroundGeolocation from "./../../helpers/geolocation";
 import { connect } from "react-redux";
 
 import { strings } from "../../config/i18n";
@@ -127,7 +127,7 @@ class SurveyScreens extends React.Component {
       <AppIntroSlider
         slides={slides}
         renderItem={this._renderItem}
-        nextLabel={strings("go_on")}
+        nextLabel={strings("id_0_15")}
         paginationContainer={{
           position: "absolute",
           bottom: 0,

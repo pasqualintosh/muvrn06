@@ -27,16 +27,12 @@ import Svg, {
   Polygon
 } from "react-native-svg";
 import { createSelector } from "reselect";
-
 import ChartsStats from "./../../components/ChartsStats/ChartsStats";
 import CO2Wave from "./../../components/CO2Wave/CO2Wave";
-
-
 import PieChart from "./../../components/AreaStack/PieChart";
-
 import { connect } from "react-redux";
 import {
-  getStats,
+  getStatsNew,
   changeScreenStatistics,
   putDailyActivities,
   getWeeklyActivities,
@@ -50,9 +46,7 @@ import { checkPublic } from "./../../domains/trainings/ActionCreators";
 import DescriptionIcon from "../../components/DescriptionIcon/DescriptionIcon";
 import DailyActivities from "../../components/DailyActivities/DailyActivities";
 import ChartsSustainability from "../../components/ChartsSustainability/ChartsSustainability";
-
 import { strings } from "../../config/i18n";
-
 import WebService from "./../../config/WebService";
 import { thisExpression } from "@babel/types";
 import AppleHealthKit from "rn-apple-healthkit";
@@ -60,33 +54,65 @@ import GoogleFit, { Scopes } from "react-native-google-fit";
 import moment from "moment";
 import { getPermActivitiesState } from "./../../domains/statistics/Selectors";
 import pointsDecimal from "./../../helpers/pointsDecimal";
-
+import Aux from "../../helpers/Aux";
+import PointedCircleSvg from "./../../components/PointedCircleSvg/PointedCircleSvg";
+import TravelsStats from "./../../components/TravelsStats/TravelsStats";
 let IS_DEV = true;
 
 WebService.url.includes("23.97.216.36") ? (IS_DEV = true) : (IS_DEV = false);
 
-
 export function coefCO2(type) {
   switch (type) {
     case 1:
-      // a piedi 
-      return 1.0;
-      break;
     case 2:
+      // a piedi
       // in bici
-      return 1.0
+      // un kilo corrisponde tot kg
+      return 0.14285714;
       break;
     case 3:
     case 5:
     case 6:
     case 7:
       // mezzi pubblici
-      return 1.0
+      return 0.07142857;
       break;
     default:
-      return 1.0;
+      return 0.14285714;
       break;
   }
+}
+
+function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+  var angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+
+  return {
+    x: centerX + radius * Math.cos(angleInRadians),
+    y: centerY + radius * Math.sin(angleInRadians)
+  };
+}
+
+function describeArc(x, y, radius, startAngle, endAngle) {
+  var start = polarToCartesian(x, y, radius, endAngle);
+  var end = polarToCartesian(x, y, radius, startAngle);
+
+  var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+  var d = [
+    "M",
+    start.x,
+    start.y,
+    "A",
+    radius,
+    radius,
+    0,
+    largeArcFlag,
+    0,
+    end.x,
+    end.y
+  ].join(" ");
+
+  return d;
 }
 
 class ChartsScreen extends React.Component {
@@ -96,7 +122,7 @@ class ChartsScreen extends React.Component {
 
     this.state = {
       page: "stats",
-      showLoading: true,
+      showLoading: false,
       refreshing: false,
       modalActive: false,
       iconChoose: "round_info_icn",
@@ -110,7 +136,11 @@ class ChartsScreen extends React.Component {
       activities2: "",
       activities3: "",
       activities4: "",
-      timeActivity: 0
+      timeActivity: 0,
+      results: "",
+      distanceApple: 0,
+      getDistanceWalkingRunning: 0,
+      getDistanceCycling: 0
     };
   }
 
@@ -130,7 +160,7 @@ class ChartsScreen extends React.Component {
   };
 
   componentWillMount() {
-    this.props.dispatch(getStats());
+    this.props.dispatch(getStatsNew());
     // this.props.dispatch(getWeeklyActivities());
 
     // if (this.props.statisticsState.error)
@@ -180,69 +210,142 @@ class ChartsScreen extends React.Component {
       // type: 'Walking',
     };
 
-    AppleHealthKit.getSamples(options, (err, results) => {
+    let optionsDistance = {
+      unit: "meter", // optional; default 'meter'
+      date: new Date().toISOString() // optional; default now
+    };
+    AppleHealthKit.getDistanceWalkingRunning(
+      optionsDistance,
+      (err, results) => {
+        if (err) {
+          return;
+        }
+        console.log(results);
+        const timeActivityWalking = Math.round(results.value / 83.3333333);
+        // ovvero 5 kilometri orari
+
+        // this.setState({getDistanceWalkingRunning: results.value})
+
+        this.setState(prevState => {
+          timeActivity = prevState.timeActivity + timeActivityWalking;
+          return { timeActivity };
+        });
+      }
+    );
+
+    AppleHealthKit.getDistanceCycling(optionsDistance, (err, results) => {
       if (err) {
-        console.log("errore");
-        console.log(err);
-        this.setState({ activitiesApple: JSON.stringify(err) });
         return;
       }
-      console.log("results");
       console.log(results);
+      if (results.value) {
+        const timeActivityCycling = Math.round(results.value / 83.3333333);
 
-      // controllo se hai il watch
-      let checkWatch = "";
-      for (i = 0; i < results.length; i++) {
-        console.log(results[i].device);
-        console.log(results[i].device.search("Watch"));
-        if (results[i].device.search("Watch") >= 0) {
-          console.log(results[i].device);
-          checkWatch = results[i].device;
-          break;
-        }
+        // this.setState({getDistanceWalkingRunning: results.value})
+
+        this.setState(prevState => {
+          timeActivity = prevState.timeActivity + timeActivityCycling;
+          return { timeActivity };
+        });
+        // this.setState({getDistanceCycling: results.value ? results.value : 0})
       }
-      // console.warn("dati", checkWatch);
-      let newResult = results;
-      if (checkWatch.length) {
-        newResult = results.filter(elem => elem.device == checkWatch);
-      }
-
-      let timeActivity = 0.0;
-      console.log(newResult);
-      // se hai l'orologio, devi muoverlo almeno un minuto per considerlo
-      const threesold = checkWatch.length ? 60000 : 30000;
-      newResult.forEach((elem, index) => {
-        if (elem.end && elem.start) {
-          const end = moment(elem.end);
-          const start = moment(elem.start);
-          const activities = end - start;
-          console.log(activities);
-
-          if (activities > threesold) {
-            timeActivity = activities + timeActivity;
-          }
-        }
-      });
-      console.log(timeActivity);
-      timeActivity = Math.round(timeActivity / 60000);
-
-      let finalActivities = 0;
-
-      this.setState(
-        prevState => {
-          if (prevState.timeActivity < timeActivity) {
-            finalActivities = timeActivity;
-            return { timeActivity };
-          } else {
-            finalActivities = prevState.timeActivity;
-            // finalActivities = 33
-          }
-        },
-        () => {
-          this.sendDailyActivities(finalActivities, checkWatch, results);
-        }
-      );
     });
+
+    // AppleHealthKit.getDailyDistanceCyclingSamples(options, (err, results) => {
+    //   if (err) {
+    //     return;
+    //   }
+    //   console.log(results)
+    // });
+    // AppleHealthKit.getDailyDistanceSwimmingSamples(options, (err, results) => {
+    //   if (err) {
+    //     return;
+    //   }
+    //   console.log(results)
+    // });
+
+    // AppleHealthKit.getDailyDistanceWalkingRunningSamples(options, (err, results) => {
+    //   if (err) {
+    //     return;
+    //   }
+    //   console.log(results)
+    // });
+
+    // AppleHealthKit.getDailyFlightsClimbedSamples(options, (err, results) => {
+    //   if (err) {
+    //     return;
+    //   }
+    //   console.log(results)
+    // });
+
+    // AppleHealthKit.getSamples(options, (err, results) => {
+    //   if (err) {
+    //     console.log("errore");
+    //     console.log(err);
+    //     this.setState({ activitiesApple: JSON.stringify(err) });
+    //     return;
+    //   }
+    //   console.log("results");
+    //   console.log(results);
+    //   this.setState({ results: JSON.stringify(results) });
+
+    //   // controllo se hai il watch
+    //   let checkWatch = "";
+    //   let distanceApple = 0
+    //   for (i = 0; i < results.length; i++) {
+    //     console.log(results[i].device);
+    //     console.log(results[i].device.search("Watch"));
+    //     if (results[i].device.search("Watch") >= 0) {
+    //       console.log(results[i].device);
+    //       checkWatch = results[i].device;
+    //       break;
+    //     }
+    //   }
+    //   // console.warn("dati", checkWatch);
+    //   let newResult = results;
+    //   if (checkWatch.length) {
+    //     newResult = results.filter(elem => elem.device == checkWatch);
+    //   }
+
+    //   let timeActivity = 0.0;
+    //   console.log(newResult);
+    //   // se hai l'orologio, devi muoverlo almeno un minuto per considerlo
+    //   const threesold = checkWatch.length ? 60000 : 30000;
+    //   newResult.forEach((elem, index) => {
+    //     if (elem.end && elem.start) {
+    //       const end = moment(elem.end);
+    //       const start = moment(elem.start);
+    //       distanceApple += elem.quantity
+    //       const activities = end - start;
+    //       console.log(activities);
+
+    //       if (activities > threesold) {
+    //         timeActivity = activities + timeActivity;
+    //       }
+    //     }
+    //   });
+    //   console.log(timeActivity);
+    //   timeActivity = Math.round(timeActivity / 60000);
+
+    //   let finalActivities = 0;
+
+    //   this.setState({ distanceApple });
+
+    //   this.setState(
+    //     prevState => {
+    //       if (prevState.timeActivity < timeActivity) {
+    //         finalActivities = timeActivity;
+    //         return { timeActivity };
+    //       } else {
+    //         finalActivities = prevState.timeActivity;
+    //         // finalActivities = 33
+    //       }
+    //     },
+    //     () => {
+    //       this.sendDailyActivities(finalActivities, checkWatch, results);
+    //     }
+    //   );
+    // });
   };
 
   sendDailyActivities = (finalActivities, checkWatch, results) => {
@@ -265,8 +368,8 @@ class ChartsScreen extends React.Component {
         support_device: checkWatch
           ? checkWatch
           : results.length
-            ? results[0].device
-            : "",
+          ? results[0].device
+          : "",
         activities_day
       };
 
@@ -307,29 +410,32 @@ class ChartsScreen extends React.Component {
           this.props.dispatch(changeStatusPerm(true));
         }
 
-        AppleHealthKit.getAppleExerciseTime(options, (err, results) => {
-          if (err) {
-            console.log("errore");
-            console.log(err);
-            this.setState({ activitiesApple: JSON.stringify(err) });
-            // non ha il watch, quindi calcolo l'attività dalle singole attività
-            this.calcolateActivitiesApple(options);
+        // calcolo soltanto l'Attività a piedi e in bici
+        this.calcolateActivitiesApple(options);
 
-            return;
-          }
-          console.log("risultati");
-          console.log(results);
+        // AppleHealthKit.getAppleExerciseTime(options, (err, results) => {
+        //   if (err) {
+        //     console.log("errore");
+        //     console.log(err);
+        //     this.setState({ activitiesApple: JSON.stringify(err) });
+        //     // non ha il watch, quindi calcolo l'attività dalle singole attività
+        //     this.calcolateActivitiesApple(options);
 
-          if (results.length) {
-            let resultsMin = results.length ? results[0].value : 0;
+        //     return;
+        //   }
+        //   console.log("risultati");
+        //   console.log(results);
 
-            resultsMin = resultsMin / 60;
+        //   if (results.length) {
+        //     let resultsMin = results.length ? results[0].value : 0;
 
-            this.setState({ timeActivity: resultsMin });
-          }
-          // non ha il watch, quindi calcolo l'attività dalle singole attività
-          this.calcolateActivitiesApple(options);
-        });
+        //     resultsMin = resultsMin / 60;
+
+        //     this.setState({ timeActivity: resultsMin });
+        //   }
+        //   // non ha il watch, quindi calcolo l'attività dalle singole attività
+        //   this.calcolateActivitiesApple(options);
+        // });
 
         // AppleHealthKit.getDailyDistanceWalkingRunningSamples(
         //   options,
@@ -585,7 +691,7 @@ class ChartsScreen extends React.Component {
 
   onRefresh() {
     this.setState({ refreshing: true });
-    this.props.dispatch(getStats());
+    this.props.dispatch(getStatsNew());
     // if (this.props.statisticsState.error)
     //   Alert.alert("Oops", "Seems like an error occured");
     const loading = setInterval(() => {
@@ -594,7 +700,6 @@ class ChartsScreen extends React.Component {
         clearTimeout(loading);
       }
     }, 1000);
-
   }
 
   _handleChangePage = page => {
@@ -607,6 +712,7 @@ class ChartsScreen extends React.Component {
     if (value > 50) return y - value * 0.3;
     else return y - value * 0.5;
   };
+
   getIosPieImageY = (y, value) => {
     if (value > 50) return -y + value * 0.3;
     else return -y + value * 0.5;
@@ -635,11 +741,11 @@ class ChartsScreen extends React.Component {
                     onPress: () => console.log("Cancel Pressed"),
                     style: "cancel"
                   },
-                    {
-                      text: strings("ok").toLocaleUpperCase(),
-                      onPress: () =>
-                        this.props.dispatch(deleteMostFrequentRoute({}, id))
-                    })
+                  {
+                    text: strings("id_0_12").toLocaleUpperCase(),
+                    onPress: () =>
+                      this.props.dispatch(deleteMostFrequentRoute({}, id))
+                  })
                 ],
                 { cancelable: false }
               );
@@ -836,51 +942,28 @@ class ChartsScreen extends React.Component {
       </View>
     ));
   };
+
   renderPieChart() {
-    let distance = 0;
-    this.props.statisticsState.statistics.forEach(element => {
-      distance += element.distance_travelled;
-    });
-    let walkPerc = 0;
-    let bikePerc = 0;
-    let publicPerc = 0;
-    if (this.props.statisticsState.statistics.length > 0) {
-      this.props.statisticsState.statistics.forEach((element, index) => {
-        // con checkPublic considero anche le tratte in metro/ bus e treno come public generico
-        switch (checkPublic(element.modal_type)) {
-          case 1:
-            walkPerc = this.props.statisticsState.statistics[index]
-              ? (this.props.statisticsState.statistics[index]
-                .distance_travelled /
-                distance) *
-              100
-              : 0;
-            break;
-          case 2:
-            bikePerc = this.props.statisticsState.statistics[index]
-              ? (this.props.statisticsState.statistics[index]
-                .distance_travelled /
-                distance) *
-              100
-              : 0;
-            break;
-          case 3:
-          case 5:
-          case 6:
-          case 7:
-            publicPerc = this.props.statisticsState.statistics[index]
-              ? (this.props.statisticsState.statistics[index]
-                .distance_travelled /
-                distance) *
-              100
-              : 0;
-            break;
-        }
-      });
-    } else {
-      walkPerc = 33.33;
-      bikePerc = 33.33;
-      publicPerc = 33.33;
+    let distance = this.props.statisticsState.statistics.total_distance,
+      walkPerc = 33.3,
+      bikePerc = 33.3,
+      publicPerc = 33.3;
+
+    console.log(distance);
+
+    if (distance != 0) {
+      walkPerc =
+        (this.props.statisticsState.statistics.total_walking /
+          this.props.statisticsState.statistics.total_distance) *
+        100;
+      bikePerc =
+        (this.props.statisticsState.statistics.total_biking /
+          this.props.statisticsState.statistics.total_distance) *
+        100;
+      publicPerc =
+        (this.props.statisticsState.statistics.total_bus /
+          this.props.statisticsState.statistics.total_distance) *
+        100;
     }
     const data = [walkPerc, publicPerc, bikePerc];
     const colors = ["#6CBA7E", "#FAB21E", "#E83475"];
@@ -903,55 +986,51 @@ class ChartsScreen extends React.Component {
       key: `pie-${index}`
     }));
     return (
-      <PieChart
+      <View
         style={{
           width: 250,
           height: 250,
-          marginTop: 20
+          // marginTop: 20,
+          alignItems: "center",
+          justifyContent: "center"
         }}
-        data={pieData}
-        renderDecorator={({ item, pieCentroid, labelCentroid, index }) => {
-          // return (
-          //   <G key={index}>
-          //     <Image
-          //       x={pieCentroid[0] - item.value * 0.3}
-          //       y={
-          //         Platform.OS == "ios"
-          //           ? this.getIosPieImageY(pieCentroid[1], item.value)
-          //           : this.getAndroidPieImageY(pieCentroid[1], item.value)
-          //       }
-          //       width="32"
-          //       height="32"
-          //       href={require("./../../assets/images/sun_home.png")}
-          //     />
-          //   </G>
-          // );
-        }}
-      />
+      >
+        <PieChart
+          style={{
+            width: 200,
+            height: 200
+            // marginTop: 20
+          }}
+          data={pieData}
+          renderDecorator={({ item, pieCentroid, labelCentroid, index }) => {
+            // return (
+            //   <G key={index}>
+            //     <Image
+            //       x={pieCentroid[0] - item.value * 0.3}
+            //       y={
+            //         Platform.OS == "ios"
+            //           ? this.getIosPieImageY(pieCentroid[1], item.value)
+            //           : this.getAndroidPieImageY(pieCentroid[1], item.value)
+            //       }
+            //       width="32"
+            //       height="32"
+            //       href={require("./../../assets/images/sun_home.png")}
+            //     />
+            //   </G>
+            // );
+          }}
+        />
+      </View>
     );
   }
 
   renderChartsScreen() {
     const routes = this.props.statisticsState.n_routes;
-    let distance = 0;
-    let calories = 0;
-    let time = 0;
-    // calcolo la CO2
-    let CO2 = 0
-    this.props.statisticsState.statistics.forEach(element => {
-      time += element.time_travelled;
-      distance += element.distance_travelled;
-      calories += element.calories;
-      // sommo la CO2
-      // la distanza è in km
-      CO2 += element.distance_travelled * coefCO2(element.modal_type)
-    });
-
-
-
-    distanceInt = Number.parseInt(distance);
-
-
+    let distance = this.props.statisticsState.statistics.total_distance,
+      calories = this.props.statisticsState.statistics.total_calories,
+      time = this.props.statisticsState.statistics.total_duration,
+      CO2 = this.props.statisticsState.statistics.total_co2,
+      distanceInt = Number.parseInt(distance);
 
     return (
       <ScrollView
@@ -973,20 +1052,18 @@ class ChartsScreen extends React.Component {
           alignItems: "center",
           width: Dimensions.get("window").width,
           paddingBottom: 30
-
-          // height: Dimensions.get("window").height
         }}
       >
-      {/* <CO2Wave/> */}
         <DailyActivities
           angle={this.state.timeActivity * 4}
           minutes={this.state.timeActivity}
           navigation={this.props.navigation}
         />
         <View style={styles.headerContainer}>
-          <Text style={styles.headerText}>ACTIVITIES</Text>
+          <Text style={styles.headerText}>
+            {strings("id_5_03").toLocaleUpperCase()}
+          </Text>
         </View>
-        {/* </TouchableWithoutFeedback> */}
         <ChartsStats
           routes={pointsDecimal(routes)}
           distance={pointsDecimal(distanceInt)}
@@ -996,12 +1073,11 @@ class ChartsScreen extends React.Component {
         <View
           style={{
             width: Dimensions.get("window").width * 0.8,
-            // flexDirection: "row",
             justifyContent: "center",
             alignItems: "center"
           }}
         >
-          {this.renderPieChart()}
+          <PointedCircleSvg child={this.renderPieChart()} />
           <View style={styles.centerTextContainer}>
             <Text style={styles.centerValue}>
               {distanceInt
@@ -1010,69 +1086,48 @@ class ChartsScreen extends React.Component {
             </Text>
             <Text style={styles.centerTextParam}>
               {" "}
-              {distanceInt ? strings("kilometers") : strings("meters")}
+              {distanceInt ? strings("id_5_05") : strings("id_5_13")}
             </Text>
           </View>
-          {/* <ChartsSustainability /> */}
-          {/* 
+          <CO2Wave CO2={CO2} navigation={this.props.navigation} />
+
           <View
-            style={{
-              width: Dimensions.get("window").width * 0.8,
-              marginTop: 15,
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center"
-            }}
+            style={[
+              styles.headerContainer,
+              { justifyContent: "center", alignItems: "center" }
+            ]}
           >
-            <Text
-              style={{
-                fontFamily: "OpenSans-Bold",
-                fontWeight: "bold",
-                color: "#3d3d3d",
-                fontSize: 12
-              }}
-            >
-              Your frequent routes
+            <Text style={[styles.headerText, { textAlign: "center" }]}>
+              {strings("id_5_10").toLocaleUpperCase()}
             </Text>
-            <TouchableOpacity
-              style={{
-                width: 18,
-                height: 18,
-                backgroundColor: "#87D99A",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: 1,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 0.01 },
-                shadowOpacity: 0.2
-              }}
-              onPress={() => this.props.navigation.navigate("Routine")}
-            >
-              <Text
-                style={{
-                  fontFamily: "OpenSans-Regular",
-                  fontWeight: "400",
-                  color: "#fff",
-                  fontSize: 10,
-                  textAlignVertical: "center"
-                }}
-              >
-                +
-              </Text>
-            </TouchableOpacity>
-          </View> 
-          */}
+          </View>
+
+          <TravelsStats CO2={CO2} navigation={this.props.navigation} />
         </View>
         {/* {this.renderHealthData()} */}
+        <View
+          style={{
+            height: 200,
+            backgroundColor: "transparent"
+          }}
+        />
         {/* {this.renderMFRList()} */}
       </ScrollView>
     );
   }
+
   renderHealthData() {
     if (Platform.OS == "ios")
       return (
         <View>
+          <Text>quantity: {this.state.distanceApple}</Text>
+          <Text>
+            getDistanceWalkingRunning: {this.state.getDistanceWalkingRunning}m
+          </Text>
+          <Text>getDistanceCycling: {this.state.getDistanceCycling}m</Text>
           <Text>{this.state.healthkit}</Text>
+          <Text>{this.state.results}</Text>
+          <Text>{this.state.activitiesApple}</Text>
         </View>
       );
     else
@@ -1091,24 +1146,11 @@ class ChartsScreen extends React.Component {
         </View>
       );
   }
+
   render() {
-    console.log(this.props.page);
-    if (this.props.statisticsState.error) {
-      Alert.alert("Oops", "Seems like an error occured, pull to refresh");
-      return <View />;
-    } else {
+    {
       return (
         <View style={{ flex: 1, backgroundColor: "#fff" }}>
-
-          {/* <DescriptionIcon
-            active={this.state.modalActive}
-            icon={this.state.iconChoose}
-            DeleteDescriptionIconModal={this.DeleteDescriptionIconModal}
-          /> */}
-          {/* <ChartsHeader
-            handleChangePage={page => this._handleChangePage(page)}
-            page={this.props.page}
-          /> 
           {this.state.showLoading ? (
             <ScrollView
               refreshControl={
@@ -1132,8 +1174,6 @@ class ChartsScreen extends React.Component {
                 height: Dimensions.get("window").height
               }}
             >
-              
-
               <View
                 style={{
                   alignContent: "center",
@@ -1141,7 +1181,6 @@ class ChartsScreen extends React.Component {
                   width: Dimensions.get("window").width,
                   height: Dimensions.get("window").height * 0.64,
                   position: "relative",
-
                   alignItems: "center",
                   alignSelf: "center"
                 }}
@@ -1161,71 +1200,9 @@ class ChartsScreen extends React.Component {
                 </View>
               </View>
             </ScrollView>
-          ) : this.props.page === "stats" ? (
+          ) : (
             this.renderChartsScreen()
-          ) : this.props.page === "trophies" ? (
-            <TrophiesScreen
-              trophies={this.props.trophies}
-              DescriptionIconModal={this.DescriptionIconModal}
-              dispatch={this.props.dispatch}
-              detailTrophies={this.props.detailTrophies}
-            />
-          ) : (
-            <RewardsScreen navigation={this.props.navigation} />
-          )}*/}
-          {this.state.showLoading ? (
-            <ScrollView
-              refreshControl={
-                <RefreshControl
-                  refreshing={this.state.refreshing}
-                  onRefresh={this.onRefresh.bind(this)}
-                />
-              }
-              style={{
-                backgroundColor: "#fff",
-                height: Dimensions.get("window").height,
-                width: Dimensions.get("window").width
-              }}
-              contentContainerStyle={{
-                alignItems: "center",
-                backgroundColor: "#fff",
-                justifyContent: "flex-start",
-                alignItems: "center",
-                width: Dimensions.get("window").width,
-                paddingBottom: 30,
-                height: Dimensions.get("window").height
-              }}
-            >
-              <View
-                style={{
-                  alignContent: "center",
-                  flex: 1,
-                  width: Dimensions.get("window").width,
-                  height: Dimensions.get("window").height * 0.64,
-                  position: "relative",
-
-                  alignItems: "center",
-                  alignSelf: "center"
-                }}
-              >
-                <View>
-                  <ActivityIndicator
-                    style={{
-                      alignContent: "center",
-                      flex: 1,
-
-                      alignItems: "center",
-                      alignSelf: "center"
-                    }}
-                    size="large"
-                    color="#3D3D3D"
-                  />
-                </View>
-              </View>
-            </ScrollView>
-          ) : (
-              this.renderChartsScreen()
-            )}
+          )}
         </View>
       );
     }
@@ -1249,7 +1226,7 @@ const styles = StyleSheet.create({
   },
   centerTextContainer: {
     position: "absolute",
-    top: 120
+    top: 100
   },
 
   centerCircleValue: {
@@ -1281,8 +1258,8 @@ const styles = StyleSheet.create({
     fontFamily: "OpenSans-Regular",
     textAlign: "center",
     fontWeight: "400",
-    color: "#9D9B9C",
-    fontSize: 9,
+    color: "#3d3d3d",
+    fontSize: 8,
     fontWeight: "bold"
   },
   iconText: {
@@ -1349,22 +1326,18 @@ const getScreen = state => state.statistics.selectedScreen;
 
 // prendo i trofei
 // reverse cosi metto prima quelli nuovi
-const getTrophiesState = createSelector(
-  [getTrophies],
-  trophies => (trophies ? trophies.reverse() : [])
+const getTrophiesState = createSelector([getTrophies], trophies =>
+  trophies ? trophies.reverse() : []
 );
 
-const getScreenState = createSelector(
-  [getScreen],
-  screen => (screen ? screen : "trophies")
+const getScreenState = createSelector([getScreen], screen =>
+  screen ? screen : "trophies"
 );
 
 const withData = connect(state => {
   return {
-    // routine: state.login.mostFrequentRoute ? state.login.mostFrequentRoute : [],
     statisticsState: state.statistics ? state.statistics : [],
     perm: getPermActivitiesState(state)
-
     // trophies: getTrophiesState(state),
     // page: getScreenState(state)
   };

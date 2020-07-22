@@ -151,7 +151,7 @@ class PickerModalContentMobility extends React.Component {
         ))}
       </Picker>
 
-      {this._renderButton("Confirm", () => {
+      {this._renderButton(strings("id_13_23"), () => {
         this.setState({ isModalVisible: false });
         this.props.changeState(
           this.props.value === "to fill"
@@ -174,7 +174,7 @@ class PickerModalContentMobility extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -185,7 +185,7 @@ class PickerModalContentMobility extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>

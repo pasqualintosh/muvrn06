@@ -1,35 +1,47 @@
-import { createSelector } from 'reselect'
+import { createSelector } from "reselect";
+import moment from "moment";
 
-const getFollow = state => state.follow.follow;
+const getUsersPoolingFind = (state) => state.connection.usersPoolingFind;
 
-const getFollowed = state => state.follow.followed;
+const getInvitePooling = (state) => state.connection.invitePooling;
 
-const getStatus = state => state.follow.fetchingData;
+const getReceiveInvitePooling = (state) => state.connection.receiveInvitePooling;
 
-const getTab = state => state.follow.selectedFriend;
+// prendo chi è alla ricerca di utenti per il pooling ne ultimi due min
+// export const getUsersPoolingFindState = createSelector(
+//   [getUsersPoolingFind],
+//   usersPooling => {
+//     if (usersPooling) {
+//       const now = moment();
+//       const filterUsersPooling = usersPooling.filter(users => {
+//         var duration = moment.duration(now.diff(users.time)).asMinutes();
+//         if (duration > 1) {
+//           return false;
+//         } else {
+//           return true;
+//         }
+//       });
+//       return filterUsersPooling;
+//     } else {
+//       return [];
+//     }
+//   }
+// );
 
-
-
-
-// prendo chi seguo
-export const getFollowedState = createSelector(
-  [getFollowed],
-  followed => (followed ? followed : [])
+// utenti trovati nella ricerca del pooling
+export const getUsersPoolingFindState = createSelector(
+  [getUsersPoolingFind],
+  (usersPooling) => (usersPooling ? usersPooling : [])
 );
 
-// prendo chi mi segue
-export const getFollowState = createSelector(
-  [getFollow],
-  follow => (follow ? follow : [])
+export const getInvitePoolingState = createSelector(
+  [getInvitePooling],
+  (invitePooling) => (invitePooling ? invitePooling : null)
 );
 
-export const getStatusState = createSelector(
-  [getStatus],
-  status => (status ? status : false)
+export const getReceiveInvitePoolingState = createSelector(
+  [getReceiveInvitePooling],
+  (receiveInvitePooling) => (receiveInvitePooling ? receiveInvitePooling : null)
 );
 
-export const getTabState = createSelector(
-  [getTab],
-  tab => (tab ? tab : "FOLLOWING")
-);
 

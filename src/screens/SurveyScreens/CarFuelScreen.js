@@ -149,9 +149,18 @@ class CarFuelScreen extends React.Component {
       car_owning_answer: val
     });
     if (val == 0)
-      this.setState({
-        car_fuel: ""
-      });
+      this.setState(
+        {
+          car_fuel: ""
+        },
+        () => {
+          this.props.dispatch(
+            updateState({
+              car: null
+            })
+          );
+        }
+      );
   };
 
   renderCarOwning() {
@@ -164,9 +173,9 @@ class CarFuelScreen extends React.Component {
           width: Dimensions.get("window").width * 0.85
         }}
       >
-        {this.renderCarOwningCheckbox(0, strings("no"))}
-        {this.renderCarOwningCheckbox(1, strings("yes"))}
-        {this.renderCarOwningCheckbox(2, strings("yes__it_is_at_m"))}
+        {this.renderCarOwningCheckbox(0, strings("id_0_54"))}
+        {this.renderCarOwningCheckbox(1, strings("id_0_55"))}
+        {this.renderCarOwningCheckbox(2, strings("id_0_56"))}
       </View>
     );
   }
@@ -183,7 +192,7 @@ class CarFuelScreen extends React.Component {
                 start={{ x: 0.0, y: 0.0 }}
                 end={{ x: 0.0, y: 1 }}
                 locations={[0, 1.0]}
-                colors={["#E82F73", "#F49658"]}
+                colors={["#7D4D99", "#6497CC"]}
                 style={[
                   styles.checkboxesGradient,
                   {
@@ -247,13 +256,53 @@ class CarFuelScreen extends React.Component {
               marginRight: 7
             }}
           >
+            {/* 
             {val.toLowerCase() == "petrol_hybrids"
-              ? strings("petrol_hybrids")
-              : strings(val.toLocaleLowerCase())}
+              ? strings("id_0_58")
+              : strings("id_0_58")} 
+            */}
+
+            {this.getTranslatedEngineMode(val)}
           </Text>
         </View>
       </TouchableWithoutFeedback>
     );
+  }
+
+  getTranslatedEngineMode(val) {
+    switch (val) {
+      case "fuel":
+        return strings("id_0_57");
+        break;
+
+      case "petrol":
+        return strings("id_0_58");
+        break;
+
+      case "diesel":
+        return strings("id_0_59");
+        break;
+
+      case "petrol_hybrids":
+        return strings("id_0_60");
+        break;
+
+      case "LPG":
+        return strings("id_0_61");
+        break;
+
+      case "CNG":
+        return strings("id_0_62");
+        break;
+
+      case "electric":
+        return strings("id_0_63");
+        break;
+
+      default:
+        return val;
+        break;
+    }
   }
 
   renderTarget = val => {
@@ -407,7 +456,7 @@ class CarFuelScreen extends React.Component {
               </TouchableWithoutFeedback>
               <Text style={styles.textHeader}>
                 {/* Select your car fuel. <Emoji name="car" /> */}
-                {strings("do_you_have_a_c")}
+                {strings("id_0_53")}
               </Text>
             </View>
           </View>
@@ -446,7 +495,7 @@ class CarFuelScreen extends React.Component {
                 }
               ]}
             >
-              {strings("fuel")}
+              {strings("id_0_57")}
             </Text>
           </View>
           <View
@@ -510,9 +559,7 @@ class CarFuelScreen extends React.Component {
             }}
           >
             <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>
-                {strings("we_need_this_in")}
-              </Text>
+              <Text style={styles.textFooter}>{strings("id_0_64")}</Text>
             </View>
 
             <View style={[styles.buttonContainer]}>
@@ -526,7 +573,7 @@ class CarFuelScreen extends React.Component {
                   //   if (this.props.registerState.motorbike != undefined)
                   //     this.props.navigation.navigate("SurveyMoto");
                   //   else this.props.navigation.navigate("SurveyUserData");
-                  // else Alert.alert("Oops", strings("seems_like_you_"));
+                  // else Alert.alert(strings("id_0_10"), strings("seems_like_you_"));
 
                   if (
                     this.props.registerState.car_fuel != undefined &&
@@ -537,7 +584,7 @@ class CarFuelScreen extends React.Component {
                       this.props.navigation.navigate("SurveyCar");
                       return;
                     } else {
-                      Alert.alert("Oops", strings("seems_like_you_"));
+                      Alert.alert(strings("id_0_10"), strings("id_0_65"));
                       return;
                     }
                   }
@@ -554,21 +601,21 @@ class CarFuelScreen extends React.Component {
                     return;
                   }
 
-                  this.props.navigation.navigate("SurveyUserData");
+                  this.props.navigation.navigate("GDPRScreen");
                   return;
 
                   // if (
                   //   this.props.registerState.car_fuel == undefined ||
                   //   this.props.registerState.car_fuel == null
                   // )
-                  //   Alert.alert("Oops", strings("seems_like_you_"));
+                  //   Alert.alert(strings("id_0_10"), strings("seems_like_you_"));
                 }}
                 disabled={this.props.status === "In register" ? true : false}
               >
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />
@@ -649,7 +696,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

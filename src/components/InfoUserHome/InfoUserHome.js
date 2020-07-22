@@ -20,7 +20,13 @@ import { createSelector } from "reselect";
 import { limitAvatar } from "./../UserItem/UserItem";
 import WavyArea from "./../../components/WavyArea/WavyArea";
 import LinearGradient from "react-native-linear-gradient";
-import { getGlobalInfoState, getCityInfoState, getFriendInfoState, getCommunityInfoState, getSelectedLeaderboardState} from  "../../domains/standings/Selectors";
+import {
+  getGlobalInfoState,
+  getCityInfoState,
+  getFriendInfoState,
+  getCommunityInfoState,
+  getSelectedLeaderboardState
+} from "../../domains/standings/Selectors";
 
 class InfoUserHome extends React.PureComponent {
   constructor(props) {
@@ -34,11 +40,8 @@ class InfoUserHome extends React.PureComponent {
   render() {
     let userAvatar = limitAvatar(this.props.avatarId);
 
-    const name = this.props.infoProfile.first_name
-      ? this.props.infoProfile.first_name.toUpperCase() +
-        " " +
-        this.props.infoProfile.last_name.charAt(0).toUpperCase() +
-        "."
+    const name = this.props.infoProfile.username
+      ? this.props.infoProfile.username.toUpperCase()
       : "";
 
     let ranking = "-/-";
@@ -275,7 +278,6 @@ class InfoUserHome extends React.PureComponent {
   }
 }
 
-
 export const listName = {
   1: "Samantha",
   2: "Cynthia",
@@ -425,7 +427,7 @@ export const images = {
   70: require("../../assets/images/avatars/faces/70_xhdpi.png"),
   71: require("../../assets/images/avatars/faces/71_xhdpi.png"),
   72: require("../../assets/images/avatars/faces/72_xhdpi.png"),
-  73: require("../../assets/images/avatars/faces/73_xhdpi.png"),
+  73: require("../../assets/images/avatars/faces/73_xhdpi.png")
 };
 
 export const images_bn = {
@@ -501,7 +503,7 @@ export const images_bn = {
   70: require("../../assets/images/avatars/faces/70_xhdpi_bn.png"),
   71: require("../../assets/images/avatars/faces/71_xhdpi_bn.png"),
   72: require("../../assets/images/avatars/faces/72_xhdpi_bn.png"),
-  73: require("../../assets/images/avatars/faces/73_xhdpi_bn.png"),
+  73: require("../../assets/images/avatars/faces/73_xhdpi_bn.png")
 };
 
 const getProfileInfo = state => state.login.infoProfile;
@@ -520,8 +522,6 @@ const getProfileState = createSelector(
     };
   }
 );
-
-
 
 // const getSelectedTimingState = createSelector(
 //   [getStandings],

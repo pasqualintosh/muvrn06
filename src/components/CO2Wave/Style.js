@@ -5,23 +5,44 @@ export const styles = StyleSheet.create({
     height: 35,
     width: Dimensions.get("window").width
   },
+  backgroundWhiteImageBottom: {
+    height: 44,
+    width: Dimensions.get("window").width,
+    backgroundColor: "#FFFFFF"
+  },
   backgroundImageBottom: {
     height: 44,
     width: Dimensions.get("window").width
+    //backgroundColor: "#FFFFFF"
   },
-  View: {
-    
+  PaddingView: {
     backgroundColor: "#6CBA7E",
-    
+    flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
     alignContent: "center",
-    height: 160,
+    height: 140,
+    width: Dimensions.get("window").width
+  },
+  View: {
+    backgroundColor: "#6CBA7E",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    alignContent: "center",
+    height: 130,
     width: Dimensions.get("window").width
   },
   FirstView: {
     backgroundColor: "#6CBA7E",
-    
+
+    justifyContent: "center",
+    alignItems: "center",
+    alignContent: "center",
+    height: 40,
+    width: Dimensions.get("window").width
+  },
+  OtherView: {
     justifyContent: "center",
     alignItems: "center",
     alignContent: "center",
@@ -30,7 +51,7 @@ export const styles = StyleSheet.create({
   },
   SecondView: {
     backgroundColor: "#6CBA7E",
-    
+
     justifyContent: "center",
     alignItems: "center",
     alignContent: "center",
@@ -39,7 +60,7 @@ export const styles = StyleSheet.create({
   },
   LastView: {
     backgroundColor: "#6CBA7E",
-    
+
     justifyContent: "center",
     alignItems: "center",
     alignContent: "center",
@@ -113,14 +134,14 @@ export const styles = StyleSheet.create({
   },
   backgroundImage: {
     height: 130,
-    width: Dimensions.get("window").width,
-    
-    
+    width: Dimensions.get("window").width
   },
-   backgroundImageAbsolute: {  height: 130,
+  backgroundImageAbsolute: {
+    height: 130,
     width: Dimensions.get("window").width,
     position: "absolute",
-    top: 40},
+    top: 40
+  },
   userContainerStatic: {
     width: Dimensions.get("window").width,
     height: 170,
@@ -132,14 +153,14 @@ export const styles = StyleSheet.create({
   },
   backgroundImageStatic: {
     height: 200,
-    width: Dimensions.get("window").width,
-    
+    width: Dimensions.get("window").width
+
     //top: 40
   },
   backgroundImageStaticAbsolute: {
     height: 200,
     width: Dimensions.get("window").width,
-    position: "absolute",
+    position: "absolute"
     //top: 40
   },
   backgroundView: {

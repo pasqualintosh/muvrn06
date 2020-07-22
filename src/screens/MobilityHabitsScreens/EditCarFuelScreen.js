@@ -452,11 +452,8 @@ class EditCarFuelScreen extends React.Component {
                   styles.checkboxes,
                   {
                     backgroundColor: "#F7F8F9",
-                    
 
-                     opacity:  this.state.car_year != strings("choose") ? 1 : 0.5
-                         
-                        
+                    opacity: this.state.car_year != strings("choose") ? 1 : 0.5
                   }
                 ]}
               >
@@ -473,7 +470,16 @@ class EditCarFuelScreen extends React.Component {
                   ]}
                 />
               </View>
-              <Text style={[styles.checkboxesText, { opacity:  this.state.car_year != strings("choose") ? 1 : 0.5}]}>{strings(element)}</Text>
+              <Text
+                style={[
+                  styles.checkboxesText,
+                  {
+                    opacity: this.state.car_year != strings("choose") ? 1 : 0.5
+                  }
+                ]}
+              >
+                {strings(element)}
+              </Text>
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -548,8 +554,8 @@ class EditCarFuelScreen extends React.Component {
           marginTop: 11
         }}
       >
-        {this.renderCarOwningCheckbox(0, strings("no"))}
-        {this.renderCarOwningCheckbox(1, strings("yes"))}
+        {this.renderCarOwningCheckbox(0, strings("id_0_54"))}
+        {this.renderCarOwningCheckbox(1, strings("id_0_55"))}
         {this.renderCarOwningCheckbox(2, strings("yes__it_is_at_m"))}
       </View>
     );
@@ -602,7 +608,7 @@ class EditCarFuelScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -613,7 +619,7 @@ class EditCarFuelScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -765,30 +771,57 @@ class EditCarFuelScreen extends React.Component {
         <ScrollView contentContainerStyle={styles.bodyContainer}>
           {this.renderCarOwning()}
           <View style={styles.textContainer}>
-            <Text style={[styles.textSection, , { opacity:  this.state.car_owning_answer == 0 ? 0.5 : 1}]}>{strings("fuel")}</Text>
+            <Text
+              style={[
+                styles.textSection,
+                ,
+                { opacity: this.state.car_owning_answer == 0 ? 0.5 : 1 }
+              ]}
+            >
+              {strings("fuel")}
+            </Text>
           </View>
           {this.renderCarFuel()}
-          {this.state.car_year_possibilities.length ? 
-          <Aux>
-          <View style={styles.textContainer}>
-            <Text style={[styles.textSection, { opacity:  this.state.car_fuel == "" ? 0.5 : 1}]}>{strings("year_of_vehicle")}</Text>
-          </View>
-          {this.renderCarYear()}
-          <View style={styles.textContainer}>
-            <Text style={[styles.textSection, { opacity:  this.state.car_year != strings("choose") ? 1 : 0.5}]}>{strings("car_segment")}</Text>
-          </View>
-          <View
-            style={{
-              height: 100,
-              flexDirection: "row",
-              justifyContent: "space-around",
-              alignItems: "center"
-            }}
-          >
-            {this.renderCarSegment()}
-          </View>
-          </Aux>
-          : <View/>}
+          {this.state.car_year_possibilities.length ? (
+            <Aux>
+              <View style={styles.textContainer}>
+                <Text
+                  style={[
+                    styles.textSection,
+                    { opacity: this.state.car_fuel == "" ? 0.5 : 1 }
+                  ]}
+                >
+                  {strings("year_of_vehicle")}
+                </Text>
+              </View>
+              {this.renderCarYear()}
+              <View style={styles.textContainer}>
+                <Text
+                  style={[
+                    styles.textSection,
+                    {
+                      opacity:
+                        this.state.car_year != strings("choose") ? 1 : 0.5
+                    }
+                  ]}
+                >
+                  {strings("car_segment")}
+                </Text>
+              </View>
+              <View
+                style={{
+                  height: 100,
+                  flexDirection: "row",
+                  justifyContent: "space-around",
+                  alignItems: "center"
+                }}
+              >
+                {this.renderCarSegment()}
+              </View>
+            </Aux>
+          ) : (
+            <View />
+          )}
           {this.renderContinueBtn()}
           <View style={{ height: 100 }} />
         </ScrollView>

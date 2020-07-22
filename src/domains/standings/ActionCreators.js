@@ -18,9 +18,12 @@ import {
   RefreshToken,
   requestCallback,
   getProfile,
-  RefreshTokenObligatory
+  RefreshTokenObligatory,
+  requestNewBackend,
+  forceRefreshTokenWithCallback
 } from "./../login/ActionCreators"; // da far puntare agli helper!!!
 import WebService from "./../../config/WebService";
+import { store } from "../../store";
 
 export const EndGMTTournament = 17;
 
@@ -328,7 +331,10 @@ export function getWeeklyFriendLeaderboard(
             payload: infoUserFriendsClassification,
             standing: response.data
           });
-        } else if (response.data && response.data.error == "players not found") {
+        } else if (
+          response.data &&
+          response.data.error == "players not found"
+        ) {
           // se non ci sono giocatori setto i punti a 0
           let infoUserFriendsClassification = {
             index: "-",
@@ -467,7 +473,10 @@ export function getWeeklyLeaderboard(
               user: user_id
             });
           }
-        } else if (response.data && response.data.error == "players not found") {
+        } else if (
+          response.data &&
+          response.data.error == "players not found"
+        ) {
           dispatch({
             type: GET_LEADBOARD,
             payload: [],
@@ -659,8 +668,6 @@ export function getMonthlyLeaderboardByCity(dataUser = {}) {
   };
 }
 
-
-
 export function getWeeklyLeaderboardByCommunity(dataUser = {}) {
   return async function(dispatch, getState) {
     const { access_token, date, infoProfile } = getState().login;
@@ -716,7 +723,10 @@ export function getWeeklyLeaderboardByCommunity(dataUser = {}) {
             payload: response.data,
             user: user_id
           });
-        } else if (response.data && response.data.error == "players not found") {
+        } else if (
+          response.data &&
+          response.data.error == "players not found"
+        ) {
           console.log("object");
           dispatch({
             type: GET_LEADBOARD_BY_COMMUNITY,
@@ -773,9 +783,8 @@ export function getWeeklyPositionByCommunity(dataUser = {}) {
       // se non ho la comunity
       // niente richiesta
     } else if (now < date) {
-      
       // token ancora valido
-      
+
       try {
         const previousMonday = new Date(getPreviousMonday());
         const nextSunday = new Date(getNextSunday());
@@ -813,15 +822,17 @@ export function getWeeklyPositionByCommunity(dataUser = {}) {
           dispatch({
             type: GET_POSITION,
             payload: response.data,
-            typePosition: 'infoUserCommunityClassification',
-            
+            typePosition: "infoUserCommunityClassification"
           });
-        } else if (response.data && response.data.error == "players not found") {
+        } else if (
+          response.data &&
+          response.data.error == "players not found"
+        ) {
           console.log("object");
           dispatch({
-            type: GET_POSITION, 
-            payload: { user_rank: '-', user_points: 0,  total_users: '-'  },
-            typePosition: 'infoUserCommunityClassification',
+            type: GET_POSITION,
+            payload: { user_rank: "-", user_points: 0, total_users: "-" },
+            typePosition: "infoUserCommunityClassification"
           });
         } else if (response.status === 403) {
           // se il token è scaduto
@@ -876,9 +887,8 @@ export function getWeeklyPosition(
     // controllo prima se il dato dell'utente e in particolare la città c'e
     // altrimenti la chiedo con getprofile
     if (now < date) {
-      
       // token ancora valido
-      
+
       try {
         const previousMonday = new Date(getPreviousMonday());
         const nextSunday = new Date(getNextSunday());
@@ -946,14 +956,17 @@ export function getWeeklyPosition(
             dispatch({
               type: GET_POSITION,
               payload: response.data,
-              typePosition: 'infoUserGlobalClassification',
+              typePosition: "infoUserGlobalClassification"
             });
           }
-        } else if (response.data && response.data.error == "players not found") {
+        } else if (
+          response.data &&
+          response.data.error == "players not found"
+        ) {
           dispatch({
             type: GET_POSITION,
-           payload: { user_rank: '-', user_points: 0,  total_users: '-'  },
-           typePosition: 'infoUserGlobalClassification',
+            payload: { user_rank: "-", user_points: 0, total_users: "-" },
+            typePosition: "infoUserGlobalClassification"
           });
         } else if (response.status === 403) {
           // se il token è scaduto
@@ -975,9 +988,7 @@ export function getWeeklyPosition(
           });
         }
       } catch (exception) {
-        console.log(
-          "Exception from api/v1/leaderboard by getWeeklyPosition"
-        );
+        console.log("Exception from api/v1/leaderboard by getWeeklyPosition");
         console.log(exception);
         dispatch({
           type: GET_LEADBOARD_FAILED
@@ -1004,9 +1015,8 @@ export function getWeeklyPositionByCity(dataUser = {}) {
         getProfile({ ...dataUser, afterCallback: getWeeklyPositionByCity })
       );
     } else if (now < date) {
-     
       // token ancora valido
-     
+
       try {
         const previousMonday = new Date(getPreviousMonday());
         const nextSunday = new Date(getNextSunday());
@@ -1045,14 +1055,16 @@ export function getWeeklyPositionByCity(dataUser = {}) {
           dispatch({
             type: GET_POSITION,
             payload: response.data,
-            typePosition: 'infoUserCityClassification',
+            typePosition: "infoUserCityClassification"
           });
-        } else if (response.data && response.data.error == "players not found") {
-          
+        } else if (
+          response.data &&
+          response.data.error == "players not found"
+        ) {
           dispatch({
             type: GET_POSITION,
-            payload: { user_rank: '-', user_points: 0,  total_users: '-'  },
-            typePosition: 'infoUserCityClassification',
+            payload: { user_rank: "-", user_points: 0, total_users: "-" },
+            typePosition: "infoUserCityClassification"
           });
         } else if (response.status === 403) {
           // se il token è scaduto
@@ -1123,7 +1135,86 @@ export function getSpecificPosition(dataUser = {}) {
   };
 }
 
+export function getSpecificPositionNew() {
+  const activeSelectable = store.getState().standings.selectedLeaderboard;
+  console.log(activeSelectable);
+  if (activeSelectable == "community") {
+    store.dispatch(getWeeklyPositionByCommunity());
+  } else if (activeSelectable == "global") {
+    store.dispatch(getWeeklyPositionNew());
+  } else if (activeSelectable == "city") {
+    store.dispatch(getWeeklyPositionByCity());
+  } else {
+    store.dispatch(getWeeklyFriendLeaderboard());
+  }
+}
 
+// recupero le info dell'utente per la settimana corrente
+export function getWeeklyPositionNew() {
+  return async function backendRequest(dispatch, getState) {
+    console.log("getWeeklyPositionNew");
+    // richiesta di accesso mandando i dati con axios
+    let { access_token } = getState().login;
+
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/gaming/ranking_by_user/",
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        dispatch({
+          type: GET_POSITION,
+          payload: {
+            user_rank: response.data.position,
+            user_points: response.data.points,
+            total_users: response.data.count
+          },
+          typePosition: "infoUserGlobalClassification"
+        });
+
+        // dispatch({
+        //   type: GET_POSITION,
+        //   payload: { user_rank: '-', user_points: 0,  total_users: '-'  },
+        //   typePosition: 'infoUserCommunityClassification',
+        // });
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(getWeeklyPositionNew(dataUser)));
+      } else {
+        dispatch({
+          type: GET_LEADBOARD_FAILED
+        });
+      }
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: GET_LEADBOARD_FAILED
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: GET_LEADBOARD_FAILED
+      });
+      console.log(error.config);
+    }
+  };
+}
 
 export function getWeeklyLeaderboardByCity(dataUser = {}) {
   return async function(dispatch, getState) {
@@ -1182,7 +1273,10 @@ export function getWeeklyLeaderboardByCity(dataUser = {}) {
             payload: response.data,
             user: user_id
           });
-        } else if (response.data && response.data.error == "players not found") {
+        } else if (
+          response.data &&
+          response.data.error == "players not found"
+        ) {
           console.log("object");
           dispatch({
             type: GET_LEADBOARD_BY_CITY,
@@ -1224,6 +1318,157 @@ export function getWeeklyLeaderboardByCity(dataUser = {}) {
       dispatch(
         RefreshToken({ ...dataUser, callback: getWeeklyLeaderboardByCity })
       );
+    }
+  };
+}
+
+// prendo le info sulla classifica settimana
+export function getWeeklyLeaderboardNew(
+  dataUser = { limit: 100, offset: 0, afterRequest: () => {} }
+) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+
+    // preparo la richiesta legata al login con username e password
+    console.log("classifica new");
+    let { access_token } = getState().login;
+
+    const { limit, offset } = dataUser;
+
+    dispatch({
+      type: FETCHING_DATA
+    });
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/gaming/ranking/?limit=" + limit + "&offset=" + offset,
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      // Alert.alert(response.status.toString())
+
+      if (response.status === 200) {
+        dispatch({
+          type: GET_LEADBOARD,
+          payload: response.data.results,
+          offset,
+          limit,
+          user: 0
+        });
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(
+          forceRefreshTokenWithCallback(getWeeklyLeaderboardNew(dataUser))
+        );
+      }
+      dataUser.afterRequest();
+    } catch (error) {
+      dispatch({
+        type: FETCHING_DATA_COMPLETE
+      });
+    }
+  };
+}
+
+// prendo le info sui miei trofei
+export function getTrophiesNew(dataUser = {}) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+
+    console.log("trophies new");
+    let { access_token } = getState().login;
+
+    dispatch({
+      type: FETCHING_DATA
+    });
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/gaming/weekly_ranking_by_user/",
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      // Alert.alert(response.status.toString())
+
+      if (response.status === 200) {
+        dispatch({
+          type: GET_TROPHIES,
+          payload: response.data.reverse()
+        });
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(getTrophiesNew(dataUser)));
+      }
+    } catch (error) {
+      console.log("Exception from trophies new");
+      console.log(error);
+      dispatch({
+        type: FETCHING_DATA_COMPLETE
+      });
+    }
+  };
+}
+
+// prendo le info sui trofei di un un specifico giorno
+export function getTrophiesDetailNew(
+  dataUser = { week_date: "2020-03-15" },
+  callbackSetState
+) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+
+    console.log("trophies detail new");
+    let { access_token } = getState().login;
+    const { week_date } = dataUser;
+    dispatch({
+      type: FETCHING_DATA
+    });
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/gaming/weekly_ranking_by_date/" + week_date,
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      // Alert.alert(response.status.toString())
+
+      if (response.status === 200) {
+        callbackSetState(response.data);
+        dispatch({ type: "nulla" });
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(getTrophiesDetailNew(dataUser)));
+      }
+    } catch (error) {
+      console.log("Exception from trophies detail new");
+      console.log(error);
+      dispatch({
+        type: FETCHING_DATA_COMPLETE
+      });
     }
   };
 }
@@ -1571,7 +1816,10 @@ export function getWeeklyLeaderboardByCityToEighteen(dataUser = {}) {
             payload: response.data,
             user: user_id
           });
-        } else if (response.data && response.data.error == "players not found") {
+        } else if (
+          response.data &&
+          response.data.error == "players not found"
+        ) {
           console.log("object");
           dispatch({
             type: GET_LEADBOARD_BY_CITY,

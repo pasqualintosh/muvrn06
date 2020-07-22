@@ -668,7 +668,7 @@ class TeamTournamentStanding extends React.Component {
                   <InviteItem
                     infoProfile={this.props.infoProfile}
                     navigation={this.props.navigation}
-                    Points={this.props.Points}
+                    Points={0}
                     description={strings("invite_your_fri")}
                     colorInvite={["#F8B126", "#FFCB03"]}
                     wave={require("../../assets/images/invite_friend_wave_list_purple.png")}
@@ -926,16 +926,8 @@ const withConnect = connect(state => {
   return {
     infoProfile: getProfile(state),
     level: getLevelState(state),
-    role: getRoleState(state),
-    Points:
-      state.statistics.statistics === []
-        ? 0
-        : state.statistics.statistics.reduce((total, elem, index, array) => {
-            return total + elem.points;
-          }, 0)
+    role: getRoleState(state)
   };
 });
 
 export default withConnect(TeamTournamentStanding);
-
-// export default StandingsScreen;

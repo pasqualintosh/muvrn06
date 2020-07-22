@@ -7,18 +7,17 @@ import {
   Platform,
   Alert,
   TouchableWithoutFeedback,
-  SafeAreaView
+  SafeAreaView,
+  ScrollView
 } from "react-native";
 import CheckBox from "react-native-check-box";
 import { connect } from "react-redux";
-import {
-  ChangePassword,
-  deleteProfile
-} from "./../../domains/login/ActionCreators";
+
 import { START_LOGIN } from "../../domains/login/ActionTypes";
-import { UpdateProfile } from "./../../domains/login/ActionCreators";
+import { updateProfileNew } from "./../../domains/login/ActionCreators";
 
 import { strings } from "../../config/i18n";
+import CheckBoxGradient from "../../components/CheckBoxGradient/CheckBoxGradient";
 
 class PersonalGdprDataScreen extends React.Component {
   // Costruttore per creare lo stato che poi contiene email e password
@@ -28,28 +27,28 @@ class PersonalGdprDataScreen extends React.Component {
     this.state = {
       checkboxes: [
         {
-          checked: false,
-          rightText: strings("customized_cont"),
+          checked: true,
+          rightText: strings("id_0_110"),
           rightTextView: null,
-          description: strings("receive_persona")
+          description: strings("id_0_111")
         },
         {
-          checked: false,
-          rightText: strings("sponsorship_off"),
+          checked: true,
+          rightText: strings("id_0_100"),
           rightTextView: null,
-          description: strings("receive_sponsor")
+          description: strings("id_0_125")
         },
         {
-          checked: false,
-          rightText: strings("commercially_us"),
+          checked: true,
+          rightText: strings("id_0_126"),
           rightTextView: null,
-          description: strings("allow_data_prod")
+          description: strings("id_0_101")
         },
         {
-          checked: false,
-          rightText: strings("mailing_list"),
+          checked: true,
+          rightText: strings("id_0_102"),
           rightTextView: null,
-          description: strings("be_added_to_the")
+          description: strings("id_0_103")
         }
       ]
     };
@@ -63,7 +62,7 @@ class PersonalGdprDataScreen extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("informed_consen")}
+          {strings("id_13_26")}
         </Text>
       )
     };
@@ -71,14 +70,12 @@ class PersonalGdprDataScreen extends React.Component {
 
   componentWillUnmount() {
     this.props.dispatch(
-      UpdateProfile({
+      updateProfileNew({
         data: {
-          public_profile: {
-            customisation_gdpr: this.state.checkboxes[0].checked,
-            sponsorships_gdpr: this.state.checkboxes[1].checked,
-            commercialisation_gdpr: this.state.checkboxes[2].checked,
-            mailinglist_gdpr: this.state.checkboxes[3].checked
-          }
+          shared_mobility_data: this.state.checkboxes[0].checked,
+          sponsor_and_rewards: this.state.checkboxes[1].checked,
+          customized_game_experience: this.state.checkboxes[2].checked,
+          mailing_list: this.state.checkboxes[3].checked
         }
       })
     );
@@ -88,11 +85,11 @@ class PersonalGdprDataScreen extends React.Component {
     if (this.props != props) {
       let checkboxes = [...this.state.checkboxes];
 
-      checkboxes[0].checked = props.loginState.infoProfile.customisation_gdpr;
-      checkboxes[1].checked = props.loginState.infoProfile.sponsorships_gdpr;
+      checkboxes[0].checked = props.loginState.infoProfile.shared_mobility_data;
+      checkboxes[1].checked = props.loginState.infoProfile.sponsor_and_rewards;
       checkboxes[2].checked =
-        props.loginState.infoProfile.commercialisation_gdpr;
-      checkboxes[3].checked = props.loginState.infoProfile.mailinglist_gdpr;
+        props.loginState.infoProfile.customized_game_experience;
+      checkboxes[3].checked = props.loginState.infoProfile.mailing_list;
 
       // console.log(checkboxes);
 
@@ -126,7 +123,7 @@ class PersonalGdprDataScreen extends React.Component {
   checkboxes() {
     return this.state.checkboxes.map((item, index) => (
       <View style={styles.checkboxContainer} key={index}>
-        <CheckBox
+        <CheckBoxGradient
           style={{
             justifyContent: "center",
             alignItems: "flex-start",
@@ -137,17 +134,17 @@ class PersonalGdprDataScreen extends React.Component {
           rightText={item.rightText ? item.rightText : null}
           rightTextStyle={{
             color: "#3d3d3d",
-            fontSize: 11,
+            fontSize: 14,
             fontFamily: "OpenSans-Bold"
           }}
           // rightTextView={item.rightTextView ? item.rightTextView : null}
           checkBoxColor={"#3d3d3d"}
         />
-        <View style={{ right: -35 }}>
+        <View style={{ right: -30 }}>
           <Text
             style={{
               color: "#3d3d3d",
-              fontSize: 10,
+              fontSize: 13,
               fontFamily: "OpenSans-Regular",
               marginTop: 0,
               alignSelf: "flex-start"
@@ -170,7 +167,7 @@ class PersonalGdprDataScreen extends React.Component {
           <Text
             style={{
               color: "#3d3d3d",
-              fontSize: 10,
+              fontSize: 13,
               fontFamily: "OpenSans-Regular"
             }}
           >
@@ -204,23 +201,29 @@ class PersonalGdprDataScreen extends React.Component {
           source={require("../../assets/images/bg-login.png")}
           style={styles.sfondo}
         >
-          <SafeAreaView style={styles.center}>
-            {/* campi per il GDPR */}
-            {this.renderCheckboxes()}
-            <Text
-              style={{
-                color: "#3d3d3d",
-                fontSize: 12,
-                fontFamily: "OpenSans-Bold",
-                fontWeight: "bold",
-                alignSelf: "center",
-                marginTop: 5
-              }}
-            >
-              {strings("i_declare_that_")}
-            </Text>
-            {this.checkboxes()}
-          </SafeAreaView>
+          <ScrollView>
+            <View style={styles.center}>
+              <View style={{ width: 25, height: 25 }} />
+              {/* campi per il GDPR */}
+              {/* {this.renderCheckboxes()} */}
+              <View style={{ width: 25, height: 25 }} />
+              {/* <Text
+                style={{
+                  color: "#3d3d3d",
+                  fontSize: 13,
+                  fontFamily: "OpenSans-Bold",
+                  fontWeight: "bold",
+                  alignSelf: "center",
+                  marginTop: 5
+                }}
+              >
+                {strings("i_declare_that_")}
+              </Text> */}
+              <View style={{ width: 25, height: 25 }} />
+              {this.checkboxes()}
+              <View style={{ width: 200, height: 200 }} />
+            </View>
+          </ScrollView>
         </ImageBackground>
       </View>
     );
@@ -246,14 +249,21 @@ const styles = {
     width: Dimensions.get("window").width / 2,
     height: Dimensions.get("window").height / 3
   },
+  scroll: {
+    alignItems: "center",
+    justifyContent: "flex-start",
+
+    flexDirection: "column",
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height
+  },
   center: {
     alignItems: "center",
     justifyContent: "space-around",
     marginTop: 15,
 
-    flexDirection: "column",
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height - 100
+    flexDirection: "column"
+
     // height: Dimensions.get("window").height / 2,
     // width: Dimensions.get("window").width
   },
@@ -321,9 +331,10 @@ const styles = {
     // marginTop: 30
   },
   checkboxContainer: {
-    width: Dimensions.get("window").width * 0.7,
+    width: Dimensions.get("window").width * 0.8,
     // height: 110,
-    marginVertical: 5
+    marginVertical: 5,
+    marginTop: 20
   }
 };
 

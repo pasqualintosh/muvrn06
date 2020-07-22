@@ -43,7 +43,7 @@ import { images } from "../../components/ProfileScreenCards/ProfileScreenCards";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import { SafeAreaView } from "react-navigation";
 
-import { UpdateProfile } from "./../../domains/login/ActionCreators";
+import { updateProfileNew } from "./../../domains/login/ActionCreators";
 import { connect } from "react-redux";
 import InteractionManager from "../../helpers/loadingComponent";
 
@@ -228,19 +228,16 @@ class DetailChangeAvatarScreen extends React.Component {
 
   ConfermNewAvatar = () => {
     const avatar = this.props.navigation.getParam("avatar");
-    const saveData = this.props.navigation.getParam(
-      "ConfermNewAvatar",
-      avatar =>
-        this.props.dispatch(
-          UpdateProfile({
-            data: {
-              public_profile: { avatar }
-            }
-          })
-        )
-    );
+
     if (avatar !== this.state.avatar) {
-      saveData(this.state.avatar);
+      console.log("avatar cambiato");
+      this.props.dispatch(
+        updateProfileNew({
+          data: {
+            avatar: this.state.avatar
+          }
+        })
+      );
     }
     // this.props.navigation.goBack();
     this.props.dispatch(changeScreenProfile("myself"));
@@ -487,9 +484,10 @@ class DetailChangeAvatarScreen extends React.Component {
             </Svg>
           ))}
         </View>
-        {this.state.page === "CLASSIC"
+        {/* {this.state.page === "CLASSIC"
           ? this.renderAvatarsList()
-          : this.renderAvatarsSpecialList()}
+          : this.renderAvatarsSpecialList()} */}
+        {this.renderAvatarsList()}
       </ScrollView>
     );
   }
@@ -503,7 +501,7 @@ class DetailChangeAvatarScreen extends React.Component {
           selectedAvatar={this.state.avatar ? this.state.avatar : avatar}
           handleTapAvatar={id => this.handleTapAvatar(id)}
           {...this.props}
-          avatarsList={AvatarList(0, 32)}
+          avatarsList={AvatarList(0, 73)}
           style={{ height: 100 }}
           scrollStart={this.scrollStart}
         /> */}
@@ -511,9 +509,9 @@ class DetailChangeAvatarScreen extends React.Component {
           selectedAvatar={this.state.avatar ? this.state.avatar : avatar}
           handleTapAvatar={id => this.handleTapAvatar(id)}
           {...this.props}
-          avatarsList={AvatarList(0, 32)}
+          avatarsList={AvatarList(0, 73)}
           scrollStart={this.scrollStart}
-          nameList={NameList(0, 32)}
+          nameList={NameList(0, 73)}
         />
       </View>
     );
@@ -772,7 +770,7 @@ class DetailChangeAvatarScreen extends React.Component {
                 backgroundColor: "transparent"
               }}
             >
-              {this.headerChooseType()}
+              {/* {this.headerChooseType()} */}
 
               {this.renderAvatarView()}
             </SafeAreaView>
@@ -828,7 +826,7 @@ class DetailChangeAvatarScreen extends React.Component {
                           }}
                         >
                           <Text style={style.buttonGoOnText}>
-                            {strings("ok")}
+                            {strings("id_0_12")}
                           </Text>
                         </View>
                       </TouchableHighlight>

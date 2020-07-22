@@ -10,7 +10,7 @@ import {
   Platform,
   ImageBackground,
   Linking,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
 
 import { withNavigation } from "react-navigation";
@@ -18,14 +18,14 @@ import { BoxShadow } from "react-native-shadow";
 
 import { images } from "../../components/InfoUserHome/InfoUserHome";
 import { data } from "./../../assets/ListCities";
-import DeviceInfo from "react-native-device-info";
+import { getDevice } from "../../helpers/deviceInfo";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
-import { checkTypeformFeed} from "../../domains/login/ActionCreators"
+import { checkTypeformFeed } from "../../domains/login/ActionCreators";
 
 import {
   addOpenPeriodicFeed,
-  addCompletePeriodicFeed
+  addCompletePeriodicFeed,
 } from "../../domains/login/ActionCreators";
 
 import { strings, switchLanguage, getLanguageI18n } from "../../config/i18n";
@@ -33,13 +33,15 @@ import { strings, switchLanguage, getLanguageI18n } from "../../config/i18n";
 import { limitAvatar } from "./../UserItem/UserItem";
 import { translateEvent } from "./../../helpers/translateEvent";
 import { translateSpecialEvent } from "./../../helpers/translateSpecialEvent";
+import { getUniversityImg } from "./../../screens/ChooseTeamScreen/ChooseTeamScreen";
 
 import Settings from "./../../config/Settings";
 import {
   GoogleAnalyticsTracker,
   GoogleTagManager,
-  GoogleAnalyticsSettings
+  GoogleAnalyticsSettings,
 } from "react-native-google-analytics-bridge";
+import WebService from "./../../config/WebService";
 
 let Tracker = new GoogleAnalyticsTracker(Settings.analyticsCode);
 // componente per visualizzare i punti che ho guadagnato in questo preciso momento
@@ -65,7 +67,7 @@ class RecapTraining extends React.PureComponent {
     // }
 
     state = {
-      color: "#3d3d3d"
+      color: "#3d3d3d",
     };
   }
 
@@ -75,7 +77,7 @@ class RecapTraining extends React.PureComponent {
     }
   }
 
-  getImagePath = label => {
+  getImagePath = (label) => {
     let userAvatar = 1;
     switch (label) {
       case "Event":
@@ -92,13 +94,53 @@ class RecapTraining extends React.PureComponent {
             style={{ width: 50, height: 50 }}
           />
         );
+      case "BonusActivities":
+        if (this.props.bonusType == 1) {
+          return (
+            <Image
+              source={require("../../assets/images/feedActivity/healt_feed_green_flame_icn.png")}
+              style={{ width: 50, height: 50 }}
+            />
+          );
+        } else if (this.props.activity_minutes == 2) {
+          return (
+            <Image
+              source={require("../../assets/images/feedActivity/healt_feed_blue_flame_icn.png")}
+              style={{ width: 50, height: 50 }}
+            />
+          );
+        } else {
+          // 3
+          return (
+            <Image
+              source={require("../../assets/images/feedActivity/healt_feed_red_flame_icn.png")}
+              style={{ width: 50, height: 50 }}
+            />
+          );
+        }
       case "DailyActivities":
-        return (
-          <Image
-            source={require("../../assets/images/trainings/training_feed_icn.png")}
-            style={{ width: 50, height: 50 }}
-          />
-        );
+        if (this.props.activity_minutes >= 10000) {
+          return (
+            <Image
+              source={require("../../assets/images/feedActivity/healt_feed_300_icn.png")}
+              style={{ width: 50, height: 50 }}
+            />
+          );
+        } else if (this.props.activity_minutes >= 5000) {
+          return (
+            <Image
+              source={require("../../assets/images/feedActivity/healt_feed_200_icn.png")}
+              style={{ width: 50, height: 50 }}
+            />
+          );
+        } else {
+          return (
+            <Image
+              source={require("../../assets/images/feedActivity/healt_feed_100_icn.png")}
+              style={{ width: 50, height: 50 }}
+            />
+          );
+        }
       case "inviteFriend":
       case "MultipleFollowed":
         return (
@@ -108,6 +150,7 @@ class RecapTraining extends React.PureComponent {
           />
         );
 
+      case "Friend":
       case "Followed":
       case "InviteAccepted":
       case "InviteConfirmed":
@@ -120,7 +163,13 @@ class RecapTraining extends React.PureComponent {
           />
         );
       case "Trophies":
-        switch (this.props.typeTrophie) {
+        return (
+          <Image
+            source={{ uri: WebService.url + this.props.trophy.img }}
+            style={{ width: 50, height: 50 }}
+          />
+        );
+      /* switch (this.props.typeTrophie) {
           case "FirstGlobalTrophy":
             return (
               <Image
@@ -163,7 +212,7 @@ class RecapTraining extends React.PureComponent {
                 style={{ width: 50, height: 50 }}
               />
             );
-        }
+        } */
       case "quiz":
         return (
           <Image
@@ -296,6 +345,13 @@ class RecapTraining extends React.PureComponent {
             style={{ width: 60, height: 60 }}
           />
         );
+      case "enrolledTournament":
+        return (
+          <Image
+            source={getUniversityImg(this.props.team_logo)}
+            style={{ width: 60, height: 60 }}
+          />
+        );
       default: {
         userAvatar = limitAvatar(this.props.avatar);
 
@@ -309,7 +365,7 @@ class RecapTraining extends React.PureComponent {
     }
   };
 
-  sendFeedBack = () => {
+  sendFeedBack = async () => {
     /* 
     try {
         Linking.openURL(
@@ -329,39 +385,24 @@ class RecapTraining extends React.PureComponent {
       } 
     */
 
-    const systemName = DeviceInfo.getSystemName();
-    const systemVersion = DeviceInfo.getSystemVersion();
-    const model = DeviceInfo.getModel();
-    const manufacturer = DeviceInfo.getManufacturer();
-    const deviceId = DeviceInfo.getDeviceId();
-
-    const device =
-      manufacturer +
-      " " +
-      deviceId +
-      " " +
-      model +
-      " " +
-      systemVersion +
-      " " +
-      systemName;
+    const device = await getDevice();
 
     const url =
       "mailto:developers@wepush.org?subject=Hey buddies, I’ve a feedback about MUV 🤓 📬&body=Ciao,\nit’s [your name]\nand since I don’t have much time, here is my very brief feedback about MUV:\n- 🤬 this didn’t work --> ...\n- 🤯 I didn’t get this --> ...\n- 🤔 you should work better on this --> ...\n- 🤩 this is pretty neat! --> ...\n\nI'm sure you'll apreciate this and I hope my feedback will improve my beloved app.\nLove you all,\n[your name] 💞\n" +
       device;
 
     Linking.canOpenURL(url)
-      .then(supported => {
+      .then((supported) => {
         if (!supported) {
           console.log("Can't handle url: " + url);
         } else {
           return Linking.openURL(url);
         }
       })
-      .catch(err => console.error("An error occurred", err));
+      .catch((err) => console.error("An error occurred", err));
   };
 
-  getEndImagePath = label => {
+  getEndImagePath = (label) => {
     switch (label) {
       case "Event":
         return (
@@ -370,6 +411,8 @@ class RecapTraining extends React.PureComponent {
             source={require("../../assets/images/trainings/training_event_done_icn.png")}
           />
         );
+
+      case "Friend":
       case "Followed":
       case "MultipleFollowed":
         return (
@@ -381,7 +424,7 @@ class RecapTraining extends React.PureComponent {
               width: "200%",
               height: "100%",
               alignSelf: "center",
-              alignItems: "center"
+              alignItems: "center",
               // top: -2,
             }}
           >
@@ -483,11 +526,19 @@ class RecapTraining extends React.PureComponent {
             source={require("../../assets/images/trainings/training_session_done_icn.png")}
           />
         );
+
+      case "BonusActivities":
+        return (
+          <ImageBackground
+            style={{ width: "100%", height: "100%" }}
+            source={require("../../assets/images/feedActivity/health_feed_icn.png")}
+          />
+        );
       case "DailyActivities":
         return (
           <ImageBackground
             style={{ width: "100%", height: "100%" }}
-            source={require("../../assets/images/trainings/training_session_done_icn.png")}
+            source={require("../../assets/images/feedActivity/health_feed_icn.png")}
           />
         );
       case "Level":
@@ -570,6 +621,31 @@ class RecapTraining extends React.PureComponent {
             source={require("../../assets/images/special_training_complete_icn.png")}
           />
         );
+      // case "enrolledTournament":
+      //   return (
+      //     <ImageBackground
+      //       style={{ width: "100%", height: "100%" }}
+      //       source={require("../../assets/images/special_training_complete_icn.png")}
+      //     />
+      //   );
+
+      case "enrolledTournament":
+        return (
+          <View
+            style={{
+              flexDirection: "row",
+              alignContent: "center",
+              justifyContent: "center",
+              width: "200%",
+              height: "100%",
+              alignSelf: "center",
+              alignItems: "center",
+              // top: -2,
+            }}
+          >
+            <OwnIcon name="sct_icn_active" size={28} color="#ED6B6F" />
+          </View>
+        );
       default:
         return (
           <ImageBackground
@@ -592,7 +668,10 @@ class RecapTraining extends React.PureComponent {
       this.props.navigation.navigate("YoutubeScreen");
     } else if (this.props.modal_type === "WeeklyChallenge") {
       this.props.navigation.navigate("Challenges");
-    } else if (this.props.modal_type === "DailyActivities") {
+    } else if (
+      this.props.modal_type === "DailyActivities" ||
+      this.props.modal_type === "BonusActivities"
+    ) {
       this.props.navigation.navigate("ChartsStack");
     } else if (this.props.modal_type === "Trophies") {
       this.props.navigation.navigate("Trophies");
@@ -606,7 +685,7 @@ class RecapTraining extends React.PureComponent {
       Tracker.trackEvent("User Interactions", "Feed frequent trip");
       this.props.navigation.navigate("ChangeFrequentTripScreen");
     } else if (this.props.modal_type === "updateProfile") {
-      this.props.dispatch(addOpenPeriodicFeed(0));
+      // this.props.dispatch(addOpenPeriodicFeed(0));
       this.props.navigation.navigate("PersonalAnagraficDataScreen");
 
       //this.props.navigation.navigate("PersonalMobilityDataScreen");
@@ -639,6 +718,7 @@ class RecapTraining extends React.PureComponent {
     } else if (this.props.modal_type === "typeform_2") {
       this.props.navigation.navigate("SoddFrust2WebView");
     } else if (
+      this.props.modal_type === "Friend" ||
       this.props.modal_type === "Followed" ||
       this.props.modal_type === "MultipleFollowed" ||
       this.props.modal_type === "InviteAccepted" ||
@@ -650,18 +730,23 @@ class RecapTraining extends React.PureComponent {
       this.props.navigation.navigate("FriendStack");
     } else if (this.props.modal_type == "newST") {
       if (this.props.customisationGdpr) {
-        this.props.navigation.navigate("Trainings");
+        this.props.navigation.navigate("TrainingsScreen");
       } else {
         this.props.navigation.navigate("PersonalGdprDataScreen");
       }
     } else if (this.props.modal_type == "completedST") {
-      console.log(this.props.reward);
-      this.props.navigation.navigate("RewardDetailScreen", {
-        id: this.props.reward
-      });
+      this.props.navigation.navigate("RewardsScreen");
+    } else if (this.props.modal_type == "enrolledTournament") {
+      if (this.props.first_team_screen_visible)
+        this.props.navigation.navigate("TeamScreen", {
+          university: this.props.team,
+        });
+      else
+        this.props.navigation.navigate("WaitingUniversityScreen", {
+          university: this.props.team,
+        });
     } else {
       // in tutti gli altri casi vado in trainings
-
       this.props.navigation.navigate("Trainings");
     }
   };
@@ -771,68 +856,124 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
       //     }
       //   </Text>
       // );
-    } else if (this.props.modal_type === "DailyActivities") {
+    } else if (this.props.modal_type === "BonusActivities") {
       return this.getFeedContentFromString(
-        strings("whoa__you_just_"),
-        this.props.activity_minutes
+        strings("id_18_42"),
+       ""
       );
+    } else if (this.props.modal_type === "DailyActivities") {
+      if (this.props.activity_minutes >= 10000) {
+       
+          return this.getFeedContentFromString(
+            strings("id_18_41"),
+            ""
+          );
+        
+      } else if (this.props.activity_minutes >= 5000) {
+        return (
+           this.getFeedContentFromString(
+            strings("id_18_39"),
+            ""
+          ))
+        
+      } else {
+      
+          return this.getFeedContentFromString(
+            strings("id_18_37"),
+            ""
+          );
+        
+      }
+      
     } else if (this.props.modal_type === "Trophies") {
-      switch (this.props.typeTrophie) {
-        case "FirstGlobalTrophy":
+      if (this.props.trophy) {
+        if (this.props.trophy.position == 1) {
           return (
             <Text style={styles.textDescr}>
               {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophy} */}
               {strings("nobody_on_plane")}
             </Text>
           );
-        case "SecondGlobalTrophy":
+        } else if (this.props.trophy.position == 2) {
           return (
             <Text style={styles.textDescr}>
-              {/* {ex_strings("descrFeedTrophiesSecondGlobalTrophy} */}
+              {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophy} */}
               {strings("this_time_you_a")}
             </Text>
           );
-        case "ThirdGlobalTrophy":
+        } else if (this.props.trophy.position == 3) {
           return (
             <Text style={styles.textDescr}>
-              {/* {ex_strings("descrFeedTrophiesThirdGlobalTrophy} */}
+              {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophy} */}
               {strings("wow__a_third_pl")}
             </Text>
           );
-        case "FirstLocalTrophy":
-          console.log(data);
-          const city = data.cities[this.props.city - 1].name;
-          return this.getFeedContentFromString(
-            strings("you_re_killing_"),
-            city
-          );
-        // return (
-        //   <Text style={styles.textDescr}>
-        //     {ex_strings("descrFeedTrophiesFirstLocalTrophy}
-        //     {city} {ex_strings("descrFeedTrophiesFirstLocalTrophyEnd}
-        //   </Text>
-        // );
-        case "SecondLocalTrophy":
-          return (
-            <Text style={styles.textDescr}>
-              {/* {ex_strings("descrFeedTrophiesSecondLocalTrophy} */}
-              {strings("you_did_great_a")}
-            </Text>
-          );
-        case "ThirdLocalTrophy":
-          return (
-            <Text style={styles.textDescr}>
-              {/* {ex_strings("descrFeedTrophiesThirdLocalTrophy} */}
-              {strings("it_s_a_bronze_t")}
-            </Text>
-          );
+        }
       }
+      // caso generico
+      return (
+        <Text style={styles.textDescr}>
+          {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophy} */}
+          {strings("wow__a_third_pl")}
+        </Text>
+      );
+      // switch (this.props.typeTrophie) {
+      //   case "FirstGlobalTrophy":
+      //     return (
+      //       <Text style={styles.textDescr}>
+      //         {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophy} */}
+      //         {strings("nobody_on_plane")}
+      //       </Text>
+      //     );
+      //   case "SecondGlobalTrophy":
+      //     return (
+      //       <Text style={styles.textDescr}>
+      //         {/* {ex_strings("descrFeedTrophiesSecondGlobalTrophy} */}
+      //         {strings("this_time_you_a")}
+      //       </Text>
+      //     );
+      //   case "ThirdGlobalTrophy":
+      //     return (
+      //       <Text style={styles.textDescr}>
+      //         {/* {ex_strings("descrFeedTrophiesThirdGlobalTrophy} */}
+      //         {strings("wow__a_third_pl")}
+      //       </Text>
+      //     );
+      //   case "FirstLocalTrophy":
+      //     console.log(data);
+      //     const city = data.cities[this.props.city - 1].name;
+      //     return this.getFeedContentFromString(
+      //       strings("you_re_killing_"),
+      //       city
+      //     );
+      //   // return (
+      //   //   <Text style={styles.textDescr}>
+      //   //     {ex_strings("descrFeedTrophiesFirstLocalTrophy}
+      //   //     {city} {ex_strings("descrFeedTrophiesFirstLocalTrophyEnd}
+      //   //   </Text>
+      //   // );
+      //   case "SecondLocalTrophy":
+      //     return (
+      //       <Text style={styles.textDescr}>
+      //         {/* {ex_strings("descrFeedTrophiesSecondLocalTrophy} */}
+      //         {strings("you_did_great_a")}
+      //       </Text>
+      //     );
+      //   case "ThirdLocalTrophy":
+      //     return (
+      //       <Text style={styles.textDescr}>
+      //         {/* {ex_strings("descrFeedTrophiesThirdLocalTrophy} */}
+      //         {strings("it_s_a_bronze_t")}
+      //       </Text>
+      //     );
+      // }
     } else if (this.props.modal_type === "Muv") {
       return (
         <Text style={styles.textDescr}>
-          {
+          {/* {
             "Discover a day-in-a-life of a real sustainable mobility champion. [Spoiler Alert - at the end a ﬁrst great teaching from your Trainer…]"
-          }
+          } */}
+          {strings("id_18_02")}
         </Text>
       );
     } else if (this.props.modal_type === "WeeklyChallenge") {
@@ -884,9 +1025,7 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
     } else if (this.props.modal_type === "firstFrequentTrip") {
       return <Text style={styles.textDescr}>{strings("frequent_trips_")}</Text>;
     } else if (this.props.modal_type === "updateProfile") {
-      return (
-        <Text style={styles.textDescr}>{strings("_209_complete_your_p")}</Text>
-      );
+      return <Text style={styles.textDescr}>{strings("id_18_13")}</Text>;
     } else if (this.props.modal_type === "mobilityHabits") {
       const city = this.props.cityName;
       // return (
@@ -904,6 +1043,15 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
       return <Text style={styles.textDescr}>{strings("are_you_trainin")}</Text>;
     } else if (this.props.modal_type === "inviteFriend") {
       return <Text style={styles.textDescr}>{strings("we_need_your_he")}</Text>;
+    } else if (this.props.modal_type === "Friend") {
+      return (
+        <Text style={styles.textDescr}>
+          {this.getFeedContentFromString(
+            strings("id_18_49"),
+            this.props.username
+          )}
+        </Text>
+      );
     } else if (this.props.modal_type === "Followed") {
       return (
         <Text style={styles.textDescr}>
@@ -935,13 +1083,13 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
         return (
           <Text style={styles.textDescr}>
             {this.getFeedContentFromString(
-              strings("hey_you___spons"),
-              this.props.textSponsor
-            )}{" "}
-            {this.getFeedContentFromString(
+              strings("id_18_15"),
+              this.props.textTraining
+            )}
+            {/* {this.getFeedContentFromString(
               strings("the_new_challen"),
               translateSpecialEvent(this.props.textTraining)
-            )}
+            )} */}
           </Text>
         );
       else
@@ -957,19 +1105,30 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
               translateSpecialEvent(this.props.textTraining)
             )} 
             */}
-            {strings("update_your_pri")}
+            {strings("id_18_35")}
           </Text>
         );
     } else if (this.props.modal_type === "completedST") {
       return (
         <Text style={styles.textDescr}>
           {this.getFeedContentFromString(
-            strings("well__that_s_a_"),
+            strings("id_18_17"),
             translateSpecialEvent(this.props.textTraining)
           )}
+          {/* 
           {this.getFeedContentFromString(
             strings("powered_by__spo"),
             this.props.textSponsor
+          )} 
+          */}
+        </Text>
+      );
+    } else if (this.props.modal_type === "enrolledTournament") {
+      return (
+        <Text style={styles.textDescr}>
+          {this.getFeedContentFromString(
+            strings("id_18_33"),
+            this.props.team_name
           )}
         </Text>
       );
@@ -1027,15 +1186,36 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
           {strings("training_sessio")}
         </Text>
       );
-    } else if (this.props.modal_type === "DailyActivities") {
+    }  else if (this.props.modal_type === "BonusActivities") {
       return (
-        <Text style={styles.textModalSplit}>{strings("training_sessio")}</Text>
+        <Text style={styles.textModalSplit}>{strings("id_18_42")}</Text>
       );
+    } else if (this.props.modal_type === "DailyActivities") {
+      if (this.props.activity_minutes >= 90) {
+       
+        return (
+          <Text style={styles.textModalSplit}>{strings("id_18_40")}</Text>
+        );
+      
+    } else if (this.props.activity_minutes >= 60) {
+      return (
+        <Text style={styles.textModalSplit}>{strings("id_18_38")}</Text>
+      );
+      
+    } else {
+    
+      return (
+        <Text style={styles.textModalSplit}>{strings("id_18_36")}</Text>
+      );
+      
+    }
+      
     } else if (this.props.modal_type === "Muv") {
       return (
         <Text style={styles.textModalSplit}>
           {/* {ex_strings("descrFeedMUVTitle} */}
-          Watch the VIDEO to become a MUV STAR!
+          {/* {Watch the VIDEO to become a MUV STAR!} */}
+          {strings("id_18_01")}
         </Text>
       );
     } else if (this.props.modal_type === "WeeklyChallenge") {
@@ -1069,50 +1249,82 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
         );
       }
     } else if (this.props.modal_type === "Trophies") {
-      switch (this.props.typeTrophie) {
-        case "FirstGlobalTrophy":
+      if (this.props.trophy) {
+        if (this.props.trophy.position == 1) {
           return (
             <Text style={styles.textModalSplit}>
               {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophyTitle} */}
               {strings("you_freaking_di")}
             </Text>
           );
-        case "SecondGlobalTrophy":
+        } else if (this.props.trophy.position == 2) {
           return (
             <Text style={styles.textModalSplit}>
-              {/* {ex_strings("descrFeedTrophiesSecondGlobalTrophyTitle} */}
+              {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophyTitle} */}
               {strings("it_s_silver__ki")}
             </Text>
           );
-        case "ThirdGlobalTrophy":
+        } else if (this.props.trophy.position == 3) {
           return (
             <Text style={styles.textModalSplit}>
-              {/* {ex_strings("descrFeedTrophiesThirdGlobalTrophyTitle} */}
+              {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophyTitle} */}
               {strings("it_s_a_bronze__")}
             </Text>
           );
-        case "FirstLocalTrophy":
-          return (
-            <Text style={styles.textModalSplit}>
-              {/* {ex_strings("descrFeedTrophiesFirstLocalTrophyTitle} */}
-              {strings("the_best_in_tow")}
-            </Text>
-          );
-        case "SecondLocalTrophy":
-          return (
-            <Text style={styles.textModalSplit}>
-              {/* {ex_strings("descrFeedTrophiesSecondLocalTrophyTitle} */}
-              {strings("almost_a_city_c")}
-            </Text>
-          );
-        case "ThirdLocalTrophy":
-          return (
-            <Text style={styles.textModalSplit}>
-              {/* {ex_strings("descrFeedTrophiesThirdLocalTrophyTitle} */}
-              {strings("third_place_")}
-            </Text>
-          );
+        }
       }
+      // caso generico
+      return (
+        <Text style={styles.textModalSplit}>
+          {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophyTitle} */}
+          {strings("it_s_a_bronze__")}
+        </Text>
+      );
+
+      // switch (this.props.typeTrophie) {
+      //   case "FirstGlobalTrophy":
+      //     return (
+      //       <Text style={styles.textModalSplit}>
+      //         {/* {ex_strings("descrFeedTrophiesFirstGlobalTrophyTitle} */}
+      //         {strings("you_freaking_di")}
+      //       </Text>
+      //     );
+      //   case "SecondGlobalTrophy":
+      //     return (
+      //       <Text style={styles.textModalSplit}>
+      //         {/* {ex_strings("descrFeedTrophiesSecondGlobalTrophyTitle} */}
+      //         {strings("it_s_silver__ki")}
+      //       </Text>
+      //     );
+      //   case "ThirdGlobalTrophy":
+      //     return (
+      //       <Text style={styles.textModalSplit}>
+      //         {/* {ex_strings("descrFeedTrophiesThirdGlobalTrophyTitle} */}
+      //         {strings("it_s_a_bronze__")}
+      //       </Text>
+      //     );
+      //   case "FirstLocalTrophy":
+      //     return (
+      //       <Text style={styles.textModalSplit}>
+      //         {/* {ex_strings("descrFeedTrophiesFirstLocalTrophyTitle} */}
+      //         {strings("the_best_in_tow")}
+      //       </Text>
+      //     );
+      //   case "SecondLocalTrophy":
+      //     return (
+      //       <Text style={styles.textModalSplit}>
+      //         {/* {ex_strings("descrFeedTrophiesSecondLocalTrophyTitle} */}
+      //         {strings("almost_a_city_c")}
+      //       </Text>
+      //     );
+      //   case "ThirdLocalTrophy":
+      //     return (
+      //       <Text style={styles.textModalSplit}>
+      //         {/* {ex_strings("descrFeedTrophiesThirdLocalTrophyTitle} */}
+      //         {strings("third_place_")}
+      //       </Text>
+      //     );
+      // }
     } else if (this.props.modal_type === "survey") {
       return (
         <Text style={styles.textModalSplit}>
@@ -1152,7 +1364,7 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
       return (
         <Text style={styles.textModalSplit}>
           {/* {ex_strings("descrFeedUpdateProfileTitle} */}
-          {strings("tell_us_about_y")}
+          {strings("id_18_12")}
         </Text>
       );
     } else if (this.props.modal_type === "mobilityHabits") {
@@ -1203,6 +1415,13 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
           )}
         </Text>
       );
+    } else if (this.props.modal_type === "Friend") {
+      return (
+        <Text style={styles.textModalSplit}>
+          {/* {ex_strings("descrFeedFeedbackTitle} */}
+          {strings("id_18_48")}
+        </Text>
+      );
     } else if (this.props.modal_type === "Followed") {
       return (
         <Text style={styles.textModalSplit}>
@@ -1236,21 +1455,28 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
         return (
           <Text style={styles.textModalSplit}>
             {/* {ex_strings("descrFeedFeedbackTitle} */}
-            {strings("new_special_tra")}
+            {strings("id_18_14")}
           </Text>
         );
       else
         return (
           <Text style={styles.textModalSplit}>
             {/* {ex_strings("descrFeedFeedbackTitle} */}
-            {strings("_687_special_trainin")}
+            {strings("id_18_14")}
           </Text>
         );
     } else if (this.props.modal_type === "completedST") {
       return (
         <Text style={styles.textModalSplit}>
           {/* {ex_strings("descrFeedFeedbackTitle} */}
-          {strings("special_trainin")}
+          {strings("id_18_16")}
+        </Text>
+      );
+    } else if (this.props.modal_type === "enrolledTournament") {
+      return (
+        <Text style={styles.textModalSplit}>
+          {/* {ex_strings("descrFeedFeedbackTitle} */}
+          {strings("id_18_32")}
         </Text>
       );
     } else {
@@ -1291,8 +1517,8 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
           flexDirection: "row",
           justifyContent: "space-around",
           alignItems: "center",
-          alignSelf: "center"
-        }
+          alignSelf: "center",
+        },
       };
     else
       shadowOpt = {
@@ -1309,8 +1535,8 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
           flexDirection: "row",
           justifyContent: "space-around",
           alignItems: "center",
-          alignSelf: "center"
-        }
+          alignSelf: "center",
+        },
       };
 
     // se ho passato la data
@@ -1329,7 +1555,7 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
                 flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center",
-                width: Dimensions.get("window").width * 0.15
+                width: Dimensions.get("window").width * 0.15,
 
                 // backgroundColor: "#ffa"
                 // borderLeftColor: "#9D9B9C80",
@@ -1342,7 +1568,7 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
               style={{
                 width: Dimensions.get("window").width * 0.55,
                 flexDirection: "column",
-                justifyContent: "space-between"
+                justifyContent: "space-between",
               }}
             >
               <Text style={styles.textTitle}>
@@ -1353,9 +1579,8 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
             </View>
             <View
               style={{
-                width: Dimensions.get("window").width * 0.05
+                width: Dimensions.get("window").width * 0.05,
                 // backgroundColor: 'red'
-
                 // borderLeftColor: "#9D9B9C80",
                 // borderLeftWidth: 1.5
               }}
@@ -1376,6 +1601,9 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
 }
 
 export function timeAgo(DataNow, Data) {
+  // console.log(DataNow);
+  // console.log(Data);
+
   let label = "";
   if (DataNow && Data) {
     const TimeAgo = DataNow - Data;
@@ -1383,22 +1611,22 @@ export function timeAgo(DataNow, Data) {
 
     // minuti
     let time = TimeAgo / 60000;
-    let text = strings("mins");
+    let text = strings("id_4_06");
     let minute = true;
     let intTime = parseInt(time);
 
     if (intTime !== 0) {
       if (intTime === 1) {
-        text = strings("minute");
+        text = strings("id_4_07");
       }
       // ore
       let timeNew = time / 60;
       intTime = parseInt(timeNew);
       if (intTime !== 0) {
         if (intTime === 1) {
-          text = strings("hour");
+          text = strings("id_4_05");
         } else {
-          text = strings("hours");
+          text = strings("id_4_04");
         }
         time = timeNew;
 
@@ -1409,9 +1637,9 @@ export function timeAgo(DataNow, Data) {
         intTime = parseInt(timeNew);
         if (intTime !== 0) {
           if (intTime === 1) {
-            text = strings("day");
+            text = strings("id_4_03");
           } else {
-            text = strings("days");
+            text = strings("id_4_02");
           }
           time = timeNew;
 
@@ -1420,9 +1648,9 @@ export function timeAgo(DataNow, Data) {
           intTime = parseInt(timeNew);
           if (intTime !== 0) {
             if (intTime === 1) {
-              text = strings("month");
+              text = strings("id_18_19");
             } else {
-              text = strings("months");
+              text = strings("id_18_18");
             }
             time = timeNew;
           }
@@ -1434,11 +1662,11 @@ export function timeAgo(DataNow, Data) {
     const languageSet = getLanguageI18n();
 
     if (languageSet == "ct" || languageSet == "es") {
-      if (time === 0 && minute) label = " | " + strings("now");
-      else label = " | " + strings("ago") + " " + time + " " + text;
+      if (time === 0 && minute) label = " | " + strings("id_1_22");
+      else label = " | " + strings("id_1_21") + " " + time + " " + text;
     } else {
-      if (time === 0 && minute) label = " | " + strings("now");
-      else label = " | " + time + " " + text + " " + strings("ago");
+      if (time === 0 && minute) label = " | " + strings("id_1_22");
+      else label = " | " + time + " " + text + " " + strings("id_1_21");
     }
   }
   return label;
@@ -1461,7 +1689,7 @@ const styles = {
     shadowColor: "#B2B2B2",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.6,
-    marginBottom: 20
+    marginBottom: 20,
   },
   viewStyle: {
     width: Dimensions.get("window").width * 0.9,
@@ -1469,46 +1697,46 @@ const styles = {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    alignSelf: "center"
+    alignSelf: "center",
   },
   textTitle: {
     fontSize: 11,
     fontFamily: "OpenSans-Regular",
     marginVertical: 6,
-    marginTop: 15
+    marginTop: 15,
   },
   textPoints: {
     fontSize: 30,
     fontFamily: "OpenSans-Regular",
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   textDescr: {
     fontSize: 11,
     fontFamily: "OpenSans-Regular",
     marginVertical: 6,
-    marginBottom: 15
+    marginBottom: 15,
   },
   textDescrBold: {
     fontSize: 11,
     fontFamily: "OpenSans-Regular",
     marginVertical: 6,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   textModalSplit: {
     fontSize: 11,
     fontFamily: "OpenSans-Regular",
     marginVertical: 6,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   points: {
     fontSize: 20,
     color: "white",
-    fontFamily: "OpenSans-Regular"
+    fontFamily: "OpenSans-Regular",
   },
   pt: {
     fontSize: 10,
     marginTop: 5,
-    fontFamily: "OpenSans-Regular"
+    fontFamily: "OpenSans-Regular",
   },
   circle: {
     width: Dimensions.get("window").width / 50 + 10,
@@ -1517,8 +1745,8 @@ const styles = {
     // justifyContent: "center",
     // alignItems: "center",
     // alignSelf: "center",
-    borderWidth: 5
-  }
+    borderWidth: 5,
+  },
 };
 
 export default withNavigation(RecapTraining);

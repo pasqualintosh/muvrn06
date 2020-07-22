@@ -30,7 +30,6 @@ import { BoxShadow } from "react-native-shadow";
 
 import { strings } from "../../config/i18n";
 
-
 const PROGRESS = [
   {
     label: "walk",
@@ -181,11 +180,11 @@ class CustomSurveySlide extends React.Component {
               "Would you like to open app settings?",
               [
                 {
-                  text: strings("yes"),
+                  text: strings("id_14_03"),
                   onPress: () => BackgroundGeolocation.showAppSettings()
                 },
                 {
-                  text: strings("no"),
+                  text: strings("id_14_04"),
                   onPress: () => console.log("No Pressed"),
                   style: "cancel"
                 }

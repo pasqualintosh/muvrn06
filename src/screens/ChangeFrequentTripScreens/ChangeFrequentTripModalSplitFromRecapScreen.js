@@ -316,15 +316,15 @@ class ChangeFrequentTripModalSplitFromRecapScreen extends React.Component {
                     );
 
                     setTimeout(() => {
-                      this.props.dispatch(postMostFrequentRoute({}, true));
+                      // this.props.dispatch(postMostFrequentRoute({}, true));
 
                       this.props.navigation.navigate("FeedRecapScreen");
                     }, 800);
-                  } else Alert.alert("Oops", strings("seems_like_you_"));
+                  } else Alert.alert("Oops", strings("id_0_46"));
                 }}
               >
                 <View style={[styles.buttonBox]}>
-                  <Text style={styles.buttonGoOnText}>{strings("ok")}</Text>
+                  <Text style={styles.buttonGoOnText}>{strings("id_0_12")}</Text>
                 </View>
               </TouchableWithoutFeedback>
             </View>

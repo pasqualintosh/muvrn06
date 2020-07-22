@@ -31,7 +31,6 @@ import { createSelector } from "reselect";
 
 import DescriptionIcon from "../../components/DescriptionIcon/DescriptionIcon";
 
-import DeviceInfo from "react-native-device-info";
 
 import Svg, { Circle } from "react-native-svg";
 
@@ -256,15 +255,15 @@ class BackgroundTutorial extends React.Component {
     }, 400);
 
 
-    setTimeout(() => {
-      // controllo se è spuntata il testo altrimenti vado avanti nella home 
-      if (!this.state.modalActive) {
-        // se la modale non funziona vai alla home
-        closeOverlay();
-    this.props.dispatch(completeTutorial("tutorialStart"));
+    // setTimeout(() => {
+    //   // controllo se è spuntata il testo altrimenti vado avanti nella home 
+    //   if (!this.state.modalActive) {
+    //     // se la modale non funziona vai alla home
+    //     closeOverlay();
+    // this.props.dispatch(completeTutorial("tutorialStart"));
 
-      }
-    }, 1500);
+    //   }
+    // }, 5000);
   }
 
   updateModal = () => {
@@ -425,7 +424,7 @@ class BackgroundTutorial extends React.Component {
     totPointsAlsoNotValid = calcolatePoints(
       totDistanceAlsoNotValid,
       PrecDistanceSameMode,
-      activityChoice.type
+      activityChoice.type, activityChoice.coef
     );
 
     let totPointsRoute = totPoints ? totPoints : 0;
@@ -487,7 +486,7 @@ class BackgroundTutorial extends React.Component {
       totPointsSegment += calcolatePoints(
         distanceLive,
         PrecDistanceSameMode,
-        activityChoice.type
+        activityChoice.type, activityChoice.coef
       );
       totDistanceSegment += distanceLive;
     }
@@ -507,7 +506,7 @@ class BackgroundTutorial extends React.Component {
   Timer = null;
 
   componentWillUnmount() {
-    if (this.state.anim) this.state.anim.reset();
+   
     if (this.timeoutId) clearTimeout(this.timeoutId);
   }
 
@@ -693,7 +692,7 @@ class BackgroundTutorial extends React.Component {
           }}
           data={this.state.data}
           keys={this.state.keys1}
-          colors={[`rgba(108, 186, 126, 1)`, `rgba(108, 186, 126, 0.4)`]}
+          colors={[`rgba(118,97,167, 1)`, `rgba(118,97,167, 0.4)`]}
           curve={shape.curveNatural}
           showGrid={false}
         />
@@ -707,7 +706,7 @@ class BackgroundTutorial extends React.Component {
           }}
           data={this.state.data}
           keys={this.state.keys}
-          colors={[`rgba(108, 186, 126, 1)`, `rgba(108, 186, 126, 0.4)`]}
+          colors={[`rgba(118,97,167, 1)`, `rgba(118,97,167, 0.4)`]}
           curve={shape.curveNatural}
           showGrid={false}
         />

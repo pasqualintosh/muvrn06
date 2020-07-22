@@ -139,11 +139,11 @@ class Template extends React.Component {
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
-                      <ActivityIndicator size="small" color="#6497CC" />
-                    )}
+                    <ActivityIndicator size="small" color="#6497CC" />
+                  )}
                 </View>
               </TouchableWithoutFeedback>
             </View>
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

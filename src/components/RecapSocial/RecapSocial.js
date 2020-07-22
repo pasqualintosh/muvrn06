@@ -1,4 +1,4 @@
-// componente per gli inviti social 
+// componente per gli inviti social
 
 import React from "react";
 import {
@@ -13,13 +13,12 @@ import {
   Linking
 } from "react-native";
 
-
-
-
 import { images } from "../../components/InfoUserHome/InfoUserHome";
 
-
-import { addOpenPeriodicFeed, addCompletePeriodicFeed } from "../../domains/login/ActionCreators";
+import {
+  addOpenPeriodicFeed,
+  addCompletePeriodicFeed
+} from "../../domains/login/ActionCreators";
 
 import { strings, getLanguageI18n } from "../../config/i18n";
 
@@ -91,7 +90,6 @@ class RecapSocial extends React.PureComponent {
   getImagePath = label => {
     let userAvatar = 1;
     switch (label) {
-      
       case "facebookLike":
         return (
           <Image
@@ -107,7 +105,6 @@ class RecapSocial extends React.PureComponent {
           />
         );
 
-     
       default: {
         userAvatar = limitAvatar(this.props.avatar);
 
@@ -121,10 +118,8 @@ class RecapSocial extends React.PureComponent {
     }
   };
 
-  
   getEndImagePath = label => {
     switch (label) {
-     
       case "facebookLike":
       case "instagramLike":
         return (
@@ -133,7 +128,7 @@ class RecapSocial extends React.PureComponent {
             source={require("../../assets/images/trainings/like_feed_icn.png")}
           />
         );
-     
+
       default:
         return (
           <ImageBackground
@@ -149,22 +144,18 @@ class RecapSocial extends React.PureComponent {
       this.props.dispatch(addOpenPeriodicFeed(6));
       this.props.dispatch(addCompletePeriodicFeed(6));
       // apri facebook
-      this.moveFacebook('609617899449899')
-     
-    }
-    else if (this.props.modal_type === "instagramLike") {
+      this.moveFacebook("609617899449899");
+    } else if (this.props.modal_type === "instagramLike") {
       this.props.dispatch(addOpenPeriodicFeed(7));
       this.props.dispatch(addCompletePeriodicFeed(7));
       // apri instagram
-      this.moveInstagram('muv2020')
+      this.moveInstagram("muv2020");
     } else {
       // in tutti gli altri casi vado in trainings
 
       this.props.navigation.navigate("Trainings");
     }
   };
-
-
 
   getFeedContentFromString = (str, rplc_text) => {
     let first_perc = str.indexOf("%");
@@ -181,16 +172,12 @@ class RecapSocial extends React.PureComponent {
     );
   };
 
-
   descriptionFeed = () => {
     if (this.props.modal_type === "facebookLike") {
       return <Text style={styles.textDescr}>{strings("follow_us_on_fa")}</Text>;
     } else if (this.props.modal_type === "instagramLike") {
       return <Text style={styles.textDescr}>{strings("follow_us_on_in")}</Text>;
-    } 
-     else {
-     
-
+    } else {
       let NameLevel = "Newbie";
       switch (this.props.level) {
         case 1:
@@ -222,13 +209,7 @@ class RecapSocial extends React.PureComponent {
   };
 
   descriptionTitle = () => {
-    
-      return (
-        <Text style={styles.textModalSplit}>
-         LIKE the way we MUV!
-        </Text>
-      );
-    
+    return <Text style={styles.textModalSplit}>LIKE the way we MUV!</Text>;
   };
 
   render() {
@@ -243,61 +224,63 @@ class RecapSocial extends React.PureComponent {
       .substr(11, 8); 
     */
 
-    
-
     // se ho passato la data
     let label = timeAgo(this.props.DataNow, this.props.Data);
 
     return (
-      <View >
-      <TouchableOpacity style={styles.view}activeOpacity={0.7} onPress={this.moveTraining} >
-      <View style={styles.viewStyle}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              width: Dimensions.get("window").width * 0.15
+      <View>
+        <TouchableOpacity
+          style={styles.view}
+          activeOpacity={0.7}
+          onPress={this.moveTraining}
+        >
+          <View style={styles.viewStyle}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                width: Dimensions.get("window").width * 0.15
 
-              // backgroundColor: "#ffa"
-              // borderLeftColor: "#9D9B9C80",
-              // borderLeftWidth: 1.5
-            }}
-          >
-            {this.getImagePath(this.props.modal_type)}
-          </View>
-          <View
-            style={{
-              width: Dimensions.get("window").width * 0.55,
-              flexDirection: "column",
-              justifyContent: "space-between"
-            }}
-          >
-            <Text style={styles.textTitle}>
-              {this.descriptionTitle()}
-              {label}
-            </Text>
-            {this.descriptionFeed()}
-          </View>
-          <View
-            style={{
-              width: Dimensions.get("window").width * 0.05
-              // backgroundColor: 'red'
+                // backgroundColor: "#ffa"
+                // borderLeftColor: "#9D9B9C80",
+                // borderLeftWidth: 1.5
+              }}
+            >
+              {this.getImagePath(this.props.modal_type)}
+            </View>
+            <View
+              style={{
+                width: Dimensions.get("window").width * 0.55,
+                flexDirection: "column",
+                justifyContent: "space-between"
+              }}
+            >
+              <Text style={styles.textTitle}>
+                {this.descriptionTitle()}
+                {label}
+              </Text>
+              {this.descriptionFeed()}
+            </View>
+            <View
+              style={{
+                width: Dimensions.get("window").width * 0.05
+                // backgroundColor: 'red'
 
-              // borderLeftColor: "#9D9B9C80",
-              // borderLeftWidth: 1.5
-            }}
-          >
-            {/* 
+                // borderLeftColor: "#9D9B9C80",
+                // borderLeftWidth: 1.5
+              }}
+            >
+              {/* 
                 <Text style={styles.textPoints}>
                   {this.props.totPoints.toFixed(0)}
                 </Text>
                 <Text style={styles.pt}>pt</Text> 
               */}
-            {this.getEndImagePath(this.props.modal_type)}
+              {this.getEndImagePath(this.props.modal_type)}
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -311,22 +294,22 @@ export function timeAgo(DataNow, Data) {
 
     // minuti
     let time = TimeAgo / 60000;
-    let text = strings("mins");
+    let text = strings("id_4_06");
     let minute = true;
     let intTime = parseInt(time);
 
     if (intTime !== 0) {
       if (intTime === 1) {
-        text = strings("minute");
+        text = strings("id_4_07");
       }
       // ore
       let timeNew = time / 60;
       intTime = parseInt(timeNew);
       if (intTime !== 0) {
         if (intTime === 1) {
-          text = strings("hour");
+          text = strings("id_4_05");
         } else {
-          text = strings("hours");
+          text = strings("id_4_04");
         }
         time = timeNew;
 
@@ -337,9 +320,9 @@ export function timeAgo(DataNow, Data) {
         intTime = parseInt(timeNew);
         if (intTime !== 0) {
           if (intTime === 1) {
-            text = strings("day");
+            text = strings("id_4_03");
           } else {
-            text = strings("days");
+            text = strings("id_4_02");
           }
           time = timeNew;
 
@@ -348,9 +331,9 @@ export function timeAgo(DataNow, Data) {
           intTime = parseInt(timeNew);
           if (intTime !== 0) {
             if (intTime === 1) {
-              text = strings("month");
+              text = strings("id_18_19");
             } else {
-              text = strings("months");
+              text = strings("id_18_18");
             }
             time = timeNew;
           }
@@ -362,11 +345,11 @@ export function timeAgo(DataNow, Data) {
     const languageSet = getLanguageI18n();
 
     if (languageSet == "ct" || languageSet == "es") {
-      if (time === 0 && minute) label = " | " + strings("now");
-      else label = " | " + strings("ago") + " " + time + " " + text;
+      if (time === 0 && minute) label = " | " + strings("id_1_22");
+      else label = " | " + strings("id_1_21") + " " + time + " " + text;
     } else {
-      if (time === 0 && minute) label = " | " + strings("now");
-      else label = " | " + time + " " + text + " " + strings("ago");
+      if (time === 0 && minute) label = " | " + strings("id_1_22");
+      else label = " | " + time + " " + text + " " + strings("id_1_21");
     }
   }
   return label;
@@ -389,8 +372,7 @@ const styles = {
     shadowColor: "#B2B2B2",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.6,
-    marginBottom: 20,
-   
+    marginBottom: 20
   },
   viewStyle: {
     width: Dimensions.get("window").width * 0.9,
@@ -398,8 +380,7 @@ const styles = {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    alignSelf: "center",
-    
+    alignSelf: "center"
   },
   textTitle: {
     fontSize: 11,

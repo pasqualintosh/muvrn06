@@ -25,9 +25,10 @@ import { connect } from "react-redux";
 import Icon from "react-native-vector-icons/Ionicons";
 import Modal from "react-native-modal";
 
-import { deleteProfile } from "./../../domains/login/ActionCreators";
+import { deleteProfileNew } from "./../../domains/login/ActionCreators";
 import { BoxShadow } from "react-native-shadow";
 import LogOut from "../../components/LogOut/LogOut";
+import * as Keychain from "react-native-keychain";
 
 import { strings } from "../../config/i18n";
 
@@ -38,8 +39,11 @@ import { strings } from "../../config/i18n";
 class PrivacyAndSecurity extends React.Component {
   constructor() {
     super();
+
     this.state = {
-      isVisible: false
+      isVisible: false,
+      perm: null,
+      security: null
     };
   }
 
@@ -51,11 +55,27 @@ class PrivacyAndSecurity extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("privacy_and_sec")}
+          {strings("id_13_05")}
         </Text>
       )
       // headerRight: <LogOut />
     };
+  };
+
+  alertdeleteCredentials = () => {
+    Alert.alert(strings("are_you_sure___"), "", [
+      {
+        text: strings("id_14_03"),
+        onPress: () => {
+          this.deleteCredentials();
+        }
+      },
+      {
+        text: strings("id_14_04"),
+        onPress: () => {},
+        style: "cancel"
+      }
+    ]);
   };
 
   closeModal = () => {
@@ -71,7 +91,7 @@ class PrivacyAndSecurity extends React.Component {
   };
 
   handleDeleteAccount = () => {
-    this.props.dispatch(deleteProfile());
+    this.props.dispatch(deleteProfileNew());
   };
 
   shadow = () => {
@@ -102,6 +122,30 @@ class PrivacyAndSecurity extends React.Component {
     } else {
       return <View />;
     }
+  };
+
+  componentWillMount() {
+    // Keychain.getSupportedBiometryType().then( perm => {
+    //   this.setState({ perm})
+    // })
+    // Keychain.getSecurityLevel().then( security => {
+    //   this.setState({ security})
+    // })
+  }
+
+  deleteCredentials = () => {
+    Keychain.resetGenericPassword().then();
+  };
+
+  updateCredentials = () => {
+    const AUTH_OPTIONS = {
+      accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
+      accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED,
+      authenticationPrompt: strings("id_0_133"),
+      authenticateType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS
+    };
+    // Store the credentials
+    Keychain.setGenericPassword(username, password, AUTH_OPTIONS).then();
   };
 
   modalDeleteAccount = () => {
@@ -189,7 +233,7 @@ class PrivacyAndSecurity extends React.Component {
                   textAlign: "center"
                 }}
               >
-                {strings("we_re_sorry_to_")}
+                {strings("id_13_33")}
               </Text>
               <View>
                 <Text
@@ -200,7 +244,7 @@ class PrivacyAndSecurity extends React.Component {
                     textAlign: "center"
                   }}
                 >
-                  {strings("are_you_sure_yo")}
+                  {strings("id_13_34")}
                 </Text>
                 <Text
                   style={{
@@ -210,7 +254,7 @@ class PrivacyAndSecurity extends React.Component {
                     textAlign: "center"
                   }}
                 >
-                  {strings("the_action_is_i")}
+                  {strings("id_13_35")}
                 </Text>
               </View>
 
@@ -259,7 +303,7 @@ class PrivacyAndSecurity extends React.Component {
                             textAlign: "center"
                           }}
                         >
-                          {strings("yes__delete_it_")}
+                          {strings("id_13_36")}
                         </Text>
                       ) : (
                         <ActivityIndicator size="small" color="white" />
@@ -299,12 +343,8 @@ class PrivacyAndSecurity extends React.Component {
             <View style={styles.other}>
               <View style={styles.session}>
                 <View>
-                  <Text style={styles.LeftTitle}>
-                    {strings("change_password")}
-                  </Text>
-                  <Text style={styles.LeftDescr}>
-                    {strings("security_is_nev")}
-                  </Text>
+                  <Text style={styles.LeftTitle}>{strings("id_13_24")}</Text>
+                  <Text style={styles.LeftDescr}>{strings("id_13_25")}</Text>
                 </View>
               </View>
               <Icon
@@ -323,12 +363,48 @@ class PrivacyAndSecurity extends React.Component {
             <View style={styles.other}>
               <View style={styles.session}>
                 <View>
-                  <Text style={styles.LeftTitle}>
-                    {strings("informed_consen")}
-                  </Text>
-                  <Text style={styles.LeftDescr}>
-                    {strings("also_known_as_t")}
-                  </Text>
+                  <Text style={styles.LeftTitle}>{strings("id_13_26")}</Text>
+                  <Text style={styles.LeftDescr}>{strings("id_13_27")}</Text>
+                </View>
+              </View>
+              <Icon
+                name="md-arrow-forward"
+                size={18}
+                color="#3d3d3d"
+                style={{ alignSelf: "center", marginRight: 17 }}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+          <TouchableWithoutFeedback
+            onPress={() => {
+              this.props.navigation.navigate("PrivacyPolicy");
+            }}
+          >
+            <View style={styles.other}>
+              <View style={styles.session}>
+                <View>
+                  <Text style={styles.LeftTitle}>{strings("id_13_63")}</Text>
+                  <Text style={styles.LeftDescr}>{strings("id_13_64")}</Text>
+                </View>
+              </View>
+              <Icon
+                name="md-arrow-forward"
+                size={18}
+                color="#3d3d3d"
+                style={{ alignSelf: "center", marginRight: 17 }}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+          <TouchableWithoutFeedback
+            onPress={() => {
+              this.props.navigation.navigate("TemsAndConditions");
+            }}
+          >
+            <View style={styles.other}>
+              <View style={styles.session}>
+                <View>
+                  <Text style={styles.LeftTitle}>{strings("id_13_61")}</Text>
+                  <Text style={styles.LeftDescr}>{strings("id_13_62")}</Text>
                 </View>
               </View>
               <Icon
@@ -344,12 +420,8 @@ class PrivacyAndSecurity extends React.Component {
             <View style={styles.other}>
               <View style={styles.session}>
                 <View>
-                  <Text style={styles.LeftTitle}>
-                    {strings("delete_your_pro")}
-                  </Text>
-                  <Text style={styles.LeftDescr}>
-                    {strings("why_would_you_w")}
-                  </Text>
+                  <Text style={styles.LeftTitle}>{strings("id_13_28")}</Text>
+                  <Text style={styles.LeftDescr}>{strings("id_13_28")}</Text>
                 </View>
               </View>
               <Icon
@@ -360,6 +432,45 @@ class PrivacyAndSecurity extends React.Component {
               />
             </View>
           </TouchableWithoutFeedback>
+          {/* {this.state.perm || this.state.security == 'SECURE_HARDWARE'  ? <View><TouchableWithoutFeedback onPress={() => this.openModal()}>
+            <View style={styles.other}>
+              <View style={styles.session}>
+                <View>
+                  <Text style={styles.LeftTitle}>
+                    {"Salva le tue credenziali d'accesso"}
+                  </Text>
+                  <Text style={styles.LeftDescr}>
+                    {"Per avere un pensiero in meno."}
+                  </Text>
+                </View>
+              </View>
+              <Icon
+                name="md-arrow-forward"
+                size={18}
+                color="#3d3d3d"
+                style={{ alignSelf: "center", marginRight: 17 }}
+              />
+            </View>
+          </TouchableWithoutFeedback><TouchableWithoutFeedback onPress={() => this.alertdeleteCredentials()}>
+            <View style={styles.other}>
+              <View style={styles.session}>
+                <View>
+                  <Text style={styles.LeftTitle}>
+                    {"Cancella le tue credenziali d'accesso rapido"}
+                  </Text>
+                  <Text style={styles.LeftDescr}>
+                    {"Perché complicarsi la vita?"}
+                  </Text>
+                </View>
+              </View>
+              <Icon
+                name="md-arrow-forward"
+                size={18}
+                color="#3d3d3d"
+                style={{ alignSelf: "center", marginRight: 17 }}
+              />
+            </View>
+          </TouchableWithoutFeedback></View> : <View/>} */}
 
           <View
             style={{ paddingBottom: Dimensions.get("window").height / 10 }}

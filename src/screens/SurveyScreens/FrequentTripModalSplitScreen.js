@@ -266,63 +266,63 @@ class FrequentTripModalSplitScreen extends React.Component {
       //       .replace(/\s/g, "_")
       //   ] == true
       // )
-      if (this.checkLabelToRender(this.state.values[index].label))
-        return (
-          <View key={index} style={{ marginVertical: 8, flexDirection: "row" }}>
-            <View style={{ flex: 0.3 }}>
-              <Image
-                style={{
-                  width: 60,
-                  height: 60
-                }}
-                source={this.getImagePath(this.state.values[index].label)}
-              />
-            </View>
-            <View style={{ flex: 0.7, marginTop: 10 }}>
-              <Slider
-                value={this.state.values[index].value}
-                onValueChange={value => {
-                  let tot_value = 0;
-                  this.state.values.forEach(el => (tot_value += el.value));
+      // if (this.checkLabelToRender(this.state.values[index].label))
+      return (
+        <View key={index} style={{ marginVertical: 8, flexDirection: "row" }}>
+          <View style={{ flex: 0.3 }}>
+            <Image
+              style={{
+                width: 60,
+                height: 60
+              }}
+              source={this.getImagePath(this.state.values[index].label)}
+            />
+          </View>
+          <View style={{ flex: 0.7, marginTop: 10 }}>
+            <Slider
+              value={this.state.values[index].value}
+              onValueChange={value => {
+                let tot_value = 0;
+                this.state.values.forEach(el => (tot_value += el.value));
 
-                  let k = 0;
-                  for (let ind = 0; ind < 6; ind++) {
-                    // non sempre devo decrementare tutto
-                    if (ind != index && this.state.values[ind].value > 0) k++;
+                let k = 0;
+                for (let ind = 0; ind < 6; ind++) {
+                  // non sempre devo decrementare tutto
+                  if (ind != index && this.state.values[ind].value > 0) k++;
+                }
+
+                if (tot_value > 250) {
+                  let v = this.state.values;
+                  let diff_value = 10 / k;
+
+                  for (ind = 0; ind < 6; ind++) {
+                    if (ind == index) v[ind].value = Number.parseInt(value);
+                    else if (v[ind].value > 0)
+                      v[ind].value -= Number.parseInt(diff_value);
                   }
 
-                  if (tot_value > 250) {
-                    let v = this.state.values;
-                    let diff_value = 10 / k;
+                  this.setState({ values: v, selected: true });
+                } else {
+                  let v = this.state.values;
+                  v[index].value = Number.parseInt(value);
+                  this.setState({ values: v, selected: true });
+                }
 
-                    for (ind = 0; ind < 6; ind++) {
-                      if (ind == index) v[ind].value = Number.parseInt(value);
-                      else if (v[ind].value > 0)
-                        v[ind].value -= Number.parseInt(diff_value);
-                    }
-
-                    this.setState({ values: v, selected: true });
-                  } else {
-                    let v = this.state.values;
-                    v[index].value = Number.parseInt(value);
-                    this.setState({ values: v, selected: true });
-                  }
-
-                  tot_value = 0;
-                  this.state.values.forEach(el => (tot_value += el.value));
-                }}
-                trackStyle={{ backgroundColor: "#fff", height: 2.5 }}
-                // thumbImage={this.getImagePath(this.state.values[index].label)}
-                style={{ height: 50 }}
-                thumbStyle={{ height: 20, width: 20, borderRadius: 15 }}
-                thumbTintColor={"#fff"}
-                minimumTrackTintColor={"#fff"}
-                minimumValue={0}
-                maximumValue={100}
-                step={10}
-              />
-            </View>
-            {/* 
+                tot_value = 0;
+                this.state.values.forEach(el => (tot_value += el.value));
+              }}
+              trackStyle={{ backgroundColor: "#fff", height: 2.5 }}
+              // thumbImage={this.getImagePath(this.state.values[index].label)}
+              style={{ height: 50 }}
+              thumbStyle={{ height: 20, width: 20, borderRadius: 15 }}
+              thumbTintColor={"#fff"}
+              minimumTrackTintColor={"#fff"}
+              minimumValue={0}
+              maximumValue={100}
+              step={10}
+            />
+          </View>
+          {/* 
             <View
               style={{
                 height: 10,
@@ -347,8 +347,8 @@ class FrequentTripModalSplitScreen extends React.Component {
               <Text style={styles.sliderSubText}>{strings("always")}</Text>
             </View> 
             */}
-          </View>
-        );
+        </View>
+      );
     });
   }
 
@@ -440,9 +440,7 @@ class FrequentTripModalSplitScreen extends React.Component {
                   />
                 </View>
               </TouchableWithoutFeedback>
-              <Text style={styles.textHeader}>
-                {strings("_410_how_do_you_usua")}
-              </Text>
+              <Text style={styles.textHeader}>{strings("id_0_51")}</Text>
             </View>
           </View>
         </View>
@@ -478,61 +476,54 @@ class FrequentTripModalSplitScreen extends React.Component {
             }}
           >
             <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>
-                {strings("you_can_always_")}
-              </Text>
+              <Text style={styles.textFooter}>{strings("id_0_52")}</Text>
             </View>
 
             <View style={[styles.buttonContainer]}>
               {/* <BoxShadow setting={shadowOpt} /> */}
               <TouchableWithoutFeedback
                 onPress={() => {
-                  this.state.values.forEach(e => {
-                    console.log("val " + e.value);
+                  // this.state.values.forEach(e => {
+                  //   console.log("val " + e.value);
 
-                    let progress = 0;
-                    if (e.value < 25) {
-                      progress = 0;
-                    } else {
-                      progress = round(e.value, 25, "up");
-                    }
+                  //   let progress = 0;
+                  //   if (e.value < 25) {
+                  //     progress = 0;
+                  //   } else {
+                  //     progress = round(e.value, 25, "up");
+                  //   }
 
-                    console.log("prog " + progress);
-                  });
+                  //   console.log("prog " + progress);
+                  // });
 
-                  this.props.dispatch(
-                    updateState({
-                      mostFrequentRaceModalSplit: this.state.values
-                    })
-                  );
-                  if (this.state.selected)
-                    if (
-                      this.props.registerState[
-                        strings("car").toLocaleLowerCase()
-                      ] != undefined &&
-                      this.props.registerState[
-                        strings("car").toLocaleLowerCase()
-                      ] == true
-                    )
+                  let tot_value = 0;
+                  this.state.values.forEach(el => (tot_value += el.value));
+
+                  if (tot_value >= 100) {
+                    this.props.dispatch(
+                      updateState({
+                        mostFrequentRaceModalSplit: this.state.values,
+                        car_flag: this.state.values[3].value > 0 ? true : false,
+                        motorbike_flag:
+                          this.state.values[4].value > 0 ? true : false
+                      })
+                    );
+
+                    if (this.state.values[3].value > 0)
                       this.props.navigation.navigate("SurveyCarFuel");
-                    else if (
-                      this.props.registerState[
-                        strings("motorbike").toLocaleLowerCase()
-                      ] != undefined &&
-                      this.props.registerState[
-                        strings("motorbike").toLocaleLowerCase()
-                      ] == true
-                    )
+                    else if (this.state.values[4].value > 0)
                       this.props.navigation.navigate("SurveyMotoSegment");
-                    else this.props.navigation.navigate("SurveyUserData");
-                  else Alert.alert("Oops", strings("seems_like_you_"));
+                    else this.props.navigation.navigate("GDPRScreen");
+                  } else {
+                    Alert.alert(strings("id_0_10"), strings("id_0_97"));
+                  }
                 }}
                 disabled={this.props.status === "In register" ? true : false}
               >
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />
@@ -613,7 +604,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

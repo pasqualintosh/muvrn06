@@ -302,12 +302,16 @@ class SelectTeamScreen extends React.Component {
                       // this.props.navigation.navigate("SurveyEnd");
                       if (this.props.registerState.cityId != undefined) {
                         this.props.navigation.navigate("GDPRScreen");
-                      } else Alert.alert("Oops", strings("seems_like_you_"));
+                      } else
+                        Alert.alert(
+                          strings("id_0_10"),
+                          strings("seems_like_you_")
+                        );
                     }}
                   >
                     <View style={[styles.buttonBox]}>
                       <Text style={styles.buttonGoOnText}>
-                        {strings("go_on")}
+                        {strings("id_0_15")}
                       </Text>
                     </View>
                   </TouchableWithoutFeedback>
@@ -398,7 +402,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

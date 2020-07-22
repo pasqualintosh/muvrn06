@@ -58,7 +58,7 @@ class PersonalDataScreenBlur extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("settings")}
+          {strings("id_13_49")}
         </Text>
       ),
       headerRight: <IconMenuDrawer navigation={navigation} />

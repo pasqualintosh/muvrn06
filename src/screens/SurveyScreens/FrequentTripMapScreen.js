@@ -20,7 +20,6 @@ import { prefixesList } from "./../../assets/ListPrefixes";
 import { strings } from "../../config/i18n";
 import LinearGradient from "react-native-linear-gradient";
 
-
 class FrequentTripMapScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -43,22 +42,33 @@ class FrequentTripMapScreen extends React.Component {
         "You're almost there. Enter the address for your trip destination. Again, we will only keep the outline of the surrounding area.",
         "Good job! Now specify your destination type and you're done.",
         "Your frequent trip has been set correctly. Shall we move on?"
-      ]
+      ],
+      screen_name: "Frequent Trip"
     };
     this.mapRef = null;
   }
 
-  static navigationOptions = {
-    headerTitle: (
-      <Text
-        style={{
-          left: Platform.OS == "android" ? 20 : 0
-        }}
-      >
-        Frequent Trip
-      </Text>
-    )
-  };
+  // static navigationOptions = {
+  //   headerTitle: (
+  //     <Text
+  //       style={{
+  //         left: Platform.OS == "android" ? 20 : 0
+  //       }}
+  //     >
+  //       {"Frequent Trip"}
+  //     </Text>
+  //   )
+  // };
+
+  static navigationOptions = ({ navigation, screenProps }) => ({
+    headerTitle: navigation.state.params
+      ? navigation.state.params.screen_name.charAt(0).toUpperCase() +
+        navigation.state.params.screen_name.slice(1).toLowerCase()
+      : "Frequen trip"
+    // headerRight: navigation.state.params
+    //   ? navigation.state.params.screen_name
+    //   : "Frequen trip"
+  });
 
   addPoint = (position, mapRef) => {
     const key = +new Date();
@@ -181,11 +191,11 @@ class FrequentTripMapScreen extends React.Component {
               "MUV wants to access your position. To save your battery we reccomend you to select 'Allow only while...'",
               [
                 {
-                  text: strings("yes"),
+                  text: strings("id_14_03"),
                   onPress: () => BackgroundGeolocation.showAppSettings()
                 },
                 {
-                  text: strings("no"),
+                  text: strings("id_14_04"),
                   onPress: () => console.log("No Pressed"),
                   style: "cancel"
                 }
@@ -216,6 +226,17 @@ class FrequentTripMapScreen extends React.Component {
   };
 
   componentDidMount() {
+    // this.setState({
+    //   screen_name: this.props.navigation.state.params.screen_name
+    //     ? this.props.navigation.state.params.screen_name
+    //     : "Frequent Trip"
+    // });
+
+    // this.props.navigation.setOptions({
+    //   headerTitle: this.props.navigation.state.params.screen_name
+    //     ? this.props.navigation.state.params.screen_name
+    //     : "Frequent Trip"
+    // });
     this.setBackgroundGeolocation();
 
     if (Platform.OS == "ios")
@@ -324,7 +345,7 @@ class FrequentTripMapScreen extends React.Component {
         { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
       );
   }
-
+  componentWillMount() {}
   componentWillUnmount() {
     this.unsetBackgroundGeolocation();
   }
@@ -560,11 +581,11 @@ class FrequentTripMapScreen extends React.Component {
 
       const NewType = { ...previousState };
       if (num === 0 && NewType.select_type[1] !== -1) {
-        this.textDescriptionHeader("Complete, press " + strings("ok"));
+        this.textDescriptionHeader("Complete, press " + strings("id_0_12"));
       } else if (num === 0) {
         this.textDescriptionHeader("Select end of routine");
       } else if (num === 1 && NewType.select_type[0] !== -1) {
-        this.textDescriptionHeader("Complete, press " + strings("ok"));
+        this.textDescriptionHeader("Complete, press " + strings("id_0_12"));
       } else if (num === 1 && NewType.select_type[0] === -1) {
         this.textDescriptionHeader("Select start of routine");
       }
@@ -657,7 +678,11 @@ class FrequentTripMapScreen extends React.Component {
         }}
       >
         <GooglePlacesAutocomplete
-          placeholder={strings("text_your_addre")}
+          placeholder={
+            strings("id_0_34")
+              .charAt(0)
+              .toUpperCase() + strings("id_0_34").slice(1)
+          }
           minLength={2} // minimum length of text to search
           autoFocus={false}
           returnKeyType={"search"} // Can be left out for default return key https://facebook.github.io/react-native/docs/textinput.html#returnkeytype
@@ -693,8 +718,8 @@ class FrequentTripMapScreen extends React.Component {
                 Platform.OS == "ios"
                   ? Dimensions.get("window").height === 812 ||
                     Dimensions.get("window").width === 812 ||
-                    (Dimensions.get("window").height === 896 ||
-                      Dimensions.get("window").width === 896)
+                    Dimensions.get("window").height === 896 ||
+                    Dimensions.get("window").width === 896
                     ? 75
                     : 60
                   : 0
@@ -763,9 +788,7 @@ class FrequentTripMapScreen extends React.Component {
               flexDirection: "row"
             }}
           >
-            <Text style={styles.textCurrentLocation}>
-              {strings("your_current_lo")}
-            </Text>
+            <Text style={styles.textCurrentLocation}>{strings("id_0_47")}</Text>
             <Image
               style={{ width: 35, height: 35, marginRight: 5 }}
               source={require("./../../assets/images/map_point_a_circle.png")}
@@ -956,7 +979,7 @@ class FrequentTripMapScreen extends React.Component {
                   fontSize: 15
                 }}
               >
-                {strings("ok")}
+                {strings("id_0_12")}
               </Text>
             </View>
           </LinearGradient>

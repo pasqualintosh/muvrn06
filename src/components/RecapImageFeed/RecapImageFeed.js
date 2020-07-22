@@ -18,7 +18,6 @@ import { BoxShadow } from "react-native-shadow";
 
 import { images } from "../../components/InfoUserHome/InfoUserHome";
 import { data } from "./../../assets/ListCities";
-import DeviceInfo from "react-native-device-info";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
 import { addOpenPeriodicFeed } from "../../domains/login/ActionCreators";
@@ -260,57 +259,7 @@ class RecapImageFeed extends React.PureComponent {
     }
   };
 
-  sendFeedBack = () => {
-    /* 
-    try {
-        Linking.openURL(
-          "mailto:support@domain.com?subject=Hey buddies, I’ve a feedback about MUV 🤓 📬&body=Ciao,\nit’s [your name]\nand since I don’t have much time, here is my very brief feedback about MUV:\n- 🤬 this didn’t work --> ...\n- 🤯 I didn’t get this --> ...\n- 🤔 you should work better on this --> ...\n- 🤩 this is pretty neat! --> ...\n\nI'm sure you'll apreciate this and I hope my feedback will improve my beloved app.\nLove you all,\n[your name] 💞"
-        );
-      } catch (error) {
-        console.log(error);
-        alert(JSON.stringify(error));
-        try {
-          Linking.openURL(
-            "googlegmail://?subject=Hey buddies, I’ve a feedback about MUV 🤓 📬&body=Ciao,\nit’s [your name]\nand since I don’t have much time, here is my very brief feedback about MUV:\n- 🤬 this didn’t work --> ...\n- 🤯 I didn’t get this --> ...\n- 🤔 you should work better on this --> ...\n- 🤩 this is pretty neat! --> ...\n\nI'm sure you'll apreciate this and I hope my feedback will improve my beloved app.\nLove you all,\n[your name] 💞"
-          );
-        } catch (error) {
-          console.log(error);
-          alert(JSON.stringify(error));
-        }
-      } 
-    */
-
-    const systemName = DeviceInfo.getSystemName();
-    const systemVersion = DeviceInfo.getSystemVersion();
-    const model = DeviceInfo.getModel();
-    const manufacturer = DeviceInfo.getManufacturer();
-    const deviceId = DeviceInfo.getDeviceId();
-
-    const device =
-      manufacturer +
-      " " +
-      deviceId +
-      " " +
-      model +
-      " " +
-      systemVersion +
-      " " +
-      systemName;
-
-    const url =
-      "mailto:developers@wepush.org?subject=Hey buddies, I’ve a feedback about MUV 🤓 📬&body=Ciao,\nit’s [your name]\nand since I don’t have much time, here is my very brief feedback about MUV:\n- 🤬 this didn’t work --> ...\n- 🤯 I didn’t get this --> ...\n- 🤔 you should work better on this --> ...\n- 🤩 this is pretty neat! --> ...\n\nI'm sure you'll apreciate this and I hope my feedback will improve my beloved app.\nLove you all,\n[your name] 💞\n" +
-      device;
-
-    Linking.canOpenURL(url)
-      .then(supported => {
-        if (!supported) {
-          console.log("Can't handle url: " + url);
-        } else {
-          return Linking.openURL(url);
-        }
-      })
-      .catch(err => console.error("An error occurred", err));
-  };
+  
 
   getEndImagePath = label => {
     switch (label) {
@@ -516,78 +465,8 @@ class RecapImageFeed extends React.PureComponent {
     }
   };
 
-  moveTraining = () => {
-    if (
-      this.props.modal_type === "QuizComplete" ||
-      this.props.modal_type === "SurveyComplete"
-    ) {
-      // se i feed sono relativi ai quiz e ai survey completati, il click non porta a profile
-    }
-    if (this.props.modal_type === "Muv") {
-      this.props.navigation.navigate("YoutubeScreen");
-    } else if (this.props.modal_type === "WeeklyChallenge") {
-      this.props.navigation.navigate("Challenges");
-    } else if (this.props.modal_type === "DailyActivities") {
-      this.props.navigation.navigate("ChartsStack");
-    } else if (this.props.modal_type === "Trophies") {
-      this.props.navigation.navigate("Trophies");
-    } else if (this.props.modal_type === "Level") {
-      this.props.navigation.navigate("ChartsStack");
-    } else if (this.props.modal_type === "addFrequentTrips") {
-      // con addOpenPeriodicFeed dico quale feed ho aperto cosi poi lo posso togliere
-      this.props.dispatch(addOpenPeriodicFeed(1));
-      this.props.navigation.navigate("PersonalFrequentTripDataScreen");
-    } else if (this.props.modal_type === "firstFrequentTrip") {
-      this.props.navigation.navigate("ChangeFrequentTripScreen");
-    } else if (this.props.modal_type === "updateProfile") {
-      this.props.dispatch(addOpenPeriodicFeed(0));
-      this.props.navigation.navigate("PersonalAnagraficDataScreen");
-
-      //this.props.navigation.navigate("PersonalMobilityDataScreen");
-    } else if (this.props.modal_type === "mobilityHabits") {
-      this.props.dispatch(addOpenPeriodicFeed(2));
-      this.props.navigation.navigate("PersonalMobilityDataScreen");
-    } else if (this.props.modal_type === "feedback") {
-      this.props.dispatch(addOpenPeriodicFeed(3));
-
-      this.sendFeedBack();
-    } else if (this.props.modal_type === "rememberLevel") {
-      this.props.dispatch(addOpenPeriodicFeed(4));
-
-      this.props.navigation.navigate("Trainings");
-    } else if (this.props.modal_type === "inviteFriend") {
-      // ho cliccato per aggiungere un amico dal feed
-      this.props.dispatch(addOpenPeriodicFeed(5));
-
-      this.props.navigation.navigate("InviteScreen");
-    } else if (this.props.modal_type === "typeform") {
-      this.props.navigation.navigate("SurveyWebView");
-    } else if (
-      this.props.modal_type === "Followed" ||
-      this.props.modal_type === "MultipleFollowed" ||
-      this.props.modal_type === "InviteAccepted" ||
-      this.props.modal_type === "InviteConfirmed"
-    ) {
-      // this.props.dispatch(addOpenPeriodicFeed(4));
-      this.props.changeScreen("friends");
-
-      this.props.navigation.navigate("FriendStack");
-    } else if (this.props.modal_type == "newST") {
-      if (this.props.customisationGdpr) {
-        this.props.navigation.navigate("Trainings");
-      } else {
-        this.props.navigation.navigate("PersonalGdprDataScreen");
-      }
-    } else if (this.props.modal_type == "completedST") {
-      console.log(this.props.reward);
-      this.props.navigation.navigate("RewardDetailScreen", {
-        id: this.props.reward
-      });
-    } else {
-      // in tutti gli altri casi vado in trainings
-
-      this.props.navigation.navigate("Trainings");
-    }
+  moveToScreen = () => {
+    this.props.navigation.navigate("CityTournament");
   };
 
   renderCircle(validated, color) {
@@ -620,6 +499,13 @@ class RecapImageFeed extends React.PureComponent {
             color = "#3d3d3d";
           }
           break;
+          case "Carpooling":
+          {
+            color = "#3363AD";
+          
+           
+          }
+          break
         default:
           {
             color = "#3d3d3d";
@@ -754,9 +640,10 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
     } else if (this.props.modal_type === "Muv") {
       return (
         <Text style={styles.textDescr}>
-          {
+          {/* {
             "Discover a day-in-a-life of a real sustainable mobility champion. [Spoiler Alert - at the end a ﬁrst great teaching from your Trainer…]"
-          }
+          } */}
+          {strings("id_18_02")}
         </Text>
       );
     } else if (this.props.modal_type === "WeeklyChallenge") {
@@ -959,7 +846,8 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
       return (
         <Text style={styles.textModalSplit}>
           {/* {ex_strings("descrFeedMUVTitle} */}
-          Watch the VIDEO to become a MUV STAR!
+          {/* Watch the VIDEO to become a MUV STAR! */}
+          {strings("id_18_01")}
         </Text>
       );
     } else if (this.props.modal_type === "WeeklyChallenge") {
@@ -1234,53 +1122,64 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
     let label = timeAgo(this.props.DataNow, this.props.Data);
 
     return (
-      <View >
-      <TouchableOpacity style={styles.view} activeOpacity={0.7} onPress={this.moveTraining}>
-       <View style={styles.viewStyle}>
-          <View
-            style={{
-              width: Dimensions.get("window").width * 0.8,
-              flexDirection: "row",
-              justifyContent: "flex-start"
-            }}
-          >
-            <Text style={styles.textTitle}>
-              {/* {this.descriptionTitle()} */}
-              Supporto Health
-              {label}
-            </Text>
-          </View>
-          <View
-            style={{
-              width: Dimensions.get("window").width * 0.8,
-              flexDirection: "column",
-              justifyContent: "center"
-            }}
-          >
-            <Image
-              source={require("../../assets/images/ambientazioni.png")}
+      <View>
+        <TouchableOpacity
+          style={styles.view}
+          activeOpacity={0.7}
+          onPress={this.moveToScreen}
+        >
+          <View style={styles.viewStyle}>
+            <View
               style={{
-                width: Dimensions.get("window").width * 0.8 ,
-                height: Dimensions.get("window").width * 0.8 * 0.26258993,
-                borderRadius: 5
-              }} 
-            />
-          </View>
+                width: Dimensions.get("window").width * 0.8,
+                flexDirection: "row",
+                justifyContent: "flex-start",
+                alignContent: "center",
+                alignItems: "center"
+              }}
+            >
+              <Text style={styles.textTitle}>
+                {/* {this.descriptionTitle()} */}
+                <Text style={styles.textModalSplit}>{strings("id_18_30")}</Text>
+                {label}
+              </Text>
+            </View>
+            <View
+              style={{
+                width: Dimensions.get("window").width * 0.8,
+                flexDirection: "column",
+                justifyContent: "center"
+              }}
+            >
+              <Image
+                source={require("../../assets/images/torneo-universita-feed.png")}
+                style={{
+                  width: Dimensions.get("window").width * 0.8,
+                  height: (Dimensions.get("window").width * 0.8) / 3,
+                  borderRadius: 5
+                }}
+              />
+            </View>
 
-          <View
-            style={{
-              width: Dimensions.get("window").width * 0.8,
-              flexDirection: "row",
-              justifyContent: "flex-start"
-            }}
-          >
-            <Text style={styles.textTitle}>
-            {/* {this.descriptionFeed()} */}
-            Ottieni nuovi punti 
-            </Text>
+            <View
+              style={{
+                width: Dimensions.get("window").width * 0.8,
+                flexDirection: "row",
+                justifyContent: "flex-start",
+                alignContent: "center",
+                alignItems: "center"
+              }}
+            >
+              <Text style={styles.textBottomTitle}>
+                {/* {this.descriptionFeed()} */}
+                {this.getFeedContentFromString(
+                  strings("id_18_31"),
+                  "EU University Sustainable Mobility Tournament"
+                )}
+              </Text>
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -1294,22 +1193,22 @@ export function timeAgo(DataNow, Data) {
 
     // minuti
     let time = TimeAgo / 60000;
-    let text = strings("mins");
+    let text = strings("id_4_06");
     let minute = true;
     let intTime = parseInt(time);
 
     if (intTime !== 0) {
       if (intTime === 1) {
-        text = strings("minute");
+        text = strings("id_4_07");
       }
       // ore
       let timeNew = time / 60;
       intTime = parseInt(timeNew);
       if (intTime !== 0) {
         if (intTime === 1) {
-          text = strings("hour");
+          text = strings("id_4_05");
         } else {
-          text = strings("hours");
+          text = strings("id_4_04");
         }
         time = timeNew;
 
@@ -1320,9 +1219,9 @@ export function timeAgo(DataNow, Data) {
         intTime = parseInt(timeNew);
         if (intTime !== 0) {
           if (intTime === 1) {
-            text = strings("day");
+            text = strings("id_4_03");
           } else {
-            text = strings("days");
+            text = strings("id_4_02");
           }
           time = timeNew;
 
@@ -1331,9 +1230,9 @@ export function timeAgo(DataNow, Data) {
           intTime = parseInt(timeNew);
           if (intTime !== 0) {
             if (intTime === 1) {
-              text = strings("month");
+              text = strings("id_18_19");
             } else {
-              text = strings("months");
+              text = strings("id_18_18");
             }
             time = timeNew;
           }
@@ -1342,8 +1241,8 @@ export function timeAgo(DataNow, Data) {
     }
     time = parseInt(time);
 
-    if (time === 0 && minute) label = " | " + strings("now");
-    else label = " | " + time + " " + text + " " + strings("ago");
+    if (time === 0 && minute) label = " | " + strings("id_1_22");
+    else label = " | " + time + " " + text + " " + strings("id_1_21");
   }
   return label;
 }
@@ -1365,23 +1264,27 @@ const styles = {
     shadowColor: "#B2B2B2",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.6,
-    marginBottom: 20,
-   
+    marginBottom: 20
   },
   viewStyle: {
     width: Dimensions.get("window").width * 0.9,
     flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-around",
+    flexDirection: "column",
+    justifyContent: "flex-start",
     alignItems: "center",
-    alignSelf: "center",
-    
+    alignSelf: "center"
   },
   textTitle: {
     fontSize: 11,
     fontFamily: "OpenSans-Regular",
     marginVertical: 6,
-    marginTop: 15
+    marginTop: 10
+  },
+  textBottomTitle: {
+    fontSize: 11,
+    fontFamily: "OpenSans-Regular",
+    marginVertical: 6,
+    marginBottom: 10
   },
   textPoints: {
     fontSize: 30,

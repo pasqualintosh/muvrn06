@@ -18,7 +18,7 @@ import InteractionManager from "../../helpers/loadingComponent";
 import { images, images_bn, listName } from "../InfoUserHome/InfoUserHome";
 import SurveySelectAvatarRegister from "../SurveySelectAvatarRegister/SurveySelectAvatarRegister";
 
-import { AvatarList as AvatarListIndex, } from "../SurveySelectAvatarView/SurveySelectAvatarView";
+import { AvatarList as AvatarListIndex } from "../SurveySelectAvatarView/SurveySelectAvatarView";
 
 class SurveySelectAvatar extends React.Component {
   constructor(props) {
@@ -168,10 +168,10 @@ class SurveySelectAvatar extends React.Component {
                 this.setState({ selectedAvatar: id });
                 this.props.handleTapAvatar(id);
               }}
-              avatarsList={AvatarListIndex(0, 32)}
-              
+              avatarsList={AvatarListIndex(0, 73)}
             />
-            <View
+            {/*
+             <View
               style={{
                 height: 80,
                 width: Dimensions.get("window").width,
@@ -630,7 +630,8 @@ class SurveySelectAvatar extends React.Component {
                 this.props.handleTapAvatar(id);
               }}
               avatarsList={AvatarListIndex(71, 73)}
-            />
+            /> 
+            */}
             <View
               style={{
                 width: Dimensions.get("window").width,
@@ -691,7 +692,7 @@ if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
 
 export const AvatarList = () => {
   let avatars = [];
-  for (let i = 0; i < 65; i++) {
+  for (let i = 0; i < 33; i++) {
     avatars[i] = {
       image: images[i + 1]
     };
@@ -701,7 +702,7 @@ export const AvatarList = () => {
 
 export const BnAvatarsList = () => {
   let avatars = [];
-  for (let i = 0; i < 65; i++) {
+  for (let i = 0; i < 33; i++) {
     avatars[i] = {
       image: images_bn[i + 1]
     };
@@ -711,7 +712,7 @@ export const BnAvatarsList = () => {
 
 export const NameList = () => {
   let avatars = [];
-  for (let i = 0; i < 65; i++) {
+  for (let i = 0; i < 33; i++) {
     avatars[i] = {
       name: listName[i + 1]
     };

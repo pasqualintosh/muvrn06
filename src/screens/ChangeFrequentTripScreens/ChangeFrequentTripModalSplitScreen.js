@@ -9,7 +9,7 @@ import {
   Platform,
   NativeModules,
   TouchableWithoutFeedback,
-  Image
+  Image,
 } from "react-native";
 import WavyArea from "./../../components/WavyArea/WavyArea";
 import LinearGradient from "react-native-linear-gradient";
@@ -17,9 +17,22 @@ import { BoxShadow } from "react-native-shadow";
 import Slider from "./../../components/Slider/Slider";
 import { connect } from "react-redux";
 import { updateState } from "./../../domains/register/ActionCreators";
-import { postMostFrequentRoute } from "./../../domains/login/ActionCreators";
+import {
+  deleteMostFrequentRoute,
+  postMostFrequentRoute,
+  postFrequentTripFromLateralMenu,
+  getMostFrequentRoute,
+  editMostFrequentRoute,
+  postFrequentTrip,
+} from "./../../domains/login/ActionCreators";
 import Emoji from "@ardentlabs/react-native-emoji";
 import Icon from "react-native-vector-icons/Ionicons";
+
+import {
+  subscribeSpecialTrainingSessions,
+  checkSpecialTrainingEvent,
+  getSpecialTrainingSessionSubscribed,
+} from "./../../domains/trainings/ActionCreators";
 
 import { strings } from "../../config/i18n";
 
@@ -30,23 +43,23 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
       values: [
         {
           label: "walk",
-          value: 0
+          value: 0,
         },
         {
           label: "bike",
-          value: 0
+          value: 0,
         },
         {
           label: "bus",
-          value: 0
+          value: 0,
         },
         {
           label: "car",
-          value: 0
+          value: 0,
         },
         {
           label: "motorbike",
-          value: 0
+          value: 0,
         },
         // {
         //   label: "car_pooling",
@@ -54,10 +67,10 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
         // },
         {
           label: "train",
-          value: 0
-        }
+          value: 0,
+        },
       ],
-      selected: false
+      selected: false,
     };
   }
 
@@ -70,18 +83,21 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
       headerTitle: (
         <Text
           style={{
-            left: Platform.OS == "android" ? 20 : 0
+            left: Platform.OS == "android" ? 20 : 0,
           }}
         >
-          {strings("_410_how_do_you_usua")}
+          {strings("id_0_51")}
         </Text>
-      )
+      ),
     };
   };
 
-  componentDidMount() {}
+  componentDidMount() {
+    console.log("ChangeFrequentTripModalSplitScreen");
+    console.log(this.props);
+  }
 
-  getImagePath = label => {
+  getImagePath = (label) => {
     switch (label) {
       case "walk":
         return require("../../assets/images/walk_ion_slider_cn.png");
@@ -102,7 +118,7 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
     }
   };
 
-  getLabel = label => {
+  getLabel = (label) => {
     switch (label) {
       case "walk":
         return strings("walking");
@@ -123,7 +139,7 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
     }
   };
 
-  getRenderLabel = label => {
+  getRenderLabel = (label) => {
     switch (label) {
       case "walk":
         return strings("walking");
@@ -149,7 +165,7 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
           <Image
             style={{
               width: 60,
-              height: 60
+              height: 60,
             }}
             source={this.getImagePath(this.state.values[index].label)}
           />
@@ -157,9 +173,9 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
         <View style={{ flex: 0.7, marginTop: 10 }}>
           <Slider
             value={this.state.values[index].value}
-            onValueChange={value => {
+            onValueChange={(value) => {
               let tot_value = 0;
-              this.state.values.forEach(el => (tot_value += el.value));
+              this.state.values.forEach((el) => (tot_value += el.value));
 
               let k = 0;
               for (let ind = 0; ind < 6; ind++) {
@@ -184,7 +200,7 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
               }
 
               tot_value = 0;
-              this.state.values.forEach(el => (tot_value += el.value));
+              this.state.values.forEach((el) => (tot_value += el.value));
             }}
             trackStyle={{ backgroundColor: "#3d3d3d", height: 2.5 }}
             // thumbImage={this.getImagePath(this.state.values[index].label)}
@@ -197,32 +213,25 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
             step={10}
           />
         </View>
-        {/* 
-        <View
-          style={{
-            height: 10,
-            width: Dimensions.get("window").width * 0.9,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}
-        >
-          <Text style={styles.sliderSubText}>{strings("never")}</Text>
-          <Text
-            style={{
-              color: "#ffffff90",
-              fontFamily: "Montserrat-ExtraBold",
-              fontSize: 8
-            }}
-          >
-            {this.getLabel(this.state.values[index].label).toLocaleUpperCase()}
-          </Text>
-          <Text style={styles.sliderSubText}>{strings("always")}</Text>
-        </View> 
-        */}
       </View>
     ));
   }
+
+  navigateToGarage = () => {
+    if (this.state.values[3].value > 0) {
+      this.props.navigation.navigate("PersonalCarScreen", {
+        go_to_moto: true,
+      });
+      return 0;
+    }
+    if (this.state.values[4].value > 0) {
+      this.props.navigation.navigate("PersonalMotoScreen");
+      return 0;
+    }
+    console.log("navigateToGarage");
+    this.props.navigation.navigate("PersonalFrequentTripDataScreen");
+    return 0;
+  };
 
   render() {
     let shadowOpt;
@@ -238,8 +247,8 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
         y: 1,
         style: {
           position: "absolute",
-          top: 0
-        }
+          top: 0,
+        },
       };
       if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
         shadowOpt = {
@@ -253,8 +262,8 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
           y: 1,
           style: {
             position: "absolute",
-            top: 0
-          }
+            top: 0,
+          },
         };
       }
     } else
@@ -269,55 +278,20 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
         y: 1,
         style: {
           position: "absolute",
-          top: 0
-        }
+          top: 0,
+        },
       };
     return (
       <ImageBackground
         source={require("./../../assets/images/bg-login.png")}
         style={styles.backgroundImage}
       >
-        {/* <View
-          style={{
-            height:
-              Platform.OS == "ios"
-                ? Dimensions.get("window").height * 0.2
-                : Dimensions.get("window").height * 0.16,
-            backgroundColor: "transparent"
-          }}
-        >
-          <WavyArea
-            data={negativeData}
-            color={"#fff"}
-            style={styles.topOverlayWave}
-          />
-          <View style={styles.textHeaderContainer}>
-            <TouchableWithoutFeedback
-              onPress={() => {
-                this.props.navigation.goBack(null);
-              }}
-            >
-              <View style={{ width: 30, height: 30 }}>
-                <Icon
-                  name="ios-arrow-back"
-                  style={{ marginTop: 4 }}
-                  size={18}
-                  color="#3d3d3d"
-                />
-              </View>
-            </TouchableWithoutFeedback>
-            <Text style={styles.textHeader}>
-              {strings("_410_how_do_you_usua")} <Emoji name="helicopter" />{" "}
-              <Emoji name="tractor" /> <Emoji name="bike" />
-            </Text>
-          </View>
-        </View> */}
         <View
           style={{
             height: Dimensions.get("window").height * 0.6,
             width: Dimensions.get("window").width * 0.9,
             alignSelf: "center",
-            justifyContent: "space-around"
+            justifyContent: "space-around",
           }}
         >
           {this.renderSlider()}
@@ -325,65 +299,78 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
         <View
           style={{
             height: Dimensions.get("window").height * 0.2,
-            backgroundColor: "transparent"
+            backgroundColor: "transparent",
           }}
         >
-          {/* <WavyArea
-            data={positiveData}
-            color={"#fff"}
-            style={styles.topOverlayWave}
-          /> */}
           <View
             style={{
               flexDirection: "row",
               justifyContent: "center",
               alignItems: "center",
-              top: 50
+              top: 50,
             }}
           >
-            {/* <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>
-                {strings("you_can_always_")}
-              </Text>
-            </View> */}
-
             <View style={[styles.buttonContainer]}>
               {/* <BoxShadow setting={shadowOpt} /> */}
               <TouchableWithoutFeedback
                 onPress={() => {
-                  if (this.state.selected) {
+                  let tot_value = 0;
+                  this.state.values.forEach((el) => (tot_value += el.value));
+
+                  if (tot_value >= 100) {
+                    // this.props.dispatch(
+                    //   deleteMostFrequentRoute(
+                    //     {},
+                    //     this.props.registerState.frequent_trip_id
+                    //   )
+                    // );
                     this.props.dispatch(
                       updateState({
-                        mostFrequentRaceModalSplit: this.state.values
+                        mostFrequentRaceModalSplit: this.state.values,
                       })
                     );
 
                     setTimeout(() => {
-                      this.props.dispatch(postMostFrequentRoute());
+                      // devo capire se sto modificando una frequent trip o ne sto aggiungendo una nuova
+                      const routine = this.props.navigation.getParam(
+                        "routine",
+                        null
+                      );
 
-                      if (
-                        this.state.values[3].value > 0 &&
-                        (isEmpty(this.props.loginState.infoProfile.car) ||
-                          this.props.loginState.infoProfile.car == null ||
-                          this.props.loginState.infoProfile.car == undefined)
-                      ) {
-                        this.props.navigation.navigate("EditCarFuelScreen", {
-                          from_frequent_trip: true
-                        });
-                      } else {
-                        this.props.navigation.navigate(
+                      if (this.props.registerState.frequent_trip_id) {
+                        // modifica
+                        this.props.dispatch(
+                          editMostFrequentRoute(
+                            {},
+                            this.props.registerState.frequent_trip_id,
+                            this.props.navigation.navigate(
                           "PersonalFrequentTripDataScreenBlur"
+                        )
+                          )
+                        );
+                        // this.props.dispatch(getMostFrequentRoute());
+                        
+                        // this.navigateToGarage();
+                        // this.props.navigation.navigate(
+                        //   "PersonalFrequentTripDataScreen"
+                        // );
+                      } else {
+                        // aggiunta
+
+                        this.props.dispatch(postFrequentTrip());
+                        this.props.navigation.navigate(
+                          "PersonalFrequentTripDataScreen"
                         );
                       }
                     }, 800);
-                  } else Alert.alert("Oops", strings("seems_like_you_"));
+                  } else Alert.alert(strings("id_0_10"), strings("id_0_97"));
                 }}
                 disabled={this.props.status === "In register" ? true : false}
               >
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("save")}
+                      {this.props.text ? this.props.text : strings("id_0_12")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />
@@ -408,31 +395,31 @@ function isEmpty(obj) {
 const styles = StyleSheet.create({
   backgroundImage: {
     width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height
+    height: Dimensions.get("window").height,
   },
   topOverlayWave: {
     position: "absolute",
     width: Dimensions.get("window").width,
     height: Dimensions.get("window").height * 0.2,
-    top: Platform.OS == "ios" ? 0 : -30
+    top: Platform.OS == "ios" ? 0 : -30,
   },
   bottomOverlayWave: {
     position: "absolute",
     width: Dimensions.get("window").width,
     height: Dimensions.get("window").height * 0.2,
-    top: Dimensions.get("window").height * 0.8
+    top: Dimensions.get("window").height * 0.8,
   },
   textHeaderContainer: {
     marginTop: Platform.OS == "ios" ? 30 : 15,
     marginLeft: 20,
     flexDirection: "row",
-    width: Dimensions.get("window").width * 0.85
+    width: Dimensions.get("window").width * 0.85,
   },
   textHeader: {
     fontFamily: "OpenSans-ExtraBold",
     color: "#3d3d3d",
     fontSize: 15,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   textFooterContainer: {
     padding: 5,
@@ -440,14 +427,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "flex-start",
     alignSelf: "flex-start",
-    marginBottom: Platform.OS == "ios" ? 20 : 30
+    marginBottom: Platform.OS == "ios" ? 20 : 30,
   },
   textFooter: {
     fontFamily: "OpenSans-Regular",
     color: "#fff",
     fontSize: 12,
     fontWeight: "400",
-    textAlign: "left"
+    textAlign: "left",
   },
   buttonContainer: {
     width: Dimensions.get("window").width * 0.2,
@@ -455,7 +442,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     justifyContent: "flex-start",
     alignItems: "center",
-    alignSelf: "center"
+    alignSelf: "center",
   },
   buttonBox: {
     width: Dimensions.get("window").width * 0.2,
@@ -468,60 +455,60 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1
+    elevation: 1,
   },
   buttonGoOnText: {
     color: "#3363AD",
     fontFamily: "OpenSans-Regular",
-    fontSize: 14
+    fontSize: 14,
   },
   sliderSubText: {
     color: "#fff",
     fontFamily: "OpenSans-Regular",
-    fontSize: 8
-  }
+    fontSize: 8,
+  },
 });
 
 export const positiveData = [
   {
-    value: 60
+    value: 60,
   },
   {
-    value: 40
+    value: 40,
   },
   {
-    value: 50
+    value: 50,
   },
   {
-    value: 40
+    value: 40,
   },
   {
-    value: 50
-  }
+    value: 50,
+  },
 ];
 
 export const negativeData = [
   {
-    value: -60
+    value: -60,
   },
   {
-    value: -40
+    value: -40,
   },
   {
-    value: -50
+    value: -50,
   },
   {
-    value: -40
+    value: -40,
   },
   {
-    value: -50
-  }
+    value: -50,
+  },
 ];
 
-const withData = connect(state => {
+const withData = connect((state) => {
   return {
     registerState: state.register,
-    loginState: state.login
+    loginState: state.login,
   };
 });
 

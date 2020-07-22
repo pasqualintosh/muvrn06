@@ -37,3 +37,9 @@ export const SET_SESSION_TOKEN = "SET_SESSION_TOKEN";
 export const ADD_PAGE_COUNTED = "ADD_PAGE_COUNTED";
 export const RESET_PAGE_COUNTED = "RESET_PAGE_COUNTED";
 export const SET_SODDFRUST_FLAG = "SET_SODDFRUST_FLAG";
+
+export const REFRESHING_TOKEN = "REFRESHING_TOKEN";
+export const DONE_REFRESHING_TOKEN = "DONE_REFRESHING_TOKEN";
+// salva le tratte già validate
+export const SAVE_TRIPS = "SAVE_TRIPS";
+export const EDIT_MFR = "EDIT_MFR";

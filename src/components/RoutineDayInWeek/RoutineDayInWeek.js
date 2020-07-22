@@ -20,6 +20,10 @@ import Modal from "react-native-modal";
 import Aux from "../../helpers/Aux";
 import Icon from "react-native-vector-icons/Ionicons";
 import LinearGradient from "react-native-linear-gradient";
+import {
+  frequentTripsState,
+  frequentTripsNotSaveState
+} from "./../../domains/login/Selectors.js";
 
 class RoutineDayInWeek extends React.Component {
   constructor() {
@@ -93,7 +97,7 @@ class RoutineDayInWeek extends React.Component {
           <Picker.Item key={index} label={elem} value={elem} />
         ))}
       </Picker>
-      {this._renderButton("Confirm", () =>
+      {this._renderButton(strings("id_13_23"), () =>
         this.setState({ isModalVisible: false })
       )}
     </View>
@@ -183,10 +187,8 @@ class RoutineDayInWeek extends React.Component {
 const Info = connect(state => {
   // prendo solo le routine
   return {
-    Routine: state.login.mostFrequentRoute ? state.login.mostFrequentRoute : [],
-    RoutineNotSave: state.login.mfr_modal_split_NotSave
-      ? state.login.mfr_modal_split_NotSave
-      : []
+    Routine: frequentTripsState(state),
+    RoutineNotSave: frequentTripsNotSaveState(state)
   };
 });
 

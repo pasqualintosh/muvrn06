@@ -16,9 +16,15 @@ import { createSelector } from "reselect";
 // importo la notifica
 import ViewActivityPoint from "../ViewActivityPoint/ViewActivityPoint";
 // importo il pacchetto di icone Ionicons
-import Icon from "react-native-vector-icons/Ionicons";
+
 import Aux from "../../helpers/Aux";
-import { calcolatePoints } from "../../domains/tracking/Reducers";
+
+import {
+  getsubTripState,
+  getDistanceLiveState,
+  getActivityState
+} from "./../../domains/tracking/Selectors";
+import { calcolatePointsFake } from "../../domains/tracking/Reducers";
 
 // la dovrei importare in ogni schermata di un componnente dove potrebbe apparire e poi con redux
 // settare una variabile per farla apparire
@@ -54,17 +60,20 @@ class NotificationPoint extends React.Component {
 
   notificationPoints = () => {
     if (this.props.activityChoice.type) {
-      const newPoint = calcolatePoints(
+      const newPoint = this.props.subTrip.points;
+
+      const pointsFake = calcolatePointsFake(
         this.props.distanceLive,
-        this.props.PrecDistanceSameMode,
-        this.props.activityChoice.type
+        0,
+        this.props.activityChoice.type,
+        this.props.activityChoice.coef
       );
 
       // vedo il tipo di attivita scelta e metto il colore corrispodente alla notifica
       // due colori per fare il gradient
       let color;
       let color1;
-      let isMetro = false
+      let isMetro = false;
       switch (this.props.activityChoice.type) {
         case "Biking":
           {
@@ -78,10 +87,17 @@ class NotificationPoint extends React.Component {
             color1 = "#43C160";
           }
           break;
+          case "Carpooling":
+          {
+            color = "#3363AD";
+            color1 = "#3363AD";
+          
+          }
+          break;
         case "Public":
           {
-            if (this.props.activityChoice.coef === 1200)  {
-              isMetro = true
+            if (this.props.activityChoice.coef === 1200) {
+              isMetro = true;
             }
             color = "#FAB21E";
             color1 = "#FFCC00";
@@ -106,7 +122,7 @@ class NotificationPoint extends React.Component {
           onPress={this.clickPoints}
         >
           <ViewActivityPoint
-            point={newPoint}
+            point={pointsFake > newPoint ? pointsFake : newPoint}
             click={this.clickPoints}
             color={color}
             color1={color1}
@@ -126,9 +142,10 @@ class NotificationPoint extends React.Component {
 
 const Point = connect(state => {
   return {
-    distanceLive: state.tracking.distanceLive,
-    PrecDistanceSameMode: state.tracking.PrecDistanceSameMode,
-    activityChoice: state.tracking.activityChoice
+    distanceLive: getDistanceLiveState(state),
+    // PrecDistanceSameMode: state.tracking.PrecDistanceSameMode,
+    activityChoice: getActivityState(state),
+    subTrip: getsubTripState(state)
   };
 });
 

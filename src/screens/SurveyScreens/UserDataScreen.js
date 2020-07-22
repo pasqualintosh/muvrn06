@@ -75,7 +75,7 @@ class UserDataScreen extends React.Component {
     this.setState({
       statusValidationEmail: false
     });
-    if (!status) Alert.alert("Oops", strings("the_email_you_t"));
+    if (!status) Alert.alert(strings("id_0_10"), strings("the_email_you_t"));
     // else this.props.navigation.navigate("GDPRScreen");
     // else this.props.navigation.navigate("SurveySelectTeam");
     else this.props.navigation.navigate("GDPRScreen");
@@ -89,6 +89,8 @@ class UserDataScreen extends React.Component {
     const {
       name,
       surname,
+      social_backend,
+      username,
       phone,
       password,
       email,
@@ -119,13 +121,16 @@ class UserDataScreen extends React.Component {
 
     let error_txt = "";
 
+    if (username == "") {
+      error_txt = error_txt + "\n- " + "username non presente" + "; ";
+    }
     if (name == "")
       error_txt = error_txt + "\n- " + strings("_423_do_not_leave_th") + "; ";
     if (surname == "")
       error_txt = error_txt + "\n- " + strings("_424_do_not_leave_th") + "; ";
     // if (phone == "")
     //   error_txt = error_txt + "\n- " + strings("_425_do_not_leave_th + ";";
-    if (password.length < 9)
+    if (password.length < 9 && !social_backend)
       error_txt = error_txt + "\n- " + strings("_426_passwords_must_") + "; ";
     // if (prefix == undefined)
     //   error_txt = error_txt + "\n- " + strings("_427_don_t_forget_th + ";";
@@ -136,7 +141,7 @@ class UserDataScreen extends React.Component {
       name.length &&
       surname.length &&
       // phone.length &&
-      password.length > 8 &&
+      (password.length > 8 || social_backend) &&
       email.length &&
       re.test(String(email).toLowerCase())
       // && prefix != undefined
@@ -144,12 +149,12 @@ class UserDataScreen extends React.Component {
       this.setState({
         statusValidationEmail: true
       });
-      this.props.dispatch(checkEmail(email, this.goOn));
-      // this.props.navigation.navigate("SurveySelectTeam");
+      // this.props.dispatch(checkEmail(email, this.goOn));
+      this.props.navigation.navigate("GDPRScreen");
     } else {
       this.setState({ show_tips: true });
       Alert.alert(
-        "Oops",
+        strings("id_0_10"),
         strings("_429_please__fix_the") +
           ":" +
           error_txt +
@@ -457,7 +462,7 @@ class UserDataScreen extends React.Component {
                   <View style={[styles.buttonBox]}>
                     {!this.state.statusValidationEmail ? (
                       <Text style={styles.buttonGoOnText}>
-                        {this.props.text ? this.props.text : strings("go_on")}
+                        {this.props.text ? this.props.text : strings("id_0_15")}
                       </Text>
                     ) : (
                       <ActivityIndicator size="small" color="#6497CC" />
@@ -540,7 +545,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

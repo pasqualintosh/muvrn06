@@ -197,7 +197,8 @@ class TripCompleted extends React.Component {
       totPointsSegment += calcolatePoints(
         distanceSingleRoute,
         PrecDistanceSameMode,
-        activityChoice.type
+        activityChoice.type,
+        activityChoice.coef
       );
       totDistanceSegment += distanceSingleRoute;
       // console.log(totPointsRoute);

@@ -369,7 +369,9 @@ class ModalSplitScreenTest extends React.Component {
             }}
           >
             <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>{strings("select_the_mode")}</Text>
+              <Text style={styles.textFooter}>
+                {strings("select_the_mode")}
+              </Text>
             </View>
 
             <View style={[styles.buttonContainer]}>
@@ -383,14 +385,14 @@ class ModalSplitScreenTest extends React.Component {
                   this.props.navigation.navigate("SurveyFrequentTripType");
                   //   else {
                   //     Alert.alert(
-                  //       "Oops",
+                  //       strings("id_0_10"),
                   //       "Seems like you forgot something, complete it"
                   //     );
                   //   }
                 }}
               >
                 <View style={[styles.buttonBox]}>
-                  <Text style={styles.buttonGoOnText}>{strings("go_on")}</Text>
+                  <Text style={styles.buttonGoOnText}>{strings("id_0_15")}</Text>
                 </View>
               </TouchableWithoutFeedback>
             </View>
@@ -464,7 +466,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

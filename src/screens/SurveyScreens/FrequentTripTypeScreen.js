@@ -265,11 +265,7 @@ class FrequentTripTypeScreen extends React.Component {
                   ].label.toLocaleUpperCase()}
                   &nbsp;&nbsp;&nbsp;&nbsp;
                 </Text>
-                <Icon
-                  name="md-arrow-forward"
-                  size={18}
-                  color="#3d3d3d"
-                />
+                <Icon name="md-arrow-forward" size={18} color="#3d3d3d" />
               </View>
             </TouchableWithoutFeedback>
           </View>
@@ -288,7 +284,7 @@ class FrequentTripTypeScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -299,7 +295,7 @@ class FrequentTripTypeScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -500,11 +496,12 @@ class FrequentTripTypeScreen extends React.Component {
                 onPress={() => {
                   if (this.state.selected)
                     this.props.navigation.navigate("SurveyFrequentTrip");
-                  else Alert.alert("Oops", strings("seems_like_you_"));
+                  else
+                    Alert.alert(strings("id_0_10"), strings("id_0_46"));
                 }}
               >
                 <View style={styles.buttonBox}>
-                  <Text style={styles.buttonGoOnText}>{strings("go_on")}</Text>
+                  <Text style={styles.buttonGoOnText}>{strings("id_0_15")}</Text>
                 </View>
               </TouchableWithoutFeedback>
             </View>
@@ -581,7 +578,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

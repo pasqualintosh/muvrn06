@@ -6,12 +6,13 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
   ActivityIndicator,
-  Image
+  Image,
 } from "react-native";
 import { connect } from "react-redux";
 import {
   postFollowUser,
-  deleteFollowedUser
+  deleteFollowedUser,
+  sendRequestFriend
 } from "./../../domains/follow/ActionCreators";
 
 import { strings } from "../../config/i18n";
@@ -21,13 +22,23 @@ import { styles } from "./Style";
 import { images } from "./../InfoUserHome/InfoUserHome";
 import { getLevelFirstCharFromInt } from "./../FriendScreen/FriendScreen";
 import { limitAvatar } from "./../UserItem/UserItem";
+import {
+  getlistFriendState,
+  getlistSendRequestFriendState,
+  getStatusState,
+  
+} from "./../../domains/follow/Selectors";
+import AlertCarPooling from "../../components/AlertCarPooling/AlertCarPooling";
 
 class FriendScreenHeader extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      modal_visible: false
+      modal_visible: false,
+      typeFriend: "",
+      userInvite: { username: "pippo", id: 0, avatar: 1 },
+      AlertCarPooling: false,
     };
   }
 
@@ -35,25 +46,65 @@ class FriendScreenHeader extends React.Component {
 
   componentWillReceiveProps(props) {
     console.log("componentWillReceiveProps", props);
+    console.log("this.props", this.props);
+    // appena ricevo l'utente o nuovi amici ricalcolo l'amicizia, o dopo aver mandato la richiesta
+    if (!this.props.user && props.user) {
+      const typeFriend = this.checkStatusFriendFromId(props.user.id, props);
+      this.setState({
+        typeFriend,
+      });
+    } else if (
+      props.user &&
+      this.props.listFriend.length != props.listFriend.length
+    ) {
+      const typeFriend = this.checkStatusFriendFromId(props.user.id, props);
+      this.setState({
+        typeFriend,
+      });
+    } else if (
+      props.user &&
+      this.props.listRequestFriend.length != props.listRequestFriend.length
+    ) {
+      const typeFriend = this.checkStatusFriendFromId(props.user.id,props );
+      this.setState({
+        typeFriend,
+      });
+    }
   }
 
   /**
    * controlla se l'id passato
    * è un utente che segui
    */
-  checkFollowingFromId = id => {
+  checkFollowingFromId = (id) => {
     return this.props.followState.followed.filter(
-      item => item.user_followed.user_id == id
+      (item) => item.user_followed.user_id == id
     ).length > 0
       ? true
       : false;
+  };
+
+  checkStatusFriendFromId = (id, props) => {
+    let typeFriend = "";
+    if (props.listFriend.findIndex((friend) => friend.id == id) != -1) {
+      // è un mio amico
+      typeFriend = "friend";
+    } else if (
+      props.listRequestFriend.findIndex(
+        (friend) => friend.to_user.id == id
+      ) != -1
+    ) {
+      // l'ho gia invitato
+      typeFriend = "sendFriend";
+    }
+    return typeFriend;
   };
 
   getFeedContentFromString = (str, rplc_text) => {
     let first_perc = str.indexOf("%");
     let last_perc = str.indexOf("%", first_perc + 1);
     let introduction = str.substr(0, first_perc);
-    let ending = str.substr(last_perc + 1, str.lenght);
+    let ending = str.substr(last_perc + 1, str.length);
 
     return (
       <Text style={styles.textDescr}>
@@ -64,23 +115,23 @@ class FriendScreenHeader extends React.Component {
     );
   };
 
-  deleteFriend = id => {
+  deleteFriend = (id) => {
     this.props.dispatch(deleteFollowedUser({ id }));
   };
 
-  addFriend = id => {
+  addFriend = (id) => {
     let link = this.props.friendData["~referring_link"];
     if (link) {
       this.props.dispatch(
         postFollowUser({
           followed_user_id: id,
-          referral_url: link
+          referral_url: link,
         })
       );
     } else {
       this.props.dispatch(
         postFollowUser({
-          followed_user_id: id
+          followed_user_id: id,
         })
       );
     }
@@ -90,14 +141,14 @@ class FriendScreenHeader extends React.Component {
     let userAvatar = limitAvatar(this.props.friendData.avatar);
 
     const level = this.props.friendData.level
-    ? typeof this.props.friendData.level === "string"
-      ? JSON.parse(this.props.friendData.level)
-        ? JSON.parse(this.props.friendData.level).level_number
+      ? typeof this.props.friendData.level === "string"
+        ? JSON.parse(this.props.friendData.level)
           ? JSON.parse(this.props.friendData.level).level_number
+            ? JSON.parse(this.props.friendData.level).level_number
+            : 1
           : 1
-        : 1
-      : this.props.friendData.level
-    : 1;
+        : this.props.friendData.level
+      : 1;
 
     let role = 0;
     if (this.props.friendData.role) {
@@ -137,7 +188,7 @@ class FriendScreenHeader extends React.Component {
           <View
             style={{
               marginTop: 20,
-              width: Dimensions.get("window").width * 0.6
+              width: Dimensions.get("window").width * 0.6,
             }}
           >
             <Text style={styles.modalText}>
@@ -163,7 +214,7 @@ class FriendScreenHeader extends React.Component {
               <View
                 style={[
                   styles.buttonContainer,
-                  { borderRightColor: "#707070", borderRightWidth: 1 }
+                  { borderRightColor: "#707070", borderRightWidth: 1 },
                 ]}
               >
                 <Text style={styles.modalBtnText}>
@@ -197,25 +248,52 @@ class FriendScreenHeader extends React.Component {
     );
   }
 
+  closeTutorialCarPooling = () => {
+    this.setState({
+      AlertCarPooling: false,
+    });
+  };
+
+  sendRequest = (data) => {
+    sendRequestFriend(data);
+    this.closeTutorialCarPooling();
+  };
+
+  showAlertCarPooling = (userInvite) => {
+    this.setState({
+      AlertCarPooling: true,
+      userInvite,
+    });
+  };
+
   render() {
     // prendo l'id dell'utente a seconda se sono nella lista amici o se mi arriva il link
-    const user_id = this.props.friendData.user_id
-      ? this.props.friendData.user_id
-      : this.props.friendData.sender_id;
-    if (!this.checkFollowingFromId(user_id))
-      return (
+    const user_id =
+      this.props.user && this.props.user.id ? this.props.user.id : 0;
+    // se non ho l'id dell'utente, sto caricando
+    let button = <View />;
+    if (!user_id || this.props.fetchingData) {
+      button = (
         <Aux>
-          {this.renderModal(user_id)}
           <View style={styles.endFlex}>
             <View style={styles.mainContainer}>
-              {/* <Text style={styles.textDescrInvite}>
-              {this.getFeedContentFromString(
-                strings("_571_are_you_sure_yo"),
-                this.props.friendData.first_name
-                  ? this.props.friendData.first_name
-                  : ""
-              )}
-            </Text> */}
+              <View style={styles.sideContainer}>
+                <ActivityIndicator
+                  // hidesWhenStopped={false}
+                  // animating={this.props.fetchingData}
+                  size="small"
+                  color={"#fff"}
+                />
+              </View>
+            </View>
+          </View>
+        </Aux>
+      );
+    } else if (this.state.typeFriend == "friend")
+      button = (
+        <Aux>
+          <View style={styles.endFlex}>
+            <View style={styles.mainContainer}>
               <TouchableWithoutFeedback
                 onPress={() => {
                   this.setState({ modal_visible: true });
@@ -231,16 +309,34 @@ class FriendScreenHeader extends React.Component {
                 // }}
               >
                 <View style={styles.sideContainer}>
-                  {this.props.followState.fetchingData ? (
-                    <ActivityIndicator
-                      hidesWhenStopped={false}
-                      animating={this.props.followState.fetchingData}
-                      size="small"
-                      // color={"#fff"}
-                    />
-                  ) : (
-                    <Text style={styles.text}>Follow</Text>
-                  )}
+                  <Text style={styles.text}>Unfollow</Text>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </View>
+        </Aux>
+      );
+    else if (this.state.typeFriend == "sendFriend")
+      button = (
+        <Aux>
+          <View style={styles.endFlex}>
+            <View style={styles.mainContainer}>
+              <TouchableWithoutFeedback
+                onPress={() => {
+                  this.setState({ modal_visible: true });
+                }}
+                // onPress={() => {
+                //   let link = this.props.friendData["~referring_link"];
+                //   this.props.dispatch(
+                //     postFollowUser({
+                //       followed_user_id: user_id,
+                //       referral_url: link
+                //     })
+                //   );
+                // }}
+              >
+                <View style={styles.sideContainer}>
+                  <Text style={styles.text}>Wait</Text>
                 </View>
               </TouchableWithoutFeedback>
             </View>
@@ -248,54 +344,50 @@ class FriendScreenHeader extends React.Component {
         </Aux>
       );
     else
-      return (
+      button = (
         <Aux>
-          {this.renderModal(user_id)}
           <View style={styles.endFlex}>
             <View style={styles.mainContainer}>
-              {/* <Text style={styles.textDescrInvite}>
-                {this.getFeedContentFromString(
-                strings("_572_are_you_sure_yo"),
-                this.props.friendData.first_name
-                  ? this.props.friendData.first_name
-                  : ""
-              )} 
-              </Text>*/}
               <TouchableWithoutFeedback
                 // onPress={() =>
                 //   this.props.dispatch(deleteFollowedUser({ id: user_id }))
                 // }
                 onPress={() => {
-                  this.setState({ modal_visible: true });
+                  this.showAlertCarPooling(this.props.user)
                 }}
               >
                 <View
                   style={[styles.sideContainer, { backgroundColor: "#FC6754" }]}
                 >
-                  {this.props.followState.fetchingData ? (
-                    <ActivityIndicator
-                      hidesWhenStopped={false}
-                      animating={this.props.followState.fetchingData}
-                      size="small"
-                      color={"#fff"}
-                    />
-                  ) : (
-                    <Text style={[styles.text, { color: "#fff" }]}>
-                      Unfollow
-                    </Text>
-                  )}
+                  <Text style={[styles.text, { color: "#fff" }]}>Follow</Text>
                 </View>
               </TouchableWithoutFeedback>
             </View>
           </View>
         </Aux>
       );
+
+    return (
+      <Aux>
+        <AlertCarPooling
+          isModalVisible={this.state.AlertCarPooling}
+          closeModal={this.closeTutorialCarPooling}
+          confermModal={this.sendRequest}
+          type={"SearchFriend"}
+          infoAlert={this.state.userInvite}
+          infoSend={{ message: "", to_user: this.state.userInvite.id }}
+        />
+        {button}
+      </Aux>
+    );
   }
 }
 
-const withData = connect(state => {
+const withData = connect((state) => {
   return {
-    followState: state.follow
+    listFriend: getlistFriendState(state),
+    listRequestFriend: getlistSendRequestFriendState(state),
+    fetchingData: getStatusState(state),
   };
 });
 

@@ -211,7 +211,7 @@ class AvatarScreen extends React.Component {
                 </View>
               </TouchableWithoutFeedback>
               <Text style={styles.textHeader}>
-                {strings("please_select_y")} <Emoji name="bust_in_silhouette" />
+                {strings("id_0_29")} <Emoji name="bust_in_silhouette" />
               </Text>
             </View>
           </View>
@@ -250,9 +250,7 @@ class AvatarScreen extends React.Component {
                 }}
               >
                 <View style={styles.textFooterContainer}>
-                  <Text style={styles.textFooter}>
-                    {strings("you_can_always_")}
-                  </Text>
+                  <Text style={styles.textFooter}>{strings("id_0_30")}</Text>
                 </View>
 
                 <View style={styles.buttonContainer}>
@@ -264,8 +262,14 @@ class AvatarScreen extends React.Component {
                           updateState({ avatar: this.state.avatar })
                         );
                         // this.props.navigation.navigate("SurveyModal");
-                        this.props.navigation.navigate("SurveyUserData");
-                      } else Alert.alert("Oops", strings("seems_like_you_"));
+                        // if (true) {
+                        //   // se è la registrazione classica vado all'anagrafica, altrimenti la salto
+                        //   this.props.navigation.navigate("SurveyUserData");
+                        // } else {
+                        this.props.navigation.navigate("AppPermissionsScreen");
+                        // this.props.navigation.navigate("SurveyFrequentTrip");
+                        // }
+                      } else Alert.alert(strings("id_0_10"), strings("id_0_45"));
                     }}
                     disabled={
                       this.props.status === "In register" ? true : false
@@ -273,7 +277,7 @@ class AvatarScreen extends React.Component {
                   >
                     <View style={styles.buttonBox}>
                       <Text style={styles.buttonGoOnText}>
-                        {strings("go_on")}
+                        {strings("id_0_15")}
                       </Text>
                     </View>
                   </TouchableWithoutFeedback>

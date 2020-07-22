@@ -1,12 +1,12 @@
 import I18n from "react-native-i18n";
 
-import { Language } from "./Language";
+import { Language } from "./languageApp.js";
 
 I18n.fallbacks = true;
 
 I18n.translations = Language;
 
-I18n.langs = ["en", "it", "nl", "sv", "es", "ca", "pt", "br", "rs"];
+I18n.langs = ["en", "it", "es", "nl", "sv", "es", "ca", "pt", "br", "rs"];
 
 export const strings = (name, params = {}) => I18n.t(name, params);
 export const switchLanguage = (lang, component) => {

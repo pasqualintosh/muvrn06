@@ -23,14 +23,20 @@ import WaveAnimation from "../../components/WaveAnimation/WaveAnimation";
 import IntermittentPointer from "../../components/IntermittentPointer/IntermittentPointer";
 import haversine from "./../../helpers/haversine";
 import pointsDecimal from "./../../helpers/pointsDecimal";
-import { calcolatePoints } from "../../domains/tracking/Reducers";
+import {
+  calcolatePoints,
+  calcolatePointsFake
+} from "../../domains/tracking/Reducers";
 import AnimateNumber from "react-native-animate-number";
 import { BoxShadow } from "react-native-shadow";
 import { createSelector } from "reselect";
 
+import { getTutorialMetroState } from "../../domains/login/Selectors";
+import { completeTutorial } from "../../domains/login/ActionCreators.js";
+
 import DescriptionIcon from "../../components/DescriptionIcon/DescriptionIcon";
 
-import DeviceInfo from "react-native-device-info";
+
 
 import Svg, { Circle } from "react-native-svg";
 
@@ -42,14 +48,23 @@ import Aux from "../../helpers/Aux";
 import Settings from "./../../config/Settings";
 
 import {
+  getsubTripState,
+  getDistanceLiveState,
+  getActivityState,
+  getNumSubTripState
+} from "./../../domains/tracking/Selectors";
+
+import {
   GoogleAnalyticsTracker,
   GoogleTagManager,
   GoogleAnalyticsSettings
 } from "react-native-google-analytics-bridge";
 
 import { strings } from "../../config/i18n";
+import { getDevice } from "../../helpers/deviceInfo"
 
 import analytics from "@react-native-firebase/analytics";
+import { store } from "../../store";
 async function trackScreenView(screen) {
   // Set & override the MainActivity screen name
   await analytics().setCurrentScreen(screen, screen);
@@ -175,10 +190,25 @@ class Track extends React.Component {
       totPointsSegment: 0,
       totDistanceSegment: 0,
       totPointsSegmentValid: 0,
+      totPointsBackend: 0,
       hoursTraffic: false,
       pointsLive: 0
     };
   }
+
+  alertMetro = () => {
+    Alert.alert(strings("id_1_16"), strings("id_1_17"), [
+      {
+        text: strings("id_1_19"),
+        onPress: () => this.props.dispatch(completeTutorial("tutorialMetro"))
+      },
+      {
+        text: strings("id_1_18"),
+        // onPress: () => alert(strings('muv_may_not_wor')),
+        style: "cancel"
+      }
+    ]);
+  };
 
   clickBack = () => {
     this.props.navigation.goBack();
@@ -294,17 +324,19 @@ class Track extends React.Component {
       }
     });
     // aggiorno i punti
-    const pointsLive = calcolatePoints(
+    const pointsLive = calcolatePointsFake(
       this.props.distanceLive,
-      this.props.PrecDistanceSameMode,
-      this.props.activityChoice.type
+      0,
+      this.props.activityChoice.type,
+      this.props.activityChoice.coef
     );
     this.setState({
       pointsLive
     });
     // tempo iniziale
-
-    if (this.props.PreviousRoute ? this.props.PreviousRoute.length : 0) {
+    console.log('montato')
+    if (store.getState().tracking.PreviousRoute ? store.getState().tracking.PreviousRoute.length : 0) {
+      console.log('tratte precedenti')
       this.updateInfoTrack(this.props);
     }
 
@@ -322,6 +354,18 @@ class Track extends React.Component {
         load: true
       });
     });
+    // entro 10 secondi
+
+    setTimeout(() => {
+      if (
+        !this.props.tutorialMetro &&
+        this.state.time < 10000 &&
+        this.props.activityChoice.type === "Public" &&
+        this.props.activityChoice.coef === 1200
+      ) {
+        this.alertMetro();
+      }
+    }, 2200);
   }
 
   componentWillReceiveProps(props) {
@@ -350,10 +394,11 @@ class Track extends React.Component {
         // aggiorno i punti
         console.log("aggiornamento");
         console.log(props);
-        const pointsLive = calcolatePoints(
+        const pointsLive = calcolatePointsFake(
           props.distanceLive,
-          props.PrecDistanceSameMode,
-          props.activityChoice.type
+          0,
+          props.activityChoice.type,
+          props.activityChoice.coef
         );
         this.setState({
           pointsLive
@@ -510,10 +555,11 @@ class Track extends React.Component {
       );
     }
     let totPointsAlsoNotValid = 0;
-    totPointsAlsoNotValid = calcolatePoints(
+    totPointsAlsoNotValid = calcolatePointsFake(
       totDistanceAlsoNotValid,
-      PrecDistanceSameMode,
-      activityChoice.type
+      0,
+      activityChoice.type,
+      activityChoice.coef
     );
 
     let totPointsRoute = totPoints ? totPoints : 0;
@@ -546,20 +592,18 @@ class Track extends React.Component {
     // vedo il tipo di attivita scelta e metto il colore corrispodente alle onde e al cerchio
     // uso tre variabili per i tre colori cosi poi aggiungo l'opacita alla seconda onda
 
-    const { route, routeAnalyzed, PreviousRoute } = props;
+    
 
-    let NumSegment = this.state.NumSegment;
+    let NumSegment = 0;
 
-    if (route.length) {
-      // console.log("sumsegment ");
-      const routeControl = [...PreviousRoute, { route, routeAnalyzed }];
-      NumSegment = sumRoute(routeControl, routeControl.length, true, false);
-      // console.log("sumsegment calcolato " + NumSegment);
-    }
+    NumSegment = props.numSubTrip// this.getNumSubTripsFromTrips(props);
+    // console.log("sumsegment calcolato " + NumSegment);
+
     console.log(NumSegment);
-    const lengthPreviousRoute = PreviousRoute.length;
+    const lengthPreviousRoute = store.getState().tracking.PreviousRoute.length;
     let totPointsSegment = 0;
-    let totDistanceSegment = 0;
+    let totDistanceSegment = 0
+    let totPointsBackend= 0;
 
     for (
       index = lengthPreviousRoute;
@@ -568,21 +612,29 @@ class Track extends React.Component {
     ) {
       const {
         distanceLive,
-        PrecDistanceSameMode,
-        activityChoice
-      } = PreviousRoute[index - 1];
+        activityChoice,
+        sub_trip
+      } = store.getState().tracking.PreviousRoute[index - 1];
 
-      totPointsSegment += calcolatePoints(
+      totPointsSegment += calcolatePointsFake(
         distanceLive,
-        PrecDistanceSameMode,
-        activityChoice.type
+        0,
+        activityChoice.type,
+        activityChoice.coef
       );
+
+      totPointsBackend += sub_trip ? sub_trip.points ? sub_trip.points : 0 : 0
+      
       totDistanceSegment += distanceLive;
+      console.log(totPointsSegment)
+      console.log(totPointsBackend)
+      console.log(totDistanceSegment)
     }
 
     this.setState({
       totDistanceSegment,
       totPointsSegment,
+      totPointsBackend,
       NumSegment
     });
   };
@@ -717,7 +769,7 @@ class Track extends React.Component {
               justifyContent: "center"
             }}
           >
-            <Text styles={styles.textBasket}>{strings("gps_doesn_t_wor")}</Text>
+            <Text styles={styles.textBasket}>{strings("id_1_15")}</Text>
           </View>
         </View>
 
@@ -781,7 +833,7 @@ class Track extends React.Component {
                   fontSize: 14
                 }}
               >
-                PLAY!
+                {strings("id_1_14")}
               </Text>
             </View>
           </TouchableOpacity>
@@ -873,7 +925,7 @@ class Track extends React.Component {
                   justifyContent: "flex-start"
                 }}
               >
-                <Text style={styles.ptText}>pt</Text>
+                <Text style={styles.ptText}>{strings("id_1_13")}</Text>
               </View>
             </View>
           </View>
@@ -882,23 +934,8 @@ class Track extends React.Component {
     );
   }
 
-  sendReport = () => {
-    const systemName = DeviceInfo.getSystemName();
-    const systemVersion = DeviceInfo.getSystemVersion();
-    const model = DeviceInfo.getModel();
-    const manufacturer = DeviceInfo.getManufacturer();
-    const deviceId = DeviceInfo.getDeviceId();
-
-    const device =
-      manufacturer +
-      " " +
-      deviceId +
-      " " +
-      model +
-      " " +
-      systemVersion +
-      " " +
-      systemName;
+  sendReport = async () => {
+    const device = await getDevice()
 
     const position = this.props.route.length
       ? this.props.route[this.props.route.length - 1]
@@ -941,12 +978,39 @@ class Track extends React.Component {
     });
   };
 
-  livePointer = (time, distanceWithComma, typeWeather) => {
+  imageMove = () => {
+
+    return(<View>
+      
+        <Image
+          style={styles.waveView}
+          source={require("./../../assets/images/wave/blue_live_wave_2.png")}
+          resizeMode={"contain"}
+        />
+        <Image
+          style={styles.waveView}
+          source={require("./../../assets/images/wave/blue_live_wave.png")}
+          resizeMode={"contain"}
+        />
+    </View>)
+  }
+
+  livePointer = (time, distanceWithComma, typeWeather, kmTrovati) => {
+    let pointsFake = calcolatePointsFake(
+      this.props.distanceLive,
+      0,
+      this.props.activityChoice.type,
+      this.props.activityChoice.coef
+    );
+    pointsFake += this.state.totPointsSegment
+    const pointsBackend = this.props.subTrip.points + this.state.totPointsBackend
     return (
       <Aux>
         {this.renderModalSplitImage(
           this.state.modalSplitIndex,
-          this.state.pointsLive + this.state.totPointsSegment,
+          pointsFake > pointsBackend
+            ? pointsFake
+            : pointsBackend,
           `rgba(${this.state.r}, ${this.state.g}, ${this.state.b}, 1)`
         )}
         <View
@@ -965,7 +1029,9 @@ class Track extends React.Component {
             }}
           >
             <View style={{ alignContent: "center", flex: 1 }}>
-              <Text style={styles.routeParametersLabel}>TIME</Text>
+              <Text style={styles.routeParametersLabel}>
+                {strings("id_1_03")}
+              </Text>
               <Text
                 style={[
                   { textAlign: "center", paddingTop: 5 },
@@ -984,9 +1050,11 @@ class Track extends React.Component {
               }}
             >
               <View>
-                <Text style={styles.routeParametersLabel}>DISTANCE</Text>
+                <Text style={styles.routeParametersLabel}>
+                  {strings("id_1_04")}
+                </Text>
               </View>
-              {distanceWithComma == "0,0" ? (
+              {distanceWithComma == 0 ? (
                 <View
                   style={{
                     paddingTop: 15
@@ -1007,7 +1075,7 @@ class Track extends React.Component {
                     styles.routeParametersValue
                   ]}
                 >
-                  {distanceWithComma} Km
+                  {distanceWithComma} {kmTrovati ? "Km" : "m"}
                 </Text>
               )}
             </View>
@@ -1033,7 +1101,9 @@ class Track extends React.Component {
                 }}
               >
                 <View>
-                  <Text style={styles.routeParametersLabel}>SPEED</Text>
+                  <Text style={styles.routeParametersLabel}>
+                    {strings("id_1_05")}
+                  </Text>
                 </View>
               </TouchableWithoutFeedback>
 
@@ -1192,11 +1262,11 @@ class Track extends React.Component {
             <OwnIcon name="map_icn" size={35} color={"rgba(61, 61, 61, 1)"} />
           </View>
         </TouchableWithoutFeedback>
-        <TouchableWithoutFeedback
+        {/* <TouchableWithoutFeedback
           // onPress={() => this.DescriptionIconModalTracking()}
           onPress={() => this.sendReport()}
           style={{
-            backgroundColor: "white"
+            backgroundColor: this.state.colors[0]
           }}
         >
           <View
@@ -1206,7 +1276,7 @@ class Track extends React.Component {
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 5 },
               shadowOpacity: 0.5,
-              backgroundColor: "transparent",
+              backgroundColor: this.state.colors[0],
 
               top: 40,
               left: 40,
@@ -1216,17 +1286,16 @@ class Track extends React.Component {
               width: 40,
               alignContent: "center",
               justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: "white"
+              alignItems: "center"
             }}
           >
             <OwnIcon
               name="feedback_icn"
               size={35}
-              color={"rgba(61, 61, 61, 1)"}
+              color={"rgba(255, 255, 255, 1)"}
             />
           </View>
-        </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback> */}
       </Aux>
     );
   };
@@ -1289,7 +1358,9 @@ class Track extends React.Component {
                   }
                 }}
               >
-                <Text style={styles.routeParametersLabel}>TIME</Text>
+                <Text style={styles.routeParametersLabel}>
+                  {strings("id_1_03")}
+                </Text>
               </TouchableWithoutFeedback>
               <Text
                 style={[
@@ -1404,6 +1475,21 @@ class Track extends React.Component {
     );
   };
 
+  getNumSubTripsFromTrips = props => {
+    const lengthPreviousRoute = store.getState().tracking.PreviousRoute.length;
+    console.log(lengthPreviousRoute)
+    let numSubTrips = 0;
+    for (i = lengthPreviousRoute - 1; i >= 0; i--) {
+      const numSubTripNext = store.getState().tracking.PreviousRoute[i].numSubTrip;
+      console.log(numSubTripNext)
+      if (numSubTripNext) {
+        numSubTrips = numSubTrips + 1;
+      } else {
+        break;
+      }
+    }
+  };
+
   render() {
     // vedo se ha superato un giorno e cosi in caso taglio le info sui giorni
     let time = 0;
@@ -1415,13 +1501,18 @@ class Track extends React.Component {
     }
 
     const totDistance = this.props.distanceLive + this.state.totDistanceSegment;
-
-    let distanceWithComma = pointsDecimal(totDistance, ",");
-
-    distanceWithComma = distanceWithComma.substr(
-      0,
-      distanceWithComma.length - 1
-    );
+    const kmTrovati = totDistance > 1.0;
+    // console.log(totDistance);
+    let distanceWithComma = totDistance;
+    if (kmTrovati) {
+      distanceWithComma = pointsDecimal(totDistance, ",");
+      distanceWithComma = distanceWithComma.substr(
+        0,
+        distanceWithComma.length - 1
+      );
+    } else {
+      distanceWithComma = parseInt(totDistance * 1000);
+    }
 
     // orario di punta
     /* const hour = new Date(this.state.start).getHours();
@@ -1491,8 +1582,8 @@ if (hour >= 7 && hour < 9) {
           )}
           {this.props.activityChoice.type === "Public" &&
           this.props.activityChoice.coef === 1200
-            ? this.metro(time, distanceWithComma, typeWeather)
-            : this.livePointer(time, distanceWithComma, typeWeather)}
+            ? this.metro(time, distanceWithComma, typeWeather, kmTrovati)
+            : this.livePointer(time, distanceWithComma, typeWeather, kmTrovati)}
         </View>
       );
     } else {
@@ -1508,7 +1599,19 @@ const styles = {
     alignItems: "center",
     backgroundColor: "#F5FCFF"
   },
-
+  waveView: {
+    position: "absolute",
+          top:
+            Dimensions.get("window").height -
+            (Platform.OS === "ios" &&
+            ((Dimensions.get("window").height === 812 ||
+              Dimensions.get("window").width === 812) || (Dimensions.get("window").height === 896 ||
+              Dimensions.get("window").width === 896) )
+              ? 400
+              : 300),
+              height: 300,
+            width: Dimensions.get("window").width
+  },
   welcome: {
     fontSize: 20,
     textAlign: "center",
@@ -1663,16 +1766,13 @@ export const modalSplitImage = {
 // quali dati prendere
 
 const getStatusButton = state => state.login.StatusButton;
-const getActivity = state => state.tracking.activityChoice;
 
 const getRoute = state => state.tracking.route;
 const getRouteAnalyzed = state => state.tracking.routeAnalyzed;
 
-const getPreviousRoute = state => state.tracking.PreviousRoute;
+
 const getRouteNotvalid = state => state.tracking.routeNotvalid;
 
-const getTotPoints = state => state.tracking.totPoints;
-const getTotDistance = state => state.tracking.totDistance;
 const getPrecDistanceSameMode = state => state.tracking.PrecDistanceSameMode;
 
 const getStatusButtonState = createSelector(
@@ -1680,50 +1780,23 @@ const getStatusButtonState = createSelector(
   StatusButton => StatusButton
 );
 
-const getActivityState = createSelector(
-  [getActivity],
-  activityChoice => activityChoice
-);
-
 const getRouteAnalyzedState = createSelector(
   [getRouteAnalyzed],
   routeAnalyzed => routeAnalyzed
 );
 
-const getRouteState = createSelector(
-  [getRoute],
-  route => route
-);
+const getRouteState = createSelector([getRoute], route => route);
 
-const getPreviousRouteState = createSelector(
-  [getPreviousRoute],
-  PreviousRoute => PreviousRoute
-);
+
 
 const getRouteNotvalidState = createSelector(
   [getRouteNotvalid],
   routeNotvalid => routeNotvalid
 );
 
-const getTotPointsState = createSelector(
-  [getTotPoints],
-  totPoints => totPoints
-);
-
-const getTotDistanceState = createSelector(
-  [getTotDistance],
-  totDistance => totDistance
-);
 const getPrecDistanceSameModeState = createSelector(
   [getPrecDistanceSameMode],
   PrecDistanceSameMode => PrecDistanceSameMode
-);
-
-const getDistanceLive = state => state.tracking.distanceLive;
-
-const getDistanceLiveState = createSelector(
-  [getDistanceLive],
-  distance => distance
 );
 
 const getWeather = state => state.tracking.typeWeather;
@@ -1734,16 +1807,10 @@ const getWeatherState = createSelector(
 );
 const getSpeed = state => state.tracking.speed;
 
-const getSpeedState = createSelector(
-  [getSpeed],
-  speed => speed
-);
+const getSpeedState = createSelector([getSpeed], speed => speed);
 const getSeries = state => state.login.NumDaysRoute.numDay;
 
-const getSeriesState = createSelector(
-  [getSeries],
-  series => series
-);
+const getSeriesState = createSelector([getSeries], series => series);
 
 const withActivity = connect((state, props) => {
   // se la pagina e attiva carica i nuovi dati
@@ -1753,14 +1820,15 @@ const withActivity = connect((state, props) => {
     activityChoice: getActivityState(state),
     route: getRouteState(state),
     routeAnalyzed: getRouteAnalyzedState(state),
-    PreviousRoute: getPreviousRouteState(state),
     routeNotvalid: getRouteNotvalidState(state),
     distanceLive: getDistanceLiveState(state),
-
+    subTrip: getsubTripState(state),
+    numSubTrip: getNumSubTripState(state),
     PrecDistanceSameMode: getPrecDistanceSameModeState(state),
     typeWeather: getWeatherState(state),
     series: getSeriesState(state),
-    speed: getSpeedState(state)
+    speed: getSpeedState(state),
+    tutorialMetro: getTutorialMetroState(state)
   };
 });
 
@@ -1773,9 +1841,9 @@ export function convertWeather(weather) {
 
   switch (weather) {
     case "Clear":
+    case "Clouds":
       typeWeather = 0;
       break;
-    case "Clouds":
     case "Drizzle":
     case "Haze":
     case "Mist":

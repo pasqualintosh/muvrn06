@@ -25,7 +25,6 @@ import DescriptionIcon from "./../../components/DescriptionIcon/DescriptionIcon"
 import FriendScreenCardsFooter from "./../../components/FriendScreenCardsFooter/FriendScreenCardsFooter";
 
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
 import { strings } from "../../config/i18n";
@@ -66,19 +65,7 @@ class CityScreenCards extends React.Component {
   }
 
   componentWillMount() {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // const screenView = new GAHits.ScreenView(
-    //   Settings.analyticsAppName,
-    //   this.constructor.name,
-    //   DeviceInfo.getReadableVersion(),
-    //   DeviceInfo.getBundleId()
-    // );
-    // ga.send(screenView);
+
   }
 
   DescriptionIconModal = typeIcon => {
@@ -372,18 +359,21 @@ class CityScreenCards extends React.Component {
                       </Text>
                     </View>
                     <View style={styles.cityImage}>
-                      <View style={styles.cityCircle}>
+                      <ImageBackground
+                        style={styles.cityCircle}
+                        source={require("./../../assets/images/cities/team_live_bg_sx.png")}
+                      >
                         <Image
                           style={styles.avatarImage}
                           // source={require("../../assets/images/avatars/0Biker1xhdpi.png")}
                           source={imagesCity[idCity]}
                         />
-                      </View>
+                      </ImageBackground>
                     </View>
                   </ImageBackground>
                 </LinearGradient>
 
-                <View
+                {/* <View
                   style={{
                     height: Dimensions.get("window").height * 0.1,
                     flexDirection: "column",
@@ -408,6 +398,16 @@ class CityScreenCards extends React.Component {
                       />
                     </View>
                   )}
+                </View> */}
+                <View
+                  style={{
+                    height: Dimensions.get("window").height * 0.1,
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <OwnIcon name="MUV_logo" size={38} color="#3d3d3d" />
                 </View>
               </View>
             </TouchableOpacity>
@@ -499,7 +499,7 @@ export function citiesColor(city) {
     case "dudelange":
       return "#242438";
       break;
-      case "gliwice":
+    case "gliwice":
       return "#FF0619";
       break;
     case "sosnowiec":
@@ -513,6 +513,9 @@ export function citiesColor(city) {
       break;
     case "münchen":
       return "#FFE600";
+      break;
+    case "eni":
+      return "#ffd100";
       break;
 
     default:
@@ -563,7 +566,7 @@ export function citiesDescription(city) {
     case "dudelange":
       return "Luxembourg";
       break;
-      case "gliwice":
+    case "gliwice":
       return "Poland";
       break;
     case "sosnowiec":
@@ -578,8 +581,6 @@ export function citiesDescription(city) {
     case "münchen":
       return "Germany";
       break;
-
-      
 
     default:
       return "";

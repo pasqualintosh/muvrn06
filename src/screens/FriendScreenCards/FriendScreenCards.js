@@ -25,7 +25,7 @@ import OwnIcon from "./../../components/OwnIcon/OwnIcon";
 import DescriptionIcon from "./../../components/DescriptionIcon/DescriptionIcon";
 
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
+
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
 import { strings } from "../../config/i18n";
@@ -34,7 +34,7 @@ import {
   images,
   backgroundImage
 } from "../../components/ProfileScreenCards/ProfileScreenCards";
-import { getUserInfo } from "./../../domains/follow/ActionCreators";
+import { getUserInfo, getUserInfoNew } from "./../../domains/follow/ActionCreators";
 import { limitAvatar } from "../../components/UserItem/UserItem";
 import {
   citiesImage,
@@ -76,30 +76,21 @@ class FriendScreenCards extends React.Component {
 
   componentDidMount() {
     console.log(this.props.friendData);
-    const indexRoleCheck = this.props.friendData.roleIndex ? true : false;
+    
+    
+      const username = this.props.friendData.username;
+      console.log(username);
+      if (username) {
+        // chiedo i dati al db
+      this.props.dispatch(getUserInfoNew({ username }, this.callback));
 
-    if (!indexRoleCheck) {
-      const user_id = this.props.friendData.user_id;
-      console.log(user_id);
-      // chiedo i dati al db
-      this.props.dispatch(getUserInfo({ user_id }, this.callback));
+      }
+      
     }
-  }
+  
 
   componentWillMount() {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // const screenView = new GAHits.ScreenView(
-    //   Settings.analyticsAppName,
-    //   this.constructor.name,
-    //   DeviceInfo.getReadableVersion(),
-    //   DeviceInfo.getBundleId()
-    // );
-    // ga.send(screenView);
+   
     let communityInfo = { sponsor: false };
     console.log(this.props.friendData);
     if (
@@ -429,11 +420,11 @@ class FriendScreenCards extends React.Component {
                     />
                   ) : (
                     <View />
-                  )}
+                  )}x
                 </View>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               activeOpacity={1}
               style={styles.card}
               onPress={() => this.card.flip()}
@@ -451,7 +442,7 @@ class FriendScreenCards extends React.Component {
                 last_name={this.props.friendData.last_name}
                 onPress={() => this.card.flip()}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </CardFlip>
         ) : (
           <CardFlip
@@ -537,14 +528,14 @@ class FriendScreenCards extends React.Component {
                 </View>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               activeOpacity={1}
               style={styles.card}
               onPress={() => this.card.flip()}
             >
               <SvgPolygon
                 walk={walk}
-                bike={bike}
+                bike={bike}                                             
                 publicTrasport={publicTrasport}
                 overall={overall}
                 level={this.getLevelFromInt(level)}
@@ -555,7 +546,7 @@ class FriendScreenCards extends React.Component {
                 last_name={this.props.friendData.last_name}
                 onPress={() => this.card.flip()}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </CardFlip>
         )}
         {communityInfo.sponsor ? (

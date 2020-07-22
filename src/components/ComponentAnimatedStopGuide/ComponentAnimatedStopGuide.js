@@ -17,7 +17,6 @@ import { connect } from "react-redux";
 import { stop, changeActivity } from "./../../domains/tracking/ActionCreators";
 import { changeStatusButton } from "./../../domains/login/ActionCreators";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
-import DeviceInfo from "react-native-device-info";
 import Settings from "./../../config/Settings";
 // import { BoxShadow } from "react-native-shadow";
 import InteractionManager from "../../helpers/loadingComponent";
@@ -132,20 +131,7 @@ class ComponentAnimatedStopGuide extends React.Component {
   };
 
   sendEventStop = () => {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // let event = this.state.events["stop-clicked"];
-    // let gaEvent = new GAHits.Event(
-    //   "user interaction",
-    //   "stop clicked",
-    //   "play/stop",
-    //   event
-    // );
-    // ga.send(gaEvent);
+
   };
 
   // metodo usato nelle icone che spuntano

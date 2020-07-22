@@ -144,7 +144,7 @@ class MotoCcScreen extends React.Component {
   };
 
   showAlert = () => {
-    Alert.alert("Oops", strings("seems_like_you_"));
+    Alert.alert(strings("id_0_10"), strings("id_0_65"));
   };
 
   renderNotSelectableMotoCc() {
@@ -395,14 +395,14 @@ class MotoCcScreen extends React.Component {
                     this.props.registerState.moto != null
                   )
                     this.props.navigation.navigate("SurveyUserData");
-                  else Alert.alert("Oops", strings("seems_like_you_"));
+                  else Alert.alert(strings("id_0_10"), strings("id_0_65"));
                 }}
                 disabled={this.props.status === "In register" ? true : false}
               >
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

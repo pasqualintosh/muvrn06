@@ -4,7 +4,8 @@ import {
   NO_STATS,
   CHANGE_SCREEN_STATISTICS,
   GET_WEEK_ACTIVITIES,
-  STATUS_PERM_ACTIVITIES
+  STATUS_PERM_ACTIVITIES,
+  UPDATE_STATUS_ACTIVITY
 } from "./ActionTypes";
 import DefaultState from "./DefaultState";
 import { LOG_OUT,  } from "../login/ActionTypes";
@@ -15,8 +16,8 @@ export default (state = DefaultState, action) => {
       {
         return {
           ...state,
-          statistics: [...action.payload.statistics],
-          n_routes: action.payload.n_routes,
+          statistics: action.payload,
+          // n_routes: action.payload.n_routes,
           error: false
         };
       }
@@ -47,7 +48,15 @@ export default (state = DefaultState, action) => {
           return { ...state, weekActivities: action.payload };
         }
         break;
+        case UPDATE_STATUS_ACTIVITY:
+        {
+          return { ...state, statusActivity: {...state.statusActivity, ...action.payload} };
+        }
+        break;
 
+        
+
+        statusActivity
       
 
     case LOG_OUT:

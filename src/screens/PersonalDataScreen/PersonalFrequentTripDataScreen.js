@@ -14,16 +14,17 @@ import {
   Platform,
   TouchableOpacity,
   TouchableHighlight,
-  Alert
+  Alert,
+  RefreshControl,
+  Image,
 } from "react-native";
-
 import { connect } from "react-redux";
 import { Tester } from "./../../config/Tester";
 import {
   postMostFrequentRouteNotSave,
   UpdateProfile,
   deleteMostFrequentRoute,
-  getMostFrequentRoute
+  getMostFrequentRoute,
 } from "./../../domains/login/ActionCreators";
 import Icon from "react-native-vector-icons/Ionicons";
 import Svg, {
@@ -31,28 +32,37 @@ import Svg, {
   LinearGradient,
   Line,
   Defs,
-  Stop
+  Stop,
 } from "react-native-svg";
 import OwnIcon from "./../../components/OwnIcon/OwnIcon";
-
+import {
+  frequentTripsState,
+  frequentTripsNotSaveState,
+} from "./../../domains/login/Selectors.js";
 import { strings } from "../../config/i18n";
+import FrequentTripContainer from "./../../components/FrequentTripContainer/FrequentTripContainer";
 
 const type = [
-  strings("other"),
-  strings("home"),
-  strings("work"),
-  strings("gym"),
-  strings("school_universi"),
-  strings("work__2"),
-  strings("mom_dad"),
-  strings("grandma_grandpa"),
-  strings("girlfriend_boyf"),
-  strings("kids__school"),
-  strings("friend_s_place"),
-  strings("supermarket"),
-  strings("bar_restaurant"),
-  strings("cinema_theater")
+  strings("id_0_140").toLocaleUpperCase(),
+  strings("id_0_32").toLocaleUpperCase(),
+  strings("id_0_33").toLocaleUpperCase(), // +1
+  strings("id_0_139").toLocaleUpperCase(), // +2
+  // strings("gym"),
+  // strings("work__2"),
+  // strings("mom_dad"),
+  // strings("grandma_grandpa"),
+  // strings("girlfriend_boyf"),
+  // strings("kids__school"),
+  // strings("friend_s_place"),
+  // strings("supermarket"),
+  // strings("bar_restaurant"),
+  // strings("cinema_theater")
 ];
+
+import analytics from "@react-native-firebase/analytics";
+async function trackEvent(event, data) {
+  await analytics().logEvent(event, { data });
+}
 
 class PersonalFrequentTripDataScreen extends React.Component {
   constructor() {
@@ -61,7 +71,8 @@ class PersonalFrequentTripDataScreen extends React.Component {
       isModalVisible: false,
       isModalVisibleWeight: false,
       load: true,
-      data: {}
+      data: {},
+      refreshing: false,
     };
   }
 
@@ -78,14 +89,14 @@ class PersonalFrequentTripDataScreen extends React.Component {
     // chiedo i dati delle routine al db
     this.props.dispatch(getMostFrequentRoute());
     // carico eventuali routine ancora non salvate nel db
-    this.props.dispatch(postMostFrequentRouteNotSave());
+    // this.props.dispatch(postMostFrequentRouteNotSave());
 
     const { infoProfile, infoProfileNotSave } = this.props.user;
 
     const info = { ...infoProfile, ...infoProfileNotSave };
 
     this.setState({
-      data: { ...infoProfileNotSave }
+      data: { ...infoProfileNotSave },
     });
   }
 
@@ -103,14 +114,16 @@ class PersonalFrequentTripDataScreen extends React.Component {
     callback && typeof callback === "function"
       ? console.log(callback(value))
       : console.log(value);
-    this.setState(prevState => {
+    this.setState((prevState) => {
       return {
         [type]: value,
         data: {
           ...prevState.data,
           [type]:
-            callback && typeof callback === "function" ? callback(value) : value
-        }
+            callback && typeof callback === "function"
+              ? callback(value)
+              : value,
+        },
       };
     });
   };
@@ -122,73 +135,41 @@ class PersonalFrequentTripDataScreen extends React.Component {
         this.props.dispatch(
           UpdateProfile({
             data: {
-              ...this.state.data
-            }
+              ...this.state.data,
+            },
           })
         );
 
         this.setState({
-          data: {}
+          data: {},
         });
       }
     }
   };
 
-  goToDetailFrequentRoutine = elem => {
+  goToDetailFrequentRoutine = (elem) => {
     this.props.navigation.navigate("FrequentRoutineMapDetail", {
-      routine: elem
+      routine: elem,
     });
   };
 
   addFrequent() {
+    trackEvent("add_frequent_trip", "User interactions");
     return (
-      <View
-        style={{
-          width: 18,
-          height: 18,
-          borderRadius: 15
-        }}
-      >
-        <TouchableHighlight
-          style={{
-            backgroundColor: "#fff",
-            height: 18,
-            width: 18,
-            borderRadius: 15,
-            alignItems: "center",
-            shadowRadius: 5,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 5 },
-            shadowOpacity: 0.5,
-            elevation: 2,
-            justifyContent: "center",
-            alignItems: "center"
-          }}
+      <View style={styles.centerView}>
+        <View style={styles.Addspace}></View>
+        <TouchableOpacity
           onPress={() => {
-            this.props.navigation.navigate("ChangeFrequentTripScreen");
+            this.props.navigation.navigate("ChangeFrequentTripScreen", {
+              routine: null,
+            });
           }}
         >
-          {/* <Svg height="18" width="18" viewBox="0 0 100 100" fill="white">
-            <Line
-              x1="50"
-              y1="25"
-              x2="50"
-              y2="75"
-              stroke="white"
-              strokeWidth="2"
-            />
-            <Line
-              x1="25"
-              y1="50"
-              x2="75"
-              y2="50"
-              stroke="white"
-              strokeWidth="2"
-            />
-          </Svg> */}
-
-          <OwnIcon name="add_icn" size={18} color="#6CBA7E" />
-        </TouchableHighlight>
+          <Image
+            source={require("./../../assets/images/add_blue_icn.png")}
+            style={styles.buttonImageStyle}
+          />
+        </TouchableOpacity>
       </View>
     );
   }
@@ -202,7 +183,7 @@ class PersonalFrequentTripDataScreen extends React.Component {
           style={{
             width: 18,
             height: 18,
-            borderRadius: 15
+            borderRadius: 15,
           }}
         >
           <TouchableHighlight
@@ -218,7 +199,7 @@ class PersonalFrequentTripDataScreen extends React.Component {
               shadowOpacity: 0.5,
               elevation: 2,
               justifyContent: "center",
-              alignItems: "center"
+              alignItems: "center",
             }}
             onPress={() => {
               Alert.alert(
@@ -228,13 +209,13 @@ class PersonalFrequentTripDataScreen extends React.Component {
                   {
                     text: "Cancel",
                     onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
+                    style: "cancel",
                   },
                   {
-                    text: strings("ok").toLocaleUpperCase(),
+                    text: strings("id_0_12").toLocaleUpperCase(),
                     onPress: () =>
-                      this.props.dispatch(deleteMostFrequentRoute({}, id))
-                  }
+                      this.props.dispatch(deleteMostFrequentRoute({}, id)),
+                  },
                 ],
                 { cancelable: false }
               );
@@ -275,540 +256,213 @@ class PersonalFrequentTripDataScreen extends React.Component {
             borderRadius: 1,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 0.01 },
-            shadowOpacity: 0.2
+            shadowOpacity: 0.2,
           }}
         />
       );
   }
 
-  render() {
-    console.log("object");
-    console.log(this.props.routine);
+  onRefresh = () => {
+    if (!this.state.refreshing) {
+      this.setState({ refreshing: true });
+      this.props.dispatch(getMostFrequentRoute());
+
+      setTimeout(() => {
+        // console.log("check");
+
+        this.setState({ refreshing: false });
+      }, 2000);
+    }
+  };
+
+  noFrequentTrips = () => {
     return (
       <View
         style={{
-          backgroundColor: "#fff"
+          backgroundColor: "#fff",
+        }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.allView}
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={this.onRefresh.bind(this)}
+            />
+          }
+        >
+          <View style={styles.space}></View>
+          <View style={styles.subView}>
+            <Text style={styles.textTitle}>{strings("id_6_01")}</Text>
+            <Text style={styles.textSubTitle}>{strings("id_6_02")}</Text>
+          </View>
+          <View style={styles.space}></View>
+          <Image
+            source={require("./../../assets/images/routinary_empty.png")}
+            style={styles.imageLogo}
+          />
+          <View style={styles.Addspace}></View>
+          <TouchableOpacity
+            onPress={() => {
+              this.props.navigation.navigate("ChangeFrequentTripScreen", {
+                routine: null,
+              });
+            }}
+          >
+            <Image
+              source={require("./../../assets/images/add_blue_icn.png")}
+              style={styles.buttonImageStyle}
+            />
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    );
+  };
+
+  visualizeFrequentTrips = () => {
+    const routine = this.props.routine.filter((elem) => elem.is_active);
+    return (
+      <View
+        style={{
+          backgroundColor: "#fff",
         }}
       >
         <ScrollView
           style={{
             backgroundColor: "#fff",
             height: Dimensions.get("window").height,
-            width: Dimensions.get("window").width
+            width: Dimensions.get("window").width,
           }}
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={this.onRefresh.bind(this)}
+            />
+          }
         >
-          <View
-            style={{
-              width: Dimensions.get("window").width,
-              flexDirection: "row",
-              marginBottom: 5,
-              borderBottomColor: "#5F5F5F90",
-              borderBottomWidth: 0.3,
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center"
-            }}
-          >
-            <View
-              // onPress={() => this.goToDetailFrequentRoutine(elem)}
-              style={{
-                height: 80,
-                width: Dimensions.get("window").width * 0.7,
-                flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-                alignSelf: "center"
-                // marginTop: 20
-              }}
-            >
-              <Svg height="40" width="40">
-                <Defs>
-                  <LinearGradient id="grad" x1="0" y1="0" x2="10" y2="0">
-                    <Stop offset="0" stopColor="#7D4D99" stopOpacity="1" />
-                    <Stop offset="1" stopColor="#6497CC" stopOpacity="1" />
-                  </LinearGradient>
-                  <LinearGradient id="grad2" x1="0" y1="0" x2="10" y2="0">
-                    <Stop offset="0" stopColor="#E82F73" stopOpacity="1" />
-                    <Stop offset="1" stopColor="#F49658" stopOpacity="1" />
-                  </LinearGradient>
-                </Defs>
-                <Circle cx="5" cy="5" r="5" fill="url(#grad)" />
-                <Line
-                  x1="5"
-                  y1="11"
-                  x2="5"
-                  y2="15"
-                  stroke="#3D3D3D"
-                  strokeWidth="1"
-                />
-                <Line
-                  x1="5"
-                  y1="17"
-                  x2="5"
-                  y2="21"
-                  stroke="#3D3D3D"
-                  strokeWidth="1"
-                />
-                <Line
-                  x1="5"
-                  y1="23"
-                  x2="5"
-                  y2="27"
-                  stroke="#3D3D3D"
-                  strokeWidth="1"
-                />
-                <Circle cx="5" cy="33" r="5" fill="url(#grad2)" />
-              </Svg>
-              <View
-                style={{
-                  marginHorizontal: 18,
-                  // flexDirection: "row",
-                  alignItems: "flex-start",
-                  justifyContent: "center"
-                }}
-              >
-                <Text
-                  style={[styles.mfrText, { fontSize: 11, textAlign: "left" }]}
-                >
-                  {strings("the_most_freque")}
-                </Text>
-                <Text
-                  style={[
-                    styles.mfrText,
-                    { fontWeight: "400", fontSize: 11, textAlign: "left" }
-                  ]}
-                >
-                  {strings("to_know_the_env")}
-                </Text>
-              </View>
-            </View>
+          <View style={styles.subView}>
+            <Text style={styles.textLeftTitle}>{strings("id_6_01")}</Text>
           </View>
 
           {this.state.load ? (
-            this.props.routine.map((elem, index) => (
-              <View
-                key={elem.id}
-                style={{
-                  flexDirection: "row",
-                  borderRadius: 4,
-                  marginTop: 7,
-                  justifyContent: "space-around",
-                  alignItems: "center",
-                  height: Dimensions.get("window").height * 0.1,
-                  borderBottomColor: "#5F5F5F",
-                  borderBottomWidth: 0.3
-                }}
-              >
-                <View
-                  onPress={() => this.goToDetailFrequentRoutine(elem)}
-                  style={{
-                    height: 40,
-                    width: Dimensions.get("window").width * 0.65,
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center"
-                  }}
-                >
-                  <TouchableOpacity
-                    onPress={() => this.goToDetailFrequentRoutine(elem)}
-                    style={{
-                      marginHorizontal: 0,
-                      flexDirection: "row",
-                      alignItems: "center"
-                    }}
-                  >
-                    {/* <Svg height="40" width="40">
-                      <Defs>
-                        <LinearGradient id="grad" x1="0" y1="0" x2="10" y2="0">
-                          <Stop
-                            offset="0"
-                            stopColor="#7D4D99"
-                            stopOpacity="1"
-                          />
-                          <Stop
-                            offset="1"
-                            stopColor="#6497CC"
-                            stopOpacity="1"
-                          />
-                        </LinearGradient>
-                        <LinearGradient id="grad2" x1="0" y1="0" x2="10" y2="0">
-                          <Stop
-                            offset="0"
-                            stopColor="#E82F73"
-                            stopOpacity="1"
-                          />
-                          <Stop
-                            offset="1"
-                            stopColor="#F49658"
-                            stopOpacity="1"
-                          />
-                        </LinearGradient>
-                      </Defs>
-                      <Circle cx="5" cy="5" r="5" fill="url(#grad)" />
-                      <Line
-                        x1="5"
-                        y1="11"
-                        x2="5"
-                        y2="15"
-                        stroke="#3D3D3D"
-                        strokeWidth="1"
-                      />
-                      <Line
-                        x1="5"
-                        y1="17"
-                        x2="5"
-                        y2="21"
-                        stroke="#3D3D3D"
-                        strokeWidth="1"
-                      />
-                      <Line
-                        x1="5"
-                        y1="23"
-                        x2="5"
-                        y2="27"
-                        stroke="#3D3D3D"
-                        strokeWidth="1"
-                      />
-                      <Circle cx="5" cy="33" r="5" fill="url(#grad2)" />
-                    </Svg> */}
-                    <View
-                      style={{
-                        marginHorizontal: 0,
-                        flexDirection: "row",
-                        alignItems: "center"
-                      }}
-                    >
-                      <Text style={styles.mfrText}>
-                        {type[elem.start_type]}
-                      </Text>
-                      <View
-                        style={{
-                          width: 40,
-                          flexDirection: "row",
-                          justifyContent: "space-around",
-                          alignItems: "center"
-                        }}
-                      >
-                        <Text style={styles.mfrText}>{"<"}</Text>
-                        <Text style={styles.mfrText}>{">"}</Text>
-                      </View>
-                      <Text style={styles.mfrText}>{type[elem.end_type]}</Text>
-                    </View>
-                  </TouchableOpacity>
+            <View>
+              {routine.map((elem, index) => (
+                <View key={elem.id} style={styles.availableChallengesContainer}>
+                  <View style={styles.marginContainer} />
+                  <FrequentTripContainer
+                    navigation={this.props.navigation}
+                    active={true}
+                    // name={type[elem.start_type] + "<>" + type[elem.end_type]}
+                    name={type[elem.start_type] + " < > " + type[elem.end_type]}
+                    // name={
+                    //   strings("id_0_32").toLocaleUpperCase() +
+                    //   " < > " +
+                    //   strings("id_0_33").toLocaleUpperCase()
+                    // }
+                    challenge={elem.item}
+                    elem={elem}
+                    routineLength={routine.length}
+                  />
                 </View>
-                {this.renderDeleteBtn(index, elem.id)}
-                {/* 
-                  <View
-                    style={{
-                      width: 18,
-                      height: 18,
-                      backgroundColor: "#FC6754",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      right: -5,
-                      borderRadius: 1,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 0.01 },
-                      shadowOpacity: 0.2
-                    }}
-                  >
-                    <Text style={styles.iconText}>x</Text>
-                  </View> 
-                  */}
-              </View>
-            ))
+              ))}
+            </View>
           ) : (
             <View />
           )}
-          <TouchableOpacity
-            onPress={() => {
-              this.props.navigation.navigate("ChangeFrequentTripScreen");
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                borderRadius: 4,
-                marginTop: 7,
-                justifyContent: "space-around",
-                alignItems: "center",
-                height: Dimensions.get("window").height * 0.1
-                // borderBottomColor: "#5F5F5F",
-                // borderBottomWidth: 0.3
-              }}
-            >
-              <View
-                style={{
-                  height: 40,
-                  width: Dimensions.get("window").width * 0.65,
-                  flexDirection: "row",
-                  justifyContent: "flex-start",
-                  alignItems: "center"
-                }}
-              >
-                <View
-                  style={{
-                    marginHorizontal: 0,
-                    flexDirection: "row",
-                    alignItems: "center"
-                  }}
-                >
-                  {/* <Svg height="40" width="40">
-                  <Defs>
-                    <LinearGradient id="grad" x1="0" y1="0" x2="10" y2="0">
-                      <Stop offset="0" stopColor="#7D4D99" stopOpacity="1" />
-                      <Stop offset="1" stopColor="#6497CC" stopOpacity="1" />
-                    </LinearGradient>
-                    <LinearGradient id="grad2" x1="0" y1="0" x2="10" y2="0">
-                      <Stop offset="0" stopColor="#E82F73" stopOpacity="1" />
-                      <Stop offset="1" stopColor="#F49658" stopOpacity="1" />
-                    </LinearGradient>
-                  </Defs>
-                  <Circle cx="5" cy="5" r="5" fill="url(#grad)" />
-                  <Line
-                    x1="5"
-                    y1="11"
-                    x2="5"
-                    y2="15"
-                    stroke="#3D3D3D"
-                    strokeWidth="1"
-                  />
-                  <Line
-                    x1="5"
-                    y1="17"
-                    x2="5"
-                    y2="21"
-                    stroke="#3D3D3D"
-                    strokeWidth="1"
-                  />
-                  <Line
-                    x1="5"
-                    y1="23"
-                    x2="5"
-                    y2="27"
-                    stroke="#3D3D3D"
-                    strokeWidth="1"
-                  />
-                  <Circle cx="5" cy="33" r="5" fill="url(#grad2)" />
-                </Svg> */}
-                  <Icon name="ios-arrow-forward" size={15} color="#3D3D3D" />
-                  <View
-                    style={{
-                      marginHorizontal: 18,
-                      flexDirection: "row",
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text
-                      style={[
-                        styles.mfrText,
-                        {
-                          borderBottomColor: "#3D3D3D",
-                          borderBottomWidth: 1
-                          // textDecorationLine:
-                          //   Platform.OS == "ios" ? "underline" : ""
-                        }
-                      ]}
-                    >
-                      {strings("add_a_new_frequ")}
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              {this.addFrequent()}
-              {/* 
-                  <View
-                    style={{
-                      width: 18,
-                      height: 18,
-                      backgroundColor: "#FC6754",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      right: -5,
-                      borderRadius: 1,
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 0.01 },
-                      shadowOpacity: 0.2
-                    }}
-                  >
-                    <Text style={styles.iconText}>x</Text>
-                  </View> 
-                  */}
-            </View>
-          </TouchableOpacity>
-          {/* {this.state.load
-            ? this.props.routineNotSave.map((elem, index) => (
-                <View
-                  key={index + this.props.routine.length}
-                  style={{
-                    height: 40,
-                    flexDirection: "row",
-                    borderRadius: 4,
-                    marginTop: 7,
-                    justifyContent: "space-around",
-                    alignItems: "center"
-                  }}
-                >
-                  <View
-                    style={{
-                      height: 40,
-                      width: Dimensions.get("window").width * 0.6,
-                      flexDirection: "row",
-                      justifyContent: "flex-start",
-                      alignItems: "center"
-                    }}
-                  >
-                    <View
-                      style={{
-                        marginHorizontal: 12,
-                        flexDirection: "row",
-                        alignItems: "center"
-                      }}
-                    >
-                      <Svg height="40" width="40">
-                        <Defs>
-                          <LinearGradient
-                            id="grad"
-                            x1="0"
-                            y1="0"
-                            x2="10"
-                            y2="0"
-                          >
-                            <Stop
-                              offset="0"
-                              stopColor="#7D4D99"
-                              stopOpacity="1"
-                            />
-                            <Stop
-                              offset="1"
-                              stopColor="#6497CC"
-                              stopOpacity="1"
-                            />
-                          </LinearGradient>
-                          <LinearGradient
-                            id="grad2"
-                            x1="0"
-                            y1="0"
-                            x2="10"
-                            y2="0"
-                          >
-                            <Stop
-                              offset="0"
-                              stopColor="#E82F73"
-                              stopOpacity="1"
-                            />
-                            <Stop
-                              offset="1"
-                              stopColor="#F49658"
-                              stopOpacity="1"
-                            />
-                          </LinearGradient>
-                        </Defs>
-                        <Circle cx="5" cy="5" r="5" fill="url(#grad)" />
-                        <Line
-                          x1="5"
-                          y1="11"
-                          x2="5"
-                          y2="15"
-                          stroke="#3D3D3D"
-                          strokeWidth="1"
-                        />
-                        <Line
-                          x1="5"
-                          y1="17"
-                          x2="5"
-                          y2="21"
-                          stroke="#3D3D3D"
-                          strokeWidth="1"
-                        />
-                        <Line
-                          x1="5"
-                          y1="23"
-                          x2="5"
-                          y2="27"
-                          stroke="#3D3D3D"
-                          strokeWidth="1"
-                        />
-                        <Circle cx="5" cy="33" r="5" fill="url(#grad2)" />
-                      </Svg>
-                      <View
-                        style={{
-                          marginHorizontal: 18,
-                          flexDirection: "row",
-                          alignItems: "center"
-                        }}
-                      >
-                        <Text style={styles.mfrText}>
-                          {type[elem.start_type]}
-                        </Text>
-                        <View
-                          style={{
-                            width: 40,
-                            flexDirection: "row",
-                            justifyContent: "space-around",
-                            alignItems: "center"
-                          }}
-                        >
-                          <Text style={styles.mfrText}>{"<"}</Text>
-                          <Text style={styles.mfrText}>{">"}</Text>
-                        </View>
-                        <Text style={styles.mfrText}>
-                          {type[elem.end_type]}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  {/*
-                  <View
-                  style={{
-                    width: 18,
-                    height: 18,
-                    backgroundColor: "#87D99A",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    alignContent: "center",
-                    right: 7,
-                    borderRadius: 1,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 0.01 },
-                    shadowOpacity: 0.2,
-                    flexDirection: "column"
-                  }}
-                >
-                  <Text style={styles.iconText}>x</Text>
-                </View>
-                //
-                </View>
-              ))
-            : <View />} */}
+
+          {this.addFrequent()}
+
           <View style={{ height: 300 }} />
         </ScrollView>
       </View>
     );
+  };
+  render() {
+    const routine = this.props.routine;
+    // ho frequent trips
+    if (routine.length) {
+      return this.visualizeFrequentTrips();
+    } else {
+      return this.noFrequentTrips();
+    }
   }
 }
 
-const withData = connect(state => {
+const withData = connect((state) => {
   // prendo solo le routine
   return {
-    routine: state.login.mostFrequentRoute ? state.login.mostFrequentRoute : [],
-    routineNotSave: state.login.mfr_modal_split_NotSave
-      ? state.login.mfr_modal_split_NotSave
-      : [],
+    routine: frequentTripsState(state),
+    routineNotSave: frequentTripsNotSaveState(state),
     user: state.login,
     infoProfile: state.login.infoProfile,
-    points:
-      state.statistics.statistics === []
-        ? 0
-        : state.statistics.statistics.reduce((total, elem, index, array) => {
-            return total + elem.points;
-          }, 0)
   };
 });
 
 export default withData(PersonalFrequentTripDataScreen);
 
 const styles = StyleSheet.create({
+  marginContainer: { marginTop: 20 },
+  availableChallengesContainer: {
+    width: Dimensions.get("window").width,
+    alignSelf: "center",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  textLeftTitle: {
+    fontFamily: "Montserrat-ExtraBold",
+    fontSize: 16,
+    textAlign: "left",
+    color: "#3D3D3D",
+  },
+  textTitle: {
+    fontFamily: "Montserrat-ExtraBold",
+    fontSize: 30,
+    textAlign: "center",
+    color: "#3D3D3D",
+  },
+  textSubTitle: {
+    paddingTop: 10,
+    fontFamily: "OpenSans-Regular",
+    fontSize: 15,
+    textAlign: "center",
+    color: "#3D3D3D",
+  },
+  imageLogo: {
+    width: Dimensions.get("window").width * 0.6,
+    height: Dimensions.get("window").width * 0.6,
+  },
+  buttonImageStyle: {
+    width: 50,
+    height: 50,
+  },
+  centerView: {
+    width: Dimensions.get("window").width,
+    flexDirection: "column",
+    justifyContent: "center",
+    alignContent: "center",
+    alignItems: "center",
+  },
+  space: {
+    height: Dimensions.get("window").width * 0.15,
+  },
+  Addspace: {
+    height: Dimensions.get("window").width * 0.1,
+  },
+
+  subView: {
+    width: Dimensions.get("window").width * 0.9,
+    paddingTop: 15,
+    alignSelf: "center",
+  },
+  allView: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+    justifyContent: "flex-start",
+    alignContent: "center",
+    alignItems: "center",
+    flexDirection: "column",
+  },
   first: {
     flex: 1,
     height:
@@ -818,7 +472,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderTopColor: "#5F5F5F",
     borderTopWidth: 0.3,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   other: {
     flex: 1,
@@ -828,18 +482,18 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.3,
     backgroundColor: "#fff",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   last: {
     flex: 1,
     height: Dimensions.get("window").height * 0.1,
     flexDirection: "row",
     borderTopColor: "#5F5F5F",
-    borderTopWidth: 0.3
+    borderTopWidth: 0.3,
   },
   LeftFrequentRoute: {
     fontSize: 15,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   Left: {
     alignSelf: "center",
@@ -849,49 +503,49 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     left: 20,
     fontFamily: "OpenSans-Bold",
-    color: "#3D3D3D"
+    color: "#3D3D3D",
   },
   Right: {
     marginHorizontal: 7,
     fontSize: 13,
     fontWeight: "400",
     fontFamily: "OpenSans-Regular",
-    color: "#3D3D3D"
+    color: "#3D3D3D",
   },
   RightAndroid: {
     alignSelf: "center",
-    right: 10
+    right: 10,
   },
   RightText: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     fontSize: 13,
-    color: "#3D3D3D"
+    color: "#3D3D3D",
   },
   centerTextContainer: {
     position: "absolute",
-    top: Dimensions.get("window").height * 0.1 + 190
+    top: Dimensions.get("window").height * 0.1 + 190,
   },
   centerValue: {
     fontFamily: "Montserrat-ExtraBold",
     color: "#3F3F3F",
     fontSize: 37,
     textAlign: "center",
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   centerTextParam: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     color: "#9D9B9C",
     fontSize: 9,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   iconText: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     color: "#fff",
     fontSize: 10,
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   mfrText: {
     fontFamily: "OpenSans-Bold",
@@ -899,19 +553,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#3D3D3D",
     fontSize: 12,
-    textAlign: "center"
+    textAlign: "center",
   },
   modalContent: {
     backgroundColor: "white",
     padding: 22,
 
     borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)"
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   modalContentAndroid: {
     width: 120,
     borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)"
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   button: {
     backgroundColor: "lightblue",
@@ -920,6 +574,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)"
-  }
+    borderColor: "rgba(0, 0, 0, 0.1)",
+  },
 });

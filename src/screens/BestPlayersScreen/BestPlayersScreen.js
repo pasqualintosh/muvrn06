@@ -16,9 +16,7 @@ import {
   TouchableHighlight,
   FlatList
 } from "react-native";
-
 import { connect } from "react-redux";
-
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import DescriptionIcon from "../../components/DescriptionIcon/DescriptionIcon";
 import RewardsUser from "../../components/RewardsUser/RewardsUser";
@@ -26,6 +24,10 @@ import WavyArea from "./../../components/WavyArea/WavyArea";
 import LinearGradient from "react-native-linear-gradient";
 import { getBestPlayer } from "./../../domains/screen/ActionCreators";
 import { strings } from "../../config/i18n";
+import {
+  getQualificationRankingByQualification,
+  getBestPlayersByTournament
+} from "./../../domains/tournaments/ActionCreators";
 
 class BestPlayersScreen extends React.Component {
   constructor(props) {
@@ -35,10 +37,78 @@ class BestPlayersScreen extends React.Component {
       modalActive: false,
       iconChoose: "round_info_icn",
       load: false,
-      players: [],
-      city: 0
+      players: best_players,
+      city: 0,
+      my_team: {}
     };
+
+    this.team = {};
+    this.university = null;
+    this.tournament_qualification_id = null;
+    this.tournament_qualification = null;
+    this.displayStandings = false;
   }
+
+  saveBestPlayersInState = data => {
+    console.log("saveBestPlayersInState");
+    let my_team_best_players = data.filter(
+      best_player => best_player.team == this.state.my_team.id
+    );
+
+    console.log(my_team_best_players);
+
+    this.setState({ players: my_team_best_players, load: true });
+  };
+
+  saveRankingInState = data => {
+    let my_team = {};
+
+    data.forEach((elem, index) => {
+      if (elem.team.name == this.team.name)
+        my_team = {
+          ...elem.team,
+          position: index + 1,
+          total_points: elem.total_points
+        };
+    });
+
+    console.log(my_team);
+
+    this.setState(
+      {
+        // standings: data,
+        // showLoading: false,
+        my_team
+      },
+      () => {
+        this.props.dispatch(
+          getBestPlayersByTournament(
+            this.tournament_qualification.tournament,
+            this.saveBestPlayersInState
+          )
+        );
+      }
+    );
+  };
+
+  componentWillMount() {
+    try {
+      this.university = this.props.navigation.state.params.university;
+      this.tournament_qualification_id = this.props.navigation.state.params.tournament_qualification_id;
+      this.tournament_qualification = this.props.navigation.state.params.tournament_qualification;
+      this.team = this.props.navigation.state.params.university;
+
+      this.props.dispatch(
+        getQualificationRankingByQualification(
+          this.tournament_qualification_id,
+          this.saveRankingInState
+        )
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   DescriptionIconModal = typeIcon => {
     // Alert.alert("weather");
     this.setState({
@@ -72,28 +142,36 @@ class BestPlayersScreen extends React.Component {
     }
   };
 
-  componentWillMount() {
-    const infoProfile = this.props.navigation.getParam("infoProfile", {
-      city: { id: 0 }
-    });
+  // componentWillMount() {
+  //   const infoProfile = this.props.navigation.getParam("infoProfile", {
+  //     city: { id: 0 }
+  //   });
 
-    
-
-    if (infoProfile.city.id) {
-      this.setState({ city: infoProfile.city.id})
-      this.props.dispatch(
-        getBestPlayer({
-          city_id: infoProfile.city.id,
-          saveData: this.savePlayers
-        })
-      );
-    }
-  }
+  //   if (infoProfile.city.id) {
+  //     this.setState({ city: infoProfile.city.id });
+  //     this.props.dispatch(
+  //       getBestPlayer({
+  //         city_id: infoProfile.city.id,
+  //         saveData: this.savePlayers
+  //       })
+  //     );
+  //   }
+  // }
 
   discount = () => {
     return (
-      <View style={styles.gradientContainerDiscount}>
-        <View style={styles.gradientContainerCurveDiscount}>
+      <View
+        style={[
+          styles.gradientContainerDiscount,
+          { backgroundColor: this.university.color }
+        ]}
+      >
+        <View
+          style={[
+            styles.gradientContainerCurveDiscount,
+            { backgroundColor: this.university.color }
+          ]}
+        >
           <WavyArea
             newData={[
               {
@@ -156,7 +234,6 @@ class BestPlayersScreen extends React.Component {
                   style={{
                     width: 40,
                     height: 90,
-
                     flexDirection: "column",
                     justifyContent: "center",
                     alignItems: "center"
@@ -173,7 +250,6 @@ class BestPlayersScreen extends React.Component {
                   style={{
                     width: 10,
                     height: 90,
-
                     flexDirection: "column",
                     justifyContent: "center",
                     alignItems: "center"
@@ -188,7 +264,11 @@ class BestPlayersScreen extends React.Component {
                   }}
                 >
                   <Text style={styles.textDescr}>
-                  {this.state.city == 1168 ? ' If the city wins, all the players that contributed will be awarded with honours, virtual Trophies and discounts!':  strings('thanks_to_airli')}
+                    {/* {this.state.city == 1168
+                      ? " If the city wins, all the players that contributed will be awarded with honours, virtual Trophies and discounts!"
+                      : strings("thanks_to_airli")} */}
+                    If the city wins, all the players that contributed will be
+                    awarded with honours, virtual Trophies and discounts!
                   </Text>
                 </View>
               </View>
@@ -262,7 +342,8 @@ class BestPlayersScreen extends React.Component {
         start={{ x: 0.0, y: 0.0 }}
         end={{ x: 0.0, y: 1 }}
         locations={[0, 1.0]}
-        colors={["#007DC5", "#0C519E"]}
+        // colors={["#007DC5", "#0C519E"]}
+        colors={[this.university.color, this.university.color]}
         style={styles.gradientContainer}
       >
         <View style={styles.gradientContainerCurve}>
@@ -282,7 +363,6 @@ class BestPlayersScreen extends React.Component {
                 style={{
                   width: 40,
                   height: 150,
-
                   flexDirection: "column",
                   justifyContent: "center",
                   alignItems: "center"
@@ -299,7 +379,6 @@ class BestPlayersScreen extends React.Component {
                 style={{
                   width: 10,
                   height: 150,
-
                   flexDirection: "column",
                   justifyContent: "center",
                   alignItems: "center"
@@ -314,8 +393,11 @@ class BestPlayersScreen extends React.Component {
                 }}
               >
                 <Text style={styles.textDescr}>
-                {this.state.city == 1168 ? 'If the city wins, best players will be awarded with honours, real Trophies and gifts!':  strings('if_your_city_wi')}
-                
+                  {/* {this.state.city == 1168
+                    ? "If the city wins, best players will be awarded with honours, real Trophies and gifts!"
+                    : strings("if_your_city_wi")} */}
+                  If the city wins, best players will be awarded with honours,
+                  real Trophies and gifts!
                 </Text>
               </View>
             </View>
@@ -392,13 +474,14 @@ class BestPlayersScreen extends React.Component {
             <View style={styles.firstPadding} />
             <View>
               <View style={styles.centerMedals}>
-                <Image
+                {/* <Image
                   source={require("../../assets/images/cities/medals_icn.png")}
                   style={{
                     width: 25,
                     height: 25
                   }}
-                />
+                /> */}
+                <OwnIcon name="best_player_icn" size={25} color="#FFCB03" />
               </View>
             </View>
           </View>
@@ -410,7 +493,6 @@ class BestPlayersScreen extends React.Component {
   };
 
   loading = () => {
-    console.log("loading best players");
     return (
       <View
         style={{
@@ -430,6 +512,7 @@ class BestPlayersScreen extends React.Component {
   };
 
   rewards = () => {
+    console.log;
     if (this.state.load) {
       return (
         <View
@@ -450,7 +533,7 @@ class BestPlayersScreen extends React.Component {
                 rowID={index + 1}
                 user={item.user}
                 points={item.points}
-                medal={item.medal}
+                medal={item.count}
               />
             );
           })}
@@ -524,29 +607,28 @@ class BestPlayersScreen extends React.Component {
     if (this.state.load && this.state.players.length > 3) {
       return (
         <View>
-        <View
-          style={{
-            width: Dimensions.get("window").width,
-            backgroundColor: "#F7F8F9",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-            alignItems: "center"
-            // height: 300
-          }}
-        >
-          {this.state.players.slice(3).map((item, index) => {
-            return (
-              <RewardsUser
-                key={index}
-                rowIDColor={index + 1}
-                rowID={index + 4}
-                user={item.user}
-                points={item.points}
-                medal={item.medal}
-              />
-            );
-          })}
-          
+          <View
+            style={{
+              width: Dimensions.get("window").width,
+              backgroundColor: "#F7F8F9",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              alignItems: "center"
+              // height: 300
+            }}
+          >
+            {this.state.players.slice(3).map((item, index) => {
+              return (
+                <RewardsUser
+                  key={index}
+                  rowIDColor={index + 1}
+                  rowID={index + 4}
+                  user={item.user}
+                  points={item.points}
+                  medal={item.count}
+                />
+              );
+            })}
           </View>
           <WavyArea
             newData={[
@@ -590,7 +672,7 @@ class BestPlayersScreen extends React.Component {
                 value: -2
               }
             ]}
-            color={ this.state.players.length % 2 === 0 ? "#F7F8F9" : "#FFFFFF"}
+            color={this.state.players.length % 2 === 0 ? "#F7F8F9" : "#FFFFFF"}
             style={{
               height: 40
             }}
@@ -602,7 +684,7 @@ class BestPlayersScreen extends React.Component {
         <View
           style={{
             width: Dimensions.get("window").width,
-            backgroundColor: "#0C519E",
+            backgroundColor: this.university.color,
             flexDirection: "column",
             justifyContent: "flex-start",
             alignItems: "center",
@@ -631,12 +713,15 @@ class BestPlayersScreen extends React.Component {
       id = citiesImage(this.props.city ? this.props.city : "");
     }
 
+    let backgroundColor = this.university.color;
+
     return (
       <ScrollView
         style={{
           width: Dimensions.get("window").width,
           height: Dimensions.get("window").height,
-          backgroundColor: "#0C519E"
+          backgroundColor
+          // backgroundColor: "#0C519E"
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -1116,3 +1201,34 @@ if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
 const withData = connect();
 
 export default withData(BestPlayersScreen);
+
+const best_players = [
+  {
+    nickname: "alfior",
+    points: 1234,
+    podium_reached_times: 3,
+    level: 1,
+    avatar: 12
+  },
+  {
+    nickname: "luciap",
+    points: 1423,
+    podium_reached_times: 2,
+    level: 1,
+    avatar: 15
+  },
+  {
+    nickname: "giacomos",
+    points: 1423,
+    podium_reached_times: 2,
+    level: 1,
+    avatar: 18
+  },
+  {
+    nickname: "giovannid",
+    points: 1423,
+    podium_reached_times: 2,
+    level: 1,
+    avatar: 18
+  }
+];

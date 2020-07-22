@@ -20,9 +20,8 @@ import { Input } from "react-native-elements";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
-
+import { getMostFrequentRoute } from "./../../domains/login/ActionCreators";
 import { strings } from "../../config/i18n";
-
 
 // import MarkerRoutine from "../MarkerRoutine/MarkerRoutine";
 
@@ -65,6 +64,7 @@ class DailyRoutineMap extends React.Component {
     this.setState({
       load: false
     });
+    this.props.dispatch(getMostFrequentRoute());
   }
 
   componentWillMount() {
@@ -262,9 +262,9 @@ class DailyRoutineMap extends React.Component {
     axios
       .get(
         "https://maps.googleapis.com/maps/api/geocode/json?address=" +
-        // this.state.street +
-        text +
-        "&key=AIzaSyC3cg3CWrVwdNa1ULzzlxZ-gy-4gCp080M"
+          // this.state.street +
+          text +
+          "&key=AIzaSyC3cg3CWrVwdNa1ULzzlxZ-gy-4gCp080M"
       )
       .then(response => {
         // handle success
@@ -361,7 +361,7 @@ class DailyRoutineMap extends React.Component {
         });
          */
       })
-      .catch(function (error) {
+      .catch(function(error) {
         if (error.response) {
           console.log(error.response.data);
           console.log(error.response.status);
@@ -461,9 +461,10 @@ class DailyRoutineMap extends React.Component {
                 height: 55,
                 marginTop:
                   Platform.OS == "ios"
-                    ? ((Dimensions.get("window").height === 812 ||
-              Dimensions.get("window").width === 812) || (Dimensions.get("window").height === 896 ||
-              Dimensions.get("window").width === 896) )
+                    ? Dimensions.get("window").height === 812 ||
+                      Dimensions.get("window").width === 812 ||
+                      Dimensions.get("window").height === 896 ||
+                      Dimensions.get("window").width === 896
                       ? 75
                       : 60
                     : 0
@@ -534,16 +535,16 @@ class DailyRoutineMap extends React.Component {
               key={index}
               onPress={
                 this.state.selectType[this.state.ButtonAndroid ? 0 : 1] !==
-                  index ? (
-                    () =>
-                      this.SelectType(
-                        index,
-                        this.state.viewRef,
-                        this.state.ButtonAndroid
-                      )
-                  ) : (
-                    <View />
-                  )
+                index ? (
+                  () =>
+                    this.SelectType(
+                      index,
+                      this.state.viewRef,
+                      this.state.ButtonAndroid
+                    )
+                ) : (
+                  <View />
+                )
               }
             >
               <View
@@ -571,8 +572,8 @@ class DailyRoutineMap extends React.Component {
                         ? "grey"
                         : this.state.selectType[this.state.ButtonAndroid] ===
                           index
-                          ? "blue"
-                          : "#3D3D3D"
+                        ? "blue"
+                        : "#3D3D3D"
                     // fontWeight: "900"
                   }}
                 >
@@ -863,35 +864,35 @@ class DailyRoutineMap extends React.Component {
               </TouchableOpacity>
             </ScrollView>
           ) : (
-              <MapView
-                ref={ref => {
-                  this.mapRef = ref;
-                }}
-                style={[
-                  StyleSheet.absoluteFillObject,
-                  {
-                    bottom: 0,
-                    flex: 1
-                  }
-                ]}
-                initialRegion={{
-                  latitude: this.props.latitude,
-                  longitude: this.props.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01
-                }}
-                loadingEnabled
+            <MapView
+              ref={ref => {
+                this.mapRef = ref;
+              }}
+              style={[
+                StyleSheet.absoluteFillObject,
+                {
+                  bottom: 0,
+                  flex: 1
+                }
+              ]}
+              initialRegion={{
+                latitude: this.props.latitude,
+                longitude: this.props.longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01
+              }}
+              loadingEnabled
               // onPress={e =>
               //   this.AddPoint(e.nativeEvent.coordinate, this.mapRef)
               // }
-              >
-                {this.ReturnPoints()}
-                {this.ReturnCircles()}
-              </MapView>
-            )
+            >
+              {this.ReturnPoints()}
+              {this.ReturnCircles()}
+            </MapView>
+          )
         ) : (
-            <View />
-          )}
+          <View />
+        )}
         {this.renderPhrase()}
         {this.ButtonAndroid()}
         {this.state.selectType[0] !== -1 && this.state.selectType[1] !== -1 ? (
@@ -925,40 +926,40 @@ class DailyRoutineMap extends React.Component {
             </TouchableWithoutFeedback>
           </View>
         ) : (
-            <View
-              style={[
-                styles.buttonContainer,
-                {
-                  opacity: 0.4
-                }
-              ]}
+          <View
+            style={[
+              styles.buttonContainer,
+              {
+                opacity: 0.4
+              }
+            ]}
+          >
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View>
+                {/* <BoxShadow setting={shadowOpt} /> */}
+                <View
+                  style={[styles.buttonBox, { backgroundColor: "#87D99A" }]}
+                >
+                  <Text style={styles.buttonGoOnText}>Yes!</Text>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+            <TouchableWithoutFeedback
+              onPress={() => {
+                //
+              }}
             >
-              <TouchableWithoutFeedback onPress={() => { }}>
-                <View>
-                  {/* <BoxShadow setting={shadowOpt} /> */}
-                  <View
-                    style={[styles.buttonBox, { backgroundColor: "#87D99A" }]}
-                  >
-                    <Text style={styles.buttonGoOnText}>Yes!</Text>
-                  </View>
+              <View>
+                {/* <BoxShadow setting={shadowOpt} /> */}
+                <View
+                  style={[styles.buttonBox, { backgroundColor: "#FC6754" }]}
+                >
+                  <Text style={styles.buttonGoOnText}>Reset</Text>
                 </View>
-              </TouchableWithoutFeedback>
-              <TouchableWithoutFeedback
-                onPress={() => {
-                  //
-                }}
-              >
-                <View>
-                  {/* <BoxShadow setting={shadowOpt} /> */}
-                  <View
-                    style={[styles.buttonBox, { backgroundColor: "#FC6754" }]}
-                  >
-                    <Text style={styles.buttonGoOnText}>Reset</Text>
-                  </View>
-                </View>
-              </TouchableWithoutFeedback>
-            </View>
-          )}
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        )}
         {this.InputStreet()}
       </View>
     );

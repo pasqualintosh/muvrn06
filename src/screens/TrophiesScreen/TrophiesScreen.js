@@ -12,19 +12,19 @@ import {
   ActivityIndicator,
   TouchableWithoutFeedback,
   NativeModules,
-  Image
+  Image,
+  ImageBackground
 } from "react-native";
+import moment from "moment";
 
-import { getTrophies } from "./../../domains/standings/ActionCreators";
+import { getTrophiesNew } from "./../../domains/standings/ActionCreators";
 import { connect } from "react-redux";
-import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
-import OwnIcon from "../../components/OwnIcon/OwnIcon";
-import DescriptionIcon from "../../components/DescriptionIcon/DescriptionIcon";
 import { createSelector } from "reselect";
 import Aux from "../../helpers/Aux";
+import { strings, getLanguageI18n } from "../../config/i18n";
+import WebService from "../../config/WebService";
 class TrophiesScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -38,7 +38,7 @@ class TrophiesScreen extends React.Component {
 
   onRefresh() {
     this.setState({ refreshing: true });
-    this.props.dispatch(getTrophies());
+    this.props.dispatch(getTrophiesNew());
     // if (this.props.statisticsState.error)
     //   Alert.alert("Oops", "Seems like an error occured");
     const loading = setInterval(() => {
@@ -48,23 +48,45 @@ class TrophiesScreen extends React.Component {
   }
 
   componentWillMount() {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // const screenView = new GAHits.ScreenView(
-    //   Settings.analyticsAppName,
-    //   this.constructor.name,
-    //   DeviceInfo.getReadableVersion(),
-    //   DeviceInfo.getBundleId()
-    // );
-    // ga.send(screenView);
+    const language = getLanguageI18n();
+    console.log(language);
+    try {
+      switch (language) {
+        case "en":
+          break;
+        case "nl":
+          require("moment/locale/nl");
+          break;
+        case "sv":
+          require("moment/locale/sv");
+          break;
+        case "es":
+          require("moment/locale/es");
+          break;
+        case "it":
+          require("moment/locale/it");
+          break;
+        case "ca":
+          require("moment/locale/ca");
+          break;
+        case "pt":
+          require("moment/locale/pt");
+          break;
+        case "br":
+          require("moment/locale/br");
+        case "rs":
+          break;
+        case "pl":
+          require("moment/locale/pl");
+          break;
+        default:
+          break;
+      }
+    } catch (error) {}
   }
 
   componentDidMount() {
-    this.props.dispatch(getTrophies());
+    this.props.dispatch(getTrophiesNew());
   }
 
   viewTrophies = trophies => {
@@ -110,17 +132,16 @@ class TrophiesScreen extends React.Component {
             height: Dimensions.get("window").height * 0.64,
             position: "relative",
             alignSelf: "center",
-            width: Dimensions.get("window").width * 0.8
+            width: Dimensions.get("window").width * 0.9
           }}
         >
-          <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>SHOWCASE </Text>
-            <OwnIcon
-              name="round_info_icn"
-              click={() => this.DescriptionIconModal("infoNoTrophies")}
-              size={25}
-              color="#3D3D3D"
-            />
+          <View
+            style={[
+              styles.headerNotrophyContainer,
+              { height: 75, alignSelf: "center" }
+            ]}
+          >
+            <Text style={styles.headerNoTrophyText}>{strings("id_9_02")}</Text>
           </View>
           <View
             style={{
@@ -153,7 +174,7 @@ class TrophiesScreen extends React.Component {
       >
         <View>
           <Image
-            source={images[elem.trophy.key]}
+            source={{ uri: WebService.url + elem.trophy.img }}
             style={{
               width: Dimensions.get("window").width * 0.3,
               height: Dimensions.get("window").width * 0.3
@@ -169,15 +190,7 @@ class TrophiesScreen extends React.Component {
               fontSize: 8
             }}
           >
-            {new Date(elem.updated_at).getDate().toString().length === 2
-              ? new Date(elem.updated_at).toDateString().slice(4, 10) +
-                ", " +
-                new Date(elem.updated_at).toDateString().slice(10)
-              : new Date(elem.updated_at).toDateString().slice(4, 8) +
-                " " +
-                new Date(elem.updated_at).toDateString().slice(9, 10) +
-                ", " +
-                new Date(elem.updated_at).toDateString().slice(10)}
+            {moment(elem.week_date).format("Do MMMM")}
           </Text>
         </View>
       </TouchableOpacity>
@@ -185,14 +198,14 @@ class TrophiesScreen extends React.Component {
   };
 
   renderTrophies() {
-    // divido i trofei per anno 2019 e 2018
+    // divido i trofei per anno 2020 e 2021
     console.log(this.props.trophies);
-    const trophies2018 = this.props.trophies.filter(
-      trophy => trophy.updated_at.slice(0, 4) === "2018"
+    const trophies2020 = this.props.trophies.filter(
+      trophy => trophy.week_date.slice(0, 4) === "2020"
     );
-    console.log(trophies2018);
-    const trophies2019 = this.props.trophies.filter(
-      trophy => trophy.updated_at.slice(0, 4) === "2019"
+    console.log(trophies2020);
+    const trophies2021 = this.props.trophies.filter(
+      trophy => trophy.week_date.slice(0, 4) === "2021"
     );
     Array.prototype.chunk = function(n) {
       if (!this.length) {
@@ -201,42 +214,54 @@ class TrophiesScreen extends React.Component {
       return [this.slice(0, n)].concat(this.slice(n).chunk(n));
     };
 
-    const trophies2018List = trophies2018.chunk(3);
-    console.log(trophies2018List);
-    const trophies2019List = trophies2019.chunk(3);
-    console.log(trophies2019List);
+    const trophies2020List = trophies2020.chunk(3);
+    console.log(trophies2020List);
+    const trophies2021List = trophies2021.chunk(3);
+    console.log(trophies2021List);
 
     return (
-      <ScrollView
-        refreshControl={
-          <RefreshControl
-            refreshing={this.state.refreshing}
-            onRefresh={this.onRefresh.bind(this)}
-          />
-        }
+      <View
         style={{
           backgroundColor: "#fff",
           height: Dimensions.get("window").height,
           width: Dimensions.get("window").width
         }}
-        contentContainerStyle={{
-          alignItems: "center",
-          backgroundColor: "#fff",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          width: Dimensions.get("window").width,
-          paddingBottom: 30
-
-          // height: Dimensions.get("window").height
-        }}
       >
-        {this.viewShowcase(trophies2018List, trophies2019List)}
-      </ScrollView>
+        <ImageBackground
+          style={styles.curveContainer}
+          source={require("./../../assets/images/purple_waves_bg.png")}
+        />
+        <ScrollView
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={this.onRefresh.bind(this)}
+            />
+          }
+          style={{
+            // backgroundColor: "#fff",
+            height: Dimensions.get("window").height,
+            width: Dimensions.get("window").width
+          }}
+          contentContainerStyle={{
+            alignItems: "center",
+            // backgroundColor: "#fff",
+            justifyContent: "flex-start",
+            alignItems: "center",
+            width: Dimensions.get("window").width,
+            paddingBottom: 30
+
+            // height: Dimensions.get("window").height
+          }}
+        >
+          {this.viewShowcase(trophies2020List, trophies2021List)}
+        </ScrollView>
+      </View>
     );
   }
 
-  viewShowcase = (trophies2018List, trophies2019List) => {
-    if (trophies2019List.length && trophies2018List.length) {
+  viewShowcase = (trophies2020List, trophies2021List) => {
+    if (trophies2021List.length && trophies2020List.length) {
       return (
         <View
           style={{
@@ -245,26 +270,20 @@ class TrophiesScreen extends React.Component {
             position: "relative",
             alignSelf: "center",
             paddingTop: 10,
-            width: Dimensions.get("window").width * 0.8
+            width: Dimensions.get("window").width * 0.9
           }}
         >
           <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>SHOWCASE '19</Text>
-            <OwnIcon
-              name="round_info_icn"
-              click={() => this.DescriptionIconModal("infoTrophies")}
-              size={25}
-              color="#3D3D3D"
-            />
+            <Text style={styles.headerText}>SHOWCASE 2021</Text>
           </View>
-          {this.viewTrophies(trophies2019List)}
+          {this.viewTrophies(trophies2021List)}
           <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>SHOWCASE '18</Text>
+            <Text style={styles.headerText}>SHOWCASE 2020</Text>
           </View>
-          {this.viewTrophies(trophies2018List)}
+          {this.viewTrophies(trophies2020List)}
         </View>
       );
-    } else if (trophies2019List.length) {
+    } else if (trophies2021List.length) {
       return (
         <View
           style={{
@@ -273,19 +292,13 @@ class TrophiesScreen extends React.Component {
             position: "relative",
             alignSelf: "center",
             paddingTop: 10,
-            width: Dimensions.get("window").width * 0.8
+            width: Dimensions.get("window").width * 0.9
           }}
         >
           <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>SHOWCASE '19</Text>
-            <OwnIcon
-              name="round_info_icn"
-              click={() => this.DescriptionIconModal("infoTrophies")}
-              size={25}
-              color="#3D3D3D"
-            />
+            <Text style={styles.headerText}>SHOWCASE 2021</Text>
           </View>
-          {this.viewTrophies(trophies2019List)}
+          {this.viewTrophies(trophies2021List)}
         </View>
       );
     } else {
@@ -297,47 +310,21 @@ class TrophiesScreen extends React.Component {
             position: "relative",
             alignSelf: "center",
             paddingTop: 10,
-            width: Dimensions.get("window").width * 0.8
+            width: Dimensions.get("window").width * 0.9
           }}
         >
           <View style={styles.headerContainer}>
-            <Text style={styles.headerText}>SHOWCASE '18</Text>
-            <OwnIcon
-              name="round_info_icn"
-              click={() => this.DescriptionIconModal("infoTrophies")}
-              size={25}
-              color="#3D3D3D"
-            />
+            <Text style={styles.headerText}>SHOWCASE 2020</Text>
           </View>
-          {this.viewTrophies(trophies2018List)}
+          {this.viewTrophies(trophies2020List)}
         </View>
       );
     }
   };
 
-  DescriptionIconModal = typeIcon => {
-    // Alert.alert("weather");
-    this.setState({
-      modalActive: true,
-      iconChoose: typeIcon
-    });
-  };
-
-  DeleteDescriptionIconModal = () => {
-    // Alert.alert("weather");
-    this.setState({
-      modalActive: false
-    });
-  };
-
   render() {
     return (
       <Aux>
-        <DescriptionIcon
-          active={this.state.modalActive}
-          icon={this.state.iconChoose}
-          DeleteDescriptionIconModal={this.DeleteDescriptionIconModal}
-        />
         {this.props.trophies.length
           ? this.renderTrophies()
           : this.renderEmptyTrophies()}
@@ -351,10 +338,46 @@ const getTrophiesList = state => state.standings.trophies;
 
 // prendo i trofei
 // reverse cosi metto prima quelli nuovi
-const getTrophiesState = createSelector(
-  [getTrophiesList],
-  trophies => (trophies ? trophies.reverse() : [])
+const getTrophiesState = createSelector([getTrophiesList], trophies =>
+  trophies ? trophies : []
 );
+
+// dati d'esempio
+// const getTrophiesState = createSelector([getTrophiesList], trophies =>
+//   trophies ? [
+//     {
+//       id: 160 ,
+//       key: 160,
+//       points: 51026,
+//       created_at: "2020-12-23 17:01:00.000000",
+//       week_date: "2020-12-23 17:01:00.000000",
+//       city_id: 1122,
+//       trophy_id: 4,
+//       trophy: {key: 4},
+//       user_id: 211
+//     }
+//   ] : [
+//     {
+//       id: 160 ,
+//       key: 160,
+//       points: 51026,
+//       created_at: "2020-12-23 17:01:00.000000",
+//       week_date: "2020-12-23 17:01:00.000000",
+//       city_id: 1122,
+//       trophy_id: 4,
+//       trophy: {key: 4},
+//       user_id: 211
+//     }
+//   ]
+// );
+
+// 161,30015,2020-12-23 17:01:00.000000,2020-12-23 17:01:00.000000,1122,5,70
+// 162,22858,2020-12-23 17:01:00.000000,2020-12-23 17:01:00.000000,1122,6,69
+// 163,18604,2020-12-23 17:01:00.000000,2020-12-23 17:01:00.000000,915,4,663
+// 164,14371,2020-12-23 17:01:00.000000,2020-12-23 17:01:00.000000,915,5,644
+// 165,11044,2020-12-23 17:01:00.000000,2020-12-23 17:01:00.000000,915,6,640
+// 166,35259,2020-12-23 17:01:00.000000,2020-12-23 17:01:00.000000,869,4,442
+// 167,12242,2020-12-23 17:01:00.000000,2020-12-23 17:01:00.000000,869,5,401
 
 const withData = connect(state => {
   return {
@@ -375,17 +398,38 @@ export const images = {
 
 const styles = StyleSheet.create({
   headerContainer: {
+    width: Dimensions.get("window").width * 0.9,
+    alignContent: "center",
+    alignSelf: "center",
+    height: 50,
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center"
+  },
+  headerNotrophyContainer: {
     width: Dimensions.get("window").width * 0.8,
     height: 50,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center"
   },
+  curveContainer: {
+    width: Dimensions.get("window").width,
+    height: 320,
+    position: "absolute",
+    top: 0,
+    left: 0
+  },
   headerText: {
     fontFamily: "Montserrat-ExtraBold",
     color: "#3F3F3F",
-    fontSize: 20,
-    textAlign: "left",
+    fontSize: 16,
+    textAlignVertical: "center"
+  },
+  headerNoTrophyText: {
+    fontFamily: "OpenSans-Regular",
+    color: "#3F3F3F",
+    fontSize: 12,
     textAlignVertical: "center"
   },
   centerTextContainer: {

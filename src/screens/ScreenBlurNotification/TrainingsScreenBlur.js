@@ -14,7 +14,7 @@ import ProfileScreenTranings from "./../../components/ProfileScreenTranings/Prof
 import IconMenuDrawer from "./../../components/IconMenuDrawer/IconMenuDrawer";
 
 import Settings from "./../../config/Settings";
-// import DeviceInfo from "react-native-device-info";
+
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
 import { strings } from "../../config/i18n";
@@ -43,19 +43,6 @@ class TrainingsScreenBlur extends React.Component {
     Tracker.trackScreenView("TrainingsScreenBlur.js");
     trackScreenView("TrainingsScreenBlur.js");
 
-    //   const ga = new Analytics(
-    //     Settings.analyticsCode,
-    //     DeviceInfo.getUniqueID(),
-    //     1,
-    //     DeviceInfo.getUserAgent()
-    //   );
-    //   const screenView = new GAHits.ScreenView(
-    //     Settings.analyticsAppName,
-    //     this.constructor.name,
-    //     DeviceInfo.getReadableVersion(),
-    //     DeviceInfo.getBundleId()
-    //   );
-    //   ga.send(screenView);
   }
 
   componentDidMount() {

@@ -36,17 +36,19 @@ class ChangeCommunityModalContent extends React.Component {
   }
 
   componentDidMount() {
-    this.setState({ communityId: this.props.communityId ? this.props.communityId : null, communityName: this.props.communityName ? this.props.communityName : null });
+    this.setState({
+      communityId: this.props.communityId ? this.props.communityId : null,
+      communityName: this.props.communityName ? this.props.communityName : null
+    });
   }
 
   responseCommunity = community => {
-    console.log('community');
+    console.log("community");
     console.log(community);
     this.setState({
       community: { community: community }
-    })
-  }
-
+    });
+  };
 
   componentWillMount() {
     this.props.dispatch(getCommunity({ status: 0 }, this.responseCommunity));
@@ -130,47 +132,47 @@ class ChangeCommunityModalContent extends React.Component {
     const result =
       this.state.cityName != ""
         ? JsonQuery(`community[*name~/${this.state.value}/i]`, {
-          allowRegexp: true,
-          data: this.state.community
-        }).value
+            allowRegexp: true,
+            data: this.state.community
+          }).value
         : "";
 
     const optionList =
       result.length > 0
         ? result.map((item, index) => (
-          <TouchableWithoutFeedback
-            key={index}
-            onPress={() => {
-              console.log(item);
-              this.setState({
-                value: item.name,
-                showAutocomplete: false,
-                communityId: item.id,
-                communityName: item.name,
-              });
-            }}
-          >
-            <View
-              style={{
-                borderBottomColor: "#aaa",
-                borderBottomWidth: 1,
-                width: Dimensions.get("window").width * 0.8,
-                height: 30
+            <TouchableWithoutFeedback
+              key={index}
+              onPress={() => {
+                console.log(item);
+                this.setState({
+                  value: item.name,
+                  showAutocomplete: false,
+                  communityId: item.id,
+                  communityName: item.name
+                });
               }}
             >
-              <Text
+              <View
                 style={{
-                  fontFamily: "OpenSans-Regular",
-                  fontWeight: "400",
-                  color: "#3d3d3d",
-                  fontSize: 16
+                  borderBottomColor: "#aaa",
+                  borderBottomWidth: 1,
+                  width: Dimensions.get("window").width * 0.8,
+                  height: 30
                 }}
               >
-                {item.name}
-              </Text>
-            </View>
-          </TouchableWithoutFeedback>
-        ))
+                <Text
+                  style={{
+                    fontFamily: "OpenSans-Regular",
+                    fontWeight: "400",
+                    color: "#3d3d3d",
+                    fontSize: 16
+                  }}
+                >
+                  {item.name}
+                </Text>
+              </View>
+            </TouchableWithoutFeedback>
+          ))
         : [].map((item, index) => <Text key={index}>{item}</Text>);
 
     return (
@@ -207,7 +209,7 @@ class ChangeCommunityModalContent extends React.Component {
 
         {this.renderScrollAutofocus(optionList)}
 
-        {this.renderButton("Confirm", () => {
+        {this.renderButton(strings("id_13_23"), () => {
           this.closeModelChangeValue();
         })}
       </View>
@@ -224,8 +226,16 @@ class ChangeCommunityModalContent extends React.Component {
       this.props.type,
       this.props.function
     );
-    this.props.changeState(this.state.communityId, "community", this.props.function);
-    this.props.changeState(this.state.communityName, "communityName", this.props.function);
+    this.props.changeState(
+      this.state.communityId,
+      "community",
+      this.props.function
+    );
+    this.props.changeState(
+      this.state.communityName,
+      "communityName",
+      this.props.function
+    );
     this.setState({ isModalVisible: false, value: null });
   };
 
@@ -241,8 +251,7 @@ class ChangeCommunityModalContent extends React.Component {
           <TouchableOpacity
             onPress={this._toggleModal}
             style={{
-              flexDirection: "row",
-              
+              flexDirection: "row"
             }}
           >
             <Text style={styles.Right}>{this.props.value}</Text>
@@ -268,13 +277,11 @@ class ChangeCommunityModalContent extends React.Component {
           <TouchableOpacity
             onPress={this._toggleModal}
             style={{
-              flexDirection: "row",
-              
+              flexDirection: "row"
             }}
           >
             <Text
               style={{
-                
                 fontFamily: "OpenSans-Regular",
                 fontWeight: "400",
                 fontSize: 13,
@@ -325,14 +332,14 @@ const styles = StyleSheet.create({
   },
   Right: {
     alignSelf: "center",
-    
+
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     fontSize: 13,
     color: "#3D3D3D"
   },
   RightAndroid: {
-    alignSelf: "center",
+    alignSelf: "center"
     //right: 10
   },
   RightText: {

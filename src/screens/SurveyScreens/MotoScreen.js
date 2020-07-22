@@ -35,7 +35,8 @@ class MotoScreen extends React.Component {
     this.state = {
       moto_owning_answer: 0, // 0 || 1 || 2
       moto_id: null,
-      moto_year: strings("choose"), // -> number
+      temp_moto_year: strings("id_0_67"), // -> number
+      moto_year: strings("id_0_67"), // -> number
       moto_engine_answer: 0, // 0 || 1 || 2
       moto_cc_answer: "", // 0 || 1 || 2 || 3
       moto_year_possibilities: ["-"],
@@ -98,7 +99,7 @@ class MotoScreen extends React.Component {
     } else {
       this.setState({
         moto_owning_answer: val,
-        moto_year: strings("choose"),
+        moto_year: strings("id_0_67"),
         moto_engine_answer: "",
         moto_cc_answer: 0
       });
@@ -155,7 +156,7 @@ class MotoScreen extends React.Component {
   };
 
   handleMotoStrokesChange = val => {
-    if (this.state.moto_year != "choose") {
+    if (this.state.moto_year != strings("id_0_67")) {
       this.setState({
         moto_engine_answer: val
       });
@@ -239,7 +240,7 @@ class MotoScreen extends React.Component {
                   start={{ x: 0.0, y: 0.0 }}
                   end={{ x: 0.0, y: 1 }}
                   locations={[0, 1.0]}
-                  colors={["#E82F73", "#F49658"]}
+                  colors={["#7D4D99", "#6497CC"]}
                   style={[
                     styles.checkboxesGradient,
                     {
@@ -287,7 +288,7 @@ class MotoScreen extends React.Component {
                   start={{ x: 0.0, y: 0.0 }}
                   end={{ x: 0.0, y: 1 }}
                   locations={[0, 1.0]}
-                  colors={["#E82F73", "#F49658"]}
+                  colors={["#7D4D99", "#6497CC"]}
                   style={[
                     styles.checkboxesGradient,
                     {
@@ -301,15 +302,13 @@ class MotoScreen extends React.Component {
                 style={{ justifyContent: "center", alignContent: "center" }}
               >
                 <Text style={styles.checkboxesText}>
-                  {element
-                    .replace(/_/g, "-")
-                    .replace("more", "≥")
-                    .replace("less", "≤") == "≥-751cm3"
-                    ? "≥751cm3"
+                  {element.replace("more_", " ≥ ").replace("less_", " ≤ ") ==
+                  "≥751cm3".replace(/_/g, "-")
+                    ? "≥ 751 cm3"
                     : element
-                        .replace(/_/g, "-")
-                        .replace("more", "≥")
-                        .replace("less", "≤")}
+                        .replace("more_", "≥ ")
+                        .replace("less_", "≤ ")
+                        .replace(/_/g, "-")}
                 </Text>
               </View>
             </View>
@@ -331,7 +330,7 @@ class MotoScreen extends React.Component {
                 start={{ x: 0.0, y: 0.0 }}
                 end={{ x: 0.0, y: 1 }}
                 locations={[0, 1.0]}
-                colors={["#E82F73", "#F49658"]}
+                colors={["#7D4D99", "#6497CC"]}
                 style={[
                   styles.checkboxesGradient,
                   {
@@ -359,9 +358,9 @@ class MotoScreen extends React.Component {
           alignItems: "center"
         }}
       >
-        {this.renderMotoOwningCheckbox(0, strings("no"))}
-        {this.renderMotoOwningCheckbox(1, strings("yes"))}
-        {this.renderMotoOwningCheckbox(2, strings("yes__it_is_at_m"))}
+        {this.renderMotoOwningCheckbox(0, strings("id_0_54"))}
+        {this.renderMotoOwningCheckbox(1, strings("id_0_55"))}
+        {this.renderMotoOwningCheckbox(2, strings("id_0_56"))}
       </View>
     );
   }
@@ -376,18 +375,22 @@ class MotoScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
         <TouchableWithoutFeedback
           onPress={() => {
-            this.setState({ modal_visible: false }, () => {});
+            this.handleMotoYearChange(this.state.temp_moto_year);
+            this.setState(
+              { modal_visible: false, moto_year: this.state.temp_moto_year },
+              () => {}
+            );
           }}
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_67").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -403,8 +406,8 @@ class MotoScreen extends React.Component {
           "" +
           element
             .replace("2007-2019", "2007-2012")
-            .replace("2013-2019", strings("from_2013_onwar"))
-            .replace("up_to_1999", strings("up_to_1999"))
+            .replace("2013-2019", strings("id_0_96"))
+            .replace("up_to_1999", strings("id_0_92"))
             .replace(/_/g, " ")
         }
         value={"" + element}
@@ -431,10 +434,11 @@ class MotoScreen extends React.Component {
               width: 250,
               height: 250
             }}
-            selectedValue={"" + this.state.moto_year}
+            selectedValue={"" + this.state.temp_moto_year}
             onValueChange={(itemValue, itemIndex) => {
               // this.setState({ modal_visible: false }, () => {
-              this.handleMotoYearChange(itemValue);
+              // this.handleMotoYearChange(itemValue);
+              this.setState({ temp_moto_year: itemValue });
               // });
             }}
           >
@@ -457,8 +461,8 @@ class MotoScreen extends React.Component {
               this.state.moto_cc_answer != ""
             )
               this.setState({
-                modal_visible: true,
-                moto_year: this.state.moto_year_possibilities[0]
+                modal_visible: true
+                // moto_year: this.state.moto_year_possibilities[0]
               });
           }}
         >
@@ -479,8 +483,8 @@ class MotoScreen extends React.Component {
             <Text>
               {this.state.moto_year
                 .replace("2007-2019", "2007-2012")
-                .replace("2013-2019", strings("from_2013_onwar"))
-                .replace("up_to_1999", strings("up_to_1999"))
+                .replace("2013-2019", strings("id_0_96"))
+                .replace("up_to_1999", strings("id_0_92"))
                 .replace(/_/g, " ")}
               &nbsp;
             </Text>
@@ -583,9 +587,7 @@ class MotoScreen extends React.Component {
                   />
                 </View>
               </TouchableWithoutFeedback>
-              <Text style={styles.textHeader}>
-                {strings("do_you_have_a_m")}
-              </Text>
+              <Text style={styles.textHeader}>{strings("id_0_83")}</Text>
             </View>
           </View>
         </View>
@@ -605,7 +607,7 @@ class MotoScreen extends React.Component {
               alignItems: "center"
             }}
           >
-            <Text style={styles.textSection}>{strings("cubic_capacity")}</Text>
+            <Text style={styles.textSection}>{strings("id_0_78")}</Text>
           </View>
           <View
             style={{
@@ -627,7 +629,7 @@ class MotoScreen extends React.Component {
               alignItems: "center"
             }}
           >
-            <Text style={styles.textSection}>{strings("year_of_vehicle")}</Text>
+            <Text style={styles.textSection}>{strings("id_0_66")}</Text>
             {this.renderMotoYear()}
           </View>
         </View>
@@ -653,9 +655,7 @@ class MotoScreen extends React.Component {
             }}
           >
             <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>
-                {strings("we_need_this_in")}
-              </Text>
+              <Text style={styles.textFooter}>{strings("id_0_64")}</Text>
             </View>
 
             <View style={[styles.buttonContainer]}>
@@ -674,14 +674,14 @@ class MotoScreen extends React.Component {
                     this.state.moto_engine_answer != ""
                   ) {
                     // this.props.navigation.navigate("SurveyMotoCc");
-                  } else this.props.navigation.navigate("SurveyUserData");
+                  } else this.props.navigation.navigate("GDPRScreen");
                 }}
                 disabled={this.props.status === "In register" ? true : false}
               >
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />
@@ -762,7 +762,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

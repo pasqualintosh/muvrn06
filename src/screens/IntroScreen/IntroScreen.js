@@ -13,7 +13,7 @@ import { styles, areUReadyCurve } from "./Style";
 import Aux from "./../../helpers/Aux";
 
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
+
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
 import { strings } from "../../config/i18n";
@@ -52,19 +52,7 @@ class IntroScreen extends React.Component {
   };
 
   componentWillMount() {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // let gaEvent = new GAHits.Event(
-    //   "pirate funnel", // category
-    //   "awareness", // action
-    //   "awareness", // label
-    //   "awareness" // value
-    // );
-    // ga.send(gaEvent);
+
   }
 
   _renderItem = props => <CustomSlide {...props} {...this.props} />;

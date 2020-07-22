@@ -198,43 +198,43 @@ class TimePicker extends React.Component {
           <View style={styles.weekDayContainer}>
             <WeekDayNotificationPicker
               index={1}
-              dayName={strings("mon").toLocaleUpperCase()}
+              dayName={strings("id_0_35").toLocaleUpperCase()}
               selected={this.state.choosedWeekDays[1]}
               onPress={this.setDayWeek}
             />
             <WeekDayNotificationPicker
               index={2}
-              dayName={strings("tue").toLocaleUpperCase()}
+              dayName={strings("id_0_36").toLocaleUpperCase()}
               selected={this.state.choosedWeekDays[2]}
               onPress={this.setDayWeek}
             />
             <WeekDayNotificationPicker
               index={3}
-              dayName={strings("wed").toLocaleUpperCase()}
+              dayName={strings("id_0_37").toLocaleUpperCase()}
               selected={this.state.choosedWeekDays[3]}
               onPress={this.setDayWeek}
             />
             <WeekDayNotificationPicker
               index={4}
-              dayName={strings("thu").toLocaleUpperCase()}
+              dayName={strings("id_0_38").toLocaleUpperCase()}
               selected={this.state.choosedWeekDays[4]}
               onPress={this.setDayWeek}
             />
             <WeekDayNotificationPicker
               index={5}
-              dayName={strings("fri").toLocaleUpperCase()}
+              dayName={strings("id_0_39").toLocaleUpperCase()}
               selected={this.state.choosedWeekDays[5]}
               onPress={this.setDayWeek}
             />
             <WeekDayNotificationPicker
               index={6}
-              dayName={strings("sat").toLocaleUpperCase()}
+              dayName={strings("id_0_40").toLocaleUpperCase()}
               selected={this.state.choosedWeekDays[6]}
               onPress={this.setDayWeek}
             />
             <WeekDayNotificationPicker
               index={0}
-              dayName={strings("sun").toLocaleUpperCase()}
+              dayName={strings("id_0_41").toLocaleUpperCase()}
               selected={this.state.choosedWeekDays[0]}
               onPress={this.setDayWeek}
             />
@@ -333,7 +333,7 @@ class TimePicker extends React.Component {
         >
           <View style={styles.buttonContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -355,7 +355,7 @@ class TimePicker extends React.Component {
         >
           <View style={styles.buttonContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>

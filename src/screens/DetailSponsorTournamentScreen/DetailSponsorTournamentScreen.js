@@ -21,17 +21,15 @@ import Svg, { Circle, Line } from "react-native-svg";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import SponsorInfoTournament from "../../components/SponsorInfoTournament/SponsorInfoTournament";
 import DetailSponsorShare from "./../../components/DetailSponsorShare/DetailSponsorShare";
-
 import Icon from "react-native-vector-icons/Ionicons";
 import Modal from "react-native-modal";
-
 import { UpdateProfile } from "./../../domains/login/ActionCreators";
-
 import { strings } from "../../config/i18n";
 import { translateEvent } from "./../../helpers/translateEvent";
 import { infoEvents } from "./../../helpers/dataEvents";
+import WebService from "../../config/WebService";
 import { Client } from "bugsnag-react-native";
-const bugsnag = new Client("58b3b39beb78eba9efdc2d08aeb15d84");
+const bugsnag = new Client(WebService.BugsnagAppId);
 
 class DetailSponsorTournamentScreen extends React.Component {
   constructor(props) {
@@ -103,7 +101,9 @@ class DetailSponsorTournamentScreen extends React.Component {
           }}
         />
         <Text style={styles.textDescriptionSession}>
-          {strings("air_is_art_is_a")}
+          {
+            "Air is Art is a project born from the collaboration of Airlite with international street artists and aims to create murals with the double objective of making cities more beautiful and less polluted thanks to the painting that purifies air."
+          }
         </Text>
         <View
           style={{
@@ -111,7 +111,7 @@ class DetailSponsorTournamentScreen extends React.Component {
           }}
         />
         <Text style={styles.textDescriptionReward}>
-          {strings("a_mural_to_cele").toUpperCase()}
+          {"A MURAL TO CELEBRATE THE VICTORY OF THE CITY TOURNAMENT"}
         </Text>
         <View
           style={{
@@ -119,7 +119,9 @@ class DetailSponsorTournamentScreen extends React.Component {
           }}
         />
         <Text style={styles.textDescriptionSession}>
-          {strings("airlite_is_glob")}
+          {
+            "Airlite is global sponsor of MUV for the second Sustainable City Tournament and has decided to award the city that will be the most sustainable with a mural art piece. In addition to providing the necessary paint, at the end of the Tournament will launch an international open call to identify the artist who will make it."
+          }
         </Text>
         <View
           style={{
@@ -286,7 +288,10 @@ class DetailSponsorTournamentScreen extends React.Component {
               console.log(numberCounter);
             } catch (error) {
               // Error saving data
-              bugsnag.notify(error);
+
+              bugsnag.notify(error, function(report) {
+                report.metadata = { error: error };
+              });
             }
           }
         }
@@ -922,21 +927,18 @@ class DetailSponsorTournamentScreen extends React.Component {
             />
             {this.renderTextDescription()}
             <SponsorInfoTournament />
-            <DetailSponsorShare
+            {/* <DetailSponsorShare
               sponsor={{
                 rewardsType: 26,
                 sponsor: true,
-
                 lat: 0,
                 lng: 0,
-
-                email: "info@teatromassimo.it",
-
+                email: "info@wepush.org",
                 twitter: "AirliteGlobal",
                 instagram: "airlite",
-                facebook: "518586948254355"
+                facebook: "609617899449899"
               }}
-            />
+            /> */}
             <ImageBackground
               source={require("../../assets/images/wave/sponsor_info_wave_bg_bottom.png")}
               style={{

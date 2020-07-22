@@ -19,15 +19,14 @@ import Geocoder from "./../../components/Geocoder/Geocoder";
 import { prefixesList } from "./../../assets/ListPrefixes";
 import LinearGradient from "react-native-linear-gradient";
 
-
 import { strings } from "../../config/i18n";
 
 class FrequentTripMapScreen extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      user_lat: 0,
-      user_lon: 0,
+      user_lat: 38.120560,
+      user_lon: 13.358200,
       points: [],
       select_type: [-1, -1],
       type: ["Home", "Work", "Gym", "School", "Other"],
@@ -46,7 +45,8 @@ class FrequentTripMapScreen extends React.Component {
         "Your frequent trip has been set correctly. Shall we move on?"
       ],
       start_point: null,
-      end_point: null
+      end_point: null,
+      render_ok_btn: true
     };
     this.mapRef = null;
   }
@@ -62,6 +62,16 @@ class FrequentTripMapScreen extends React.Component {
       </Text>
     )
   };
+
+  static navigationOptions = ({ navigation, screenProps }) => ({
+    headerTitle: navigation.state.params
+      ? navigation.state.params.screen_name.charAt(0).toUpperCase() +
+        navigation.state.params.screen_name.slice(1)
+      : "Frequent trip"
+    // headerRight: navigation.state.params
+    //   ? navigation.state.params.screen_name
+    //   : "Frequen trip"
+  });
 
   addPoint = (position, mapRef) => {
     const key = +new Date();
@@ -172,11 +182,11 @@ class FrequentTripMapScreen extends React.Component {
               "MUV wants to access your position. To save your battery we reccomend you to select 'Allow only while...'",
               [
                 {
-                  text: strings("yes"),
+                  text: strings("id_14_03"),
                   onPress: () => BackgroundGeolocation.showAppSettings()
                 },
                 {
-                  text: strings("no"),
+                  text: strings("id_14_04"),
                   onPress: () => console.log("No Pressed"),
                   style: "cancel"
                 }
@@ -525,11 +535,11 @@ class FrequentTripMapScreen extends React.Component {
 
       const NewType = { ...previousState };
       if (num === 0 && NewType.select_type[1] !== -1) {
-        this.textDescriptionHeader("Complete, press " + strings("ok"));
+        this.textDescriptionHeader("Complete, press " + strings("id_0_12"));
       } else if (num === 0) {
         this.textDescriptionHeader("Select end of routine");
       } else if (num === 1 && NewType.select_type[0] !== -1) {
-        this.textDescriptionHeader("Complete, press " + strings("ok"));
+        this.textDescriptionHeader("Complete, press " + strings("id_0_12"));
       } else if (num === 1 && NewType.select_type[0] === -1) {
         this.textDescriptionHeader("Select start of routine");
       }
@@ -612,7 +622,7 @@ class FrequentTripMapScreen extends React.Component {
   }
 
   renderOkBtn() {
-    if (this.state.formatted_address != "") {
+    if (this.state.formatted_address != "" && this.state.render_ok_btn) {
       return (
         <TouchableWithoutFeedback
           onPress={() => {
@@ -664,7 +674,7 @@ class FrequentTripMapScreen extends React.Component {
                   fontSize: 15
                 }}
               >
-                {strings("ok")}
+                {strings("id_0_12")}
               </Text>
             </View>
           </LinearGradient>
@@ -684,7 +694,16 @@ class FrequentTripMapScreen extends React.Component {
         }}
       >
         <GooglePlacesAutocomplete
-          placeholder={strings("text_your_addre")}
+          textInputProps={{
+            onFocus: () => {
+              this.setState({ render_ok_btn: false });
+            }
+          }}
+          placeholder={
+            strings("id_0_34")
+              .charAt(0)
+              .toUpperCase() + strings("id_0_34").slice(1)
+          }
           minLength={2} // minimum length of text to search
           autoFocus={false}
           returnKeyType={"search"} // Can be left out for default return key https://facebook.github.io/react-native/docs/textinput.html#returnkeytype
@@ -696,13 +715,16 @@ class FrequentTripMapScreen extends React.Component {
             // 'details' is provided when fetchDetails = true
             // console.log(data, details);
             // console.log(data.description);
-            this.setState({ formatted_address: data.description }, () => {
-              this.handleStreet(data.description);
-              this.sendGeocoding(data.description);
+            this.setState(
+              { formatted_address: data.description, render_ok_btn: true },
+              () => {
+                this.handleStreet(data.description);
+                this.sendGeocoding(data.description);
 
-              this.saveJustPointsInRedux();
-              // this.props.navigation.goBack(null);
-            });
+                this.saveJustPointsInRedux();
+                // this.props.navigation.goBack(null);
+              }
+            );
           }}
           getDefaultValue={() => ""}
           query={{
@@ -720,8 +742,8 @@ class FrequentTripMapScreen extends React.Component {
                 Platform.OS == "ios"
                   ? Dimensions.get("window").height === 812 ||
                     Dimensions.get("window").width === 812 ||
-                    (Dimensions.get("window").height === 896 ||
-                      Dimensions.get("window").width === 896)
+                    Dimensions.get("window").height === 896 ||
+                    Dimensions.get("window").width === 896
                     ? 75
                     : 60
                   : 0
@@ -790,9 +812,7 @@ class FrequentTripMapScreen extends React.Component {
               flexDirection: "row"
             }}
           >
-            <Text style={styles.textCurrentLocation}>
-              {strings("your_current_lo")}
-            </Text>
+            <Text style={styles.textCurrentLocation}>{strings("id_0_47")}</Text>
             <Image
               style={{ width: 35, height: 35, marginRight: 5 }}
               source={require("./../../assets/images/map_point_a_circle.png")}

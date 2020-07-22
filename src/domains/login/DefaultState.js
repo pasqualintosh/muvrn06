@@ -8,6 +8,7 @@ const state = {
   email: "",
   access_token: 0,
   refresh_token: 0,
+  refreshTokenPromise: null, // promise per sapere lo stato del rinnovo del token
   date: 0,
   status: "",
   coins: 0,
@@ -21,9 +22,12 @@ const state = {
   mostFrequentRoute: [],
   infoProfile: {
     user_id: 0,
-    first_name: '',
+    id: 0, // per il nuovo muv
+    username: "", // per il nuovo muv
+    first_name: "",
     customisation_gdpr: false,
-    sponsorships_gdpr: false
+    sponsorships_gdpr: false,
+    avatar: 1
   },
   infoProfileNotSave: {},
   NumDaysRoute: { day: -1, numDay: 0 },
@@ -43,7 +47,7 @@ const state = {
     5: { open: "", completed: "" },
     6: { open: "", completed: "" },
     7: { open: "", completed: "" },
-    8: { open: "", completed: "" },
+    8: { open: "", completed: "" }
   },
   language: "",
   typeform_user: true,
@@ -51,11 +55,16 @@ const state = {
   bestScore: 0, // punteggio effettuato nel gioco del basket
   // quali tutorial sono stati completati
   tutorial: {
-    tutorialStart: false,
-    tutorialLive: false
+    tutorialStart: true,
+    tutorialLive: false,
+    tutorialMetro: false,
+    tutorialCarPooling: false
   },
   sessionToken: null, // { token: "abc123blabla", expired_date: timestamp },
-  typeform_soddfrust_2: 0 // 0 non da fare || 1 da fare || 2 fatto
+  typeform_soddfrust_2: 0, // 0 non da fare || 1 da fare || 2 fatto
+  typeform_soddfrust_3: 0, // 0 non da fare || 1 da fare || 2 fatto
+  multipliers: null, // oggetto con la descrizione dei moltiplicatori
+  // listAvatar: [], // lista con le info dei vari avatar, link con le immagini ecc 
 };
 
 export default state;

@@ -17,7 +17,6 @@ import { connect } from "react-redux";
 import { stop, changeActivity } from "./../../domains/tracking/ActionCreators";
 import { changeStatusButton } from "./../../domains/login/ActionCreators";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
-import DeviceInfo from "react-native-device-info";
 import Settings from "./../../config/Settings";
 // import { BoxShadow } from "react-native-shadow";
 import InteractionManager from "../../helpers/loadingComponent";
@@ -30,6 +29,10 @@ import {
 } from "react-native-google-analytics-bridge";
 
 let Tracker = new GoogleAnalyticsTracker(Settings.analyticsCode);
+import analytics from "@react-native-firebase/analytics";
+async function trackEvent(event, data) {
+  await analytics().logEvent(event, { data });
+}
 
 // componente per avere le icone circolari per selezionare stop o pausa
 
@@ -146,20 +149,8 @@ class ComponentAnimatedStop extends React.Component {
 
   sendEventStop = () => {
     Tracker.trackEvent("User Interactions", "Stop");
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // let event = this.state.events["stop-clicked"];
-    // let gaEvent = new GAHits.Event(
-    //   "user interaction",
-    //   "stop clicked",
-    //   "play/stop",
-    //   event
-    // );
-    // ga.send(gaEvent);
+    trackEvent("stop", "User Interactions");
+
   };
 
   // metodo usato nelle icone che spuntano
@@ -180,11 +171,11 @@ class ComponentAnimatedStop extends React.Component {
 
   stopOrChange = (type, coef, threshold) => {
     if (type) {
-      this.props.dispatch(changeActivity(type, coef, threshold));
+      changeActivity(type, coef, threshold);
     } else {
       this.props.dispatch(stop());
     }
-    // this.sendEventStop();
+    this.sendEventStop();
   };
 
   renderWavyArea() {

@@ -9,15 +9,21 @@ import {
   PixelRatio,
   Platform,
   TouchableWithoutFeedback,
-  TouchableHighlight
+  TouchableHighlight,
+  Image
 } from "react-native";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
 import Aux from "../../helpers/Aux";
-
+import RecapActivityLoading from "../../components/RecapActivityLoading/RecapActivityLoading";
 
 import TrackGuide from "../../components/TrackGuide/TrackGuide";
 import ComponentAnimatedStopGuide from "../../components/ComponentAnimatedStopGuide/ComponentAnimatedStopGuide";
+import { strings } from "../../config/i18n";
+import WavyArea from "../../components/WavyArea/WavyArea";
+import UserItem from "../../components/UserItem/UserItem";
+import ChallengeTrainingContainer from "./../../components/ChallengeTrainingContainer/ChallengeTrainingContainer";
+import InfoTutorialUserHome from "./../../components/InfoTutorialUserHome/InfoTutorialUserHome";
 
 class ButtonPlayOrStopGuide extends React.Component {
   // play: per sapere se sono in modalita di play con il tipo di mezzo o di pausa con stop e riprendi
@@ -68,7 +74,7 @@ class ButtonPlayOrStopGuide extends React.Component {
     // iphone x, x max
     if (
       Platform.OS === "ios" &&
-      (height === 812 || width === 812 || (height === 896 || width === 896))
+      (height === 812 || width === 812 || height === 896 || width === 896)
     ) {
       extra = 35;
       style = {
@@ -89,12 +95,18 @@ class ButtonPlayOrStopGuide extends React.Component {
       coef: 0,
       animatedStop: false,
       stop: false,
-      end: false
+      end: false,
+      tab: false,
+      standing: false,
+      challenges: false,
+      challengesActive: false,
+      tournament: false,
+      recapUser: false
     };
   }
 
   componentDidMount() {
-    this.props.updateModal()
+    this.props.updateModal();
   }
 
   changeGuide = state => {
@@ -140,10 +152,93 @@ class ButtonPlayOrStopGuide extends React.Component {
     });
   };
 
+  nextTutorialTab = () => {
+    this.setState({
+      tab: true
+    });
+  };
+
+  nextTutorialTab = () => {
+    this.setState({
+      tab: true
+    });
+  };
+
+  nextTutorialStanding = () => {
+    this.setState({
+      standing: true
+    });
+  };
+
+  nextTutorialChallenges = () => {
+    this.setState({
+      challenges: true
+    });
+  };
+
+  nextTutorialChallengesActive = () => {
+    this.setState({
+      challengesActive: true
+    });
+  };
+
+  nextTutorialTournament = () => {
+    this.setState({
+      tournament: true
+    });
+  };
+
+  nextTutorialRecapUser = () => {
+    this.setState({
+      recapUser: true
+    });
+  };
+
+  getCountdownTxt = (days_txt, hours_txt, min_txt, checkDay) => {
+    return (
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center"
+        }}
+      >
+        <OwnIcon name="timer_icn" size={20} color={"#FC6754"} />
+        <View style={{ width: 5, height: 5 }} />
+        <Text style={styles.countdownTxt}>
+          <Text style={styles.countdownBoldTxt}>{"3 " + days_txt}</Text>
+          {" " + strings("id_4_08")}
+        </Text>
+      </View>
+    );
+  };
+
+  renderCountdown() {
+    let days_txt = strings("id_4_02");
+
+    return (
+      <View
+        style={[
+          styles.selectableHeaderBlock,
+          {
+            backgroundColor: "#fff"
+          }
+        ]}
+      >
+        <View style={{ height: 5 }} />
+        <View style={styles.HeaderTimer}>
+          {this.getCountdownTxt(days_txt, 0, 0, 0)}
+        </View>
+        <View style={{ height: 5 }} />
+      </View>
+    );
+  }
+
   render() {
     return (
       <Aux>
-        {this.state.end ? <Aux>
+        {this.state.recapUser ? (
+          <Aux>
             <View
               style={{
                 position: "absolute",
@@ -153,149 +248,1301 @@ class ButtonPlayOrStopGuide extends React.Component {
                 alignItems: "center",
 
                 top: 20 + this.state.extra + 55
-                
               }}
             >
               <View
                 style={{
-                  width: Dimensions.get("window").width * 0.8,
-                  justifyContent: "center",
-                  flexDirection: "column",
-                  alignContent: "center",
-                  alignItems: "center",
-
-
-                }}
-              >
-              
-                <Text
-                  style={{
-                    fontFamily:
-                      Platform.OS === "ios"
-                        ? "MoonFlowerBold"
-                        : "MoonFlower-Bold",
-                    textAlign: "center",
-                    color: "white",
-                    // fontWeight: "bold",
-
-                    marginBottom: 5,
-                    fontSize: 32
-                  }}
-                >
-                
-                {"you nailed it!\nnow it’s time for you\nto train".toUpperCase()}
-                </Text>
-                <OwnIcon
-                        name="training_icn_active"
-                        size={30}
-                        color={"#ffffff"}
-                      />
-                      <Text
-                  style={{
-                    fontFamily:
-                      Platform.OS === "ios"
-                        ? "MoonFlowerBold"
-                        : "MoonFlower-Bold",
-                    textAlign: "center",
-                    color: "white",
-                    // fontWeight: "bold",
-
-                    marginBottom: 5,
-                    fontSize: 32
-                  }}
-                >
-                
-                {"crush the weekly challenges".toUpperCase()}
-                </Text>
-                <OwnIcon
-                        name="weekly_icn_active"
-                        size={30}
-                        color={"#ffffff"}
-                      />
-                      <Text
-                  style={{
-                    fontFamily:
-                      Platform.OS === "ios"
-                        ? "MoonFlowerBold"
-                        : "MoonFlower-Bold",
-                    textAlign: "center",
-                    color: "white",
-                    // fontWeight: "bold",
-
-                    marginBottom: 5,
-                    fontSize: 32
-                  }}
-                >
-                
-                {"and win the Tournaments".toUpperCase()}
-                </Text>
-                <OwnIcon
-                        name="sct_icn_active"
-                        size={30}
-                        color={"#ffffff"}
-                      />
-                
-               
-                   
-              
-              
-               
-                
-               
-              
-                
-                </View>
-            </View>
-            <View
-                style={{
-                  position: "absolute",
-
-                  bottom: 18 + this.state.extra,
-                  left: Dimensions.get("window").width / 2 - 30
+                  height:
+                    Dimensions.get("window").height -
+                    (20 + this.state.extra + 55 + 70),
+                  justifyContent: "flex-start",
+                  flexDirection: "column"
                 }}
               >
                 <View
                   style={{
-                    position: "relative",
-                    height: 70,
-                    width: 60,
-                    top: 10
+                    width: Dimensions.get("window").width * 0.95,
+                    // height: Dimensions.get("window").height - 100,
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    alignContent: "center",
+                    alignItems: "center"
                   }}
                 >
-                  
                   <View
                     style={{
-                      position: "relative"
+                      width: Dimensions.get("window").width * 0.95,
+                      // height: Dimensions.get("window").height - 100,
+                      justifyContent: "center",
+                      flexDirection: "column",
+                      alignContent: "center",
+                      alignItems: "center",
+                      marginTop: 5
                     }}
                   >
-                    <TouchableHighlight
+                    <View
                       style={{
-                        
-                        height: 60,
-                        width: 60,
-
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "center",
+                        flexDirection: "column",
                         alignContent: "center",
                         alignItems: "center",
-                        alignSelf: "center",
-
-                        flexDirection: "column",
-                        justifyContent: "center",
-
-                       
+                        marginTop: 10
                       }}
-                      onPress={this.props.closeTutorial}
                     >
-                      <OwnIcon
-                        name="arrow_tutorial"
-                        
-                        size={40}
-                        color={"#ffffff"}
-                      />
-                    </TouchableHighlight>
+                      <InfoTutorialUserHome />
+
+                      <Text
+                        style={{
+                          fontFamily:
+                            Platform.OS === "ios"
+                              ? "MoonFlowerBold"
+                              : "MoonFlower-Bold",
+                          textAlign: "center",
+                          color: "white",
+                          // fontWeight: "bold",
+
+                          fontSize: 32,
+                          marginTop: 20,
+                          alignSelf: "center"
+                        }}
+                      >
+                        {strings("id_16_14")}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </View>
-              </Aux> : this.state.stop ? (
+            </View>
+
+            <View
+              style={{
+                position: "absolute",
+
+                bottom: 18 + this.state.extra,
+                left: Dimensions.get("window").width / 2 - 30
+              }}
+            >
+              <View
+                style={{
+                  position: "relative",
+                  height: 70,
+                  width: 60,
+                  top: 10
+                }}
+              >
+                <View
+                  style={{
+                    position: "relative"
+                  }}
+                >
+                  <TouchableHighlight
+                    style={{
+                      height: 60,
+                      width: 60,
+
+                      alignContent: "center",
+                      alignItems: "center",
+                      alignSelf: "center",
+
+                      flexDirection: "column",
+                      justifyContent: "center"
+                    }}
+                    // onPress={this.props.closeTutorial}
+                    onPress={this.props.closeTutorial}
+                  >
+                    <OwnIcon
+                      name="arrow_tutorial"
+                      size={40}
+                      color={"#ffffff"}
+                    />
+                  </TouchableHighlight>
+                </View>
+              </View>
+            </View>
+          </Aux>
+        ) : this.state.tournament ? (
+          <Aux>
+            <View
+              style={{
+                position: "absolute",
+                width: Dimensions.get("window").width,
+                alignContent: "center",
+                justifyContent: "center",
+                alignItems: "center",
+
+                top: 20 + this.state.extra + 55
+              }}
+            >
+              <View
+                style={{
+                  height:
+                    Dimensions.get("window").height -
+                    (20 + this.state.extra + 55 + 70),
+                  justifyContent: "flex-start",
+                  flexDirection: "column"
+                }}
+              >
+                <View
+                  style={{
+                    width: Dimensions.get("window").width * 0.95,
+                    // height: Dimensions.get("window").height - 100,
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    alignContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <View
+                    style={{
+                      width: Dimensions.get("window").width * 0.95,
+                      // height: Dimensions.get("window").height - 100,
+                      justifyContent: "center",
+                      flexDirection: "column",
+                      alignContent: "center",
+                      alignItems: "center",
+                      marginTop: 5
+                    }}
+                  >
+                    <View
+                      style={{
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "center",
+                        flexDirection: "column",
+                        alignContent: "center",
+                        alignItems: "center",
+                        marginTop: 10
+                      }}
+                    >
+                    <View  style={{
+                          width: Dimensions.get("window").width * 0.6,
+                          height: Dimensions.get("window").width * 0.6,
+                          backgroundColor: '#7562A7',
+                          borderRadius: Dimensions.get("window").width * 0.3,
+                          alignContent: 'center',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          paddingBottom: 20
+                        }}>
+                      <Image
+                        source={require("./../../assets/images/tournament_empty.png")}
+                        style={{
+                          width: Dimensions.get("window").width * 0.5,
+                          height: Dimensions.get("window").width * 0.5
+                        }}
+                      />
+                      </View>
+                      <Text
+                        style={{
+                          fontFamily:
+                            Platform.OS === "ios"
+                              ? "MoonFlowerBold"
+                              : "MoonFlower-Bold",
+                          textAlign: "center",
+                          color: "white",
+                          // fontWeight: "bold",
+
+                          fontSize: 32,
+                          marginTop: 10,
+                          alignSelf: "center"
+                        }}
+                      >
+                        {strings("id_16_13")}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        width: Dimensions.get("window").width * 0.95,
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignContent: "center"
+                      }}
+                    >
+                      <View
+                        style={{
+                          // height: Dimensions.get("window").height - 100,
+                          justifyContent: "center",
+                          flexDirection: "row",
+                          alignContent: "center",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexDirection: "row",
+                          alignContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "#ffffff",
+                          marginTop: 15,
+                          height: 40,
+                          width: 40,
+                          borderRadius: 20
+                        }}
+                      >
+                        <OwnIcon
+                          name="sct_icn_active"
+                          size={22}
+                          color={"#ED6B6F"}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View
+              style={{
+                position: "absolute",
+
+                bottom: 18 + this.state.extra,
+                left: Dimensions.get("window").width / 2 - 30
+              }}
+            >
+              <View
+                style={{
+                  position: "relative",
+                  height: 70,
+                  width: 60,
+                  top: 10
+                }}
+              >
+                <View
+                  style={{
+                    position: "relative"
+                  }}
+                >
+                  <TouchableHighlight
+                    style={{
+                      height: 60,
+                      width: 60,
+
+                      alignContent: "center",
+                      alignItems: "center",
+                      alignSelf: "center",
+
+                      flexDirection: "column",
+                      justifyContent: "center"
+                    }}
+                    // onPress={this.props.closeTutorial}
+                    onPress={this.nextTutorialRecapUser}
+                  >
+                    <OwnIcon
+                      name="arrow_tutorial"
+                      size={40}
+                      color={"#ffffff"}
+                    />
+                  </TouchableHighlight>
+                </View>
+              </View>
+            </View>
+          </Aux>
+        ) : this.state.challengesActive ? (
+          <Aux>
+            <View
+              style={{
+                position: "absolute",
+                width: Dimensions.get("window").width,
+                alignContent: "center",
+                justifyContent: "center",
+                alignItems: "center",
+
+                top: 20 + this.state.extra + 55
+              }}
+            >
+              <View
+                style={{
+                  height:
+                    Dimensions.get("window").height -
+                    (20 + this.state.extra + 55 + 70),
+                  justifyContent: "flex-start",
+                  flexDirection: "column"
+                }}
+              >
+                <View
+                  style={{
+                    width: Dimensions.get("window").width * 0.95,
+                    // height: Dimensions.get("window").height - 100,
+                    justifyContent: "flex-start",
+                    flexDirection: "column",
+                    alignContent: "center"
+                  }}
+                >
+                  <View
+                    style={{
+                      width: Dimensions.get("window").width * 0.95,
+                      // height: Dimensions.get("window").height - 100,
+                      justifyContent: "flex-start",
+                      flexDirection: "column",
+                      alignContent: "center",
+
+                      marginTop: 5
+                    }}
+                  >
+                    <View
+                      style={{
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "flex-start",
+                        flexDirection: "column",
+                        alignContent: "center",
+                        marginTop: 10
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: Dimensions.get("window").width * 0.95,
+                          // height: Dimensions.get("window").height - 100,
+                          justifyContent: "center",
+                          flexDirection: "column",
+                          alignContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "#ffffff",
+                          marginTop: 10,
+                          borderRadius: 20,
+                          paddingBottom: 5
+                        }}
+                      >
+                        <View
+                          style={[
+                            styles.topTextContainer,
+                            styles.marginContainer
+                          ]}
+                        >
+                          <Text style={styles.topText}>
+                            {strings("id_3_02").toUpperCase()}
+                          </Text>
+                        </View>
+
+                        <View style={styles.marginContainer} />
+                        <ChallengeTrainingContainer
+                          navigation={null}
+                          active={true}
+                          name={"Schiaccia il pedale... "}
+                          challenge={null}
+                        />
+                      </View>
+                      <Text
+                        style={{
+                          fontFamily:
+                            Platform.OS === "ios"
+                              ? "MoonFlowerBold"
+                              : "MoonFlower-Bold",
+                          textAlign: "center",
+                          color: "white",
+                          // fontWeight: "bold",
+
+                          fontSize: 32,
+                          marginTop: 10,
+                          alignSelf: "center"
+                        }}
+                      >
+                        {strings("id_16_12")}
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        width: Dimensions.get("window").width * 0.95,
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignContent: "center"
+                      }}
+                    >
+                      <View
+                        style={{
+                          // height: Dimensions.get("window").height - 100,
+                          justifyContent: "center",
+                          flexDirection: "row",
+                          alignContent: "center",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexDirection: "row",
+                          alignContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "#ffffff",
+                          marginTop: 15,
+                          height: 40,
+                          width: 40,
+                          borderRadius: 20
+                        }}
+                      >
+                        <OwnIcon
+                          name="challenges_icn_active"
+                          size={22}
+                          color={"#ED6B6F"}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View
+              style={{
+                position: "absolute",
+
+                bottom: 18 + this.state.extra,
+                left: Dimensions.get("window").width / 2 - 30
+              }}
+            >
+              <View
+                style={{
+                  position: "relative",
+                  height: 70,
+                  width: 60,
+                  top: 10
+                }}
+              >
+                <View
+                  style={{
+                    position: "relative"
+                  }}
+                >
+                  <TouchableHighlight
+                    style={{
+                      height: 60,
+                      width: 60,
+
+                      alignContent: "center",
+                      alignItems: "center",
+                      alignSelf: "center",
+
+                      flexDirection: "column",
+                      justifyContent: "center"
+                    }}
+                    // onPress={this.props.closeTutorial}
+                    onPress={this.nextTutorialTournament}
+                  >
+                    <OwnIcon
+                      name="arrow_tutorial"
+                      size={40}
+                      color={"#ffffff"}
+                    />
+                  </TouchableHighlight>
+                </View>
+              </View>
+            </View>
+          </Aux>
+        ) : this.state.challenges ? (
+          <Aux>
+            <View
+              style={{
+                position: "absolute",
+                width: Dimensions.get("window").width,
+                alignContent: "center",
+                justifyContent: "center",
+                alignItems: "center",
+
+                top: 20 + this.state.extra + 55
+              }}
+            >
+              <View
+                style={{
+                  height:
+                    Dimensions.get("window").height -
+                    (20 + this.state.extra + 55 + 70),
+                  justifyContent: "flex-start",
+                  flexDirection: "column"
+                }}
+              >
+                <View
+                  style={{
+                    width: Dimensions.get("window").width * 0.95,
+                    // height: Dimensions.get("window").height - 100,
+                    justifyContent: "flex-start",
+                    flexDirection: "column",
+                    alignContent: "center"
+                  }}
+                >
+                  <View
+                    style={{
+                      width: Dimensions.get("window").width * 0.95,
+                      // height: Dimensions.get("window").height - 100,
+                      justifyContent: "flex-start",
+                      flexDirection: "column",
+                      alignContent: "center",
+
+                      marginTop: 5
+                    }}
+                  >
+                    <View
+                      style={{
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "flex-start",
+                        flexDirection: "column",
+                        alignContent: "center",
+                        marginTop: 10
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily:
+                            Platform.OS === "ios"
+                              ? "MoonFlowerBold"
+                              : "MoonFlower-Bold",
+                          textAlign: "center",
+                          color: "white",
+                          // fontWeight: "bold",
+
+                          fontSize: 32,
+
+                          alignSelf: "center"
+                        }}
+                      >
+                        {strings("id_16_11")}
+                      </Text>
+                      <View
+                        style={{
+                          width: Dimensions.get("window").width * 0.95,
+                          // height: Dimensions.get("window").height - 100,
+                          justifyContent: "center",
+                          flexDirection: "column",
+                          alignContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "#ffffff",
+                          marginTop: 10,
+                          borderRadius: 20,
+                          paddingBottom: 5
+                        }}
+                      >
+                        <View
+                          style={[
+                            styles.topTextContainer,
+                            styles.marginContainer
+                          ]}
+                        >
+                          <Text style={styles.topText}>
+                            {strings("id_3_03").toUpperCase()}
+                          </Text>
+                        </View>
+
+                        <View style={styles.marginContainer} />
+                        <ChallengeTrainingContainer
+                          navigation={null}
+                          active={false}
+                          name={"Schiaccia il pedale... "}
+                          challenge={null}
+                        />
+                      </View>
+                      <View
+                        style={{
+                          width: Dimensions.get("window").width * 0.95,
+                          // height: Dimensions.get("window").height - 100,
+                          justifyContent: "center",
+                          flexDirection: "row",
+                          alignContent: "center"
+                        }}
+                      >
+                        <View
+                          style={{
+                            // height: Dimensions.get("window").height - 100,
+                            justifyContent: "center",
+                            flexDirection: "row",
+                            alignContent: "center",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexDirection: "row",
+                            alignContent: "center",
+                            alignItems: "center",
+                            backgroundColor: "#ffffff",
+                            marginTop: 15,
+                            height: 40,
+                            width: 40,
+                            borderRadius: 20
+                          }}
+                        >
+                          <OwnIcon
+                            name="challenges_icn_active"
+                            size={22}
+                            color={"#ED6B6F"}
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View
+              style={{
+                position: "absolute",
+
+                bottom: 18 + this.state.extra,
+                left: Dimensions.get("window").width / 2 - 30
+              }}
+            >
+              <View
+                style={{
+                  position: "relative",
+                  height: 70,
+                  width: 60,
+                  top: 10
+                }}
+              >
+                <View
+                  style={{
+                    position: "relative"
+                  }}
+                >
+                  <TouchableHighlight
+                    style={{
+                      height: 60,
+                      width: 60,
+
+                      alignContent: "center",
+                      alignItems: "center",
+                      alignSelf: "center",
+
+                      flexDirection: "column",
+                      justifyContent: "center"
+                    }}
+                    onPress={this.nextTutorialChallengesActive}
+                  >
+                    <OwnIcon
+                      name="arrow_tutorial"
+                      size={40}
+                      color={"#ffffff"}
+                    />
+                  </TouchableHighlight>
+                </View>
+              </View>
+            </View>
+          </Aux>
+        ) : this.state.standing ? (
+          <Aux>
+            <View
+              style={{
+                position: "absolute",
+                width: Dimensions.get("window").width,
+                alignContent: "center",
+                justifyContent: "center",
+                alignItems: "center",
+
+                top: 20 + this.state.extra + 55 + 40
+              }}
+            >
+              <View
+                style={{
+                  height:
+                    Dimensions.get("window").height -
+                    (20 + this.state.extra + 55 + 70),
+                  justifyContent: "center",
+                  flexDirection: "column"
+                }}
+              >
+                <View
+                  style={{
+                    width: Dimensions.get("window").width * 0.95,
+                    // height: Dimensions.get("window").height - 100,
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    alignContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <View
+                    style={{
+                      width: Dimensions.get("window").width * 0.95,
+                      // height: Dimensions.get("window").height - 100,
+                      justifyContent: "center",
+                      flexDirection: "row",
+                      alignContent: "center",
+                      alignItems: "center",
+                      marginTop: 5
+                    }}
+                  >
+                    <View
+                      style={{
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "center",
+                        flexDirection: "column",
+                        alignContent: "center",
+                        alignItems: "center"
+                      }}
+                    >
+                      {this.renderCountdown()}
+                      <WavyArea
+                        data={[
+                          {
+                            value: -1000
+                          },
+                          {
+                            value: -1200
+                          },
+                          {
+                            value: -1000
+                          },
+                          {
+                            value: -1000
+                          },
+                          {
+                            value: -1200
+                          },
+                          {
+                            value: -1000
+                          }
+                        ]}
+                        color={"#ffffff"}
+                        style={styles.overlayWave2}
+                      />
+                      <WavyArea
+                        data={[
+                          {
+                            value: -1000
+                          },
+                          {
+                            value: -1200
+                          },
+                          {
+                            value: -1000
+                          },
+                          {
+                            value: -1000
+                          },
+                          {
+                            value: -1200
+                          },
+                          {
+                            value: -1000
+                          }
+                        ]}
+                        color={"#3D3D3D"}
+                        style={styles.overlayWave}
+                      />
+
+                      <View style={styles.userContainer}>
+                        <View
+                          style={{
+                            flexDirection: "column",
+                            alignContent: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          {/* {this.selectTypeNew(community, checkSponsor)} */}
+                          <View>
+                            <UserItem
+                              myProfile={() => {}}
+                              navigation={null}
+                              currentUser={true}
+                              user={{
+                                username: "Roberto",
+
+                                avatar: 4,
+                                id: 1,
+
+                                points: 1100,
+                                position: 7,
+                                referred_route__user__city_id: 0
+                              }}
+                              // lo faccio piu piccolo dato che sopra metto il selettore per il periodo
+
+                              level={"Newbie"}
+                              fontColor={"#fff"}
+                              modalType={1}
+                              blockRanking={false}
+                              activeSelectable={"Global"}
+                              community={null}
+                              city={""}
+                              colorStar={"#fab21e"}
+                              style={{
+                                width: Dimensions.get("window").width * 0.9,
+                                height: 85
+                              }}
+                            />
+                          </View>
+                        </View>
+                      </View>
+                      <View style={styles.textContainer}>
+                        <Text
+                          style={{
+                            fontFamily:
+                              Platform.OS === "ios"
+                                ? "MoonFlowerBold"
+                                : "MoonFlower-Bold",
+                            textAlign: "center",
+                            color: "white",
+                            // fontWeight: "bold",
+                            marginTop: 15,
+                            fontSize: 32,
+
+                            alignSelf: "center"
+                          }}
+                        >
+                          {strings("id_16_10")}
+                        </Text>
+                        <View
+                          style={{
+                            // height: Dimensions.get("window").height - 100,
+                            justifyContent: "center",
+                            flexDirection: "row",
+                            alignContent: "center",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexDirection: "row",
+                            alignContent: "center",
+                            alignItems: "center",
+                            backgroundColor: "#ffffff",
+                            marginTop: 15,
+                            height: 40,
+                            width: 40,
+                            borderRadius: 20
+                          }}
+                        >
+                          <OwnIcon
+                            name="weekly_icn_active"
+                            size={22}
+                            color={"#ED6B6F"}
+                          />
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View
+              style={{
+                position: "absolute",
+
+                bottom: 18 + this.state.extra,
+                left: Dimensions.get("window").width / 2 - 30
+              }}
+            >
+              <View
+                style={{
+                  position: "relative",
+                  height: 70,
+                  width: 60,
+                  top: 10
+                }}
+              >
+                <View
+                  style={{
+                    position: "relative"
+                  }}
+                >
+                  <TouchableHighlight
+                    style={{
+                      height: 60,
+                      width: 60,
+
+                      alignContent: "center",
+                      alignItems: "center",
+                      alignSelf: "center",
+
+                      flexDirection: "column",
+                      justifyContent: "center"
+                    }}
+                    onPress={this.nextTutorialChallenges}
+                  >
+                    <OwnIcon
+                      name="arrow_tutorial"
+                      size={40}
+                      color={"#ffffff"}
+                    />
+                  </TouchableHighlight>
+                </View>
+              </View>
+            </View>
+          </Aux>
+        ) : this.state.tab ? (
+          <Aux>
+            <View
+              style={{
+                position: "absolute",
+                width: Dimensions.get("window").width,
+                alignContent: "center",
+                justifyContent: "center",
+                alignItems: "center",
+
+                top: 20 + this.state.extra + 55
+              }}
+            >
+              <View
+                style={{
+                  height:
+                    Dimensions.get("window").height -
+                    (20 + this.state.extra + 55 + 70),
+                  justifyContent: "center",
+                  flexDirection: "column"
+                }}
+              >
+                <View
+                  style={{
+                    width: Dimensions.get("window").width * 0.8,
+                    // height: Dimensions.get("window").height - 100,
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    alignContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily:
+                        Platform.OS === "ios"
+                          ? "MoonFlowerBold"
+                          : "MoonFlower-Bold",
+                      textAlign: "center",
+                      color: "white",
+                      // fontWeight: "bold",
+                      marginTop: 5,
+                      fontSize: 32,
+
+                      alignSelf: "center"
+                    }}
+                  >
+                    {strings("id_16_09")}
+                  </Text>
+                  <View
+                    style={{
+                      width: Dimensions.get("window").width * 0.8,
+                      // height: Dimensions.get("window").height - 100,
+                      justifyContent: "flex-start",
+                      flexDirection: "row",
+                      alignContent: "center",
+                      alignItems: "center",
+                      marginTop: 15
+                    }}
+                  >
+                    <View
+                      style={{
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignContent: "center",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignContent: "center",
+                        alignItems: "center",
+                        backgroundColor: "#ffffff",
+                        height: 40,
+                        width: 40,
+                        borderRadius: 20
+                      }}
+                    >
+                      <OwnIcon
+                        name="weekly_icn_active"
+                        size={22}
+                        color={"#ED6B6F"}
+                      />
+                    </View>
+                    <Text
+                      style={{
+                        fontFamily:
+                          Platform.OS === "ios"
+                            ? "MoonFlowerBold"
+                            : "MoonFlower-Bold",
+                        textAlign: "center",
+                        color: "white",
+                        // fontWeight: "bold",
+                        marginLeft: 10,
+                        fontSize: 32,
+
+                        alignSelf: "center"
+                      }}
+                    >
+                      {strings("id_16_16")}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      width: Dimensions.get("window").width * 0.8,
+                      // height: Dimensions.get("window").height - 100,
+                      justifyContent: "flex-start",
+                      flexDirection: "row",
+                      alignContent: "center",
+                      alignItems: "center",
+                      marginTop: 5
+                    }}
+                  >
+                    <View
+                      style={{
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignContent: "center",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignContent: "center",
+                        alignItems: "center",
+                        backgroundColor: "#ffffff",
+                        height: 40,
+                        width: 40,
+                        borderRadius: 20
+                      }}
+                    >
+                      <OwnIcon
+                        name="challenges_icn_active"
+                        size={22}
+                        color={"#ED6B6F"}
+                      />
+                    </View>
+
+                    <Text
+                      style={{
+                        fontFamily:
+                          Platform.OS === "ios"
+                            ? "MoonFlowerBold"
+                            : "MoonFlower-Bold",
+                        textAlign: "center",
+                        color: "white",
+                        // fontWeight: "bold",
+                        marginLeft: 10,
+                        fontSize: 32,
+
+                        alignSelf: "center"
+                      }}
+                    >
+                      {strings("id_16_15")}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      width: Dimensions.get("window").width * 0.8,
+                      // height: Dimensions.get("window").height - 100,
+                      justifyContent: "flex-start",
+                      flexDirection: "row",
+                      alignContent: "center",
+                      alignItems: "center",
+                      marginTop: 5
+                    }}
+                  >
+                    <View
+                      style={{
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignContent: "center",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignContent: "center",
+                        alignItems: "center",
+                        backgroundColor: "#ffffff",
+                        height: 40,
+                        width: 40,
+                        borderRadius: 20
+                      }}
+                    >
+                      {/* <OwnIcon name="sct_icn" size={25} color={"#ffffff"} /> */}
+                      <OwnIcon
+                        name="sct_icn_active"
+                        size={22}
+                        color={"#ED6B6F"}
+                      />
+                    </View>
+                    <View
+                      style={{
+                        // height: Dimensions.get("window").height - 100,
+                        justifyContent: "center",
+                        flexDirection: "row",
+                        alignContent: "center",
+                        alignItems: "center"
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily:
+                            Platform.OS === "ios"
+                              ? "MoonFlowerBold"
+                              : "MoonFlower-Bold",
+                          textAlign: "center",
+                          color: "white",
+                          // fontWeight: "bold",
+                          marginLeft: 10,
+                          fontSize: 32,
+
+                          alignSelf: "center"
+                        }}
+                      >
+                        {strings("id_16_17")}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily:
+                        Platform.OS === "ios"
+                          ? "MoonFlowerBold"
+                          : "MoonFlower-Bold",
+                      textAlign: "center",
+                      color: "white",
+                      // fontWeight: "bold",
+                      marginTop: 15,
+                      fontSize: 32,
+
+                      alignSelf: "center"
+                    }}
+                  >
+                    {strings("id_16_18")}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View
+              style={{
+                position: "absolute",
+
+                bottom: 18 + this.state.extra,
+                left: Dimensions.get("window").width / 2 - 30
+              }}
+            >
+              <View
+                style={{
+                  position: "relative",
+                  height: 70,
+                  width: 60,
+                  top: 10
+                }}
+              >
+                <View
+                  style={{
+                    position: "relative"
+                  }}
+                >
+                  <TouchableHighlight
+                    style={{
+                      height: 60,
+                      width: 60,
+
+                      alignContent: "center",
+                      alignItems: "center",
+                      alignSelf: "center",
+
+                      flexDirection: "column",
+                      justifyContent: "center"
+                    }}
+                    onPress={this.nextTutorialStanding}
+                  >
+                    <OwnIcon
+                      name="arrow_tutorial"
+                      size={40}
+                      color={"#ffffff"}
+                    />
+                  </TouchableHighlight>
+                </View>
+              </View>
+            </View>
+          </Aux>
+        ) : this.state.end ? (
+          <Aux>
+            <View
+              style={{
+                position: "absolute",
+                width: Dimensions.get("window").width,
+                alignContent: "center",
+                justifyContent: "center",
+                alignItems: "center",
+
+                top: 20 + this.state.extra + 55
+              }}
+            >
+              <View
+                style={{
+                  height:
+                    Dimensions.get("window").height -
+                    (20 + this.state.extra + 55 + 40),
+                  justifyContent: "center",
+                  flexDirection: "column"
+                }}
+              >
+                <View
+                  style={{
+                    width: Dimensions.get("window").width * 0.8,
+                    // height: Dimensions.get("window").height - 100,
+                    justifyContent: "center",
+                    flexDirection: "column",
+                    alignContent: "center",
+                    alignItems: "center"
+                  }}
+                >
+                  <View
+                    style={{
+                      height: 100,
+                      justifyContent: "center",
+                      flexDirection: "column",
+                      alignContent: "center",
+                      alignItems: "center"
+                    }}
+                  >
+                    <RecapActivityLoading
+                      modal_type={{ type: "Walking", coef: 1200, threshold: 5 }}
+                      validated={false}
+                      DataNow={new Date()}
+                      Data={new Date()}
+                    />
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily:
+                        Platform.OS === "ios"
+                          ? "MoonFlowerBold"
+                          : "MoonFlower-Bold",
+                      textAlign: "center",
+                      color: "white",
+                      // fontWeight: "bold",
+                      marginBottom: 5,
+                      fontSize: 32,
+
+                      alignSelf: "center"
+                    }}
+                  >
+                    {strings("id_16_08")}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View
+              style={{
+                position: "absolute",
+
+                bottom: 18 + this.state.extra,
+                left: Dimensions.get("window").width / 2 - 30
+              }}
+            >
+              <View
+                style={{
+                  position: "relative",
+                  height: 70,
+                  width: 60,
+                  top: 10
+                }}
+              >
+                <View
+                  style={{
+                    position: "relative"
+                  }}
+                >
+                  <TouchableHighlight
+                    style={{
+                      height: 60,
+                      width: 60,
+
+                      alignContent: "center",
+                      alignItems: "center",
+                      alignSelf: "center",
+
+                      flexDirection: "column",
+                      justifyContent: "center"
+                    }}
+                    onPress={this.nextTutorialTab}
+                  >
+                    <OwnIcon
+                      name="arrow_tutorial"
+                      size={40}
+                      color={"#ffffff"}
+                    />
+                  </TouchableHighlight>
+                </View>
+              </View>
+            </View>
+          </Aux>
+        ) : this.state.stop ? (
           <Aux>
             <View
               style={{
@@ -305,9 +1552,8 @@ class ButtonPlayOrStopGuide extends React.Component {
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
-                height: Dimensions.get("window").height,
+                height: Dimensions.get("window").height
                 // top: 20 + this.state.extra + 55
-                
               }}
             >
               <View
@@ -324,14 +1570,15 @@ class ButtonPlayOrStopGuide extends React.Component {
                     textAlign: "center",
                     color: "white",
                     // fontWeight: "bold",
-
+                    width: Dimensions.get("window").width * 0.8,
+                    alignSelf: "center",
                     marginBottom: 5,
                     fontSize: 32
                   }}
                 >
-               {this.state.animated3
-                ? "to switch your mobility system\nor stop the trip"
-                : "while recording a trip\nyou can pause it".toUpperCase()}
+                  {this.state.animated3
+                    ? strings("id_16_07")
+                    : strings("id_16_06")}
                 </Text>
               </View>
             </View>
@@ -343,7 +1590,7 @@ class ButtonPlayOrStopGuide extends React.Component {
                 ...this.state.style
               }}
               selectTrasport={() => {
-                this.nextTutorial3()
+                this.nextTutorial3();
                 // this.props.closeTutorial();
               }}
               styleView={{
@@ -375,7 +1622,7 @@ class ButtonPlayOrStopGuide extends React.Component {
                 justifyContent: "center",
                 alignItems: "center",
                 flexDirection: "column",
-                height: Dimensions.get("window").height,
+                height: Dimensions.get("window").height
 
                 // // top: 20 + this.state.extra + 55
                 // bottom:
@@ -398,14 +1645,15 @@ class ButtonPlayOrStopGuide extends React.Component {
                     textAlign: "center",
                     color: "white",
                     // fontWeight: "bold",
-
+                    width: Dimensions.get("window").width * 0.8,
                     marginBottom: 5,
+                    alignSelf: "center",
                     fontSize: 32
                   }}
                 >
                   {this.state.animated
-                    ? "SELECT WITH WHICH MOBILITY SYSTEM YOU’RE GOING TO MOVE"
-                    : "Hello muver,\nwe are glade\nto introduce you\nto your new sport\nfundamentals.\n\nPlease press\n“play”"}
+                    ? strings("id_16_02")
+                    : strings("id_16_01")}
                 </Text>
               </View>
             </View>
@@ -415,7 +1663,7 @@ class ButtonPlayOrStopGuide extends React.Component {
               }}
               selectTrasport={this.handleChangeButton}
               // selectTrasport={() => {
-              
+
               //   this.props.closeTutorial();
 
               // }}
@@ -432,10 +1680,9 @@ class ButtonPlayOrStopGuide extends React.Component {
             />
           </Aux>
         )}
-       
+
         <TouchableWithoutFeedback
           onPress={() => {
-           
             this.props.closeTutorial();
           }}
         >
@@ -460,7 +1707,6 @@ class ButtonPlayOrStopGuide extends React.Component {
               size={32}
               color="white"
               click={() => {
-                
                 this.props.closeTutorial();
               }}
               // style={{ marginTop: -40}}
@@ -471,5 +1717,133 @@ class ButtonPlayOrStopGuide extends React.Component {
     );
   }
 }
+
+const styles = {
+  availableChallengesContainer: {
+    width: Dimensions.get("window").width,
+    alignSelf: "center",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF"
+  },
+  countdownTxt: {
+    fontFamily: "OpenSans-Regular",
+    textAlign: "center",
+    color: "#3D3D3D",
+    fontSize: 12
+  },
+  countdownBoldTxt: {
+    fontFamily: "OpenSans-Bold",
+    textAlign: "center",
+    fontWeight: "bold",
+    color: "#FC6754",
+    fontSize: 12
+  },
+  mainContainer: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+    alignSelf: "center",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF"
+  },
+  topTextContainer: {
+    width: Dimensions.get("window").width * 0.9,
+    alignSelf: "center",
+    justifyContent: "flex-start",
+    alignItems: "flex-start"
+  },
+  marginContainer: { marginTop: 10 },
+  topText: {
+    color: "#000000",
+    fontSize: 16,
+    textAlignVertical: "center",
+    fontFamily: "Montserrat-ExtraBold"
+  },
+  restartBoldTxt: {
+    fontFamily: "OpenSans-Bold",
+    textAlign: "center",
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontSize: 12
+  },
+  restartTxt: {
+    fontFamily: "OpenSans-Regular",
+    textAlign: "center",
+
+    color: "#FFFFFF",
+    fontSize: 12
+  },
+  countdownTxtWhite: {
+    fontFamily: "OpenSans-Regular",
+    textAlign: "center",
+    color: "#FFFFFF",
+    fontSize: 12
+  },
+  countdownBoldTxtWhite: {
+    fontFamily: "OpenSans-Bold",
+    textAlign: "center",
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontSize: 12
+  },
+  selectableHeaderBlock: {
+    width: Dimensions.get("window").width * 0.95,
+    height: 40,
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20
+  },
+  HeaderTimer: {
+    justifyContent: "center",
+    alignItems: "center",
+    alignContent: "center",
+    height: 30,
+    flexDirection: "row",
+    width: Dimensions.get("window").width,
+    // left: Dimensions.get("window").width * 0.05,
+
+    // right: Dimensions.get("window").width * 0.0125,
+
+    // left: Dimensions.get("window").width * 0,
+    // right: Dimensions.get("window").width * 0.025,
+    alignSelf: "flex-start"
+  },
+  overlayWave2: {
+    height: 150,
+    width: Dimensions.get("window").width * 0.95,
+    position: "relative",
+    top: 0
+    //  position: "absolute"
+  },
+  overlayWave: {
+    height: 140,
+    width: Dimensions.get("window").width * 0.95,
+    position: "relative",
+    top: -150
+
+    // top: Dimensions.get("window").height * 0.04 + 14
+  },
+  userContainer: {
+    position: "relative",
+    top: -290,
+    width: Dimensions.get("window").width * 0.95,
+    height: 110,
+    marginVertical: 8,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignContent: "center",
+    alignItems: "center"
+    // position: "absolute"
+  },
+  textContainer: {
+    position: "relative",
+    top: -250,
+    justifyContent: "center",
+    flexDirection: "column",
+    alignContent: "center",
+    alignItems: "center",
+    justifyContent: "center"
+  }
+};
 
 export default ButtonPlayOrStopGuide;

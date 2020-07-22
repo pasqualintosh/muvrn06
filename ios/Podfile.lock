@@ -400,6 +400,8 @@ PODS:
   - react-native-photo-manipulator (1.1.2):
     - React
     - WCPhotoManipulator
+  - react-native-safe-area-context (3.1.1):
+    - React
   - react-native-splash-screen (3.2.0):
     - React
   - react-native-webview (10.3.2):
@@ -469,6 +471,8 @@ PODS:
   - RNActivityRecognition (3.2.0):
     - React
   - RNBackgroundFetch (3.1.0):
+    - React
+  - RNCAsyncStorage (1.11.0):
     - React
   - RNCPushNotificationIOS (1.3.0):
     - React
@@ -569,6 +573,7 @@ DEPENDENCIES:
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-onesignal (from `../node_modules/react-native-onesignal`)
   - react-native-photo-manipulator (from `../node_modules/react-native-photo-manipulator`)
+  - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
@@ -584,6 +589,7 @@ DEPENDENCIES:
   - ReactNativeExceptionHandler (from `../node_modules/react-native-exception-handler`)
   - RNActivityRecognition (from `../node_modules/react-native-activity-recognition`)
   - RNBackgroundFetch (from `../node_modules/react-native-background-fetch`)
+  - "RNCAsyncStorage (from `../node_modules/@react-native-community/async-storage`)"
   - "RNCPushNotificationIOS (from `../node_modules/@react-native-community/push-notification-ios`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
@@ -708,6 +714,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-onesignal"
   react-native-photo-manipulator:
     :path: "../node_modules/react-native-photo-manipulator"
+  react-native-safe-area-context:
+    :path: "../node_modules/react-native-safe-area-context"
   react-native-splash-screen:
     :path: "../node_modules/react-native-splash-screen"
   react-native-webview:
@@ -738,6 +746,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-activity-recognition"
   RNBackgroundFetch:
     :path: "../node_modules/react-native-background-fetch"
+  RNCAsyncStorage:
+    :path: "../node_modules/@react-native-community/async-storage"
   RNCPushNotificationIOS:
     :path: "../node_modules/@react-native-community/push-notification-ios"
   RNDateTimePicker:
@@ -841,6 +851,7 @@ SPEC CHECKSUMS:
   react-native-netinfo: 7f3f3ed9e8f0e7ab3e7cac00cbfdc6997e25ecaf
   react-native-onesignal: 3cb529f99353f5765ca3ce305c9e8c583fd54c81
   react-native-photo-manipulator: 29c055c3ab53f69db7e093a90a1b7c1366800be4
+  react-native-safe-area-context: 4c3249e4840225c61fcd215b136af0a737bccb79
   react-native-splash-screen: 200d11d188e2e78cea3ad319964f6142b6384865
   react-native-webview: e2c0bce9a1a7c7edd4eb30f0c3016fce216245ce
   React-RCTActionSheet: 1702a1a85e550b5c36e2e03cb2bd3adea053de95
@@ -856,6 +867,7 @@ SPEC CHECKSUMS:
   ReactNativeExceptionHandler: 8025d98049c25f186835a3af732dd7c9974d6dce
   RNActivityRecognition: 9ebc9434b719e66fc9ab2ed4a2681394d34b3607
   RNBackgroundFetch: 81c690aa5e8e67dbc3f86ecb7f26629c00c6060d
+  RNCAsyncStorage: db711e29e5e0500d9bd21aa0c2e397efa45302b1
   RNCPushNotificationIOS: 23c5b5fdae79f105c63236de5ca306a70c00c444
   RNDateTimePicker: 8784fb27ddd12a9f0eaf6d994bfe3892f0f319cf
   RNDeviceInfo: e9b45b08fd1d733c3940879ed286c37d90bff7a0

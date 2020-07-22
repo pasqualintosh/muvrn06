@@ -4,7 +4,7 @@ import Aux from "../../helpers/Aux";
 
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
-import { logOut } from "../../domains/login/ActionCreators";
+import { logOutNew } from "../../domains/login/ActionCreators";
 import { connect } from "react-redux";
 import { strings } from "../../config/i18n";
 
@@ -15,7 +15,7 @@ class LogOut extends React.Component {
   }
 
   actionLogOut = () => {
-    this.props.dispatch(logOut());
+    this.props.dispatch(logOutNew());
   };
 
   render() {
@@ -46,13 +46,13 @@ class LogOut extends React.Component {
 
               [
                 {
-                  text: strings("yes"),
+                  text: strings("id_14_03"),
                   onPress: () => {
                     this.actionLogOut();
                   }
                 },
                 {
-                  text: strings("no"),
+                  text: strings("id_14_04"),
                   onPress: () => console.log("Cancel Pressed"),
                   style: "cancel"
                 }
@@ -74,13 +74,13 @@ class LogOut extends React.Component {
 
               [
                 {
-                  text: strings("yes"),
+                  text: strings("id_14_03"),
                   onPress: () => {
                     this.actionLogOut();
                   }
                 },
                 {
-                  text: strings("no"),
+                  text: strings("id_14_04"),
                   onPress: () => console.log("Cancel Pressed"),
                   style: "cancel"
                 }

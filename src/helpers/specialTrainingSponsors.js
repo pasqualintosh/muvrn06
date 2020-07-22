@@ -598,6 +598,147 @@ const sponsors = [
     instagram: "",
     facebook: "",
     description: "Fundão Minicipality"
+  },
+  {
+    st_id: 50,
+    sts: -1,
+    name: "Airlite",
+    training: "Love is in the not polluted air",
+    position: { lat: 45.487333, lon: 9.198034 },
+    website: "http://www.airlite.com/it/",
+    email: "info@wepush.org",
+    lat: 45.487333,
+    lng: 9.198034,
+    twitter: "airlite",
+    instagram: "airlite",
+    facebook: "518586948254355",
+    description: strings("airlite_is_a_10")
+  },
+  {
+    st_id: 51,
+    sts: -1,
+    name: "Smart City Week",
+    training: "Barcelona in action!",
+    position: { lat: 41.4098832, lon: 2.2034803 },
+    website: "https://www.barcelona.cat/smart-city-week/es/",
+    email: "info@wepush.org",
+    lat: 41.4098832,
+    lng: 2.2034803,
+    twitter: "barcelona_cat",
+    instagram: "barcelona_cat",
+    facebook: "127681140618185",
+    description: strings("scw_is_an_initi")
+  },
+  {
+    st_id: 52,
+    sts: -1,
+    name: "PUSH",
+    training: "Human Flows",
+    position: { lat: 38.114747, lon: 13.3630174 },
+    website: "https://www.wepush.org/",
+    email: "info@wepush.org",
+    lat: 38.114747,
+    lng: 13.3630174,
+    twitter: "wepushsocial",
+    instagram: "wepushsocial",
+    facebook: "452659814806757",
+    description:
+      "PUSH è un laboratorio di design. Attraverso la metodologia del service design puntiamo a trasformare le città, migliorando l’esperienza dei propri cittadini."
+  },
+  {
+    st_id: 53,
+    sts: -1,
+    name: "PUSH",
+    training: "Human Flows Final",
+    position: { lat: 38.114747, lon: 13.3630174 },
+    website: "https://www.wepush.org/",
+    email: "info@wepush.org",
+    lat: 38.114747,
+    lng: 13.3630174,
+    twitter: "wepushsocial",
+    instagram: "wepushsocial",
+    facebook: "452659814806757",
+    description:
+      "PUSH è un laboratorio di design. Attraverso la metodologia del service design puntiamo a trasformare le città, migliorando l’esperienza dei propri cittadini."
+  },
+  {
+    st_id: 54,
+    sts: -1,
+    name: "Fondazione The Brass Group",
+    training: "MUV & MUSIC",
+    position: { lat: 38.11485, lon: 13.3693813 },
+    website: "http://www.thebrassgroup.it/",
+    email: "info@thebrassgroup.it",
+    lat: 38.11485,
+    lng: 13.3693813,
+    twitter: "thebrassgroup",
+    instagram: "thebrassgroup",
+    facebook: "564617000272352",
+    description:
+      "Il Brass Group di Palermo è una delle maggiori realtà musicali nazionali. È l'unico ente italiano di produzione di musica jazz e tra i più rari al mondo."
+  },
+  {
+    st_id: 55,
+    sts: -1,
+    name: "Fondazione Sant'Elia",
+    training: "Stay Active: be happy!",
+    position: { lat: 38.1123979, lon: 13.3621551 },
+    website: "http://www.fondazionesantelia.it/",
+    email: "info@fondazionesantelia.it",
+    lat: 38.1123979,
+    lng: 13.3621551,
+    twitter: "FondSantElia",
+    instagram: "FondSantElia",
+    facebook: "399882786752125",
+    description:
+      "La Fondazione Sant'Elia è un ente con lo scopo di tutelare e valorizzare il patrimonio artistico, monumentale e culturale della Provincia, attraverso l’uso degli antichi immobili, Palazzo Sant’Elia e Loggiato San Bartolomeo, per l’attuazione del programma di attività artistiche, culturali ed espositive."
+  },
+  {
+    st_id: 56,
+    sts: -1,
+    name: "Agência de Desenvolvimento Gardunha 21",
+    training: "5000 pts = 1 tree for Gardunha forest",
+    position: { lat: 0, lon: 0 },
+    website: "http://agenciagardunha21.blogspot.com/2009/",
+    email: "info@wepush.org",
+    lat: 0,
+    lng: 0,
+    twitter: "FondSantElia",
+    instagram: "FondSantElia",
+    facebook: "321583747910320",
+    description: strings("agencia_de_des")
+  },
+  {
+    st_id: 57,
+    sts: -1,
+    name: "Freschette BioBistrot",
+    training: "Scopri il centro storico nei weekend festivi",
+    position: { lat: 38.1161044, lon: 13.363185 },
+    website: "http://www.freschette.com/",
+    email: "info@freschette.com",
+    lat: 38.1161044,
+    lng: 13.363185,
+    twitter: "freschettebiobistrot",
+    instagram: "freschettebiobistrot",
+    facebook: "187383031349646",
+    description:
+      "Freschette BioBistrot è un ristorante biologico, vegetariano e vegano con sede in Via Grande Lattarini"
+  },
+  {
+    st_id: 58,
+    sts: -1,
+    name: "Glifo Edizioni",
+    training: "Il movimento è cultura",
+    position: { lat: 38.1286712, lon: 13.3207615 },
+    website: "http://www.glifo.com/it/",
+    email: "info@glifo.com",
+    lat: 38.1286712,
+    lng: 13.3207615,
+    twitter: "",
+    instagram: "",
+    facebook: "413827325389402",
+    description:
+      "Glifo è una casa editrice nata a Palermo nel 2013 che si propone di unire alla tradizionale attività del `fare libri` quella più recente dell'editoria digitale."
   }
 ];
 

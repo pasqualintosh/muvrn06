@@ -12,6 +12,8 @@ import {
 import OwnIcon from "../OwnIcon/OwnIcon";
 import LinearGradient from "react-native-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
+import { strings } from "../../config/i18n";
+import SvgWaveTopNotification  from "../SvgWaveTopNotification/SvgWaveTopNotification";
 
 // componente per visualizzare i punti che ho guadagnato in questo preciso momento
 
@@ -29,9 +31,8 @@ class ViewActivityPoint extends React.Component {
   render() {
     return (
       <View style={styles.viewAll}>
-        <ImageBackground
-          source={image[this.props.color]}
-          style={styles.sfondo}
+        <SvgWaveTopNotification
+          color={this.props.color}
         />
         <View
           // colors={[this.props.color, this.props.color1]}
@@ -39,24 +40,27 @@ class ViewActivityPoint extends React.Component {
         />
         <View style={styles.viewContent}>
           <View>
-            <Text style={styles.textTitle}>{this.props.title}</Text>
+            <Text style={styles.textTitle}>{strings("id_1_20")}</Text>
             {/* <Text style={styles.textDescr}>{this.props.descr}</Text> */}
           </View>
           <View />
 
-          {this.props.isMetro ? <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Image
-                    source={require("../../assets/images/puntini_bianchi.gif")}
-                    style={{
-                      height: 12,
-                      width: 20
-                    }}
-                  />
-          </View> : 
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.points}>{this.props.point.toFixed(0)}</Text>
-            <Text style={styles.pt}>pt</Text>
-          </View>}
+          {this.props.isMetro ? (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Image
+                source={require("../../assets/images/puntini_bianchi.gif")}
+                style={{
+                  height: 12,
+                  width: 20
+                }}
+              />
+            </View>
+          ) : (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={styles.points}>{this.props.point.toFixed(0)}</Text>
+              <Text style={styles.pt}>pt</Text>
+            </View>
+          )}
 
           <TouchableHighlight
             style={styles.icon}

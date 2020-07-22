@@ -8401,6 +8401,34 @@ export const data = {
       nameEng: "Dudelange",
       lat: 49.4800377,
       lon: 6.0527902
+    },
+    {
+      id: 1173,
+      name: "Codlea",
+      nameEng: "Codlea",
+      lat: 45.694934,
+      lon: 25.452543
+    },
+    {
+      id: 1174,
+      name: "Chieri",
+      nameEng: "Chieri",
+      lat: 45.010094,
+      lon: 7.824661
+    },
+    {
+      id: 1175,
+      name: "San Donà di Piave",
+      nameEng: "San Donà di Piave",
+      lat: 45.634242, 
+      lon: 12.563512
+    },
+    {
+      id: 1176,
+      name: "Lanzarote",
+      nameEng: "Lanzarote",
+      lat: 28.040533, 
+      lon: -15.580462
     }
   ]
 };

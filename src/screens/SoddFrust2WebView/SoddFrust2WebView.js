@@ -65,31 +65,31 @@ class SurveyWebView extends React.Component {
     switch (this.convertLanguagesLanguage(this.state.indexLanguage)) {
       case "it":
         this.props.dispatch(
-          postTypeform({ url: "https://push564474.typeform.com/to/HscGtO" })
+          postTypeform({ url: "https://push564474.typeform.com/to/MZ9X5A" })
         );
         this.props.dispatch(setSoddfrustValue());
         this.props.navigation.goBack();
         break;
 
-      case "en":
-        this.props.dispatch(
-          postTypeform({ url: "https://push564474.typeform.com/to/QLSZGR" })
-        );
-        this.props.dispatch(setSoddfrustValue());
-        this.props.navigation.goBack();
-        break;
+      // case "en":
+      //   this.props.dispatch(
+      //     postTypeform({ url: "https://push564474.typeform.com/to/QLSZGR" })
+      //   );
+      //   this.props.dispatch(setSoddfrustValue());
+      //   this.props.navigation.goBack();
+      //   break;
 
-      case "es":
-        this.props.dispatch(
-          postTypeform({ url: "https://push564474.typeform.com/to/il3UpA" })
-        );
-        this.props.dispatch(setSoddfrustValue());
-        this.props.navigation.goBack();
-        break;
+      // case "es":
+      //   this.props.dispatch(
+      //     postTypeform({ url: "https://push564474.typeform.com/to/il3UpA" })
+      //   );
+      //   this.props.dispatch(setSoddfrustValue());
+      //   this.props.navigation.goBack();
+      //   break;
 
       default:
         this.props.dispatch(
-          postTypeform({ url: "https://push564474.typeform.com/to/lmCm8m" })
+          postTypeform({ url: "https://push564474.typeform.com/to/MZ9X5A" })
         );
         this.props.navigation.goBack();
         break;
@@ -211,7 +211,7 @@ class SurveyWebView extends React.Component {
         source={{
           // uri: `http://www.google.com`
           // uri: `https://push564474.typeform.com/to/vBODOz`
-          uri: `https://push564474.typeform.com/to/HscGtO?email=${this.props.loginState.username}`
+          uri: `https://push564474.typeform.com/to/MZ9X5A?user_email=${this.props.loginState.username}`
         }}
         style={{
           display: !this.state.can_render ? "none" : "flex"

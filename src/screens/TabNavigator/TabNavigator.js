@@ -9,16 +9,14 @@ import {
   Image,
   PixelRatio,
   Alert,
-  StyleSheet,
-  NetInfo
+  StyleSheet
 } from "react-native";
+import { NetInfo } from "@react-native-community/netinfo";
 import {
   setJSExceptionHandler,
   setNativeExceptionHandler
 } from "react-native-exception-handler";
 import BackgroundGeolocation from "./../../helpers/geolocation";
-
-
 
 import Icon from "react-native-vector-icons/Ionicons";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
@@ -40,12 +38,21 @@ import { strings } from "../../config/i18n";
 import MapScreenBlur from "../ScreenBlurNotification/MapScreenBlur";
 import ProfileScreenBlur from "../ScreenBlurNotification/ProfileScreenBlur";
 
+import StatisticsRoutesScreenBlur from "../ScreenBlurNotification/StatisticsRoutesScreenBlur";
+
+
+
 import ChartsScreenBlur from "../ScreenBlurNotification/ChartsScreenBlur";
 
 import TrackBlur from "../ScreenBlurNotification/TrackBlur";
 import HomeBlur from "../ScreenBlurNotification/HomeBlur";
+import PoolingRadarScreenBlur from "../ScreenBlurNotification/PoolingRadarScreenBlur";
+import PoolingUsersScreenBlur from "../ScreenBlurNotification/PoolingUsersScreenBlur";
+
 import MapRoutine from "../MapRoutine/MapRoutine";
 import ResetPassword from "../ResetPassword/ResetPassword";
+
+import PlayoffScrollScreen from "../PlayoffScrollScreen/PlayoffScrollScreen";
 
 import SelectNewRoutineBlur from "../ScreenBlurNotification/SelectNewRoutineBlur";
 import PersonalDataScreenBlur from "../ScreenBlurNotification/PersonalDataScreenBlur";
@@ -60,6 +67,7 @@ import FriendDetailScreenBlur from "../ScreenBlurNotification/FriendDetailScreen
 
 import TrophiesRankingBlur from "../ScreenBlurNotification/TrophiesRankingBlur";
 import FriendScreenBlur from "../ScreenBlurNotification/FriendScreenBlur";
+import SearchFriendsScreenBlur from "../ScreenBlurNotification/SearchFriendsScreenBlur";
 
 import PersonalMobilityDataScreenBlur from "../ScreenBlurNotification/PersonalMobilityDataScreenBlur";
 
@@ -84,9 +92,19 @@ import EndScreen from "../SurveyScreens/EndScreen";
 import FrequentTripTypeScreen from "../SurveyScreens/FrequentTripTypeScreen";
 import MoldalSplitChooseScreen from "../SurveyScreens/MoldalSplitChooseScreen";
 import SelectCityScreen from "../SelectCityScreen/SelectCityScreen";
-import Login from "../Login/Login";
+import LoginWithSocial from "../LoginWithSocial/LoginWithSocial";
+import LoginWithEmail from "../LoginWithEmail/LoginWithEmail";
+
+import WelcomeMUVToNewMUV from "../WelcomeMUVToNewMUV/WelcomeMUVToNewMUV";
+import NewNicknameScreen from "../NewNicknameScreen/NewNicknameScreen";
+import NewPasswordScreen from "../NewPasswordScreen/NewPasswordScreen";
+
+import UserDataWithNicknameScreen from "../SurveyScreens/UserDataWithNicknameScreen";
+
 import CheckEmail from "../CheckEmail/CheckEmail";
 import DebugTrackScreen from "../DebugTrackScreen/DebugTrackScreen";
+import DebugStateScreen from "../DebugStateScreen/DebugStateScreen";
+
 import CameraScreen from "../CameraScreen/CameraScreen";
 
 import ChangePasswordScreen from "./../ChangePasswordScreen/ChangePasswordScreen";
@@ -102,11 +120,14 @@ import ChangeFrequentTripFromRecapScreen from "./../ChangeFrequentTripScreens/Ch
 import ChangeFrequentTripTypeFromRecapScreen from "./../ChangeFrequentTripScreens/ChangeFrequentTripTypeFromRecapScreen";
 import ChangeFrequentTripModalSplitFromRecapScreen from "./../ChangeFrequentTripScreens/ChangeFrequentTripModalSplitFromRecapScreen";
 
+import ChangeFrequentTripModalSplitScreenWithScooter from "./../ChangeFrequentTripScreens/ChangeFrequentTripModalSplitScreenWithScooter";
+
+
 import TeamTournamentBlur from "../ScreenBlurNotification/TeamTournamentBlur";
 
 import TripCompleted from "./../../components/TripCompleted/TripCompleted";
 
-import DailyRoutineMapDetail from "./../../components/DailyRoutineMapDetail/DailyRoutineMapDetail";
+import DailyRoutineMapDetailBlur from "./../ScreenBlurNotification/DailyRoutineMapDetailBlur";
 
 import PersonalAnagraficDataScreen from "../PersonalDataScreen/PersonalAnagraficDataScreen";
 import PersonalMobilityDataScreen from "../PersonalDataScreen/PersonalMobilityDataScreen";
@@ -133,9 +154,15 @@ import EditCarFuelScreen from "../MobilityHabitsScreens/EditCarFuelScreen";
 import EditMotoScreen from "../MobilityHabitsScreens/EditMotoScreen";
 import EditMotoSegmentScreen from "../MobilityHabitsScreens/EditMotoSegmentScreen";
 
+
+
+
 import SurveyWebView from "./../SurveyWebView/SurveyWebView";
 import SoddFrust2WebView from "./../SoddFrust2WebView/SoddFrust2WebView";
 import FeedbackWebView from "./../FeedbackWebView/FeedbackWebView";
+
+import GenericWebViewScreen from "./../GenericWebViewScreen/GenericWebViewScreen";
+
 
 import GDPRScreen from "../../screens/GDPRScreen/GDPRScreen";
 import GDPRVideoScreen from "../../screens/GDPRScreen/GDPRVideoScreen";
@@ -143,19 +170,38 @@ import CustomizedContentScreen from "../../screens/GDPRScreen/CustomizedContentS
 import SponsorshipScreen from "../../screens/GDPRScreen/SponsorshipScreen";
 import CommerciallyScreen from "../../screens/GDPRScreen/CommerciallyScreen";
 import MailingListScreen from "../../screens/GDPRScreen/MailingListScreen";
+import GdprDataScreen from "../../screens/GDPRScreen/GdprDataScreen";
+import TeamScreen from "../../screens/ScreenBlurNotification/TeamScreenBlur";
+import WaitingUniversityScreenBlur from "../../screens/ScreenBlurNotification/WaitingUniversityScreenBlur";
+import ChooseTeamScreenBlur from "../../screens/ScreenBlurNotification/ChooseTeamScreenBlur";
+
+import AppPermissionsScreen from "../../screens/AppPermissionsScreen/AppPermissionsScreen";
 
 import DetailTrainingScreenBlur from "./../ScreenBlurNotification/DetailTrainingScreenBlur";
 import DetailSpecialTrainingScreenBlur from "./../ScreenBlurNotification/DetailSpecialTrainingScreenBlur";
 import CityDetailScreenBlur from "./../ScreenBlurNotification/CityDetailScreenBlur";
+import EniDetailScreenBlur from "./../ScreenBlurNotification/EniDetailScreenBlur";
 
 import GameWeekTournamentBlur from "./../ScreenBlurNotification/GameWeekTournamentBlur";
 import CitiesStandingBlur from "./../ScreenBlurNotification/CitiesStandingBlur";
+
+import DetailTournamentScreenBlur from "./../ScreenBlurNotification/DetailTournamentScreenBlur";
+import TournamentsRulesScreenBlur from "./../ScreenBlurNotification/TournamentsRulesScreenBlur";
+
+import GroupScreenBlur from "./../ScreenBlurNotification/GroupScreenBlur";
+import FinalTournamentScreenBlur from "./../ScreenBlurNotification/FinalTournamentScreenBlur";
+import StandingsUniversityScreenBlur from "../ScreenBlurNotification/StandingsUniversityScreenBlur";
+
 import ScheduleGameBlur from "./../ScreenBlurNotification/ScheduleGameBlur";
 import BestPlayersScreenBlur from "./../ScreenBlurNotification/BestPlayersScreenBlur";
+import ChallengesTrainingScreenBlur from "./../ScreenBlurNotification/ChallengesTrainingScreenBlur";
+import DetailChallengesScreenBlur from "./../ScreenBlurNotification/DetailChallengesScreenBlur";
+import LeaderboardChallengeScreenBlur from "./../ScreenBlurNotification/LeaderboardChallengeScreenBlur";
+import ChallengeRulesScreenBlur from "./../ScreenBlurNotification/ChallengeRulesScreenBlur";
+import TournamentsRulesScreen from "./../../screens/TournamentsRulesScreen/TournamentsRulesScreen";
 import GameCompleteWeekTournamentScreenBlur from "./../ScreenBlurNotification/GameCompleteWeekTournamentScreenBlur";
 import GameWeekCityTournamentScreenBlur from "./../ScreenBlurNotification/GameWeekCityTournamentScreenBlur";
 import DetailSponsorTournamentScreenBlur from "./../ScreenBlurNotification/DetailSponsorTournamentScreenBlur";
-
 
 import TrophiesScreenBlur from "./../ScreenBlurNotification/TrophiesScreenBlur";
 
@@ -176,29 +222,54 @@ import SponsorMapScreen from "./../SponsorMapScreen/SponsorMapScreen";
 
 import YoutubeScreen from "./../YoutubeScreen/YoutubeScreen";
 import FAQScreen from "./../FAQScreen/FAQScreen";
+
+import FAQScreenBlur from "./../ScreenBlurNotification/FAQScreenBlur";
+import RulesScreenBlur from "./../ScreenBlurNotification/RulesScreenBlur";
+
 import OneplusScreen from "./../OneplusScreen/OneplusScreen";
 
 import ModalSplitScreenTest from "../SurveyScreens/ModalSplitScreenTest";
-import { startApp, UpdateProfile } from "./../../domains/login/ActionCreators";
+
+import {
+  startApp,
+  UpdateProfile,
+  getProfileNew
+} from "./../../domains/login/ActionCreators";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
-import DeviceInfo from "react-native-device-info";
 import Settings from "./../../config/Settings";
 
 import TrainingsScreenBlur from "./../ScreenBlurNotification/TrainingsScreenBlur";
 import CitiesTournamentBlur from "../ScreenBlurNotification/CitiesTournamentBlur";
 
+import WebService from "../../config/WebService";
 import { Client } from "bugsnag-react-native";
-const bugsnag = new Client("58b3b39beb78eba9efdc2d08aeb15d84");
+const bugsnag = new Client(WebService.BugsnagAppId);
+import { store } from "./../../store";
 
 import { switchLanguage } from "./../../config/i18n";
 import BasketBallScreenBlur from "../ScreenBlurNotification/BasketBallScreenBlur";
 import ChartsWavesScreenBlur from "../ScreenBlurNotification/ChartsWavesScreenBlur";
+import CommunityDetailScreenBlur from "../ScreenBlurNotification/CommunityDetailScreenBlur";
+
+import WhoYouAreScreen from "../WhoYouAreScreen/WhoYouAreScreen";
+import AllGarageScreen from "../SurveyScreens/AllGarageScreen";
+import ChooseRandomOrNotSceeen from "../ChooseRandomOrNotSceeen/ChooseRandomOrNotSceeen";
+import ChooseRandomAvatarScreen from "../ChooseRandomAvatarScreen/ChooseRandomAvatarScreen";
+
 
 import SideMenu from "./../../components/SideMenu/SideMenu";
 
 import BackgroundTutorial from "../../screens/BackgroundTutorial/BackgroundTutorial";
 
+import PrivacyPolicyScreen from "../PrivacyPolicyScreen/PrivacyPolicyScreen";
+import TemsAndConditionsScreen from "../TemsAndConditionsScreen/TemsAndConditionsScreen";
+
+import FeedbackScreen from "../FeedbackScreen/FeedbackScreen";
+
+import { wsConnect } from "../../domains/connection/ActionCreators.js";
+
 import OneSignal from "react-native-onesignal";
+
 
 import {
   getTutorialStartState,
@@ -206,9 +277,17 @@ import {
   getLanguageState,
   getDateState,
   getUserIdState,
-  getUserAgentState,
-  getUserObjectState
+  getUserIdOldState,
+  getEmailState,
+  frequentTripsHomeWork
 } from "../../domains/login/Selectors";
+
+import BackgroundFetch from "react-native-background-fetch";
+
+import {
+
+  updateActivitiesStep
+} from "./../../domains/statistics/ActionCreators";
 
 const reporter = error => {
   // Logic for reporting to devs
@@ -219,22 +298,19 @@ const reporter = error => {
 const errorHandler = (e, isFatal) => {
   if (isFatal) {
     reporter(e);
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
 
-    // let gaEvent = new GAHits.Event("MUV", "fatal error", e.name, e.message);
-    // ga.send(gaEvent);
 
-    if (typeof e !== "Error") {
-      msg = new Error(e);
-      bugsnag.notify(msg);
-    } else {
-      bugsnag.notify(e);
-    }
+
+    // if (typeof e !== "Error") {
+    //   msg = new Error(e);
+    //   bugsnag.notify(msg, function (report) {
+    //     report.metadata = { error: e };
+    //   });
+    // } else {
+    //   bugsnag.notify(e, function (report) {
+    //     report.metadata = { error: e };
+    //   });
+    // }
 
     // Error: ${isFatal ? "Fatal:" : ""} ${e.name} ${e.message}\n
 
@@ -244,7 +320,7 @@ const errorHandler = (e, isFatal) => {
       [
         {
           text: "Close",
-          onPress: () => {}
+          onPress: () => { }
         }
       ]
     );
@@ -262,9 +338,14 @@ setNativeExceptionHandler(errorString => {
   //
   if (typeof errorString !== "Error") {
     msg = new Error(errorString);
-    bugsnag.notify(msg);
+
+    bugsnag.notify(msg, function (report) {
+      report.metadata = { error: errorString };
+    });
   } else {
-    bugsnag.notify(errorString);
+    bugsnag.notify(errorString, function (report) {
+      report.metadata = { error: errorString };
+    });
   }
 });
 
@@ -289,6 +370,12 @@ const StandingsStack = createStackNavigator(
     Mappa: {
       screen: MapScreenBlur
     },
+    PoolingRadarScreen: {
+      screen: PoolingRadarScreenBlur
+    },
+    PoolingUsersScreen: {
+      screen: PoolingUsersScreenBlur
+    },
     BasketBallScreen: {
       screen: BasketBallScreenBlur
     },
@@ -307,11 +394,20 @@ const ProfileStack = createStackNavigator(
     Info: {
       screen: ProfileScreenBlur
     },
+    StatisticsRoutesScreen: {
+      screen: StatisticsRoutesScreenBlur
+    },
     Track: {
       screen: TrackBlur
     },
     Mappa: {
       screen: MapScreenBlur
+    },
+    PoolingRadarScreen: {
+      screen: PoolingRadarScreenBlur
+    },
+    PoolingUsersScreen: {
+      screen: PoolingUsersScreenBlur
     },
     BasketBallScreen: {
       screen: BasketBallScreenBlur
@@ -354,8 +450,20 @@ const HomeStack = createStackNavigator({
   Mappa: {
     screen: MapScreenBlur
   },
+  PoolingRadarScreen: {
+    screen: PoolingRadarScreenBlur
+  },
+  PoolingUsersScreen: {
+    screen: PoolingUsersScreenBlur
+  },
+  EniDetailScreenBlur: {
+    screen: EniDetailScreenBlur
+  },
   Debug: {
     screen: DebugTrackScreen
+  },
+  DebugState: {
+    screen: DebugStateScreen
   },
   BasketBallScreen: {
     screen: BasketBallScreenBlur
@@ -367,13 +475,37 @@ const CityTournamentStack = createStackNavigator(
     Tournament: {
       screen: CitiesTournamentBlur
     },
+    DetailTournamentScreen: {
+      screen: DetailTournamentScreenBlur
+    },
+    TournamentsRulesScreen: {
+      screen: TournamentsRulesScreenBlur
+    },
+    GroupScreen: {
+      screen: GroupScreenBlur
+    },
+    FinalTournamentScreen: {
+      screen: FinalTournamentScreenBlur
+    },
+    StandingsUniversityScreen: {
+      screen: StandingsUniversityScreenBlur
+    },
+
+    TeamScreen: {
+      screen: TeamScreen
+    },
+    WaitingUniversityScreen: {
+      screen: WaitingUniversityScreenBlur
+    },
+    ChooseTeamScreen: {
+      screen: ChooseTeamScreenBlur
+    },
     InviteScreenFromTournament: {
       screen: InviteScreenBlur
     },
     TeamTournamentBlur: {
       screen: TeamTournamentBlur
     },
-
     CitiesStandingBlur: {
       screen: CitiesStandingBlur
     },
@@ -397,6 +529,9 @@ const CityTournamentStack = createStackNavigator(
     },
     DetailSponsorTournamentScreenBlur: {
       screen: DetailSponsorTournamentScreenBlur
+    },
+    CommunityDetailScreenBlur: {
+      screen: CommunityDetailScreenBlur
     }
   },
   {
@@ -451,10 +586,36 @@ const TrainingsStack = createStackNavigator(
   }
 );
 
+const ChallengesTrainingStack = createStackNavigator(
+  {
+    TrainingsScreen: {
+      screen: ChallengesTrainingScreenBlur
+    },
+    DetailChallengeScreen: {
+      screen: DetailChallengesScreenBlur
+    },
+    LeaderboardChallengeScreen: {
+      screen: LeaderboardChallengeScreenBlur
+    },
+    ChallengeRulesScreen: {
+      screen: ChallengeRulesScreenBlur
+    }
+    // DetailSpecialTrainingScreen: {
+    //   screen: DetailSpecialTrainingScreenBlur
+    // }
+  },
+  {
+    initialRouteName: "TrainingsScreen"
+  }
+);
+
 const FriendStack = createStackNavigator(
   {
     FriendScreen: {
       screen: FriendScreenBlur
+    },
+    SearchFriendsScreen: {
+      screen: SearchFriendsScreenBlur
     },
     InviteScreen: {
       screen: InviteScreenBlur
@@ -483,26 +644,50 @@ const FrequentTripsStack = createStackNavigator({
   PersonalFrequentTripDataScreenBlur: {
     screen: PersonalFrequentTripDataScreenBlur
   },
-  initialRouteName: "PersonalFrequentTripDataScreenBlur"
-});
-
-const PersonalMobilityDataStack = createStackNavigator({
+  FrequentRoutineMapDetail: {
+    screen: DailyRoutineMapDetailBlur
+  },
   PersonalMobilityDataScreen: {
     screen: PersonalMobilityDataScreenBlur
   },
   initialRouteName: "PersonalFrequentTripDataScreenBlur"
 });
 
+/* const PersonalMobilityDataStack = createStackNavigator({
+  FrequentRoutineMapDetail: {
+    screen: DailyRoutineMapDetailBlur
+  },
+  PersonalMobilityDataScreen: {
+    screen: PersonalMobilityDataScreenBlur
+  },
+
+  initialRouteName: "FrequentRoutineMapDetail"
+}); */
+
 // stack attivita utente
 
 const ChartsStack = createStackNavigator({
-  ChartsScreen: {
-    screen: ChartsScreenBlur
-  },
+  // ChartsScreen: {
+  //   screen: ChartsScreenBlur
+  // },
   ChartsWavesScreenBlur: {
     screen: ChartsWavesScreenBlur
   },
-  initialRouteName: "ChartsScreen"
+  initialRouteName: "ChartsWavesScreenBlur"
+});
+
+const FAQStack = createStackNavigator({
+  FAQScreenBlur: {
+    screen: FAQScreenBlur
+  },
+  initialRouteName: "FAQScreenBlur"
+});
+
+const RulesStack = createStackNavigator({
+  RulesScreenBlur: {
+    screen: RulesScreenBlur
+  },
+  initialRouteName: "RulesScreenBlur"
 });
 
 // comprende tutti gli altri stack che si possono aprire con il menu drawer, nascosto nello screen centrale nel menu tab
@@ -544,14 +729,26 @@ const OtherStack = createSwitchNavigator(
         header: null
       }
     },
-    PersonalMobilityDataScreen: {
-      screen: PersonalMobilityDataStack,
+    // PersonalMobilityDataScreen: {
+    //   screen: PersonalMobilityDataStack,
+    //   navigationOptions: {
+    //     header: null
+    //   }
+    // },
+    ChartsStack: {
+      screen: ChartsStack,
       navigationOptions: {
         header: null
       }
     },
-    ChartsStack: {
-      screen: ChartsStack,
+    FAQStack: {
+      screen: FAQStack,
+      navigationOptions: {
+        header: null
+      }
+    },
+    RulesStack: {
+      screen: RulesStack,
       navigationOptions: {
         header: null
       }
@@ -566,9 +763,10 @@ const OtherStack = createSwitchNavigator(
 const TabHome = createBottomTabNavigator(
   {
     Home: { screen: HomeStack },
-    Trainings: { screen: TrainingsStack },
-    Pulsante: { screen: OtherStack },
     Challenges: { screen: StandingsStack },
+    Pulsante: { screen: OtherStack },
+    // Trainings: { screen: TrainingsStack },
+    Trainings: { screen: ChallengesTrainingStack },
     CityTournament: { screen: CityTournamentStack }
   },
   {
@@ -587,9 +785,9 @@ const TabHome = createBottomTabNavigator(
           }
         } else if (routeName === "Trainings") {
           if (tintColor === "#ED6B6F") {
-            iconName = "training_icn_active";
+            iconName = "challenges_icn_active";
           } else {
-            iconName = "training_icn-1";
+            iconName = "challenges_icn";
           }
         } else if (routeName === "Challenges") {
           if (tintColor === "#ED6B6F") {
@@ -678,248 +876,291 @@ const Tab = createDrawerNavigator(
 
 // stack iniziale dell'app
 
-const Stack = ({ initialRouteName }) => {
-  const CustomStack = createStackNavigator(
-    {
-      Login: {
-        screen: Login
-      },
-      Welcome: {
-        screen: IntroScreen
-      },
-      Tutorial: {
-        screen: BackgroundTutorial
-      },
-      ResetPassword: {
-        screen: ResetPassword
-      },
-      CheckEmail: {
-        screen: CheckEmail
-      },
-      Survey: {
-        screen: SurveyScreens
-      },
-      SurveyAvatar: {
-        screen: AvatarScreen
-      },
-      SurveyModalSplit: {
-        screen: ModalSplitScreen
-      },
-      ModalSplitScreenTest: {
-        screen: ModalSplitScreenTest
-      },
-      SurveyFrequentTripType: {
-        screen: FrequentTripTypeScreen
-      },
-      SurveyFrequentTrip: {
-        screen: FrequentTripScreen
-      },
-      SurveyFrequentTripMap: {
-        screen: FrequentTripMapScreen
-      },
-      SurveyFrequentTripModalSplit: {
-        screen: FrequentTripModalSplitScreen
-      },
-      SurveyCar: {
-        screen: CarScreen
-      },
-      SurveyCarFuel: {
-        screen: CarFuelScreen
-      },
-      SurveyMoto: {
-        screen: MotoScreen
-      },
-      SurveyMotoSegment: {
-        screen: MotoSegmentScreen
-      },
-      SurveyMotoCc: {
-        screen: MotoCcScreen
-      },
-      SurveyUserData: {
-        screen: UserDataScreen
-      },
-      SurveySelectTeam: {
-        screen: SelectTeamScrollScreen
-      },
-      SurveyModal: {
-        screen: MoldalSplitChooseScreen
-      },
-      GDPRVideoScreen: {
-        screen: GDPRVideoScreen
-      },
-      GDPRScreen: {
-        screen: GDPRScreen
-      },
-      CommerciallyScreen: {
-        screen: CommerciallyScreen
-      },
-      CustomizedContentScreen: {
-        screen: CustomizedContentScreen
-      },
-      MailingListScreen: {
-        screen: MailingListScreen
-      },
-      SponsorshipScreen: {
-        screen: SponsorshipScreen
-      },
-      SurveyEnd: {
-        screen: EndScreen
-      },
-      Home: {
-        screen: Tab,
-        navigationOptions: {
-          header: null
-        }
-      },
-      SelectCity: {
-        screen: SelectCityScreen
-      },
-      SelectMostFrequentRoutePoint: {
-        screen: MapRoutine
-      },
-      Routine: {
-        screen: SelectNewRoutineBlur
-      },
-      Mappa: {
-        screen: MapScreenBlur
-      },
-      ChangeAvatarScreen: {
-        screen: DetailChangeAvatarScreen
-      },
-      FrequentRoutineMapDetail: {
-        screen: DailyRoutineMapDetail
-      },
-      ChangePasswordScreen: {
-        screen: ChangePasswordScreen
-      },
-      PersonalAnagraficDataScreen: {
-        screen: PersonalAnagraficDataScreen
-      },
-      PersonalMobilityDataScreen: {
-        screen: PersonalMobilityDataScreen
-      },
-      PersonalGdprDataScreen: {
-        screen: PersonalGdprDataScreen
-      },
-      PersonalNotificationDataScreen: {
-        screen: PersonalNotificationDataScreen
-      },
-      PrivacyAndSecurity: {
-        screen: PrivacyAndSecurity
-      },
-      PersonalCarScreen: {
-        screen: PersonalCarScreen
-      },
-      PersonalCarFuelScreen: {
-        screen: PersonalCarFuelScreen
-      },
-      PersonalMotoScreen: {
-        screen: PersonalMotoScreen
-      },
-      PersonalMotoCcScreen: {
-        screen: PersonalMotoCcScreen
-      },
-      ChangeCityScreen: {
-        screen: ChangeCity
-      },
-      ChangeFrequentTripTypeScreen: {
-        screen: ChangeFrequentTripTypeScreen
-      },
-      ChangeFrequentTripScreen: {
-        screen: ChangeFrequentTripScreen
-      },
-      ChangeFrequentTripMapScreen: {
-        screen: ChangeFrequentTripMapScreen
-      },
-      ChangeFrequentTripModalSplitScreen: {
-        screen: ChangeFrequentTripModalSplitScreen
-      },
-      ChangeFrequentTripFromRecapScreen: {
-        screen: ChangeFrequentTripFromRecapScreen
-      },
-      ChangeFrequentTripTypeFromRecapScreen: {
-        screen: ChangeFrequentTripTypeFromRecapScreen
-      },
-      ChangeFrequentTripModalSplitFromRecapScreen: {
-        screen: ChangeFrequentTripModalSplitFromRecapScreen
-      },
-      BranchView: {
-        screen: BranchView
-      },
-      BikeScreen: {
-        screen: BikeScreen
-      },
-      TplScreen: {
-        screen: TplScreen
-      },
-      PoolingScreen: {
-        screen: PoolingScreen
-      },
-      SharingScreen: {
-        screen: SharingScreen
-      },
-      EditCarScreen: {
-        screen: EditCarScreen
-      },
-      EditCarFuelScreen: {
-        screen: EditCarFuelScreen
-      },
-      EditMotoScreen: {
-        screen: EditMotoScreen
-      },
-      EditMotoSegmentScreen: {
-        screen: EditMotoSegmentScreen
-      },
-      SurveyWebView: {
-        screen: SurveyWebView
-      },
-      SoddFrust2WebView: {
-        screen: SoddFrust2WebView
-      },
-      FeedbackWebView: {
-        screen: FeedbackWebView
-      },
-      CameraScreen: {
-        screen: CameraScreen
-      },
-      IntroMobilityScreen: {
-        screen: IntroMobilityScreen
-      },
-      EndMobilityScreen: {
-        screen: EndMobilityScreen
-      },
-      GlobalStandingsScreen: {
-        screen: GlobalStandingsScreen
-      },
-      FriendDetailFromGlobal: {
-        screen: FriendDetailScreenBlur
-      },
-      CityDetailScreenBlurFromGlobal: {
-        screen: CityDetailScreenBlur
-      },
-      LanguagesScreen: {
-        screen: LanguagesScreen
-      },
-      SponsorMapScreen: {
-        screen: SponsorMapScreen
-      },
-      YoutubeScreen: {
-        screen: YoutubeScreen
-      },
-      FAQScreen: {
-        screen: FAQScreen
-      },
-      OneplusScreen: {
-        screen: OneplusScreen
+const Stack = createStackNavigator(
+  {
+    Login: {
+      screen: LoginWithEmail
+    },
+    Welcome: {
+      screen: LoginWithSocial
+    },
+    WelcomeMUVToNewMUV: {
+      screen: WelcomeMUVToNewMUV
+    },
+    NewNicknameScreen: {
+      screen: NewNicknameScreen
+    },
+    NewPasswordScreen: {
+      screen: NewPasswordScreen
+    },
+    PrivacyPolicy: {
+      screen: PrivacyPolicyScreen
+    },
+    TemsAndConditions: {
+      screen: TemsAndConditionsScreen
+    },
+    Tutorial: {
+      screen: BackgroundTutorial
+    },
+    ResetPassword: {
+      screen: ResetPassword
+    },
+    CheckEmail: {
+      screen: CheckEmail
+    },
+    Survey: {
+      screen: SurveyScreens
+    },
+    SurveyAvatar: {
+      screen: AvatarScreen
+    },
+    SurveyModalSplit: {
+      screen: ModalSplitScreen
+    },
+    ModalSplitScreenTest: {
+      screen: ModalSplitScreenTest
+    },
+    SurveyFrequentTripType: {
+      screen: FrequentTripTypeScreen
+    },
+    SurveyFrequentTrip: {
+      screen: FrequentTripScreen
+    },
+    SurveyFrequentTripMap: {
+      screen: FrequentTripMapScreen
+    },
+    SurveyFrequentTripModalSplit: {
+      screen: FrequentTripModalSplitScreen
+    },
+    SurveyCar: {
+      screen: CarScreen
+    },
+    SurveyCarFuel: {
+      screen: CarFuelScreen
+    },
+    AllGarageScreen: {
+      screen: AllGarageScreen
+    },
+    SurveyMoto: {
+      screen: MotoScreen
+    },
+    SurveyMotoSegment: {
+      screen: MotoSegmentScreen
+    },
+    SurveyMotoCc: {
+      screen: MotoCcScreen
+    },
+    SurveyUserData: {
+      screen: UserDataWithNicknameScreen
+    },
+    SurveySelectTeam: {
+      screen: SelectTeamScrollScreen
+    },
+    SurveyModal: {
+      screen: MoldalSplitChooseScreen
+    },
+    AppPermissionsScreen: {
+      screen: AppPermissionsScreen
+    },
+    GDPRVideoScreen: {
+      screen: GDPRVideoScreen
+    },
+    GDPRScreen: {
+      screen: GDPRScreen
+    },
+    GdprDataScreen: {
+      screen: GdprDataScreen
+    },
+    CommerciallyScreen: {
+      screen: CommerciallyScreen
+    },
+    CustomizedContentScreen: {
+      screen: CustomizedContentScreen
+    },
+    MailingListScreen: {
+      screen: MailingListScreen
+    },
+    SponsorshipScreen: {
+      screen: SponsorshipScreen
+    },
+    SurveyEnd: {
+      screen: EndScreen
+    },
+    Home: {
+      screen: Tab,
+      navigationOptions: {
+        header: null
       }
     },
-    {
-      // initialRouteName: 'GDPRScreen'
-      initialRouteName: initialRouteName
+    SelectCity: {
+      screen: SelectCityScreen
+    },
+    SelectMostFrequentRoutePoint: {
+      screen: MapRoutine
+    },
+    Routine: {
+      screen: SelectNewRoutineBlur
+    },
+    Mappa: {
+      screen: MapScreenBlur
+    },
+    PoolingRadarScreen: {
+      screen: PoolingRadarScreenBlur
+    },
+    PoolingUsersScreen: {
+      screen: PoolingUsersScreenBlur
+    },
+    ChangeAvatarScreen: {
+      screen: DetailChangeAvatarScreen
+    },
+
+    ChangePasswordScreen: {
+      screen: ChangePasswordScreen
+    },
+    PersonalAnagraficDataScreen: {
+      screen: PersonalAnagraficDataScreen
+    },
+    PersonalMobilityDataScreen: {
+      screen: PersonalMobilityDataScreen
+    },
+    PersonalGdprDataScreen: {
+      screen: PersonalGdprDataScreen
+    },
+    PersonalNotificationDataScreen: {
+      screen: PersonalNotificationDataScreen
+    },
+    PrivacyAndSecurity: {
+      screen: PrivacyAndSecurity
+    },
+    PersonalCarScreen: {
+      screen: PersonalCarScreen
+    },
+    PersonalCarFuelScreen: {
+      screen: PersonalCarFuelScreen
+    },
+    PersonalMotoScreen: {
+      screen: PersonalMotoScreen
+    },
+    PersonalMotoCcScreen: {
+      screen: PersonalMotoCcScreen
+    },
+    ChangeCityScreen: {
+      screen: ChangeCity
+    },
+    ChangeFrequentTripTypeScreen: {
+      screen: ChangeFrequentTripTypeScreen
+    },
+    ChangeFrequentTripScreen: {
+      screen: ChangeFrequentTripScreen
+    },
+    ChangeFrequentTripMapScreen: {
+      screen: ChangeFrequentTripMapScreen
+    },
+    ChooseRandomOrNotSceeen: {
+      screen: ChooseRandomOrNotSceeen
+    },
+    WhoYouAreScreen: {
+      screen: WhoYouAreScreen
+    },
+    ChangeFrequentTripModalSplitScreenWithScooter: {
+      screen: ChangeFrequentTripModalSplitScreenWithScooter
+    },
+    ChooseRandomAvatarScreen: {
+      screen: ChooseRandomAvatarScreen
+    },
+    ChangeFrequentTripModalSplitScreen: {
+      screen: ChangeFrequentTripModalSplitScreen
+    },
+    ChangeFrequentTripFromRecapScreen: {
+      screen: ChangeFrequentTripFromRecapScreen
+    },
+    ChangeFrequentTripTypeFromRecapScreen: {
+      screen: ChangeFrequentTripTypeFromRecapScreen
+    },
+    ChangeFrequentTripModalSplitFromRecapScreen: {
+      screen: ChangeFrequentTripModalSplitFromRecapScreen
+    },
+    BranchView: {
+      screen: BranchView
+    },
+    BikeScreen: {
+      screen: BikeScreen
+    },
+    TplScreen: {
+      screen: TplScreen
+    },
+    PoolingScreen: {
+      screen: PoolingScreen
+    },
+    SharingScreen: {
+      screen: SharingScreen
+    },
+    EditCarScreen: {
+      screen: EditCarScreen
+    },
+    EditCarFuelScreen: {
+      screen: EditCarFuelScreen
+    },
+    EditMotoScreen: {
+      screen: EditMotoScreen
+    },
+    EditMotoSegmentScreen: {
+      screen: EditMotoSegmentScreen
+    },
+    SurveyWebView: {
+      screen: SurveyWebView
+    },
+    GenericWebViewScreen: {
+      screen: GenericWebViewScreen
+    },
+    SoddFrust2WebView: {
+      screen: SoddFrust2WebView
+    },
+    FeedbackWebView: {
+      screen: FeedbackWebView
+    },
+    CameraScreen: {
+      screen: CameraScreen
+    },
+    IntroMobilityScreen: {
+      screen: IntroMobilityScreen
+    },
+    EndMobilityScreen: {
+      screen: EndMobilityScreen
+    },
+    GlobalStandingsScreen: {
+      screen: GlobalStandingsScreen
+    },
+    FriendDetailFromGlobal: {
+      screen: FriendDetailScreenBlur
+    },
+    CityDetailScreenBlurFromGlobal: {
+      screen: CityDetailScreenBlur
+    },
+    LanguagesScreen: {
+      screen: LanguagesScreen
+    },
+    SponsorMapScreen: {
+      screen: SponsorMapScreen
+    },
+    YoutubeScreen: {
+      screen: YoutubeScreen
+    },
+    FAQScreen: {
+      screen: FAQScreen
+    },
+    FeedbackScreen: {
+      screen: FeedbackScreen
+    },
+
+    OneplusScreen: {
+      screen: OneplusScreen
     }
-  );
-  return <CustomStack />;
-};
+  },
+  {
+    initialRouteName: "Home"
+  }
+);
 
 renderAnimatedTabButton = navigation => {
   // Dimensions.get("window").width / 2 - 30
@@ -968,7 +1209,7 @@ renderAnimatedTabButton = navigation => {
   // iphone x, x max
   if (
     Platform.OS === "ios" &&
-    (height === 812 || width === 812 || (height === 896 || width === 896))
+    (height === 812 || width === 812 || height === 896 || width === 896)
   ) {
     extra = 35;
     style = {
@@ -1044,6 +1285,23 @@ renderAnimatedTabButton = navigation => {
   );
 };
 
+MyStack = createStackNavigator(
+  {
+    Login: {
+      screen: LoginWithEmail,
+    },
+    Welcome: {
+      screen: LoginWithSocial,
+    },
+    WelcomeMUVToNewMUV: {
+      screen: WelcomeMUVToNewMUV,
+    }
+  },
+  {
+    initialRouteName: "Login",
+  }
+);
+
 class Menu extends React.Component {
   constructor(props) {
     super(props);
@@ -1056,20 +1314,27 @@ class Menu extends React.Component {
       completeTutorial: false
     };
 
-    NetInfo.getConnectionInfo()
-      .then()
-      .done(() => {
-        NetInfo.getConnectionInfo().then(connectionInfo => {
-          NetInfo.isConnected.fetch().then(() => {
-            NetInfo.isConnected.fetch().then(isConnected => {
-              this.props.dispatch(
-                changeConnectionStatus({ ...connectionInfo, isConnected })
-              );
-            });
-          });
-        });
-      });
+    // NetInfo.getConnectionInfo()
+    //   .then()
+    //   .done(() => {
+    //     NetInfo.getConnectionInfo().then(connectionInfo => {
+    //       NetInfo.isConnected.fetch().then(() => {
+    //         NetInfo.isConnected.fetch().then(isConnected => {
+    //           this.props.dispatch(
+    //             changeConnectionStatus({ ...connectionInfo, isConnected })
+    //           );
+    //         });
+    //       });
+    //     });
+    //   });
   }
+
+  static router = {
+    ...Stack.router,
+    getStateForAction: (action, lastState) => {
+      return Stack.router.getStateForAction(action, lastState);
+    }
+  };
 
   static navigationOptions = {
     headerTitle: (
@@ -1097,20 +1362,72 @@ class Menu extends React.Component {
 
   handleFirstConnectivityChange = isConnected => {
     console.log("Then, is " + (isConnected ? "online" : "offline"));
-    NetInfo.isConnected.fetch().then(() => {
-      NetInfo.isConnected.fetch().then(isConnected => {
-        NetInfo.getConnectionInfo()
-          .then()
-          .done(() => {
-            NetInfo.getConnectionInfo().then(connectionInfo => {
-              this.props.dispatch(
-                changeConnectionStatus({ ...connectionInfo, isConnected })
-              );
-            });
-          });
-      });
-    });
+    // NetInfo.isConnected.fetch().then(() => {
+    //   NetInfo.isConnected.fetch().then(isConnected => {
+    //     NetInfo.getConnectionInfo()
+    //       .then()
+    //       .done(() => {
+    //         NetInfo.getConnectionInfo().then(connectionInfo => {
+    //           this.props.dispatch(
+    //             changeConnectionStatus({ ...connectionInfo, isConnected })
+    //           );
+    //         });
+    //       });
+    //   });
+    // });
   };
+
+  componentDidMount(lastProps) {
+    if (this.props.email && !this.props.user_id_old && this.props.date) {
+
+      // Configure it.
+      BackgroundFetch.configure({
+        minimumFetchInterval: 15,     // <-- minutes (15 is minimum allowed)
+        // Android options
+        forceAlarmManager: false,     // <-- Set true to bypass JobScheduler.
+        stopOnTerminate: false,
+        startOnBoot: true,
+        requiredNetworkType: BackgroundFetch.NETWORK_TYPE_NONE, // Default
+        requiresCharging: false,      // Default
+        requiresDeviceIdle: false,    // Default
+        requiresBatteryNotLow: false, // Default
+        requiresStorageNotLow: false  // Default
+      }, () => {
+        console.log("[js] Received background-fetch event");
+        const perm = store.getState().statistics.permActivities
+        console.log(perm);
+        if (perm) {
+          this.props.dispatch(updateActivitiesStep({ notification: true }))
+        }
+
+        // Required: Signal completion of your task to native code
+        // If you fail to do this, the OS can terminate your app
+        // or assign battery-blame for consuming too much background-time
+        BackgroundFetch.finish(BackgroundFetch.FETCH_RESULT_NEW_DATA);
+      }, (error) => {
+        console.log("[js] RNBackgroundFetch failed to start");
+      });
+
+
+      // Optional: Query the authorization status.
+      BackgroundFetch.status((status) => {
+        switch (status) {
+          case BackgroundFetch.STATUS_RESTRICTED:
+            console.log("BackgroundFetch restricted");
+            break;
+          case BackgroundFetch.STATUS_DENIED:
+            console.log("BackgroundFetch denied");
+            break;
+          case BackgroundFetch.STATUS_AVAILABLE:
+            console.log("BackgroundFetch is enabled");
+            break;
+        }
+      })
+
+
+    }
+
+  }
 
   componentWillMount() {
     // gestore eventi se cambia la connessione chiamo la funzione che manda un azione per cambiare lo stato su redux
@@ -1118,10 +1435,10 @@ class Menu extends React.Component {
     // se si avvia l'app si effettua il refresh token se sono presenti username e password messe
     // altrimenti si fa il login
 
-    NetInfo.isConnected.addEventListener(
-      "connectionChange",
-      this.handleFirstConnectivityChange
-    );
+    // NetInfo.isConnected.addEventListener(
+    //   "connectionChange",
+    //   this.handleFirstConnectivityChange
+    // );
 
     if (this.props.language.length) {
       switchLanguage(this.props.language);
@@ -1130,207 +1447,63 @@ class Menu extends React.Component {
     // se sono nella home, faccio tutte le chiamate
     // ovvero ho username settato
 
-    if (this.props.username) {
+    if (this.props.email && !this.props.user_id_old && this.props.date) {
+      //this.props.dispatch(wsConnect());
+
       // prendo i dati di inizio app come level e route ecc
 
       // se sono loggato attivo le notifiche push
 
-      OneSignal.init("2af1f3dd-728c-4d7c-a6d4-217daf3583b5");
+      OneSignal.init(WebService.OneSignalAppId);
       // OneSignal.configure(); 	// triggers the ids event
       // OneSignal.setRequiresUserPrivacyConsent(true);
 
       // OneSignal.sendTag("userId", this.props.user_id.toString());
-      OneSignal.setExternalUserId(this.props.user_id.toString());
+      // OneSignal.setExternalUserId(this.props.user_id.toString(), () => {});
       OneSignal.sendTag("userID", this.props.user_id.toString());
       // OneSignal.sendTags({userID: this.props.user_id.toString()});
-       // posso sapere l'id dell'utente che ha avuto un problema e lo posso contattare per avvisare che esiste una nuova versione fix 
-       bugsnag.setUser(this.props.user_id.toString());
+      // posso sapere l'id dell'utente che ha avuto un problema e lo posso contattare per avvisare che esiste una nuova versione fix
+      bugsnag.setUser(this.props.user_id.toString());
 
       this.props.dispatch(startApp());
-      if (!this.props.userAgent) {
-        console.log(this.props.userAgent);
-        // se non ho l'agentuser lo creo adesso e lo salvo
-        const systemName = DeviceInfo.getSystemName();
-        const systemVersion = DeviceInfo.getSystemVersion();
-        const model = DeviceInfo.getModel();
-        const manufacturer = DeviceInfo.getManufacturer();
-        const deviceId = DeviceInfo.getDeviceId();
-        const device =
-          systemName +
-          " " +
-          systemVersion +
-          " " +
-          model +
-          " " +
-          deviceId +
-          " " +
-          manufacturer;
-        // aggiorno il profilo con il nuovo agent user
-        this.props.dispatch(
-          UpdateProfile({
-            data: {
-              public_profile: { user_agent: device }
-            }
-          })
-        );
-      }
     }
   }
 
   shouldComponentUpdate(nextProps) {
-    if (nextProps.username && this.props.user_id !== nextProps.user_id) {
+    if (nextProps.email && this.props.user_id !== nextProps.user_id) {
       return false;
     }
-
+    // } else if (this.props.user_id_old !== nextProps.user_id_old) {
+    //   return false;
+    // }
     return true;
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.username && this.props.username !== nextProps.username) {
-      const systemName = DeviceInfo.getSystemName();
-      const systemVersion = DeviceInfo.getSystemVersion();
-      const model = DeviceInfo.getModel();
-      const manufacturer = DeviceInfo.getManufacturer();
-      const deviceId = DeviceInfo.getDeviceId();
-
-      console.log(model);
-      console.log(manufacturer);
-
-      // controllo se è un telefono android huawei o honor e in caso
-      // do un alert per spiegare di disabilitare il controllo sul consumo della batteria
-      /*  if (
-        manufacturer === "HUAWEI" ||
-        manufacturer === "HONOR" ||
-        model === "HUAWEI" ||
-        model === "HONOR"
-      ) {
-        Alert.alert(
-          "The system prevents MUV to work correctly",
-          'Hey, to use MUV on your device you need to configure the battery settings. Click on Battery-->App launch, then uncheck the "Manage automatically" option and press OK.',
-          [
-            {
-              text: strings("yes"),
-              onPress: () =>
-                Platform.OS !== "ios"
-                  ? Platform.Version < 23
-                    ? BackgroundGeolocation.showLocationSettings()
-                    : BackgroundGeolocation.showAppSettings()
-                  : BackgroundGeolocation.showAppSettings()
-            },
-            {
-              text: strings("no"),
-              onPress: () => alert("App not work correctly"),
-              style: "cancel"
-            }
-          ]
-        );
-      } else if (
-        (manufacturer === "OnePlus" || model === "OnePlus") &&
-        parseInt(systemVersion) > 8
-      ) {
-        Alert.alert(
-          "The system prevents MUV to work correctly",
-          "Hey, to use MUV on your device you need to configure the multitasking settings. Active the lock function, using the three dot in Multitasking",
-          [
-            {
-              text: "Close",
-              onPress: () => {}
-            }
-          ]
-        );
-      } */
+    if (nextProps.email && this.props.email !== nextProps.email) {
+      // this.props.dispatch(wsConnect());
     }
   }
 
-  // change page con componentWillReceiveProps
-  // componentWillReceiveProps(nextProps) {
-  //   if (
-  //     nextProps.username &&
-  //     this.props.username !== nextProps.username
-  //   ) {
-  //     // login o registrazione
-  //     this.setState({ page: nextProps.tutorialStart  ? "Home" : "Tutorial" })
 
-  //     // la prima volta che faccio il login ovvero non ho username e poi accedo e quindi cambia
-
-  //     const systemName = DeviceInfo.getSystemName();
-  //     const systemVersion = DeviceInfo.getSystemVersion();
-  //     const model = DeviceInfo.getModel();
-  //     const manufacturer = DeviceInfo.getManufacturer();
-  //     const deviceId = DeviceInfo.getDeviceId();
-
-  //     console.log(model);
-  //     console.log(manufacturer);
-
-  //     // controllo se è un telefono android huawei o honor e in caso
-  //     // do un alert per spiegare di disabilitare il controllo sul consumo della batteria
-  //     /*  if (
-  //       manufacturer === "HUAWEI" ||
-  //       manufacturer === "HONOR" ||
-  //       model === "HUAWEI" ||
-  //       model === "HONOR"
-  //     ) {
-  //       Alert.alert(
-  //         "The system prevents MUV to work correctly",
-  //         'Hey, to use MUV on your device you need to configure the battery settings. Click on Battery-->App launch, then uncheck the "Manage automatically" option and press OK.',
-  //         [
-  //           {
-  //             text: strings("yes"),
-  //             onPress: () =>
-  //               Platform.OS !== "ios"
-  //                 ? Platform.Version < 23
-  //                   ? BackgroundGeolocation.showLocationSettings()
-  //                   : BackgroundGeolocation.showAppSettings()
-  //                 : BackgroundGeolocation.showAppSettings()
-  //           },
-  //           {
-  //             text: strings("no"),
-  //             onPress: () => alert("App not work correctly"),
-  //             style: "cancel"
-  //           }
-  //         ]
-  //       );
-  //     } else if (
-  //       (manufacturer === "OnePlus" || model === "OnePlus") &&
-  //       parseInt(systemVersion) > 8
-  //     ) {
-  //       Alert.alert(
-  //         "The system prevents MUV to work correctly",
-  //         "Hey, to use MUV on your device you need to configure the multitasking settings. Active the lock function, using the three dot in Multitasking",
-  //         [
-  //           {
-  //             text: "Close",
-  //             onPress: () => {}
-  //           }
-  //         ]
-  //       );
-  //     } */
-  //   } else if (
-  //     !nextProps.username &&
-  //     this.props.username !== nextProps.username
-  //   ) {
-  //     this.setState({ page: "Login"})
-  //   } else if (
-  //     nextProps.username &&
-  //     this.props.tutorialStart !== nextProps.tutorialStart
-  //   ) {
-  //     this.setState({ page: "Home"})
-  //   }
-  // }
 
   render() {
     console.log(this.props.language);
+    const { navigation } = this.props;
+
+    // con user_id_old capisco se l'utente è del vecchio muv
     return (
       <Stack
-        initialRouteName={
-          this.props.username
-            ? this.props.tutorialStart
-              ? "Home"
-              : "Tutorial"
-            : this.props.date
-            ? "Login"
-            : "Welcome"
-        }
+        navigation={navigation}
+      // initialRouteName={
+      //   this.props.user_id_old
+      //     ? "WelcomeMUVToNewMUV"
+      //     : this.props.email
+      //       ? this.props.tutorialStart
+      //         ? "Home"
+      //         : "Tutorial"
+      //       : "Welcome"
+      // }
       />
     );
   }
@@ -1366,11 +1539,11 @@ const connection = connect(state => {
   // uso date per sapere se si è mai loggato o no
   // quindi se si è registrato
   return {
-    username: getUserState(state),
-    userAgent: getUserAgentState(state),
+    email: getEmailState(state),
     date: getDateState(state),
     language: getLanguageState(state),
     user_id: getUserIdState(state),
+    user_id_old: getUserIdOldState(state),
     tutorialStart: getTutorialStartState(state)
   };
 });

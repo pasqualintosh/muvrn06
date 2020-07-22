@@ -32,7 +32,6 @@ class MapFeedRecapScreen extends React.Component {
 
   getActivityColor = activity => {
     let color;
-    
 
     switch (activity) {
       case 2:
@@ -47,21 +46,28 @@ class MapFeedRecapScreen extends React.Component {
           color = "#6CBA7E";
         }
         break;
-        case 3:
-            case 5:
-            case 6:
-            case 7:
-            case "Public":
-            case "Bus":
-            case "Train":
-            case "Metro":
-              {
-                // (5, ‘Train’)
-                // (6, ‘Metro’)
-                // (7, ‘Bus_Tram’)
-                color = "#F9B224";
-              }
-              break;
+      case 3:
+      case 5:
+      case 6:
+      case 7:
+      case "Public":
+      case "Bus":
+      case "Train":
+      case "Metro":
+        {
+          // (5, ‘Train’)
+          // (6, ‘Metro’)
+          // (7, ‘Bus_Tram’)
+          color = "#F9B224";
+        }
+        break;
+        case "Carpooling":
+          {
+            color = "#3363AD";
+            
+           
+          }
+          break
       default:
         {
           color = "rgba(108, 186, 126, 1)";
@@ -78,8 +84,8 @@ class MapFeedRecapScreen extends React.Component {
 
     if (fromDb) {
       route.forEach((el, index) => {
-        let latitude = el.coordinates.map(element => element[1]);
-        let longitude = el.coordinates.map(element => element[0]);
+        let latitude = el.map(element => element[1]);
+        let longitude = el.map(element => element[0]);
         coordinates.push(
           latitude.map((elem, index) => {
             return {
@@ -169,22 +175,20 @@ class MapFeedRecapScreen extends React.Component {
     let latitude, longitude;
 
     if (fromDb) {
-      /* firstTripLatitude = route[route.length - 1].coordinates.map(
+      /* firstTripLatitude = route[route.length - 1].map(
         element => element[1]
       );
-      firstTripLongitude = route[route.length - 1].coordinates.map(
+      firstTripLongitude = route[route.length - 1].map(
         element => element[0]
       );
       console.log(route)
 
-      lastTripLatitude = route[0].coordinates.map(element => element[1]);
-      lastTripLongitude = route[0].coordinates.map(element => element[0]); */
+      lastTripLatitude = route[0].map(element => element[1]);
+      lastTripLongitude = route[0].map(element => element[0]); */
       console.log(route);
 
-      latitude = route.map(element => element.coordinates.map(elem => elem[1]));
-      longitude = route.map(element =>
-        element.coordinates.map(elem => elem[0])
-      );
+      latitude = route.map(element => element.map(elem => elem[1]));
+      longitude = route.map(element => element.map(elem => elem[0]));
       latitude = this.flatten(latitude);
       longitude = this.flatten(longitude);
     } else {

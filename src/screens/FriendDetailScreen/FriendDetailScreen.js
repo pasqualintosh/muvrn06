@@ -9,20 +9,25 @@ import FriendScreenHeader from "./../../components/FriendScreenHeader/FriendScre
 import FriendScreenCards from "./..//FriendScreenCards/FriendScreenCards";
 
 import { strings } from "../../config/i18n";
+import { store } from "../../store";
+import { getUserInfoNew } from "./../../domains/follow/ActionCreators";
 
 class FriendDetailScreen extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      page: "myself",
       enableModal: false,
-      completeQuiz: false
+      user: null
     };
   }
-  _handleChangePage = page => {
-    this.setState({ page });
+
+  callback = data => {
+    this.setState({
+      user: data
+    });
   };
+
   static navigationOptions = ({ navigation }) => {
     return {
       headerTitle: (
@@ -31,7 +36,7 @@ class FriendDetailScreen extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("profile")}
+          {strings("id_5_15")}
         </Text>
       ),
       headerRight: (
@@ -46,7 +51,15 @@ class FriendDetailScreen extends React.Component {
   };
 
   componentWillMount() {
-    // this.props.dispatch(getStats());
+    console.log(this.props.friendData);
+    
+    
+      const username = this.props.friendData.username;
+      console.log(username);
+      if (username) {
+        // chiedo i dati al db
+      store.dispatch(getUserInfoNew({ username }, this.callback));
+      }
   }
 
   render() {
@@ -77,16 +90,15 @@ class FriendDetailScreen extends React.Component {
             ref={ref => (this.ref = ref)}
           >
             <FriendScreenHeader
-              handleChangePage={page => this._handleChangePage(page)}
-              page={this.state.page}
-              can_follow={this.props.can_follow}
+              user={this.state.user}
               friendData={this.props.friendData}
             />
-
-            <FriendScreenCards
+            {/* <FriendScreenCards
+           
               {...this.props}
               friendData={this.props.friendData}
-            />
+              user={this.state.user}
+            /> */}
             <View
               style={{
                 height: 300,
@@ -99,6 +111,5 @@ class FriendDetailScreen extends React.Component {
     );
   }
 }
-
 
 export default FriendDetailScreen;

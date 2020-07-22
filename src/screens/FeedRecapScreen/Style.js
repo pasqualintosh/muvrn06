@@ -1,7 +1,6 @@
 import { StyleSheet, Dimensions, Platform } from "react-native";
 
 export const styles = StyleSheet.create({
-  
   container: {
     height: Dimensions.get("window").height,
     width: Dimensions.get("window").width,
@@ -12,7 +11,7 @@ export const styles = StyleSheet.create({
 
     justifyContent: "flex-start",
     alignItems: "center",
-    height: Dimensions.get("window").height * 0.5 - 160,
+    height: 210,
     backgroundColor: "#fff"
   },
   end: {
@@ -21,13 +20,11 @@ export const styles = StyleSheet.create({
 
     justifyContent: "space-around",
     alignItems: "center",
-    height: Dimensions.get("window").height * 0.5 - 220,
-    backgroundColor: "#fff",
-    top: -60
+    height: 150
   },
   headerRow: {
     width: Dimensions.get("window").width * 1,
-    height: Dimensions.get("window").height * 0.5 - 160,
+    height: 210,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -44,14 +41,33 @@ export const styles = StyleSheet.create({
   },
   backgroundImageLigth: {
     width: Dimensions.get("window").width,
-    height: 50,
-    top: -30
+    height: 25
+    // top: -30
   },
   backgroundImageBanner: {
     width: Dimensions.get("window").width,
-    height: 150,
-    top: -60
+    height: 150
+    // top: -60
   },
+  backgroundImageTopBanner: {
+    width: Dimensions.get("window").width,
+    height: 35
+    // top: -60
+  },
+  backgroundTopBanner: {
+    width: Dimensions.get("window").width,
+    height: 35,
+    backgroundColor: "#F7F8F9"
+    // top: -60
+  },
+  iconBanner: {
+    width: Dimensions.get("window").width,
+    height: 220,
+    flexDirection: "column",
+    justifyContent: "flex-start"
+    // top: -60
+  },
+
   backgroundImageBannerCenter: {
     width: Dimensions.get("window").width,
     height: 150,
@@ -83,11 +99,11 @@ export const styles = StyleSheet.create({
   },
   LigthUp: {
     width: Dimensions.get("window").width * 0.9,
-    height: 75,
+    height: 60,
     justifyContent: "space-between",
     flexDirection: "row",
-    alignItems: "center",
-    top: -20
+    alignItems: "center"
+    // top: -20
   },
   LigthOpen: {
     width: Dimensions.get("window").width * 0.9,
@@ -128,30 +144,32 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderBottomColor: "#9D9B9C",
-    borderBottomWidth: 0.3,
-    top: -30
+    borderBottomWidth: 0.3
+    // top: -30
   },
   IconDetailUp: {
     width: Dimensions.get("window").width * 0.8,
-    height: 70,
+    height: 80,
     justifyContent: "space-around",
     flexDirection: "row",
     alignItems: "center",
+    alignContent: "center"
 
-    top: -20
+    // top: -20
   },
   SingleIconDetail: {
-    flexDirection: 'column', justifyContent: 'flex-start', alignItems: "center",
-    height: 70,
-    
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    height: 80
   },
   Rest: {
     width: Dimensions.get("window").width,
     justifyContent: "flex-start",
     flexDirection: "column",
     alignItems: "center",
-    backgroundColor: "#F7F8F9",
-    top: -40
+    backgroundColor: "#F7F8F9"
+    //  top: -40
   },
   row: {
     height: Dimensions.get("window").height * 0.08,
@@ -171,7 +189,6 @@ export const styles = StyleSheet.create({
   pointsBonus: {
     fontFamily: "OpenSans-Regular",
 
-   
     fontSize: 10,
     color: "#3D3D3D"
   },
@@ -214,7 +231,7 @@ export const styles = StyleSheet.create({
     fontFamily: "OpenSans-Bold",
     fontSize: 12,
     textAlign: "center",
-    color: "#3D3D3D"
+    color: "#ffffff"
   },
   rightElement: {
     fontFamily: "OpenSans-Regular",

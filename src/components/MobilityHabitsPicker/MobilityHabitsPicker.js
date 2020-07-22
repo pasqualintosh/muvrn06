@@ -128,7 +128,7 @@ class MobilityHabitsPicker extends React.Component {
       ) : (
         <MobilityHabitsMotoModal checkboxColor={"#F7F8F9"} />
       )}
-      {this._renderButton("Confirm", () => {
+      {this._renderButton(strings("id_13_23"), () => {
         this.setState({ isModalVisible: false });
         // this.props.changeState(
         //   this.props.value === "to fill"
@@ -157,7 +157,7 @@ class MobilityHabitsPicker extends React.Component {
           <MobilityHabitsMotoModal checkboxColor={"#F7F8F9"} />
         )}
 
-        {this._renderButton("Confirm", () => {
+        {this._renderButton(strings("id_13_23"), () => {
           this.setState({ isModalVisible: false });
         })}
       </View>

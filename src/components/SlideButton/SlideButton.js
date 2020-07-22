@@ -63,7 +63,11 @@ export class SlideButton extends React.Component {
 
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: (evt, gestureState) => true,
-      onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
+      onStartShouldSetPanResponderCapture: (evt, gestureState) => {
+        // sto iniziandomi a muovermi di lato, disabilito lo scroll 
+        this.props.changeScrollEnabled(false)
+        return true
+      },
       onMoveShouldSetPanResponder: (evt, gestureState) => true,
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
       onPanResponderTerminationRequest: (evt, gestureState) => true,
@@ -78,6 +82,8 @@ export class SlideButton extends React.Component {
       },
 
       onPanResponderRelease: (evt, gestureState) => {
+         // sto finito di muovermi di lato, attivo lo scroll 
+        this.props.changeScrollEnabled(true)
         if (this.isSlideSuccessful()) {
           // Move the button out
           this.moveButtonOut(() => {
@@ -107,6 +113,7 @@ export class SlideButton extends React.Component {
       onPanResponderTerminate: (evt, gestureState) => {
         // Another component has become the responder, so this gesture
         // should be cancelled
+        this.props.changeScrollEnabled(true)
         this.snapToPosition(() => {
           self.setState({
             released: false,

@@ -91,11 +91,11 @@ class ActivityTracking extends React.Component {
           "Would you like to open location settings?",
           [
             {
-              text: strings("yes"),
+              text: strings("id_14_03"),
               onPress: () => BackgroundGeolocation.showLocationSettings()
             },
             {
-              text: strings("no"),
+              text: strings("id_14_04"),
               onPress: () => alert("No Pressed"),
               style: "cancel"
             }
@@ -254,11 +254,11 @@ class ActivityTracking extends React.Component {
           "Would you like to open location settings?",
           [
             {
-              text: strings("yes"),
+              text: strings("id_14_03"),
               onPress: () => BackgroundGeolocation.showLocationSettings()
             },
             {
-              text: strings("no"),
+              text: strings("id_14_04"),
               onPress: () => {},
               style: "cancel"
             }

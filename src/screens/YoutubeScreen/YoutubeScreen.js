@@ -5,7 +5,6 @@ import { WebView } from "react-native-webview";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
 
 class YoutubeScreen extends React.Component {
   constructor(props) {
@@ -36,20 +35,7 @@ class YoutubeScreen extends React.Component {
   }
 
   sendEventYoutube = () => {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // let event = "open YoutubeScreen";
-    // let gaEvent = new GAHits.Event(
-    //   "user interaction", // category
-    //   "click MUV feed", // action
-    //   "click MUV feed", // label
-    //   event // value
-    // );
-    // ga.send(gaEvent);
+   
   };
 
   /* video verticale  */

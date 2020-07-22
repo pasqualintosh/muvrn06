@@ -5,7 +5,9 @@ import {
   // WebView,
   ActivityIndicator,
   Platform,
-  BackHandler
+  SafeAreaView,
+  BackHandler,
+  Dimensions
 } from "react-native";
 import { connect } from "react-redux";
 import {
@@ -304,8 +306,8 @@ class FeedbackWebView extends React.Component {
           // uri: `https://push564474.typeform.com/to/vBODOz`
           uri:
             link +
-            `email=${this.props.loginState.username}&city=${
-              this.props.loginState.infoProfile.city.city_name
+            `email=${this.props.loginState.email}&city=${
+              this.props.loginState.infoProfile.city
             }&app_version=${DeviceInfo.getVersion()}`
         }}
         style={{
@@ -436,12 +438,14 @@ class FeedbackWebView extends React.Component {
       link = this.getLinkFeedbackPath(modalType);
     }
     return (
+     
+      <View style={{ flex: 1,}}>
       <WebView
-        onLoadEnd={() => {
-          setTimeout(() => {
-            this.setState({ can_render: true });
-          }, 1500);
-        }}
+        // onLoadEnd={() => {
+        //   setTimeout(() => {
+        //     this.setState({ can_render: true });
+        //   }, 1500);
+        // }}
         onMessage={this.onMessage}
         javaScriptEnabled={true}
         domStorageEnabled={true}
@@ -458,20 +462,20 @@ class FeedbackWebView extends React.Component {
         )}
         source={{
           uri:
-            link +
-            `id_route=${
+            link + `id_route=${
               this.props.navigation.state.params.referred_route_id
                 ? this.props.navigation.state.params.referred_route_id
                 : 0
             }&user_agent=${
               this.props.navigation.state.params.device
-            }&user_email=${this.props.loginState.username}
-            &city=${this.props.loginState.infoProfile.city.city_name}`
+            }&user_email=${this.props.loginState.email}&city=${this.props.loginState.infoProfile.city}&username=${
+              this.props.loginState.infoProfile.username
+            }&user_id=${this.props.loginState.infoProfile.id}`
         }}
-        style={{
-          display: !this.state.can_render ? "none" : "flex"
-        }}
+        
       />
+      </View>
+      
     );
   }
 }

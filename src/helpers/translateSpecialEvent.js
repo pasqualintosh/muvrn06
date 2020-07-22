@@ -387,6 +387,48 @@ export const translateSpecialEvent = event => {
     case "Show your code and name (on your phone) at reception. One code = one free entry. Use until 31 december 2019.":
       return strings("show_your_code_");
       break;
+    case "Love is in the not polluted air":
+      return strings("love_is_in_the_");
+      break;
+    case "Going from our lovely home to work (or to study) with sustainable mobility means reduce traffic and pollution. Airlite, the paint that purifies air, rewards with 25% discount those who record home-to-work (or to-study) trips for 4 days in a row.":
+      return strings("going_from_our_");
+      break;
+    case "Airlite is a 100% natural paint that eliminates bacteria, prevents the growth of mold and reduces air pollution, bringing the air back to its state of purity.":
+      return strings("airlite_is_a_10");
+      break;
+    case "Record home-to-work (or home-to-study) trips for 4 days in a row to get a 20% discount on Airlite products.":
+      return strings("record_home_to_");
+      break;
+    case "20% discount on Airlite products.":
+      return strings("_1044_20__discount_on");
+      break;
+    case "Barcelona in action!":
+      return strings("barcelona_in_ac");
+      break;
+    case "The first three MUVers that get more points from Nov 11th to 17th will receive each one of them a prize":
+      return strings("_1054_the_first_three");
+      break;
+    case "A gorgeous shopping basket full of socially and responsible consumption local products; A shopping basket full of socially and responsible consumption local products; A shopping basket with socially and responsible consumption local products":
+      return strings("a_gorgeous_shop");
+      break;
+    case "SCW is an initiative of the Barcelona City Council that aims to reflect and experiment on the relationship between people, technology and cities":
+      return strings("scw_is_an_initi");
+      break;
+    case "5000 pts = 1 tree for Gardunha forest":
+      return strings("_5000_pts___1_tr");
+      break;
+    case "Collect points for Fundao and make Serra Gardunha greener! Every time a MUVer collects 5000 points, Gardunha 21 association will plant a tree in Serra da Gardunha.":
+      return strings("collect_points_");
+      break;
+    case "Agência de Desenvolvimento Gardunha 21 is a no-profit association that aims to promote actions for protection and development of Serra da Gardunha.":
+      return strings("agencia_de_des");
+      break;
+    case "Until the end of February, every time a MUVer collects 5000 points for Fundão, Gardunha 21 associations will donate and plant a tree in Serra da Gardunha forest.":
+      return strings("until_the_end_o");
+      break;
+    case "Every time a MUVer collects 5000 points, Gardunha 21 association will plant a tree in Serra da Gardunha":
+      return strings("every_time_a_mu");
+      break;
     case 17:
       return strings("come_to_insula_");
       break;
@@ -482,6 +524,21 @@ export const translateSpecialEvent = event => {
       break;
     case 46:
       return "Recati presso la biglietteria del Museo Pasqualino con il tuo smartphone e mostra la schermata della vittoria per riscuotere il tuo premio.";
+      break;
+    case 50:
+      return strings("use_the_discoun");
+      break;
+    case 50:
+      return strings("use_the_discoun");
+      break;
+    case 51:
+      return strings("use_the_discoun");
+      break;
+    case 56:
+      return strings("follow_muv_fund");
+      break;
+    case 57:
+      return "Recati da Feschette BioBistrot col tuo smartphone nei giorni di sabato o domenica e mostra la schermata della vittoria per riscuotere il tuo premio.";
       break;
     default:
       return event;

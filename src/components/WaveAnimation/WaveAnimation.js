@@ -143,7 +143,11 @@ const styles = {};
 const wavyJson = {
   Walking: require("./../../assets/wavy_walk.json"),
   Biking: require("./../../assets/wavy_bike.json"),
-  Public: require("./../../assets/wavy_public.json")
+  Public: require("./../../assets/wavy_public.json"),
+  Carpooling: require("./../../assets/wavy_public.json"),
 };
 
 export default WaveAnimation;
+
+
+

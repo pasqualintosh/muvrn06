@@ -27,6 +27,9 @@ import OwnIcon from "./../../components/OwnIcon/OwnIcon";
 
 let Picker = Platform.OS === "ios" ? PickerIos : PickerAndroid;
 let PickerItem = Picker.Item;
+import WebService from "../../config/WebService";
+import { Client } from "bugsnag-react-native";
+const bugsnag = new Client(WebService.BugsnagAppId);
 
 import { strings } from "../../config/i18n";
 
@@ -142,17 +145,17 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
         strings("other").toLocaleUpperCase(),
         strings("home").toLocaleUpperCase(),
         strings("work").toLocaleUpperCase(),
-        strings("gym").toLocaleUpperCase(),
-        strings("school_universi").toLocaleUpperCase(),
-        strings("work__2").toLocaleUpperCase(),
-        strings("mom_dad").toLocaleUpperCase(),
-        strings("grandma_grandpa").toLocaleUpperCase(),
-        strings("girlfriend_boyf").toLocaleUpperCase(),
-        strings("kids__school").toLocaleUpperCase(),
-        strings("friend_s_place").toLocaleUpperCase(),
-        strings("supermarket").toLocaleUpperCase(),
-        strings("bar_restaurant").toLocaleUpperCase(),
-        strings("cinema_theater").toLocaleUpperCase()
+        // strings("gym").toLocaleUpperCase(),
+        strings("school_universi").toLocaleUpperCase()
+        // strings("work__2").toLocaleUpperCase(),
+        // strings("mom_dad").toLocaleUpperCase(),
+        // strings("grandma_grandpa").toLocaleUpperCase(),
+        // strings("girlfriend_boyf").toLocaleUpperCase(),
+        // strings("kids__school").toLocaleUpperCase(),
+        // strings("friend_s_place").toLocaleUpperCase(),
+        // strings("supermarket").toLocaleUpperCase(),
+        // strings("bar_restaurant").toLocaleUpperCase(),
+        // strings("cinema_theater").toLocaleUpperCase()
       ],
       frequecy_values: [1, 2, 3, 4, 5, 6, 7],
       frequency_selected: 5,
@@ -414,49 +417,49 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
       <View style={styles.weekDayContainer}>
         <OnboardingWeekDay
           index={1}
-          dayName={strings("mon").toLocaleUpperCase()}
+          dayName={strings("id_0_35").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[1]}
           onPress={this.setDayWeek}
           detailScreen={true}
         />
         <OnboardingWeekDay
           index={2}
-          dayName={strings("tue").toLocaleUpperCase()}
+          dayName={strings("id_0_36").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[2]}
           onPress={this.setDayWeek}
           detailScreen={true}
         />
         <OnboardingWeekDay
           index={3}
-          dayName={strings("wed").toLocaleUpperCase()}
+          dayName={strings("id_0_37").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[3]}
           onPress={this.setDayWeek}
           detailScreen={true}
         />
         <OnboardingWeekDay
           index={4}
-          dayName={strings("thu").toLocaleUpperCase()}
+          dayName={strings("id_0_38").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[4]}
           onPress={this.setDayWeek}
           detailScreen={true}
         />
         <OnboardingWeekDay
           index={5}
-          dayName={strings("fri").toLocaleUpperCase()}
+          dayName={strings("id_0_39").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[5]}
           onPress={this.setDayWeek}
           detailScreen={true}
         />
         <OnboardingWeekDay
           index={6}
-          dayName={strings("sat").toLocaleUpperCase()}
+          dayName={strings("id_0_40").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[6]}
           onPress={this.setDayWeek}
           detailScreen={true}
         />
         <OnboardingWeekDay
           index={0}
-          dayName={strings("sun").toLocaleUpperCase()}
+          dayName={strings("id_0_41").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[0]}
           onPress={this.setDayWeek}
           detailScreen={true}
@@ -642,7 +645,7 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -653,7 +656,7 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -728,7 +731,7 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -739,7 +742,7 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -816,7 +819,7 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -827,7 +830,7 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -848,38 +851,40 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
         break;
       case this.state.frequent_type[3]:
         return 3;
+        // ho tolto il terzo quindi il 4 valore è nella 3 posizione
+        // return 4;
         break;
-      case this.state.frequent_type[4]:
-        return 4;
-        break;
-      case this.state.frequent_type[5]:
-        return 5;
-        break;
+      // case this.state.frequent_type[4]:
+      //   return 4;
+      //   break;
+      // case this.state.frequent_type[5]:
+      //   return 5;
+      //   break;
 
-      case this.state.frequent_type[6]:
-        return 6;
-        break;
-      case this.state.frequent_type[7]:
-        return 7;
-        break;
-      case this.state.frequent_type[8]:
-        return 8;
-        break;
-      case this.state.frequent_type[9]:
-        return 9;
-        break;
-      case this.state.frequent_type[10]:
-        return 10;
-        break;
-      case this.state.frequent_type[11]:
-        return 11;
-        break;
-      case this.state.frequent_type[12]:
-        return 12;
-        break;
-      case this.state.frequent_type[13]:
-        return 13;
-        break;
+      // case this.state.frequent_type[6]:
+      //   return 6;
+      //   break;
+      // case this.state.frequent_type[7]:
+      //   return 7;
+      //   break;
+      // case this.state.frequent_type[8]:
+      //   return 8;
+      //   break;
+      // case this.state.frequent_type[9]:
+      //   return 9;
+      //   break;
+      // case this.state.frequent_type[10]:
+      //   return 10;
+      //   break;
+      // case this.state.frequent_type[11]:
+      //   return 11;
+      //   break;
+      // case this.state.frequent_type[12]:
+      //   return 12;
+      //   break;
+      // case this.state.frequent_type[13]:
+      //   return 13;
+      //   break;
 
       default:
         return 0;
@@ -1066,6 +1071,35 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
                       }
                     }
 
+                    // mi salvo tutto lo status su bugsnag per vedere dove è il problema
+                    try {
+                      const msg = new Error(
+                        "save frequent trips from ChangeFrequentTripTypeFromRecapScreen"
+                      );
+                      bugsnag.notify(msg, function(report) {
+                        report.metadata = {
+                          input: {
+                            mostFrequentRaceFrequency: k,
+                            mostFrequentRaceFrequencyPosition: {
+                              start_point: this.props.navigation.state.params
+                                .start_point,
+                              end_point: this.props.navigation.state.params
+                                .end_point,
+                              start_type: this.state.frequent_trip_type_start,
+                              end_type: this.state.frequent_trip_type_end
+                            },
+                            frequent_trip_start_time: this.state
+                              .frequent_trip_start_time,
+                            frequent_trip_end_time: this.state
+                              .frequent_trip_end_time,
+                            frequent_trip_choosed_weekdays: this.state
+                              .choosed_week_days
+                          },
+                          state: this.state.state
+                        };
+                      });
+                    } catch (error) {}
+
                     this.props.dispatch(
                       updateState({
                         mostFrequentRaceFrequency: k,
@@ -1085,14 +1119,16 @@ class ChangeFrequentTripTypeFromRecapScreen extends React.Component {
                           .choosed_week_days
                       })
                     );
-                    this.props.navigation.navigate(
-                      "ChangeFrequentTripModalSplitFromRecapScreen"
-                    );
-                  } else Alert.alert("Oops", strings("seems_like_you_"));
+                    setTimeout(() => {
+                      this.props.navigation.navigate(
+                        "ChangeFrequentTripModalSplitFromRecapScreen"
+                      );
+                    }, 500);
+                  } else Alert.alert("Oops", strings("id_0_46"));
                 }}
               >
                 <View style={[styles.buttonBox]}>
-                  <Text style={styles.buttonGoOnText}>{strings("ok")}</Text>
+                  <Text style={styles.buttonGoOnText}>{strings("id_0_12")}</Text>
                 </View>
               </TouchableWithoutFeedback>
             </View>

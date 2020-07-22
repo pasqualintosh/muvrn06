@@ -49,7 +49,6 @@ export default class WavyArea extends React.Component {
         colors={colors}
         curve={shape.curveNatural}
         showGrid={false}
-        
       />
     );
   }

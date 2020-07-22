@@ -9,7 +9,10 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import CheckBox from "react-native-check-box";
 import LinearGradient from "react-native-linear-gradient";
@@ -18,10 +21,6 @@ import { Input } from "react-native-elements";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import InputPassword from "../../components/InputLogin/InputPassword";
 import { connect } from "react-redux";
-import {
-  ChangePassword,
-  deleteProfile
-} from "./../../domains/login/ActionCreators";
 
 import Icon from "react-native-vector-icons/Ionicons";
 import Emoji from "@ardentlabs/react-native-emoji";
@@ -43,7 +42,7 @@ class GDPRScreen extends React.Component {
   //             left: Platform.OS == "android" ? 20 : 0
   //           }}
   //         >
-  //           {strings("change_password")}
+  //           {strings("id_13_24")}
   //         </Text>
   //       )
   //     };
@@ -54,12 +53,13 @@ class GDPRScreen extends React.Component {
   };
 
   nextGDPR = () => {
-    this.props.navigation.navigate("CommerciallyScreen");
+    this.props.navigation.navigate("GdprDataScreen");
   };
 
-  
   videoGDPR = () => {
-    this.props.navigation.navigate("GDPRVideoScreen", { typeGDPR: 'GDPRScreen'});
+    this.props.navigation.navigate("GDPRVideoScreen", {
+      typeGDPR: "GDPRScreen"
+    });
   };
 
   componentDidMount() {}
@@ -74,49 +74,68 @@ class GDPRScreen extends React.Component {
           backgroundColor: "#FFFFFF"
         }}
       >
-        <View
-          style={{
-            height: 100,
-            backgroundColor: "transparent"
-          }}
+        
+         <ImageBackground
+          source={require("./../../assets/images/profile_card_bg.png")}
+          style={styles.backgroundImage}
         >
-          <ImageBackground
-            source={require("../../assets/images/white_wave_onbording_top.png")}
-            style={styles.backgroundImageWave}
-          />
-          <View
-            style={{
-              height: 100,
-
-              backgroundColor: "transparent",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignContent: "center"
+          <SafeAreaView style={{ flex: 1 }}>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              paddingBottom: 100,
+                  flexDirection: "column",
+                  alignContent: "center",
+                  justifyContent: "center",
             }}
           >
-            <View style={styles.textHeaderContainer}>
-              <TouchableWithoutFeedback
-                onPress={() => {
-                  this.props.navigation.goBack(null);
-                }}
-              >
-                <View style={{ width: 30, height: 30 }}>
-                  <Icon
-                    name="ios-arrow-back"
-                    style={{ marginTop: Platform.OS == "ios" ? 4 : 2 }}
-                    size={18}
-                    color="#3d3d3d"
-                  />
+           
+             
+                <View
+                  style={{
+                    flexDirection: "row",
+                    width: Dimensions.get("window").width,
+                    
+                    justifyContent: 'flex-start'
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => {
+                      this.props.navigation.goBack(null);
+                    }}
+                  >
+                    <View style={{ width: 30, height: 30 }}>
+                      <Icon
+                        name="md-arrow-forward"
+                        size={18}
+                        color="#31343F"
+                        style={{ transform: [{ rotateZ: "180deg" }] }}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                  <Text
+                    style={{
+                      // margin: 10,
+                      color: "#31343F",
+                      fontFamily: "OpenSans-Bold",
+                      fontWeight: "700",
+                      fontSize: 15,
+                      marginLeft: 20,
+                      textAlign: "left",
+                    }}
+                  >
+                    {strings("id_0_105")}
+                  </Text>
                 </View>
-              </TouchableWithoutFeedback>
-              <Text style={styles.textHeader}>
-                {strings("informed_consen")}
-              </Text>
-            </View>
-          </View>
-        </View>
+              
+          
         <View style={styles.half}>
           <View style={{ width: Dimensions.get("window").width * 0.9 }}>
+            <Text style={styles.textFooter}>{strings("id_0_106")}</Text>
+            <Text style={styles.textFooter} />
+            <Text style={styles.textFooter}>{strings("id_0_107")}</Text>
+
+            {/* 
             <Text>
               <Text style={styles.textFooter}>{strings("dear")}</Text>
               <Text style={styles.textFooterBold}>
@@ -132,14 +151,15 @@ class GDPRScreen extends React.Component {
               <Text style={styles.textFooter}>
                 {strings("__regarding_the")}
               </Text>
-            </Text>
+            </Text> 
+            */}
           </View>
           <View style={{ width: Dimensions.get("window").width * 0.9 }}>
             <Text style={styles.textFooter} />
           </View>
-          <View style={{ width: Dimensions.get("window").width * 0.9 }}>
+          {/* <View style={{ width: Dimensions.get("window").width * 0.9 }}>
             <Text style={styles.textFooter}>{strings("please_note_tha")}</Text>
-          </View>
+          </View> */}
         </View>
         <View
           style={{
@@ -150,77 +170,38 @@ class GDPRScreen extends React.Component {
             alignSelf: "center",
             alignItems: "center",
             // top: -2,
-            height: 200
+            height: 150
           }}
         >
           <OwnIcon
             name="onboarding-gdpr-lock"
-            size={200}
+            size={150}
             color="#000000"
-            style={{ position: "relative", top: 100 }}
+            style={{ position: "relative", top: 75 }}
           />
           <OwnIcon
             name="onboarding-gdpr-yellow_stars"
-            size={200}
+            size={150}
             color="#FAB21E"
-            style={{ position: "relative", top: -100 }}
+            style={{ position: "relative", top: -75 }}
           />
         </View>
 
         <View
           style={{
-            height: 130,
-            backgroundColor: "transparent",
-            flexDirection: "row",
-            justifyContent: "center",
-            alignContent: "center",
-            alignItems: "center",
-            width: Dimensions.get("window").width,
-            position: "absolute",
-            bottom: 0
+            height: 80,
+            paddingTop: 20,
+                backgroundColor: "transparent",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignContent: "center",
+                alignSelf: "center",
+                alignItems: "center",
+                width: Dimensions.get("window").width * 0.9,
+                paddingBottom: 50,
           }}
         >
-         <View
-            
-            style={[styles.buttonVideo, { marginTop: 10 }]}
-          >
-            <TouchableHighlight
-              onPress={this.videoGDPR}
-              style={{
-                width: 70,
-                height: 41,
-                borderRadius: 25,
-                alignItems: "center",
-                shadowRadius: 5
-              }}
-            >
-              <View
-                style={{
-                  height: 41,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  alignContent: "center",
-                  flexDirection: "row"
-                }}
-              >
-              <OwnIcon
-            name="video_btn_icn"
-            size={30}
-            color="#E83475"
-           
-          />
-              </View>
-            </TouchableHighlight>
-          </View>
-          <View
-            style={{
-              width: 20
-            }}
-          />
-          <View
-
-            style={[styles.button, { marginTop: 10 }]}
-          >
+          <View style={[styles.button, { marginTop: 10 }]}>
             <TouchableHighlight
               onPress={this.nextGDPR}
               style={{
@@ -231,6 +212,19 @@ class GDPRScreen extends React.Component {
                 shadowRadius: 5
               }}
             >
+            <LinearGradient
+        start={{ x: 0.0, y: 0.0 }}
+        end={{ x: 0.0, y: 1.0 }}
+        locations={[0, 1.0]}
+        colors={["#62357C", "#6497CC"]}
+        style={{
+                width: 70,
+                height: 41,
+                borderRadius: 25,
+                alignItems: "center",
+                shadowRadius: 5
+              }}
+      >
               <View
                 style={{
                   height: 41,
@@ -240,13 +234,15 @@ class GDPRScreen extends React.Component {
                   flexDirection: "row"
                 }}
               >
-                <Text style={{ color: "#FFFFFF" }}>
-                  {strings("go").toUpperCase()}
-                </Text>
+                <Text style={{ color: "#FFFFFF" }}>{strings("id_0_118")}</Text>
               </View>
+              </LinearGradient>
             </TouchableHighlight>
           </View>
         </View>
+        </ScrollView>
+        </SafeAreaView>
+        </ImageBackground>
       </View>
     );
   }
@@ -255,13 +251,17 @@ class GDPRScreen extends React.Component {
 // elevation: 2 per avere l'ombra su android con versione 5 in su
 
 const styles = {
+  backgroundImage: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+  },
   sfondo: {
     width: Dimensions.get("window").width,
     height: Dimensions.get("window").height
   },
   half: {
     width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height - 430,
+    // height: Dimensions.get("window").height - 430,
     alignItems: "center",
     justifyContent: "center",
 
@@ -297,7 +297,7 @@ const styles = {
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
     elevation: 1,
-    backgroundColor: '#6CBA7E'
+    // backgroundColor: "#6CBA7E"
   },
   buttonVideo: {
     width: 70,
@@ -309,13 +309,11 @@ const styles = {
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
     elevation: 1,
-    backgroundColor: '#F7F8F9'
+    backgroundColor: "#F7F8F9"
   },
   textFooter: {
     fontFamily: "OpenSans-Regular",
-
-    fontSize: 12
-
+    fontSize: 14
     // textAlign: "left"
   },
   textFooterBold: {

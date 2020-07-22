@@ -5,7 +5,7 @@ import {
   Image,
   TouchableHighlight,
   Dimensions,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
 } from "react-native";
 
 import { styles } from "./Style";
@@ -21,7 +21,7 @@ import Settings from "./../../config/Settings";
 import {
   GoogleAnalyticsTracker,
   GoogleTagManager,
-  GoogleAnalyticsSettings
+  GoogleAnalyticsSettings,
 } from "react-native-google-analytics-bridge";
 
 let Tracker = new GoogleAnalyticsTracker(Settings.analyticsCode);
@@ -61,7 +61,7 @@ class UserItem extends React.PureComponent {
     }
   }
 
-  conversionLevel = level => {
+  conversionLevel = (level) => {
     let NameLevel = 1;
     switch (level) {
       case "newbie":
@@ -109,32 +109,59 @@ class UserItem extends React.PureComponent {
     } else {
       data = {
         user_id: this.props.user.referred_route__user_id,
-        avatar: this.props.user.referred_route__user__avatar,
+        avatar: this.props.user.avatar,
         role: this.props.modalType,
         level: this.conversionLevel(this.props.level),
         first_name: this.props.user.referred_route__user__first_name,
         last_name: this.props.user.referred_route__user__last_name,
         city: this.props.user.referred_route__user__city__city_name,
         community: {
-          name: this.props.user.referred_route__user__community__name
-        }
+          name: this.props.user.referred_route__user__community__name,
+        },
       };
       console.log(data);
       console.log(this.props.navigation.state.routeName);
-      if (
-        this.props.navigation.state.routeName === "GlobalStandingsScreen" ||
-        this.props.navigation.state.routeName === "TeamTournamentBlur"
-      ) {
-        this.props.navigation.navigate("FriendDetailFromGlobal", {
-          friendData: data,
-          can_follow: false
-        });
-      } else {
-        this.props.navigation.navigate("FriendDetailFromStanding", {
-          friendData: data,
-          can_follow: false
-        });
+      // if (
+      //   this.props.navigation.state.routeName === "GlobalStandingsScreen" ||
+      //   this.props.navigation.state.routeName === "TeamTournamentBlur"
+      // ) {
+      //   this.props.navigation.navigate("FriendDetailFromGlobal", {
+      //     friendData: data,
+      //     can_follow: false
+      //   });
+      // } else {
+      //   this.props.navigation.navigate("FriendDetailFromStanding", {
+      //     friendData: data,
+      //     can_follow: false
+      //   });
+      // }
+    }
+  };
+
+  goToFriendNew = () => {
+    // se ho un id allora vado nel mio profilo
+    // se uguale al mio id
+    console.log(this.props.user.id);
+    console.log(this.props.user.referred_route__user_id);
+    if (this.props.user.id == this.props.user.referred_route__user_id) {
+      if (this.props.myProfile) {
+        this.props.myProfile();
       }
+    } else {
+      console.log(this.props.user);
+      console.log(this.props.navigation.state.routeName);
+      // if (
+      //   this.props.navigation.state.routeName === "GlobalStandingsScreen" ||
+      //   this.props.navigation.state.routeName === "TeamTournamentBlur"
+      // ) {
+      //   this.props.navigation.navigate("FriendDetailFromGlobal", {
+      //     friendData: data,
+      //     can_follow: false
+      //   });
+      this.props.navigation.navigate("FriendDetailFromStanding", {
+        friendData: this.props.user,
+        can_follow: false,
+      });
     }
   };
 
@@ -150,14 +177,14 @@ class UserItem extends React.PureComponent {
     }
   }
 
-  goToCity = id => {
+  goToCity = (id) => {
     if (this.props.navigation.state.routeName === "GlobalStandingsScreen") {
       this.props.navigation.navigate("CityDetailScreenBlurFromGlobal", {
         city: id,
         cityName: this.props.city,
         cityId: this.props.user.referred_route__user__city_id
           ? this.props.user.referred_route__user__city_id
-          : 0
+          : 0,
       });
     } else {
       this.props.navigation.navigate("CityDetailScreenBlurFromStanding", {
@@ -165,7 +192,7 @@ class UserItem extends React.PureComponent {
         cityName: this.props.city,
         cityId: this.props.user.referred_route__user__city_id
           ? this.props.user.referred_route__user__city_id
-          : 0
+          : 0,
       });
     }
   };
@@ -178,12 +205,21 @@ class UserItem extends React.PureComponent {
           <Emoji name="fire" />
         </Text>
       ); */
-      return (
-        <Image
-          style={{ height: 40, width: 40 }}
-          source={trophies[this.props.user.position + baseTrophies]}
-        />
-      );
+      if (this.props.imageEnd) {
+        return (
+          <Image
+            style={{ height: 30, width: 30 }}
+            source={{ uri: this.props.imageEnd }}
+          />
+        );
+      } else {
+        return (
+          <Image
+            style={{ height: 40, width: 40 }}
+            source={trophies[this.props.user.position + baseTrophies]}
+          />
+        );
+      }
     } else {
       return <View style={{ height: 40, width: 40 }} />;
     }
@@ -196,7 +232,7 @@ class UserItem extends React.PureComponent {
     } else {
       // vai allo sponsor
       this.props.navigation.navigate("DetailSponsorScreenBlurFromStanding", {
-        communityInfo
+        communityInfo,
       });
     }
   };
@@ -207,7 +243,7 @@ class UserItem extends React.PureComponent {
       // vedo se è tra le città pilota
       id = citiesImage(this.props.city ? this.props.city : "");
     }
-    let userAvatar = limitAvatar(this.props.user.referred_route__user__avatar);
+    let userAvatar = limitAvatar(this.props.user.avatar);
 
     const colorCircle = ["#60368C", "#6CBA7E", "#E83475", "#FAB21E"];
     const colorText = ["#FFFFFF", "#000000", "#FFFFFF", "#000000"];
@@ -220,16 +256,16 @@ class UserItem extends React.PureComponent {
     return (
       <TouchableHighlight
         key={this.props.user.position}
-        onPress={() => this.goToFriend()}
+        onPress={() => this.goToFriendNew()}
         disabled={this.props.currentUser}
       >
         <View
           style={[
             styles.userContainer,
             {
-              backgroundColor
+              backgroundColor,
             },
-            this.props.style
+            this.props.style,
           ]}
         >
           <View style={styles.userPositionContainer}>
@@ -253,27 +289,14 @@ class UserItem extends React.PureComponent {
           {this.props.community ? (
             <View style={styles.ViewLabel}>
               <Text style={[styles.userLabel, { color }]}>
-                {this.props.user.referred_route__user__first_name
-                  ? this.props.user.referred_route__user__first_name
-                      .charAt(0)
-                      .toUpperCase() +
-                    this.props.user.referred_route__user__first_name
-                      .toLowerCase()
-                      .slice(1)
-                  : ""}{" "}
-                {this.props.user.referred_route__user__last_name
-                  ? this.props.user.referred_route__user__last_name.substr(
-                      0,
-                      1
-                    ) + "."
-                  : " "}
+                {this.props.user.username ? this.props.user.username : " "}
               </Text>
 
               <View
                 style={{
                   flexDirection: "row",
                   alignContent: "center",
-                  paddingTop: 5
+                  paddingTop: 5,
                 }}
               >
                 <OwnIcon
@@ -290,20 +313,7 @@ class UserItem extends React.PureComponent {
           ) : (
             <View style={styles.ViewLabel}>
               <Text style={[styles.userLabel, { color }]}>
-                {this.props.user.referred_route__user__first_name
-                  ? this.props.user.referred_route__user__first_name
-                      .charAt(0)
-                      .toUpperCase() +
-                    this.props.user.referred_route__user__first_name
-                      .toLowerCase()
-                      .slice(1)
-                  : ""}{" "}
-                {this.props.user.referred_route__user__last_name
-                  ? this.props.user.referred_route__user__last_name.substr(
-                      0,
-                      1
-                    ) + "."
-                  : " "}
+                {this.props.user.username ? this.props.user.username : " "}
               </Text>
             </View>
           )}
@@ -316,7 +326,7 @@ class UserItem extends React.PureComponent {
                 source={imagesCity[id]}
                 style={{
                   width: 25,
-                  height: 25
+                  height: 25,
                 }}
               />
             </TouchableHighlight>
@@ -324,7 +334,7 @@ class UserItem extends React.PureComponent {
             <View
               style={{
                 width: 25,
-                height: 25
+                height: 25,
               }}
             />
           )}
@@ -334,7 +344,7 @@ class UserItem extends React.PureComponent {
               width: 90,
               flexDirection: "row",
               justifyContent: "flex-start",
-              alignItems: "center"
+              alignItems: "center",
             }}
           >
             <View
@@ -342,7 +352,7 @@ class UserItem extends React.PureComponent {
                 width: 50,
                 flexDirection: "row",
                 justifyContent: "center",
-                alignItems: "center"
+                alignItems: "center",
               }}
             >
               <Text style={[styles.userPoints, { color }]}>
@@ -360,7 +370,8 @@ class UserItem extends React.PureComponent {
 }
 
 UserItem.defaultProps = {
-  colorStar: "#fab21e"
+  colorStar: "#fab21e",
+  imageEnd: null,
 };
 
 const trophies = {
@@ -369,7 +380,7 @@ const trophies = {
   3: require("../../assets/images/trophies/trophy_global_third_small.png"),
   4: require("../../assets/images/trophies/trophy_city_first_small.png"),
   5: require("../../assets/images/trophies/trophy_city_second_small.png"),
-  6: require("../../assets/images/trophies/trophy_city_third_small.png")
+  6: require("../../assets/images/trophies/trophy_city_third_small.png"),
 };
 
 export default UserItem;

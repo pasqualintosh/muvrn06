@@ -3,8 +3,6 @@ import { View, Text, Platform, Dimensions } from "react-native";
 import { styles } from "./Style";
 import { BoxShadow } from "react-native-shadow";
 
-
-
 import { strings } from "../../config/i18n";
 
 class ChartsStats extends React.Component {
@@ -38,19 +36,19 @@ class ChartsStats extends React.Component {
           <View style={styles.routesContainer}>
             <Text style={styles.quantity}>{this.props.routes}</Text>
             <Text style={styles.param}>
-              {strings("routes").toLocaleUpperCase()}
+              {strings("id_5_04").toLocaleUpperCase()}
             </Text>
           </View>
           <View style={styles.kilometersContainer}>
             <Text style={styles.quantity}>{this.props.calories}</Text>
             <Text style={styles.param}>
-              {strings("calories").toLocaleUpperCase()}
+              {strings("id_5_14").toLocaleUpperCase()}
             </Text>
           </View>
           <View style={styles.minutesContainer}>
             <Text style={styles.quantity}>{this.props.time}</Text>
             <Text style={styles.param}>
-              {strings("minutes").toLocaleUpperCase()}
+              {strings("id_4_06").toLocaleUpperCase()}
             </Text>
           </View>
         </View>

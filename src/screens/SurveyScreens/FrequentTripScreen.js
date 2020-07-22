@@ -24,10 +24,8 @@ import Icon from "react-native-vector-icons/Ionicons";
 import OnboardingWeekDay from "./../../components/WeekDayNotificationPicker/OnboardingWeekDay";
 import DateTimePicker from "react-native-modal-datetime-picker";
 import OwnIcon from "./../../components/OwnIcon/OwnIcon";
-
 let Picker = Platform.OS === "ios" ? PickerIos : PickerAndroid;
 let PickerItem = Picker.Item;
-
 import { strings } from "../../config/i18n";
 
 class FrequentTripScreen extends React.Component {
@@ -55,9 +53,10 @@ class FrequentTripScreen extends React.Component {
       // "CINEMA/THEATER"
       // ],
       frequent_type: [
-        strings("other").toLocaleUpperCase(),
-        strings("work").toLocaleUpperCase(), // +1
-        strings("school_universi").toLocaleUpperCase() // +2
+        strings("id_0_140").toLocaleUpperCase(),
+        strings("id_0_32").toLocaleUpperCase(),
+        strings("id_0_33").toLocaleUpperCase(), // +1
+        strings("id_0_139").toLocaleUpperCase() // +2
       ],
       choosed_week_days: {
         0: false,
@@ -73,7 +72,7 @@ class FrequentTripScreen extends React.Component {
       frequent_trip_start_time: "9:00",
       frequent_trip_end_time: "17:00",
       frequent_trip_type_start: 1,
-      frequent_trip_type_end: 1
+      frequent_trip_type_end: 2
     };
   }
 
@@ -173,6 +172,9 @@ class FrequentTripScreen extends React.Component {
       case this.state.frequent_type[2]:
         return 2;
         break;
+      case this.state.frequent_type[3]:
+        return 3;
+        break;
 
       default:
         return 0;
@@ -193,43 +195,43 @@ class FrequentTripScreen extends React.Component {
       <View style={styles.weekDayContainer}>
         <OnboardingWeekDay
           index={1}
-          dayName={strings("mon").toLocaleUpperCase()}
+          dayName={strings("id_0_35").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[1]}
           onPress={this.setDayWeek}
         />
         <OnboardingWeekDay
           index={2}
-          dayName={strings("tue").toLocaleUpperCase()}
+          dayName={strings("id_0_36").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[2]}
           onPress={this.setDayWeek}
         />
         <OnboardingWeekDay
           index={3}
-          dayName={strings("wed").toLocaleUpperCase()}
+          dayName={strings("id_0_37").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[3]}
           onPress={this.setDayWeek}
         />
         <OnboardingWeekDay
           index={4}
-          dayName={strings("thu").toLocaleUpperCase()}
+          dayName={strings("id_0_38").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[4]}
           onPress={this.setDayWeek}
         />
         <OnboardingWeekDay
           index={5}
-          dayName={strings("fri").toLocaleUpperCase()}
+          dayName={strings("id_0_39").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[5]}
           onPress={this.setDayWeek}
         />
         <OnboardingWeekDay
           index={6}
-          dayName={strings("sat").toLocaleUpperCase()}
+          dayName={strings("id_0_40").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[6]}
           onPress={this.setDayWeek}
         />
         <OnboardingWeekDay
           index={0}
-          dayName={strings("sun").toLocaleUpperCase()}
+          dayName={strings("id_0_41").toLocaleUpperCase()}
           selected={this.state.choosed_week_days[0]}
           onPress={this.setDayWeek}
         />
@@ -305,7 +307,7 @@ class FrequentTripScreen extends React.Component {
                 }}
               >
                 <Text style={styles.tripLeftText}>
-                  {strings("home").toLocaleUpperCase()}
+                  {strings("id_0_32").toLocaleUpperCase()}
                 </Text>
               </View>
             </TouchableWithoutFeedback>
@@ -315,7 +317,6 @@ class FrequentTripScreen extends React.Component {
               backgroundColor: "#F7F8F9",
               height: Dimensions.get("window").height * 0.09 - 10,
               width: 1,
-
               justifyContent: "center",
               alignItems: "center",
               alignSelf: "center"
@@ -325,7 +326,8 @@ class FrequentTripScreen extends React.Component {
             onPress={() => {
               this.props.navigation.navigate("SurveyFrequentTripMap", {
                 start_point: true,
-                end_point: false
+                end_point: false,
+                screen_name: strings("id_0_32")
               });
             }}
           >
@@ -333,7 +335,7 @@ class FrequentTripScreen extends React.Component {
               <Text style={styles.textTrip}>
                 {this.props.registerState.frequent_trip_start != null
                   ? this.props.registerState.frequent_trip_start.street
-                  : strings("insert_the_addr")}
+                  : strings("id_0_34")}
               </Text>
             </View>
           </TouchableWithoutFeedback>
@@ -378,7 +380,6 @@ class FrequentTripScreen extends React.Component {
       };
     return (
       <View style={styles.tripPointersContainer}>
-        {this.renderTypesModal()}
         <BoxShadow setting={shadowOpt} />
         <View
           style={{
@@ -391,61 +392,28 @@ class FrequentTripScreen extends React.Component {
             style={{
               backgroundColor: "#fff",
               height: Dimensions.get("window").height * 0.09,
-              width: Dimensions.get("window").width * 0.2 + 25,
-              borderRadius: 4,
+              width: Dimensions.get("window").width * 0.2 + 5,
               justifyContent: "center",
               alignItems: "center",
-              alignSelf: "center"
+              alignSelf: "center",
+              borderRadius: 4
             }}
           >
-            <TouchableWithoutFeedback
-              onPress={() => {
-                this.setState({ modal_types_visible: true });
-              }}
-            >
+            <TouchableWithoutFeedback>
               <View
                 style={{
+                  backgroundColor: "#F7F8F9",
                   height: Dimensions.get("window").height * 0.09 - 10,
-                  width: Dimensions.get("window").width * 0.2 + 15,
+                  width: Dimensions.get("window").width * 0.2 - 5,
                   borderRadius: 4,
-                  flexDirection: "row",
-                  backgroundColor: "#F7F8F9"
+                  justifyContent: "center",
+                  alignItems: "center",
+                  alignSelf: "center"
                 }}
               >
-                <View
-                  style={{
-                    height: Dimensions.get("window").height * 0.09 - 10,
-                    width: Dimensions.get("window").width * 0.2 - 5,
-
-                    justifyContent: "center",
-                    alignItems: "center",
-                    alignSelf: "center"
-                  }}
-                >
-                  <Text style={styles.tripLeftText}>
-                    {this.state.frequent_type[
-                      this.state.frequent_trip_type_end
-                    ].substring(0, 6)}
-                    ...
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    height: Dimensions.get("window").height * 0.09 - 10,
-                    width: 20,
-                    flexDirection: "row",
-                    justifyContent: "flex-start",
-                    alignItems: "center",
-                    alignSelf: "center"
-                  }}
-                >
-                  <Icon
-                    name="ios-arrow-down"
-                    size={15}
-                    color="#3d3d3d"
-                    style={{ alignSelf: "center" }}
-                  />
-                </View>
+                <Text style={styles.tripLeftText}>
+                  {strings("id_0_33").toLocaleUpperCase()}
+                </Text>
               </View>
             </TouchableWithoutFeedback>
           </View>
@@ -454,7 +422,6 @@ class FrequentTripScreen extends React.Component {
               backgroundColor: "#F7F8F9",
               height: Dimensions.get("window").height * 0.09 - 10,
               width: 1,
-
               justifyContent: "center",
               alignItems: "center",
               alignSelf: "center"
@@ -464,15 +431,16 @@ class FrequentTripScreen extends React.Component {
             onPress={() => {
               this.props.navigation.navigate("SurveyFrequentTripMap", {
                 start_point: false,
-                end_point: true
+                end_point: true,
+                screen_name: strings("id_0_33").toLocaleLowerCase()
               });
             }}
           >
-            <View style={styles.tripSecondPointContainer}>
+            <View style={styles.tripPointContainer}>
               <Text style={styles.textTrip}>
                 {this.props.registerState.frequent_trip_end != null
                   ? this.props.registerState.frequent_trip_end.street
-                  : strings("insert_the_addr")}
+                  : strings("id_0_34")}
               </Text>
             </View>
           </TouchableWithoutFeedback>
@@ -480,6 +448,144 @@ class FrequentTripScreen extends React.Component {
       </View>
     );
   }
+
+  // renderBoxB() {
+  //   let shadowOpt;
+  //   if (Platform.OS == "ios") {
+  //     shadowOpt = {
+  //       width: Dimensions.get("window").width * 0.9,
+  //       height: Dimensions.get("window").height * 0.06,
+  //       color: "#111",
+  //       border: 4,
+  //       radius: 5,
+  //       opacity: 0.25,
+  //       x: 0,
+  //       y: 1,
+  //       style: {
+  //         position: "absolute"
+  //         // top: Dimensions.get("window").height * 0.04,
+  //         // left: Dimensions.get("window").width * 0.28
+  //       }
+  //     };
+  //   } else
+  //     shadowOpt = {
+  //       width: Dimensions.get("window").width * 0.9,
+  //       height: Dimensions.get("window").height * 0.06,
+  //       color: "#444",
+  //       border: 6,
+  //       radius: 5,
+  //       opacity: 0.35,
+  //       x: 0,
+  //       y: 1,
+  //       style: {
+  //         position: "absolute"
+  //         // top: Dimensions.get("window").height * 0.04,
+  //         // left: Dimensions.get("window").width * 0.28
+  //       }
+  //     };
+  //   return (
+  //     <View style={styles.tripPointersContainer}>
+  //       {this.renderTypesModal()}
+  //       <BoxShadow setting={shadowOpt} />
+  //       <View
+  //         style={{
+  //           backgroundColor: "#fff",
+  //           borderRadius: 4,
+  //           flexDirection: "row"
+  //         }}
+  //       >
+  //         <View
+  //           style={{
+  //             backgroundColor: "#fff",
+  //             height: Dimensions.get("window").height * 0.09,
+  //             width: Dimensions.get("window").width * 0.2 + 25,
+  //             borderRadius: 4,
+  //             justifyContent: "center",
+  //             alignItems: "center",
+  //             alignSelf: "center"
+  //           }}
+  //         >
+  //           <TouchableWithoutFeedback
+  //             onPress={() => {
+  //               this.setState({ modal_types_visible: true });
+  //             }}
+  //           >
+  //             <View
+  //               style={{
+  //                 height: Dimensions.get("window").height * 0.09 - 10,
+  //                 width: Dimensions.get("window").width * 0.2 + 15,
+  //                 borderRadius: 4,
+  //                 flexDirection: "row",
+  //                 backgroundColor: "#F7F8F9"
+  //               }}
+  //             >
+  //               <View
+  //                 style={{
+  //                   height: Dimensions.get("window").height * 0.09 - 10,
+  //                   width: Dimensions.get("window").width * 0.2 - 5,
+  //                   justifyContent: "center",
+  //                   alignItems: "center",
+  //                   alignSelf: "center"
+  //                 }}
+  //               >
+  //                 <Text style={styles.tripLeftText}>
+  //                   {this.state.frequent_type[
+  //                     this.state.frequent_trip_type_end
+  //                   ].substring(0, 6)}
+  //                   ...
+  //                 </Text>
+  //               </View>
+  //               <View
+  //                 style={{
+  //                   height: Dimensions.get("window").height * 0.09 - 10,
+  //                   width: 20,
+  //                   flexDirection: "row",
+  //                   justifyContent: "flex-start",
+  //                   alignItems: "center",
+  //                   alignSelf: "center"
+  //                 }}
+  //               >
+  //                 <Icon
+  //                   name="ios-arrow-down"
+  //                   size={15}
+  //                   color="#3d3d3d"
+  //                   style={{ alignSelf: "center" }}
+  //                 />
+  //               </View>
+  //             </View>
+  //           </TouchableWithoutFeedback>
+  //         </View>
+  //         <View
+  //           style={{
+  //             backgroundColor: "#F7F8F9",
+  //             height: Dimensions.get("window").height * 0.09 - 10,
+  //             width: 1,
+
+  //             justifyContent: "center",
+  //             alignItems: "center",
+  //             alignSelf: "center"
+  //           }}
+  //         />
+  //         <TouchableWithoutFeedback
+  //           onPress={() => {
+  //             this.props.navigation.navigate("SurveyFrequentTripMap", {
+  //               start_point: false,
+  //               end_point: true
+  //             });
+  //           }}
+  //         >
+  //           <View style={styles.tripSecondPointContainer}>
+  //             <Text style={styles.textTrip}>
+  //               {this.props.registerState.frequent_trip_end != null
+  //                 ? this.props.registerState.frequent_trip_end.street
+  //                 : strings("insert_the_addr")}
+  //             </Text>
+  //           </View>
+  //         </TouchableWithoutFeedback>
+  //       </View>
+  //     </View>
+  //   );
+  // }
 
   renderFrequencyBox() {
     return (
@@ -545,7 +651,7 @@ class FrequentTripScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -556,7 +662,7 @@ class FrequentTripScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -574,7 +680,7 @@ class FrequentTripScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -585,7 +691,7 @@ class FrequentTripScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -700,68 +806,315 @@ class FrequentTripScreen extends React.Component {
     return (
       <View
         style={{
-          width: Dimensions.get("window").width * 0.4,
-          height: 30,
+          width: Dimensions.get("window").width,
+          // height: 80,
           alignSelf: "center",
           justifyContent: "center",
           // backgroundColor: "#fff",
-          flexDirection: "row"
+          flexDirection: "row",
+          alignItems: "center",
+          paddingTop: 20,
+          paddingBottom: 20,
+         
         }}
       >
-        <View
-          style={{
-            flex: 0.3,
-            backgroundColor: "#fff",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: 2
-          }}
-        >
+        
           <TouchableWithoutFeedback
             onPress={() => {
               this._showStartDateTimePicker();
             }}
           >
             <View>
-              <Text style={styles.textTime}>
-                {this.state.frequent_trip_start_time}
-              </Text>
+              <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingBottom: 5
+                }}
+              >
+                <Text style={styles.textTimePicker}  onPress={() => {
+              this._showStartDateTimePicker();
+            }}>{strings("id_0_42")}</Text>
+              </View>
+
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  borderRadius: 2,
+                  width: 80,
+                  height: 50
+                }}
+              >
+                <Text style={styles.textTime}  onPress={() => {
+              this._showStartDateTimePicker();
+            }}>
+                  {this.state.frequent_trip_start_time}
+                </Text>
+              </View>
             </View>
           </TouchableWithoutFeedback>
-        </View>
-        <View
-          style={{
-            flex: 0.3,
-            justifyContent: "center",
-            alignItems: "center"
-          }}
-        >
-          <OwnIcon name={"onboarding-time_icn"} size={20} color={"#fff"} />
-        </View>
-        <View
-          style={{
-            flex: 0.3,
-            backgroundColor: "#fff",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: 2
-          }}
-        >
+          <TouchableWithoutFeedback
+            onPress={() => {
+              this._showStartDateTimePicker();
+            }}
+          >
+            <View>
+            <View
+                style={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  paddingBottom: 5
+                }}
+              >
+                <Text style={styles.textOpacityTimePicker}  onPress={() => {
+              this._showStartDateTimePicker();
+            }}>ciao</Text>
+              </View>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                paddingLeft: 10,
+                paddingRight: 10,
+                width: 80,
+                  height: 50
+              }}
+            >
+              <OwnIcon name={"onboarding-time_icn"} size={25} color={"#ffffff"} />
+            </View>
+            </View>
+            </TouchableWithoutFeedback>
           <TouchableWithoutFeedback
             onPress={() => {
               this._showEndDateTimePicker();
             }}
           >
-            <View style={{ minWidth: 15, minHeight: 15 }}>
-              <Text style={styles.textTime}>
+           <View>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center",
+                paddingBottom: 5
+              }}
+            >
+              <Text style={styles.textTimePicker}  onPress={() => {
+              this._showEndDateTimePicker();
+            }}>{strings("id_0_43")}</Text>
+            </View>
+            <View
+              style={{
+                backgroundColor: "#fff",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 2,
+                width: 80,
+                height: 50
+              }}
+            >
+              <Text style={styles.textTime}  onPress={() => {
+              this._showEndDateTimePicker();
+            }}>
                 {this.state.frequent_trip_end_time}
               </Text>
             </View>
+            </View>
           </TouchableWithoutFeedback>
-        </View>
       </View>
     );
   }
+
+  /* renderTimeBox() {
+    return (
+      <View
+        style={{
+          width: Dimensions.get("window").width * 0.5,
+          height: 80,
+          alignSelf: "center",
+          justifyContent: "space-around",
+          // backgroundColor: "#fff",
+          flexDirection: "column",
+          alignItems: "center"
+        }}
+      >
+        <View
+          style={{
+            width: Dimensions.get("window").width * 0.5,
+            height: 40,
+            alignSelf: "center",
+            justifyContent: "space-between",
+            // backgroundColor: "#fff",
+            flexDirection: "row",
+            alignItems: "flex-end",
+            paddingHorizontal: 13
+          }}
+        >
+          <Text style={styles.textTimePicker}>{strings("id_0_42")}</Text>
+          <Text style={styles.textTimePicker}>{strings("id_0_43")}</Text>
+        </View>
+
+        <View
+          style={{
+            width: Dimensions.get("window").width * 0.5,
+            height: 40,
+            alignSelf: "center",
+            justifyContent: "space-around",
+            // backgroundColor: "#fff",
+            flexDirection: "row",
+            alignItems: "center"
+          }}
+        >
+          <View>
+            <View
+              style={{
+                backgroundColor: "#fff",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 2,
+                width: 65,
+                height: 38
+              }}
+            >
+              <TouchableWithoutFeedback
+                onPress={() => {
+                  this._showStartDateTimePicker();
+                }}
+              >
+                <View>
+                  <Text style={styles.textTime}>
+                    {this.state.frequent_trip_start_time}
+                  </Text>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </View>
+
+          <View>
+            <View
+              style={{
+                justifyContent: "center",
+                alignItems: "center"
+              }}
+            >
+              <OwnIcon name={"onboarding-time_icn"} size={20} color={"#fff"} />
+            </View>
+          </View>
+
+          <View>
+            <View
+              style={{
+                backgroundColor: "#fff",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 2,
+                width: 65,
+                height: 38
+              }}
+            >
+              <TouchableWithoutFeedback
+                onPress={() => {
+                  this._showEndDateTimePicker();
+                }}
+              >
+                <View style={{ minWidth: 15, minHeight: 15 }}>
+                  <Text style={styles.textTime}>
+                    {this.state.frequent_trip_end_time}
+                  </Text>
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </View>
+        </View>
+      </View>
+    );
+  } */
+
+
+
+  // renderTimeBox() {
+  //   return (
+  //     <View
+  //       style={{
+  //         width: Dimensions.get("window").width * 0.5,
+  //         height: 80,
+  //         alignSelf: "center",
+  //         justifyContent: "center",
+  //         // backgroundColor: "#fff",
+  //         flexDirection: "row",
+  //         alignItems: "center"
+  //       }}
+  //     >
+  //       <View
+  //         style={{
+  //           flex: 0.3,
+  //           justifyContent: "center",
+  //           alignItems: "center"
+  //         }}
+  //       >
+  //         <Text style={styles.textTimePicker}>Andata</Text>
+  //         <View
+  //           style={{
+  //             backgroundColor: "#fff",
+  //             justifyContent: "center",
+  //             alignItems: "center",
+  //             borderRadius: 2,
+  //             width: 65,
+  //             height: 38
+  //           }}
+  //         >
+  //           <TouchableWithoutFeedback
+  //             onPress={() => {
+  //               this._showStartDateTimePicker();
+  //             }}
+  //           >
+  //             <View>
+  //               <Text style={styles.textTime}>
+  //                 {this.state.frequent_trip_start_time}
+  //               </Text>
+  //             </View>
+  //           </TouchableWithoutFeedback>
+  //         </View>
+  //       </View>
+
+  //       <View
+  //         style={{
+  //           flex: 0.3,
+  //           justifyContent: "center",
+  //           alignItems: "center"
+  //         }}
+  //       >
+  //         <OwnIcon name={"onboarding-time_icn"} size={20} color={"#fff"} />
+  //       </View>
+
+  //       <View>
+  //         <Text style={styles.textTimePicker}>Ritorno</Text>
+  //         <View
+  //           style={{
+  //             backgroundColor: "#fff",
+  //             justifyContent: "center",
+  //             alignItems: "center",
+  //             borderRadius: 2,
+  //             width: 65,
+  //             height: 38
+  //           }}
+  //         >
+  //           <TouchableWithoutFeedback
+  //             onPress={() => {
+  //               this._showEndDateTimePicker();
+  //             }}
+  //           >
+  //             <View style={{ minWidth: 15, minHeight: 15 }}>
+  //               <Text style={styles.textTime}>
+  //                 {this.state.frequent_trip_end_time}
+  //               </Text>
+  //             </View>
+  //           </TouchableWithoutFeedback>
+  //         </View>
+  //       </View>
+  //     </View>
+  //   );
+  // }
 
   renderBody() {
     return (
@@ -772,7 +1125,16 @@ class FrequentTripScreen extends React.Component {
           justifyContent: "center"
         }}
       >
-        <Image
+        {/* <Image
+          source={require("../../assets/images/routinary_empty.png")}
+          style={{
+            height: 50,
+            width: 50,
+            alignSelf: "center"
+          }}
+          resizeMode={"contain"}
+        /> */}
+         <Image
           source={require("../../assets/images/trip_a_b.png")}
           style={{
             height: 50,
@@ -781,6 +1143,7 @@ class FrequentTripScreen extends React.Component {
           }}
           resizeMode={"contain"}
         />
+
 
         <View
           style={{
@@ -803,8 +1166,8 @@ class FrequentTripScreen extends React.Component {
           }}
         >
           {/* {this.renderFrequencyBox()} */}
-          {this.renderTimeBox()}
           {this.renderWeekdays()}
+          {this.renderTimeBox()}
         </View>
       </View>
     );
@@ -870,6 +1233,9 @@ class FrequentTripScreen extends React.Component {
           datePickerModeAndroid={"default"}
           mode={"time"}
           is24Hour={true}
+          cancelTextIOS={strings("id_0_50")}
+          confirmTextIOS={strings("id_0_49")}
+          titleIOS={strings("id_0_48")}
         />
         <DateTimePicker
           isVisible={this.state.end_datetime_picker_visible}
@@ -878,6 +1244,9 @@ class FrequentTripScreen extends React.Component {
           datePickerModeAndroid={"default"}
           mode={"time"}
           is24Hour={true}
+          cancelTextIOS={strings("id_0_50")}
+          confirmTextIOS={strings("id_0_49")}
+          titleIOS={strings("id_0_48")}
         />
         <View
           style={{
@@ -913,9 +1282,7 @@ class FrequentTripScreen extends React.Component {
                   />
                 </View>
               </TouchableWithoutFeedback>
-              <Text style={styles.textHeader}>
-                {strings("insert_your_mos")}
-              </Text>
+              <Text style={styles.textHeader}>{strings("id_0_31")}</Text>
             </View>
           </View>
         </View>
@@ -952,9 +1319,7 @@ class FrequentTripScreen extends React.Component {
               }}
             >
               <View style={styles.textFooterContainer}>
-                <Text style={styles.textFooter}>
-                  {strings("please_enter_th")}
-                </Text>
+                <Text style={styles.textFooter}>{strings("id_0_44")}</Text>
                 {/* {strings("you_can_always_} */}
               </View>
 
@@ -972,18 +1337,19 @@ class FrequentTripScreen extends React.Component {
                       // incremento di 1 se this.state.frequent_trip_type_end == 1
                       // incremento di 2 se this.state.frequent_trip_type_end == 2
                       // per sincronizzarmi con l'enum del DATABASE
-                      let frequent_trip_end =
-                        this.state.frequent_trip_type_end == 1
-                          ? this.state.frequent_trip_type_end + 1
-                          : this.state.frequent_trip_type_end == 2
-                          ? this.state.frequent_trip_type_end + 2
-                          : this.state.frequent_trip_type_end;
+                      // let frequent_trip_end =
+                      //   this.state.frequent_trip_type_end == 1
+                      //     ? this.state.frequent_trip_type_end + 1
+                      //     : this.state.frequent_trip_type_end == 2
+                      //     ? this.state.frequent_trip_type_end + 2
+                      //     : this.state.frequent_trip_type_end;
 
                       this.props.dispatch(
                         updateState({
                           frequent_trip_type_start: this.state
                             .frequent_trip_type_start,
-                          frequent_trip_type_end: frequent_trip_end,
+                          frequent_trip_type_end: this.state
+                            .frequent_trip_type_end,
                           frequent_trip_start_time: this.state
                             .frequent_trip_start_time,
                           frequent_trip_end_time: this.state
@@ -996,7 +1362,10 @@ class FrequentTripScreen extends React.Component {
                         "SurveyFrequentTripModalSplit"
                       );
                     } else {
-                      Alert.alert("Oops", strings("seems_like_you_"));
+                      Alert.alert(
+                        strings("id_0_10"),
+                        strings("id_0_46")
+                      );
                     }
                   }}
                   disabled={this.props.status === "In register" ? true : false}
@@ -1004,7 +1373,7 @@ class FrequentTripScreen extends React.Component {
                   <View style={[styles.buttonBox]}>
                     {this.props.status !== "In register" ? (
                       <Text style={styles.buttonGoOnText}>
-                        {this.props.text ? this.props.text : strings("go_on")}
+                        {this.props.text ? this.props.text : strings("id_0_15")}
                       </Text>
                     ) : (
                       <ActivityIndicator size="small" color="#6497CC" />
@@ -1066,6 +1435,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "400",
     textAlign: "left"
+  },
+  textTimePicker: {
+    fontFamily: "OpenSans-Regular",
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "400",
+    textAlign: "center"
+  },
+  textOpacityTimePicker: {
+    fontFamily: "OpenSans-Regular",
+    color: "#3d3d3d",
+    fontSize: 14,
+    fontWeight: "400",
+    textAlign: "center",
+    opacity: 0
   },
   buttonContainer: {
     width: Dimensions.get("window").width * 0.3,

@@ -134,7 +134,7 @@ class SharingScreen extends React.Component {
           <View style={styles.boxesContainer}>
             {this.renderCheckbox(
               0,
-              strings("no"),
+              strings("id_0_54"),
               () => {
                 this.setState({ bike_sharing_user: 0 });
               },
@@ -142,7 +142,7 @@ class SharingScreen extends React.Component {
             )}
             {this.renderCheckbox(
               1,
-              strings("yes"),
+              strings("id_0_55"),
               () => {
                 this.setState({ bike_sharing_user: 1 });
               },
@@ -178,7 +178,7 @@ class SharingScreen extends React.Component {
           <View style={styles.boxesContainer}>
             {this.renderCheckbox(
               0,
-              strings("no"),
+              strings("id_0_54"),
               () => {
                 this.setState({ car_sharing_user: 0 });
               },
@@ -186,7 +186,7 @@ class SharingScreen extends React.Component {
             )}
             {this.renderCheckbox(
               1,
-              strings("yes"),
+              strings("id_0_55"),
               () => {
                 this.setState({ car_sharing_user: 1 });
               },
@@ -222,7 +222,7 @@ class SharingScreen extends React.Component {
           <View style={styles.boxesContainer}>
             {this.renderCheckbox(
               0,
-              strings("no"),
+              strings("id_0_54"),
               () => {
                 this.setState({ ride_sharing_user: 0 });
               },
@@ -230,7 +230,7 @@ class SharingScreen extends React.Component {
             )}
             {this.renderCheckbox(
               1,
-              strings("yes"),
+              strings("id_0_55"),
               () => {
                 this.setState({ ride_sharing_user: 1 });
               },

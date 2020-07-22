@@ -31,7 +31,7 @@ class OneplusScreen extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {/* {strings("change_muv_lang")} */}
+          {/* {strings("id_13_10")} */}
           {"FAQ Oneplus"}
         </Text>
       )

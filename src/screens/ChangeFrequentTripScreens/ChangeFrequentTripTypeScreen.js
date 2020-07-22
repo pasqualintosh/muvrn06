@@ -281,7 +281,7 @@ class ChangeFrequentTripTypeScreen extends React.Component {
           }}
         >
           <View style={styles.buttonModalContainer}>
-            <Text style={styles.textButton}>{strings("undo")}</Text>
+            <Text style={styles.textButton}>{strings("id_0_68")}</Text>
           </View>
         </TouchableWithoutFeedback>
         <TouchableWithoutFeedback
@@ -290,7 +290,7 @@ class ChangeFrequentTripTypeScreen extends React.Component {
           }}
         >
           <View style={styles.buttonModalContainer}>
-            <Text style={styles.textButton}>{strings("ok")}</Text>
+            <Text style={styles.textButton}>{strings("id_0_12")}</Text>
           </View>
         </TouchableWithoutFeedback>
       </View>
@@ -505,7 +505,7 @@ class ChangeFrequentTripTypeScreen extends React.Component {
                         }
                       );
                     }
-                  else Alert.alert("Oops", strings("seems_like_you_"));
+                  else Alert.alert("Oops", strings("id_0_46"));
                 }}
               >
                 <View style={[styles.buttonBox]}>
@@ -583,7 +583,7 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
+    elevation: 1
   },
   buttonGoOnText: {
     color: "#3363AD",

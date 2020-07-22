@@ -35,13 +35,12 @@ if (Platform.OS == "ios") {
   locale = NativeModules.SettingsManager.settings.AppleLocale;
   if (locale === undefined) {
     // iOS 13 workaround, take first of AppleLanguages array  ["en", "en-NZ"]
-    locale = NativeModules.SettingsManager.settings.AppleLanguages[0]
+    locale = NativeModules.SettingsManager.settings.AppleLanguages[0];
     if (locale == undefined) {
-          locale = "en" // default language
+      locale = "en"; // default language
     }
-}
-}
-else locale = NativeModules.I18nManager.localeIdentifier;
+  }
+} else locale = NativeModules.I18nManager.localeIdentifier;
 
 locale = locale.substr(0, 2);
 
@@ -129,7 +128,7 @@ class DatePicker extends React.Component {
         }
         locale={locale}
       />
-      {this._renderButton("Confirm", () =>
+      {this._renderButton(strings("id_13_23"), () =>
         this.setState({ isModalVisible: false })
       )}
     </View>
@@ -137,7 +136,7 @@ class DatePicker extends React.Component {
 
   setDate(newDate) {
     console.log(newDate);
-    this.props.changeState(newDate, this.props.type);
+    this.props.changeState(newDate, this.props.type, this.props.function);
   }
 
   showAndroidDatePicker = async () => {
@@ -181,7 +180,16 @@ class DatePicker extends React.Component {
           <TouchableOpacity
             onPress={this._toggleModal}
             style={{
-              flexDirection: "row"
+              flexDirection: "row",
+              alignSelf: "center",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignContent: "center",
+    alignItems: "center",
+
+    height: Dimensions.get("window").height * 0.1,
+    width: Dimensions.get("window").width * 0.45
+              
             }}
           >
             <Text style={styles.Right}>
@@ -216,7 +224,15 @@ class DatePicker extends React.Component {
           <TouchableOpacity
             onPress={() => this.showAndroidDatePicker()}
             style={{
-              flexDirection: "row"
+              flexDirection: "row",
+              alignSelf: "center",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignContent: "center",
+    alignItems: "center",
+
+    height: Dimensions.get("window").height * 0.1,
+    width: Dimensions.get("window").width * 0.45
             }}
           >
             <Text

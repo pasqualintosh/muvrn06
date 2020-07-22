@@ -140,9 +140,19 @@ class DailyActivities extends React.Component {
     console.log(this.random);
 
     return (
-      <View style={{ width: Dimensions.get("window").width, flexDirection: "column", alignContent: "center", justifyContent: 'center', alignSelf: "center",alignContent: "center", alignItems: "center"}}>
+      <View
+        style={{
+          width: Dimensions.get("window").width,
+          flexDirection: "column",
+          alignContent: "center",
+          justifyContent: "center",
+          alignSelf: "center",
+          alignContent: "center",
+          alignItems: "center"
+        }}
+      >
         <View style={styles.headerContainer}>
-          <Text style={styles.headerText}>DAILY ACTIVITIES</Text>
+          <Text style={styles.headerText}>ACTIVITIES</Text>
         </View>
         <View
           onPress={() =>
@@ -258,7 +268,6 @@ class DailyActivities extends React.Component {
               </G>
             </Svg>
           </View>
-          
         </View>
         <View
           style={styles.centerCircleContainer}
@@ -268,10 +277,12 @@ class DailyActivities extends React.Component {
         >
           <View>
             <Text style={styles.centerCircleValue}>{this.props.minutes}</Text>
-            <Text style={styles.centerTextCircleParam}> Minutes</Text>
+            <Text style={styles.centerTextCircleParam}>
+              {strings("id_5_06")}
+            </Text>
           </View>
         </View>
-        
+
         <View style={styles.headerContainerActivities}>
           <Text style={styles.headerTextActivities}>
             {this.label[position * 3 + this.casualValue]}

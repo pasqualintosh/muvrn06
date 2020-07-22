@@ -158,7 +158,6 @@ export function citiesId(city = "") {
 
 // per sapere se è girone A o B
 export function divisionTournamentCitiesInA(city) {
-
   switch (city) {
     case "Palermo":
     case "Amsterdam":
@@ -176,7 +175,6 @@ export function divisionTournamentCitiesInA(city) {
       break;
   }
 }
-
 
 // per sapere le città che partecipano al torneo
 export function TournamentCities(city) {
@@ -198,7 +196,6 @@ export function TournamentCities(city) {
     case "Sosnowiec":
     case "Katowice":
     case "Oostende":
-
       return 1;
       break;
 
@@ -226,7 +223,8 @@ export const imagesCity = {
   15: require("../../assets/images/cities/sosnowiec.png"),
   16: require("../../assets/images/cities/milano.png"),
   17: require("../../assets/images/cities/cagliari.png"),
-  18: require("../../assets/images/cities/munich.png")
+  18: require("../../assets/images/cities/munich.png"),
+  19: require("../../assets/images/Eni_logo.png")
 };
 
 export const imagesBanners = {
@@ -247,7 +245,7 @@ export const imagesBanners = {
   15: require("../../assets/images/bandiere/Poland.png"),
   16: require("../../assets/images/bandiere/Italy.png"),
   17: require("../../assets/images/bandiere/Italy.png"),
-  18: require("../../assets/images/bandiere/Germany.png"),
+  18: require("../../assets/images/bandiere/Germany.png")
 };
 
 class FriendItem extends React.PureComponent {
@@ -310,13 +308,13 @@ class FriendItem extends React.PureComponent {
             <Text style={styles.modalText}>
               {this.props.follower
                 ? this.getFeedContentFromString(
-                  strings("_571_are_you_sure_yo"),
-                  this.props.friendData.first_name
-                )
+                    strings("_571_are_you_sure_yo"),
+                    this.props.friendData.first_name
+                  )
                 : this.getFeedContentFromString(
-                  strings("_572_are_you_sure_yo"),
-                  this.props.friendData.first_name
-                )}
+                    strings("_572_are_you_sure_yo"),
+                    this.props.friendData.first_name
+                  )}
             </Text>
           </View>
 
@@ -420,7 +418,7 @@ class FriendItem extends React.PureComponent {
             alignItems: "center"
           }}
           onPress={() => {
-            this.setState({ modal_visible: true }, () => { });
+            this.setState({ modal_visible: true }, () => {});
           }}
         >
           <OwnIcon name="delete_icn" size={18} color="#FC6754" />
@@ -472,7 +470,7 @@ class FriendItem extends React.PureComponent {
             alignItems: "center"
           }}
           onPress={() => {
-            this.setState({ modal_visible: true }, () => { });
+            this.setState({ modal_visible: true }, () => {});
           }}
         >
           {/* <Svg height="18" width="18" viewBox="0 0 100 100" fill="white">
@@ -589,12 +587,12 @@ class FriendItem extends React.PureComponent {
                 <Text style={[styles.userLabel, { color }]}>
                   {this.props.friendData.first_name
                     ? this.props.friendData.first_name.charAt(0).toUpperCase() +
-                    this.props.friendData.first_name.toLowerCase().slice(1)
+                      this.props.friendData.first_name.toLowerCase().slice(1)
                     : ""}{" "}
                   {this.props.friendData.last_name
                     ? this.props.friendData.last_name
-                      .substr(0, 1)
-                      .toUpperCase() + "."
+                        .substr(0, 1)
+                        .toUpperCase() + "."
                     : " "}
                 </Text>
               </View>
@@ -612,7 +610,7 @@ class FriendItem extends React.PureComponent {
                 >
                   <TouchableHighlight
                     onPress={() => this.props.goToCity(id, this.props.city)}
-                  // disabled={true}
+                    // disabled={true}
                   >
                     <Image
                       source={imagesCity[id]}
@@ -624,22 +622,22 @@ class FriendItem extends React.PureComponent {
                   </TouchableHighlight>
                 </View>
               ) : (
-                  <View
-                    style={{
-                      width: Dimensions.get("window").width * 0.25,
-                      height: 100,
-                      alignContent: "center",
-                      flexDirection: "column",
-                      justifyContent: "center",
+                <View
+                  style={{
+                    width: Dimensions.get("window").width * 0.25,
+                    height: 100,
+                    alignContent: "center",
+                    flexDirection: "column",
+                    justifyContent: "center",
 
-                      alignItems: "center"
-                    }}
-                  >
-                    <Text style={[styles.userPoints, { color }]}>
-                      {this.props.city}
-                    </Text>
-                  </View>
-                )}
+                    alignItems: "center"
+                  }}
+                >
+                  <Text style={[styles.userPoints, { color }]}>
+                    {this.props.city}
+                  </Text>
+                </View>
+              )}
 
               <View
                 style={{
@@ -683,11 +681,11 @@ class FriendItem extends React.PureComponent {
                   !this.props.can_follow ? (
                     this.addFriend()
                   ) : (
-                      <View />
-                    )
+                    <View />
+                  )
                 ) : (
-                    this.deleteFriend()
-                  )}
+                  this.deleteFriend()
+                )}
               </View>
             </View>
           </View>

@@ -610,7 +610,6 @@ class LevelContainer extends React.Component {
               alignContent: "center",
               flex: 1,
               paddingTop: 20,
-
               alignItems: "center",
               alignSelf: "center"
             }}
@@ -3022,24 +3021,15 @@ if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
 
 const getSession = state => state.screen.sessions;
 
-const getSessionState = createSelector(
-  [getSession],
-  session => session
-);
+const getSessionState = createSelector([getSession], session => session);
 
 const getSession2 = state => state.screen.sessions2;
 
-const getSessionState2 = createSelector(
-  [getSession2],
-  session => session
-);
+const getSessionState2 = createSelector([getSession2], session => session);
 
 const getProfileLogin = state => state.login.infoProfile;
 
-const getProfileState = createSelector(
-  [getProfileLogin],
-  profile => profile
-);
+const getProfileState = createSelector([getProfileLogin], profile => profile);
 
 const withData = connect(state => {
   return {

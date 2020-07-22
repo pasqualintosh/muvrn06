@@ -11,17 +11,15 @@ import {
   ListView
 } from "react-native";
 
-
 import Aux from "../../helpers/Aux";
 import Blur from "../../components/Blur/Blur";
 import NotificationPoint from "./../../components/NotificationPoint/NotificationPoint";
 import TrophiesRanking from "../TrophiesRanking/TrophiesRanking";
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
 import { connect } from "react-redux";
-import { getTrophiesDetail } from "./../../domains/standings/ActionCreators";
+import { getTrophiesDetailNew } from "./../../domains/standings/ActionCreators";
 import LinearGradient from "react-native-linear-gradient";
 
 class TrophiesRankingBlur extends React.Component {
@@ -31,28 +29,72 @@ class TrophiesRankingBlur extends React.Component {
     this.state = {
       trophies: [],
       viewRef: null,
-      title: "City"
+      title: "World",
+      trophy: {
+        id: 7,
+        user: {
+          id: 11,
+          username: "angy",
+          walking_index: 0,
+          biking_index: 0,
+          lpt_index: 0,
+          carpooling_index: 0,
+          global_index: 0,
+          city: 1122,
+          avatar: 58,
+          level_of_experience: 1,
+          role: 1
+        },
+        trophy: {
+          id: 1,
+          position: 1,
+          img: "/media/static/img/weekly_trophies/trophy_global_first.png",
+          img_small:
+            "/media/static/img/weekly_trophies/trophy_global_first_small.png"
+        },
+        week_date: "2020-03-08",
+        position: 1,
+        points: 99999
+      }
     };
   }
 
   componentWillMount() {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // const screenView = new GAHits.ScreenView(
-    //   Settings.analyticsAppName,
-    //   this.constructor.name,
-    //   DeviceInfo.getReadableVersion(),
-    //   DeviceInfo.getBundleId()
-    // );
-    // ga.send(screenView);
 
-    const trophy = this.props.navigation.getParam("trophy", []);
 
-    this.props.dispatch(getTrophiesDetail(trophy, this.saveTrophies));
+    const trophy = this.props.navigation.getParam("trophy", {
+      id: 7,
+      user: {
+        id: 11,
+        username: "angy",
+        walking_index: 0,
+        biking_index: 0,
+        lpt_index: 0,
+        carpooling_index: 0,
+        global_index: 0,
+        city: 1122,
+        avatar: 58,
+        level_of_experience: 1,
+        role: 1
+      },
+      trophy: {
+        id: 1,
+        position: 1,
+        img: "/media/static/img/weekly_trophies/trophy_global_first.png",
+        img_small:
+          "/media/static/img/weekly_trophies/trophy_global_first_small.png"
+      },
+      week_date: "2020-03-08",
+      position: 1,
+      points: 99999
+    });
+
+    console.log(trophy);
+    this.setState({
+      trophy
+    });
+
+    this.props.dispatch(getTrophiesDetailNew(trophy, this.saveTrophies));
   }
 
   saveTrophies = data => {
@@ -71,13 +113,14 @@ class TrophiesRankingBlur extends React.Component {
     // quando ho caricato il componente, posso dire a blur che è possibile fare il blur usando questa variabile
     this.setState({ viewRef: findNodeHandle(this.view) });
     // Individual Standings
-    const trophy = this.props.navigation.getParam("trophy", []);
+    // const trophy = this.props.navigation.getParam("trophy", []);
 
-    const title = trophy.city ? "Individual" : "World";
+    const title = "World";
+    // const title = trophy.city ? "Individual" : "World";
 
-    this.setState({
-      title: trophy.city ? "City" : "World"
-    });
+    // this.setState({
+    //   title: trophy.city ? "City" : "World"
+    // });
 
     // Set route params
     this.props.navigation.setParams({
@@ -116,13 +159,13 @@ class TrophiesRankingBlur extends React.Component {
         "th " +
         textDate.slice(10);
     } */
-    let dataStart = new Date("2018-11-25T00:00:00.465Z");
-    if (myTrophy.updated_at.slice(0, 4) === "2019") {
+    let dataStart = new Date("2020-03-01T00:00:00.465Z");
+    if (myTrophy.week_date.slice(0, 4) == "2021") {
       // l'ultima domenica del 2018 come riferimento
-      dataStart = new Date("2018-12-30T00:00:00.465Z");
+      dataStart = new Date("2021-01-01T00:00:00.465Z");
     }
 
-    const dateNow = new Date(myTrophy.updated_at);
+    const dateNow = new Date(myTrophy.week_date);
     const differenceData = dateNow - dataStart;
     console.log(differenceData);
     const seconds = new Date(differenceData).getTime();
@@ -194,9 +237,9 @@ class TrophiesRankingBlur extends React.Component {
   };
 
   refreshTrophies = () => {
-    const trophy = this.props.navigation.getParam("trophy", []);
-
-    this.props.dispatch(getTrophiesDetail(trophy, this.saveTrophies));
+    this.props.dispatch(
+      getTrophiesDetailNew(this.state.trophy, this.saveTrophies)
+    );
   };
 
   ASCIItoRomanNumeralConverter = num => {
@@ -240,9 +283,6 @@ class TrophiesRankingBlur extends React.Component {
   };
 
   render() {
-    const trophy = this.props.navigation.getParam("trophy", []);
-    console.log(trophy);
-
     return (
       <Aux>
         <NotificationPoint navigation={this.props.navigation} />
@@ -256,10 +296,10 @@ class TrophiesRankingBlur extends React.Component {
             height: Dimensions.get("window").height
           }}
         >
-          {this.renderHeader(trophy)}
+          {this.renderHeader(this.state.trophy)}
           <TrophiesRanking
             navigation={this.props.navigation}
-            trophy={trophy}
+            trophy={this.state.trophy}
             trophies={this.state.trophies}
             refreshTrophies={this.refreshTrophies}
           />

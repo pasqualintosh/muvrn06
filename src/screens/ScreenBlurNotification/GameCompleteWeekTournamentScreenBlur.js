@@ -17,7 +17,7 @@ import NotificationPoint from "./../../components/NotificationPoint/Notification
 import GameCompleteWeekTournamentScreen from "../GameCompleteWeekTournamentScreen/GameCompleteWeekTournamentScreen";
 
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
+
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
 class GameCompleteWeekTournamentScreenBlur extends React.Component {
@@ -27,19 +27,7 @@ class GameCompleteWeekTournamentScreenBlur extends React.Component {
   }
 
   componentWillMount() {
-    // const ga = new Analytics(
-    //     Settings.analyticsCode,
-    //     DeviceInfo.getUniqueID(),
-    //     1,
-    //     DeviceInfo.getUserAgent()
-    // );
-    // const screenView = new GAHits.ScreenView(
-    //     Settings.analyticsAppName,
-    //     this.constructor.name,
-    //     DeviceInfo.getReadableVersion(),
-    //     DeviceInfo.getBundleId()
-    // );
-    // ga.send(screenView);
+   
   }
 
   componentDidMount() {

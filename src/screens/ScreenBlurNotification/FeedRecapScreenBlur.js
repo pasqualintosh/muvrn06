@@ -4,6 +4,7 @@ import Aux from "../../helpers/Aux";
 import Blur from "../../components/Blur/Blur";
 import NotificationPoint from "./../../components/NotificationPoint/NotificationPoint";
 import FeedRecapScreen from "./../FeedRecapScreen/FeedRecapScreen";
+import { strings } from "../../config/i18n";
 
 class MapRoutineBlur extends React.Component {
   constructor(props) {
@@ -18,7 +19,7 @@ class MapRoutineBlur extends React.Component {
           left: Platform.OS == "android" ? 20 : 0
         }}
       >
-        Trip recap
+        {strings("id_1_23")}
       </Text>
     )
   };

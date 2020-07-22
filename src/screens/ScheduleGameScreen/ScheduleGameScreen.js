@@ -45,12 +45,13 @@ import { medalSmallGlobalView } from "./../TrophiesRanking/TrophiesRanking";
 import {
   getSchedule,
   getScheduleWeek,
-  getPlayoffMatch
+  getSchedulePlayoff
 } from "./../../domains/screen/ActionCreators";
 import { getProfile } from "./../../domains/login/Selectors";
 import { getPlayoffMatchState } from "./../../domains/screen/Selectors";
 
 import { data, currentMatch } from "../../helpers/tournament";
+import { strings } from "../../config/i18n";
 
 function compare(a, b) {
   console.log(a);
@@ -75,38 +76,38 @@ function compareSchedule(a, b) {
 
 export function playoffStart(Now) {
   const endTournament = "2019-11-10T17:00:00Z";
-  // const endTournament = "2019-09-23T04:30:00Z"
+  // const endTournament = "2019-10-27T17:00:00Z"
   return Now >= new Date(endTournament).getTime();
 }
 
 export function playoffPhrase(Now) {
   const endTournament = "2019-11-10T17:00:00Z";
-  // const endTournament = "2019-09-23T04:30:00Z"
+  // const endTournament = "2019-10-27T17:00:00Z"
   // calcolo la fase, index del torneo, indexMax per lo scroll
   let phrase = 1;
-  let index = 8;
-  let indexMax = index + 1;
+  let index = 7;
+  let indexMax = 9;
   if (Now < new Date(endTournament).getTime() + 7 * 86400000) {
     phrase = 1;
-    index = 8;
-    indexMax = index + 1;
+    index = 7;
+    ondexMax = 9;
   } else if (Now < new Date(endTournament).getTime() + 14 * 86400000) {
     phrase = 2;
-    index = 9;
-    indexMax = index + 1;
+    index = 8;
+    indexMax = 10;
   } else if (Now < new Date(endTournament).getTime() + 21 * 86400000) {
     phrase = 3;
 
-    index = 10;
-    indexMax = index + 1;
+    index = 9;
+    indexMax = 11;
   } else if (Now < new Date(endTournament).getTime() + 28 * 86400000) {
     phrase = 4;
 
-    index = 11;
-    indexMax = index + 1;
+    index = 10;
+    indexMax = 12;
   } else {
     phrase = 4;
-    index = 12;
+    index = 11;
     indexMax = 12;
   }
   return {
@@ -168,7 +169,7 @@ class ScheduleGameScreen extends React.Component {
 
     // let index = 11
     let index = Match.indexWeek;
-    let indexMax = 7
+    let indexMax = 8;
     // let indexMax = 13
     if (playoff) {
       // devo vedere in che settimana del playoff sono
@@ -182,7 +183,7 @@ class ScheduleGameScreen extends React.Component {
       index,
       division: division,
       indexMax,
-      Now: new Date().getTime
+      Now: new Date().getTime()
     };
 
     // this.state = {
@@ -353,10 +354,14 @@ class ScheduleGameScreen extends React.Component {
   };
 
   componentDidMount() {
-    setTimeout(() => {
-      this.onLayout();
+    let wait = new Promise((resolve) => setTimeout(resolve, 1000));  // Smaller number should work
+  wait.then( () => {
+    this.onLayout();
       this.onLayoutHeader();
-    }, 400);
+    
+  });
+
+   
   }
 
   componentWillMount() {
@@ -406,7 +411,7 @@ class ScheduleGameScreen extends React.Component {
       // per le successive settimane chiedo i dati del playoff
       // aggiorna in automatico lo stato redux corrisponde
       this.props.dispatch(
-        getPlayoffMatch({ season_playoff: this.state.index - 6 })
+        getSchedulePlayoff({ season_playoff: this.state.index - 6 })
       );
     }
   }
@@ -448,7 +453,7 @@ class ScheduleGameScreen extends React.Component {
       } else {
         // per le successive settimane chiedo i dati del playoff
         // aggiorna in automatico lo stato redux corrisponde
-        this.props.dispatch(getPlayoffMatch({ season_playoff: index - 6 }));
+        this.props.dispatch(getSchedulePlayoff({ season_playoff: index - 6 }));
       }
     }
   }
@@ -519,10 +524,38 @@ class ScheduleGameScreen extends React.Component {
       } else {
         // per le successive settimane chiedo i dati del playoff
         // aggiorna in automatico lo stato redux corrisponde
-        this.props.dispatch(getPlayoffMatch({ season_playoff: index - 6 }));
+        this.props.dispatch(getSchedulePlayoff({ season_playoff: index - 6 }));
       }
     }
   }
+
+  handleScrollHeaderTest = event => {
+    let yOffset = event.nativeEvent.contentOffset.y;
+    let contentHeight = event.nativeEvent.contentSize.height;
+    let value = yOffset / contentHeight;
+
+    let index = value;
+    console.log(index);
+
+    this.header.scrollToIndex({ index: index });
+    this.game.scrollToIndex({ index: index });
+    this.setState({
+      index
+    });
+    // se index cambia carico nuovi dati
+    if (index !== this.state.index) {
+      if (index < 7) {
+        // per le prime sette settimane chiedo i dati del torneo
+        this.props.dispatch(
+          getScheduleWeek({ week: index + 1 }, this.saveSpecificWeek)
+        );
+      } else {
+        // per le successive settimane chiedo i dati del playoff
+        // aggiorna in automatico lo stato redux corrisponde
+        this.props.dispatch(getSchedulePlayoff({ season_playoff: index - 6 }));
+      }
+    }
+  };
 
   changeIndex = index => {
     if (index <= this.state.index) {
@@ -534,7 +567,7 @@ class ScheduleGameScreen extends React.Component {
       } else {
         // per le successive settimane chiedo i dati del playoff
         // aggiorna in automatico lo stato redux corrisponde
-        this.props.dispatch(getPlayoffMatch({ season_playoff: index - 7 }));
+        this.props.dispatch(getSchedulePlayoff({ season_playoff: index - 7 }));
       }
     } else if (index > this.state.index + 1) {
       this.increase();
@@ -545,7 +578,7 @@ class ScheduleGameScreen extends React.Component {
       } else {
         // per le successive settimane chiedo i dati del playoff
         // aggiorna in automatico lo stato redux corrisponde
-        this.props.dispatch(getPlayoffMatch({ season_playoff: index - 7 }));
+        this.props.dispatch(getSchedulePlayoff({ season_playoff: index - 7 }));
       }
     }
   };
@@ -616,6 +649,7 @@ class ScheduleGameScreen extends React.Component {
   };
 
   nextPlayoffMatch = index => {
+    console.log(index);
     return (
       <View key={index}>
         <View
@@ -665,6 +699,123 @@ class ScheduleGameScreen extends React.Component {
               }}
               source={require("../../assets/images/next_matches.png")}
             />
+          </View>
+          <View
+            style={{
+              alignContent: "center",
+
+              width: 30,
+              height: 30,
+
+              flexDirection: "column",
+              alignItems: "center",
+              alignSelf: "center",
+              justifyContent: "center"
+            }}
+          />
+          <View
+            style={{
+              alignContent: "center",
+
+              width: Dimensions.get("window").width * 0.8,
+
+              flexDirection: "column",
+              alignItems: "center",
+              alignSelf: "center",
+              justifyContent: "center"
+            }}
+          >
+            {index == 7 ? (
+              <Text>
+                <Text
+                  style={{
+                    color: "#3D3D3D",
+                    fontSize: 12,
+                    textAlign: "center",
+                    // fontWeight: "600",
+                    fontFamily: "OpenSans-Regular",
+                    textAlign: "center",
+                    textAlignVertical: "center"
+                  }}
+                >
+                  {strings("from_now_on_it_")}
+                </Text>
+                <Text
+                  style={{
+                    color: "#3D3D3D",
+                    fontSize: 12,
+                    textAlign: "center",
+                    // fontWeight: "600",
+                    fontFamily: "OpenSans-Regular",
+                    textAlign: "center",
+                    textAlignVertical: "center"
+                  }}
+                >
+                  {"\n"}
+                  {strings("it_s_your_final")}
+                </Text>
+              </Text>
+            ) : index == 8 || index == 9 ? (
+              <Text>
+                <Text
+                  style={{
+                    color: "#3D3D3D",
+                    fontSize: 12,
+                    textAlign: "center",
+                    // fontWeight: "600",
+                    fontFamily: "OpenSans-Regular",
+                    textAlign: "center",
+                    textAlignVertical: "center"
+                  }}
+                >
+                  {strings("winners_against")}
+                </Text>
+                <Text
+                  style={{
+                    color: "#3D3D3D",
+                    fontSize: 12,
+                    textAlign: "center",
+                    // fontWeight: "600",
+                    fontFamily: "OpenSans-Regular",
+                    textAlign: "center",
+                    textAlignVertical: "center"
+                  }}
+                >
+                  {"\n"}
+                  {strings("but_there_s_alw")}
+                </Text>
+              </Text>
+            ) : (
+              <Text>
+                <Text
+                  style={{
+                    color: "#3D3D3D",
+                    fontSize: 12,
+                    textAlign: "center",
+                    // fontWeight: "600",
+                    fontFamily: "OpenSans-Regular",
+                    textAlign: "center",
+                    textAlignVertical: "center"
+                  }}
+                >
+                  {strings("who_s_gonna_win")}
+                </Text>
+                <Text
+                  style={{
+                    color: "#3D3D3D",
+                    fontSize: 12,
+                    textAlign: "center",
+                    // fontWeight: "600",
+                    fontFamily: "OpenSans-Regular",
+                    textAlign: "center",
+                    textAlignVertical: "center"
+                  }}
+                >
+                  {"\n"}
+                  {strings("the_best_team__")}
+                </Text>
+              </Text>
+            )}
           </View>
         </View>
       </View>
@@ -1041,14 +1192,102 @@ class ScheduleGameScreen extends React.Component {
     if (this.game) {
       this.game.scrollToIndex({ index: this.limitIndex(this.state.index) });
     }
-    
   }
 
   onLayoutHeader() {
     if (this.header) {
-    this.header.scrollToIndex({ index: this.limitIndex(this.state.index) });
+      this.header.scrollToIndex({ index: this.limitIndex(this.state.index) });
     }
   }
+
+  changeHeaderPage = e => {
+    console.log(e.nativeEvent);
+    console.log(e.nativeEvent.layoutMeasurement.width);
+
+    console.log(e.nativeEvent.contentOffset.x);
+    console.log(e.nativeEvent.contentOffset.y);
+    const index = this.limitIndex(
+      Math.round(
+        e.nativeEvent.contentOffset.x /
+          (e.nativeEvent.layoutMeasurement.width / 3)
+      )
+    );
+    
+    // se index cambia carico nuovi dati
+    if (index !== this.state.index || index == this.state.indexMax - 1) {
+      this.header.scrollToIndex({ index: index });
+    this.game.scrollToIndex({ index: index });
+    this.setState({
+      index
+    });
+      if (index < 7) {
+        // per le prime sette settimane chiedo i dati del torneo
+        this.props.dispatch(
+          getScheduleWeek({ week: index + 1 }, this.saveSpecificWeek)
+        );
+      } else {
+        // per le successive settimane chiedo i dati del playoff
+        // aggiorna in automatico lo stato redux corrisponde
+        this.props.dispatch(getSchedulePlayoff({ season_playoff: index - 6 }));
+      }
+    }
+  };
+
+  changePage = e => {
+    console.log(e.nativeEvent);
+    console.log(e.nativeEvent.layoutMeasurement.width);
+
+    console.log(e.nativeEvent.contentOffset.x);
+    console.log(e.nativeEvent.contentOffset.y);
+    const index = this.limitIndex(
+      Math.round(
+        e.nativeEvent.contentOffset.x / e.nativeEvent.layoutMeasurement.width
+      )
+    );
+    
+    // se index cambia carico nuovi dati
+    if (index !== this.state.index || index == this.state.indexMax - 1) {
+      this.header.scrollToIndex({ index: index });
+    this.game.scrollToIndex({ index: index });
+    this.setState({
+      index
+    });
+      if (index < 7) {
+        // per le prime sette settimane chiedo i dati del torneo
+        this.props.dispatch(
+          getScheduleWeek({ week: index + 1 }, this.saveSpecificWeek)
+        );
+      } else {
+        // per le successive settimane chiedo i dati del playoff
+        // aggiorna in automatico lo stato redux corrisponde
+        this.props.dispatch(getSchedulePlayoff({ season_playoff: index - 6 }));
+      }
+    }
+  };
+
+  onViewableItemsChanged = ({ viewableItems, changed }) => {
+    console.log("Visible items are", viewableItems);
+    console.log("Changed in this iteration", changed);
+    const index = changed.index;
+    this.header.scrollToIndex({ index: index });
+    this.game.scrollToIndex({ index: index });
+    this.setState({
+      index
+    });
+    // se index cambia carico nuovi dati
+    if (index !== this.state.index) {
+      if (index < 7) {
+        // per le prime sette settimane chiedo i dati del torneo
+        this.props.dispatch(
+          getScheduleWeek({ week: index + 1 }, this.saveSpecificWeek)
+        );
+      } else {
+        // per le successive settimane chiedo i dati del playoff
+        // aggiorna in automatico lo stato redux corrisponde
+        this.props.dispatch(getSchedulePlayoff({ season_playoff: index - 6 }));
+      }
+    }
+  };
 
   render() {
     let id = 1;
@@ -1067,6 +1306,11 @@ class ScheduleGameScreen extends React.Component {
               backgroundColor: "#F7F8F9",
               top: 40
             }}
+            //     onViewableItemsChanged={this.onViewableItemsChanged }
+            // viewabilityConfig={{
+            //   itemVisiblePercentThreshold: 30
+            // }}
+
             showsVerticalScrollIndicator={false}
             scrollEventThrottle={10}
             horizontal
@@ -1077,7 +1321,10 @@ class ScheduleGameScreen extends React.Component {
             ref={ref => (this.game = ref)}
             // initialScrollIndex={this.state.index}
             keyExtractor={(item, index) => index.toString()}
-            onScrollEndDrag={this.handleScrollHeader.bind(this)}
+            //onScrollEndDrag={this.handleScrollHeaderTest.bind(this)}
+            onMomentumScrollEnd={e => {
+              this.changePage(e);
+            }}
             data={[...this.state.schedule, ...this.props.playoff]}
             renderItem={({ item, index }) => (
               <ScrollView
@@ -1096,8 +1343,7 @@ class ScheduleGameScreen extends React.Component {
                     {item.map((match, indexMatch) =>
                       match.firstCity ? (
                         this.winner(match, indexMatch)
-                      ) : ( 
-                        index < 7 ? 
+                      ) : index < 7 ? (
                         <ScheduleSingleCityGame
                           indexMatch={indexMatch}
                           indexWeek={index}
@@ -1116,7 +1362,8 @@ class ScheduleGameScreen extends React.Component {
                           //division={this.state.division}
                           // divisionMatch={this.state.division}
                         />
-                       : <ScheduleSingleCityGame
+                      ) : (
+                        <ScheduleSingleCityGame
                           indexMatch={indexMatch}
                           indexWeek={index}
                           key={match.season_match.season_match_id}
@@ -1126,11 +1373,14 @@ class ScheduleGameScreen extends React.Component {
                           total_point_home={match.total_point_home}
                           total_point_away={match.total_point_away}
                           statusMatch={
-        this.state.Now < new Date(match.season_match.start_match).getTime()
-          ? 0
-          : this.state.Now > new Date(match.season_match.end_match).getTime()
-          ? 2
-          : 1}
+                            this.state.Now <
+                            new Date(match.season_match.start_match).getTime()
+                              ? 0
+                              : this.state.Now >
+                                new Date(match.season_match.end_match).getTime()
+                              ? 2
+                              : 1
+                          }
                           rowID={match.season_match.season_match_id}
                           match={match.season_match}
                           division={match.group}
@@ -1139,7 +1389,8 @@ class ScheduleGameScreen extends React.Component {
                           //division={this.state.division}
                           // divisionMatch={this.state.division}
                         />
-                    ))}
+                      )
+                    )}
                   </View>
                 ) : index == 11 ? (
                   this.winnerWho(index)
@@ -1191,13 +1442,18 @@ class ScheduleGameScreen extends React.Component {
             horizontal={true}
             onScrollToIndexFailed={() => {}}
             ref={ref => (this.header = ref)}
-            onScrollEndDrag={this.handleScrollGame.bind(this)}
+            //  onScrollEndDrag={this.handleScrollGame.bind(this)}
+            onMomentumScrollEnd={e => {
+              this.changeHeaderPage(e);
+            }}
             showsVerticalScrollIndicator={false}
             scrollEventThrottle={10}
             horizontal
-            //pagingEnabled
+            pagingEnabled
+            snapToInterval={3}
+            snapToAlignment={'center'}
             showsHorizontalScrollIndicator={false}
-            keyExtractor={(item, index) => index.toString()}
+            keyExtractor={(item, index) => (item + index).toString()}
             // onScroll={this.handleScroll.bind(this)}
             data={[
               "",
@@ -1208,7 +1464,7 @@ class ScheduleGameScreen extends React.Component {
               "WEEK 5",
               "WEEK 6",
               "WEEK 7",
-              "LAST 16",
+              "PLAY OFF",
               "QUARTER-FINAL",
               "SEMI-FINAL",
               "FINAL",

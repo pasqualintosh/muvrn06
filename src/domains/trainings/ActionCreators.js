@@ -46,9 +46,9 @@ import { checkFrequentTrip } from "./../tracking/ActionCreators"; // controllo r
 
 import { Alert, AsyncStorage, Platform } from "react-native";
 import haversine from "./../../helpers/haversine";
-
+import WebService from "../../config/WebService";
 import { Client } from "bugsnag-react-native";
-const bugsnag = new Client("58b3b39beb78eba9efdc2d08aeb15d84");
+const bugsnag = new Client(WebService.BugsnagAppId);
 
 import { emailPresentTypeformUserList } from "./../../config/Tester";
 
@@ -1738,7 +1738,7 @@ export function putSession(dataUser = {}) {
               setTimeout(
                 () => {
                   dispatch(getProfile());
-                   // dispatch(getProfilePublic());
+                  // dispatch(getProfilePublic());
                 },
                 Platform.OS === "android" ? 1000 : 500
               );
@@ -2012,7 +2012,7 @@ export function getSpecialTrainingSessions(dataUser = {}) {
       try {
         const response = await requestBackend(
           "get",
-          "/api/v1/special_training_session?filter=all",
+          "/api/v1/special_training_session",
           access_token,
           null,
           null,
@@ -2276,6 +2276,8 @@ export function checkSpecialTrainingEvent(route, weather, s_point, e_point) {
       ? getState().trainings.statusCheckEvents
       : {};
 
+    const most_frequent_routes = getState().login.mostFrequentRoute;
+
     let log = "";
     let typeCheckCompleted = false;
 
@@ -2303,7 +2305,8 @@ export function checkSpecialTrainingEvent(route, weather, s_point, e_point) {
           },
           s_point,
           e_point,
-          dispatch
+          dispatch,
+          most_frequent_routes
         );
 
         let completed_special_training = specialTrainings.completedST();
@@ -3990,6 +3993,26 @@ export function checkFrequentTripEvent(route) {
   }
 }
 
+export function checkHomeWorkFrequentTripEvent(
+  route,
+  most_frequent_routes = new Array()
+) {
+  if (route.referred_most_freq_route) {
+    let mfr = most_frequent_routes.filter(
+      e => (e.id = route.referred_most_freq_route)
+    )[0];
+
+    console.log("checkHomeWorkFrequentTripEvent");
+    console.log(mfr);
+
+    if (mfr.start_type == 1 && (mfr.end_type == 2 || mfr.end_type == 4))
+      return true;
+    else return false;
+  } else {
+    return false;
+  }
+}
+
 export function checkDay(route, condition) {
   // in uno specifico giorno
   if (
@@ -5323,13 +5346,13 @@ export function checkPeakHours(route) {
   console.log("fine per il controllo delle ore di punta");
   console.log(hourLast);
 
-  if (hour >= "07:30" && hour <= "09:00") {
+  if (hour >= "07:00" && hour <= "09:00") {
     return true;
-  } else if (hour >= "17:00" && hour <= "18:30") {
+  } else if (hour >= "17:00" && hour <= "19:00") {
     return true;
-  } else if (hourLast >= "07:30" && hourLast <= "09:00") {
+  } else if (hourLast >= "07:00" && hourLast <= "09:00") {
     return true;
-  } else if (hourLast >= "17:00" && hourLast <= "18:30") {
+  } else if (hourLast >= "17:00" && hourLast <= "19:00") {
     return true;
   } else {
     return false;
@@ -5805,7 +5828,9 @@ export function checkEvent(
         } catch (error) {
           // console.log(error);
 
-          bugsnag.notify(error);
+          bugsnag.notify(error, function (report) {
+            report.metadata = { error: error };
+          });
         }
       }
     }
@@ -6885,7 +6910,10 @@ export function checkEventRedux(
       } catch (error) {
         // console.log(error);
 
-        bugsnag.notify(error);
+        
+        bugsnag.notify(error, function (report) {
+          report.metadata = { error: error };
+        });
       }
     }
 

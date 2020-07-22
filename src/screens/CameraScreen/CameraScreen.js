@@ -31,6 +31,7 @@ import { connect } from "react-redux";
 import { createSelector } from "reselect";
 
 import { validateStPhoto } from "./../../domains/trainings/ActionCreators";
+import InteractionManager from "../../helpers/loadingComponent";
 
 const flashModeOrder = {
   off: "on",
@@ -54,6 +55,7 @@ class CameraScreen extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
+      load: false,
       base64: "",
       flash: "off",
       zoom: 0,
@@ -125,6 +127,60 @@ class CameraScreen extends React.PureComponent {
     return manipResult.base64;
   };
 
+  sendPhotoEmail = () => {
+    this.convertBase64().then(image => {
+      const to = "support@domain.com";
+      const subjectEncoded = "Send Photo Mail";
+      console.log(image);
+      const bodyEncoded = `<img alt="receipt" width="100%" src="data:image/jpeg;base64,${image}">`;
+      let gmailUrl = `googlegmail://co?to=${to}&subject=${subjectEncoded}&body=${bodyEncoded}`;
+      let outlookUrl = `ms-outlook://compose?to=${to}&subject=${subjectEncoded}&body=${bodyEncoded}`;
+      let yahooMail = `ymail://mail/compose?to=${to}&subject=${subjectEncoded}&body=${bodyEncoded}`;
+      let sparkUrl = `readdle-spark://compose?recipient=${to}&subject=${subjectEncoded}&body=${bodyEncoded}`;
+      let defaultUrl = `mailto:${to}?subject=${subjectEncoded}&body=${bodyEncoded}`;
+
+      Linking.canOpenURL(gmailUrl)
+        .then(supported => {
+          if (!supported) {
+            console.log("Can't handle url: " + gmailUrl);
+            Linking.canOpenURL(outlookUrl)
+              .then(supported => {
+                if (!supported) {
+                  console.log("Can't handle url: " + outlookUrl);
+                  Linking.canOpenURL(yahooMail)
+                    .then(supported => {
+                      if (!supported) {
+                        console.log("Can't handle url: " + yahooMail);
+                        Linking.canOpenURL(sparkUrl)
+                          .then(supported => {
+                            if (!supported) {
+                              console.log("Can't handle url: " + sparkUrl);
+                              Linking.openURL(defaultUrl);
+                            } else {
+                              return Linking.openURL(sparkUrl);
+                            }
+                          })
+                          .catch(err =>
+                            console.error("An error occurred", err)
+                          );
+                      } else {
+                        return Linking.openURL(yahooMail);
+                      }
+                    })
+                    .catch(err => console.error("An error occurred", err));
+                } else {
+                  return Linking.openURL(outlookUrl);
+                }
+              })
+              .catch(err => console.error("An error occurred", err));
+          } else {
+            return Linking.openURL(gmailUrl);
+          }
+        })
+        .catch(err => console.error("An error occurred", err));
+    });
+  };
+
   rotateImage() {
     let exifOrientation = this.state.orientValue;
     switch (exifOrientation) {
@@ -190,6 +246,11 @@ class CameraScreen extends React.PureComponent {
   };
 
   componentDidMount() {
+    InteractionManager.runAfterInteractions(() => {
+      this.setState({
+        load: true
+      });
+    });
     setTimeout(() => {
       if (Platform.OS != "ios") this.requestCameraPermission();
     }, 10000);
@@ -251,8 +312,8 @@ class CameraScreen extends React.PureComponent {
             }}
           />
         ) : (
-          <View />
-        )}
+            <View />
+          )}
 
         {/* 
         <Image
@@ -473,7 +534,7 @@ class CameraScreen extends React.PureComponent {
                 />
               </View>
               <Text style={[styles.addButton, { marginLeft: 4 }]}>
-                {strings("share")}
+                {strings("id_1_39")}
               </Text>
             </View>
           </TouchableWithoutFeedback>
@@ -517,6 +578,47 @@ class CameraScreen extends React.PureComponent {
             }}
           >
             <OwnIcon name="share_icn" size={25} color={"#3D3D3D"} />
+          </View>
+        </TouchableWithoutFeedback>
+      </View>
+    );
+  };
+
+  renderMailShareButton = () => {
+    return (
+      <View
+        style={{
+          justifyContent: "center",
+          alignContent: "center",
+          alignItems: "center"
+          // width: Dimensions.get("window").width / 3
+        }}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            this.sendPhotoEmail();
+          }}
+        >
+          <View
+            style={{
+              shadowRadius: 5,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 5 },
+              shadowOpacity: 0.5,
+              backgroundColor: "transparent",
+              elevation: 2,
+              borderRadius: 25,
+              height: 50,
+              width: 50,
+              alignContent: "center",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "white",
+              borderColor: "#3d3d3d",
+              borderWidth: 0.5
+            }}
+          >
+            <OwnIcon name="share_icn" size={25} color={"red"} />
           </View>
         </TouchableWithoutFeedback>
       </View>
@@ -703,7 +805,7 @@ class CameraScreen extends React.PureComponent {
                 render_image: true,
                 loading: false
               },
-              () => {}
+              () => { }
             );
           })
           .catch(e => {
@@ -735,8 +837,8 @@ class CameraScreen extends React.PureComponent {
         Platform.OS == "ios"
           ? 1 * (this.state.imgW / this.state.frameW)
           : Dimensions.get("window").width > 360
-          ? k * (this.state.imgW / this.state.frameW)
-          : k * (this.state.imgW / this.state.frameW),
+            ? k * (this.state.imgW / this.state.frameW)
+            : k * (this.state.imgW / this.state.frameW),
       quality: 100
     })
       .then(res => {
@@ -797,7 +899,7 @@ class CameraScreen extends React.PureComponent {
             .catch(err => {
               err && console.log(err);
             });
-        } catch {}
+        } catch { }
       });
     } else {
       var shareImageBase64 = {
@@ -823,7 +925,7 @@ class CameraScreen extends React.PureComponent {
           .catch(err => {
             err && console.log(err);
           });
-      } catch {}
+      } catch { }
     }
   };
 
@@ -838,13 +940,13 @@ class CameraScreen extends React.PureComponent {
         photos: [{ imageUrl: "file://" + this.state.cache_path }]
       };
       ShareDialog.canShow(shareLinkContent)
-        .then(function(canShow) {
+        .then(function (canShow) {
           if (canShow) {
             return ShareDialog.show(shareLinkContent);
           }
         })
         .then(
-          function(result) {
+          function (result) {
             // prima controllo se c'e il risultato
             if (result) {
               if (result.isCancelled) {
@@ -855,7 +957,7 @@ class CameraScreen extends React.PureComponent {
               }
             }
           },
-          function(error) {
+          function (error) {
             // alert('Share failed with error: ' + error.message);
           }
         );
@@ -981,7 +1083,7 @@ class CameraScreen extends React.PureComponent {
       });
   };
 
-  takePicture = async function() {
+  takePicture = async function () {
     // if (!this.state.loading)
     if (this.camera) {
       const data = await this.camera.takePictureAsync({
@@ -1006,7 +1108,7 @@ class CameraScreen extends React.PureComponent {
     }
   };
 
-  takeVideo = async function() {
+  takeVideo = async function () {
     if (this.camera) {
       try {
         const promise = this.camera.recordAsync(this.state.recordOptions);
@@ -1172,6 +1274,7 @@ class CameraScreen extends React.PureComponent {
             alignItems: "center",
             justifyContent: "center"
           }}
+          captureAudio={false}
           type={this.state.type}
           flashMode={this.state.flash}
           ratio={this.state.ratio}
@@ -1284,19 +1387,19 @@ class CameraScreen extends React.PureComponent {
                 <OwnIcon name="switch_camera_icn" size={40} color={"#3d3d3d"} />
               </Svg>
             ) : (
-              <OwnIcon
-                style={{
-                  position: "relative",
-                  backgroundColor: "transparent",
+                <OwnIcon
+                  style={{
+                    position: "relative",
+                    backgroundColor: "transparent",
 
-                  top: 0,
-                  left: 0
-                }}
-                name="switch_camera_icn"
-                size={40}
-                color={"#3d3d3d"}
-              />
-            )}
+                    top: 0,
+                    left: 0
+                  }}
+                  name="switch_camera_icn"
+                  size={40}
+                  color={"#3d3d3d"}
+                />
+              )}
           </View>
         </TouchableWithoutFeedback>
       </View>
@@ -1343,19 +1446,19 @@ class CameraScreen extends React.PureComponent {
                 <OwnIcon name="flash_icn" size={40} color={"#3d3d3d"} />
               </Svg>
             ) : (
-              <OwnIcon
-                style={{
-                  position: "relative",
-                  backgroundColor: "transparent",
+                <OwnIcon
+                  style={{
+                    position: "relative",
+                    backgroundColor: "transparent",
 
-                  top: 0,
-                  left: 0
-                }}
-                name="flash_icn"
-                size={40}
-                color={"#3d3d3d"}
-              />
-            )}
+                    top: 0,
+                    left: 0
+                  }}
+                  name="flash_icn"
+                  size={40}
+                  color={"#3d3d3d"}
+                />
+              )}
           </View>
         </TouchableWithoutFeedback>
       </View>
@@ -1394,7 +1497,7 @@ class CameraScreen extends React.PureComponent {
             marginTop: Dimensions.get("window").height * 0.05
           }}
         >
-          {strings("share")}!
+          {strings("id_1_39")}!
         </Text>
         <View
           style={{
@@ -1407,9 +1510,11 @@ class CameraScreen extends React.PureComponent {
             // flexDirection: 'row'
           }}
         >
-          {this.renderShareButton()}
+          {this.renderMailShareButton()}
+
+          {/* {this.renderShareButton()}
           {this.renderFbButton()}
-          {this.renderInstaButton()}
+          {this.renderInstaButton()} */}
           {this.renderDeleteButton()}
         </View>
       </View>
@@ -1418,25 +1523,29 @@ class CameraScreen extends React.PureComponent {
 
   render() {
     console.log(this.props);
-    return (
-      <View style={styles.mainContainer}>
-        {/* <View style={styles.cameraContainer}> */}
-        {this.state.render_camera
-          ? this.renderCamera()
-          : this.renderSpinnerOrImage()}
-        {/* </View> */}
-        {/* 
+    if (this.state.load) {
+      return (
+        <View style={styles.mainContainer}>
+          {/* <View style={styles.cameraContainer}> */}
+          {this.state.render_camera
+            ? this.renderCamera()
+            : this.renderSpinnerOrImage()}
+          {/* </View> */}
+          {/* 
         <View style={styles.commandsContainer}>
           {this.state.render_camera
             ? this.renderCaptureBtn()
             : this.renderSaveBtn()}
         </View> 
         */}
-        {this.state.render_camera
-          ? this.renderCameraButtons()
-          : this.renderImageButtons()}
-      </View>
-    );
+          {this.state.render_camera
+            ? this.renderCameraButtons()
+            : this.renderImageButtons()}
+        </View>
+      );
+    } else {
+      return <View />;
+    }
   }
 }
 
@@ -1602,24 +1711,20 @@ const getStMuvtoget = state =>
 const getStKalsa = state =>
   state.trainings.st_kalsa ? state.trainings.st_kalsa : false;
 
-const getStTeatroMassimoState = createSelector(
-  [getStTeatroMassimo],
-  stTeatro => (stTeatro ? stTeatro : false)
+const getStTeatroMassimoState = createSelector([getStTeatroMassimo], stTeatro =>
+  stTeatro ? stTeatro : false
 );
 
-const getStBallarakState = createSelector(
-  [getStBallarak],
-  stBallarak => (stBallarak ? stBallarak : false)
+const getStBallarakState = createSelector([getStBallarak], stBallarak =>
+  stBallarak ? stBallarak : false
 );
 
-const getStMuvtogetState = createSelector(
-  [getStMuvtoget],
-  stMuvtoget => (stMuvtoget ? stMuvtoget : false)
+const getStMuvtogetState = createSelector([getStMuvtoget], stMuvtoget =>
+  stMuvtoget ? stMuvtoget : false
 );
 
-const getStKalsaState = createSelector(
-  [getStKalsa],
-  stKalsa => (stKalsa ? stKalsa : false)
+const getStKalsaState = createSelector([getStKalsa], stKalsa =>
+  stKalsa ? stKalsa : false
 );
 
 const withData = connect(state => {

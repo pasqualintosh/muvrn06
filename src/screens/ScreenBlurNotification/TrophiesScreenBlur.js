@@ -18,7 +18,7 @@ import NotificationPoint from "./../../components/NotificationPoint/Notification
 import TrophiesScreen from "../TrophiesScreen/TrophiesScreen";
 
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
+
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
 import { strings } from "../../config/i18n";
@@ -49,19 +49,7 @@ class TrophiesScreenBlur extends React.Component {
     Tracker.trackScreenView("TrophiesScreenBlur.js");
     trackScreenView("TrophiesScreenBlur.js");
 
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // const screenView = new GAHits.ScreenView(
-    //   Settings.analyticsAppName,
-    //   this.constructor.name,
-    //   DeviceInfo.getReadableVersion(),
-    //   DeviceInfo.getBundleId()
-    // );
-    // ga.send(screenView);
+
   }
 
   componentDidMount() {
@@ -77,7 +65,9 @@ class TrophiesScreenBlur extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("trophies")}
+          {strings("id_9_01")
+            .charAt(0)
+            .toUpperCase() + strings("id_9_01").slice(1)}
         </Text>
       ),
       headerRight: <IconMenuDrawer navigation={navigation} />

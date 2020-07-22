@@ -15,9 +15,10 @@ import Blur from "../../components/Blur/Blur";
 import NotificationPoint from "./../../components/NotificationPoint/NotificationPoint";
 
 import BestPlayersScreen from "../BestPlayersScreen/BestPlayersScreen";
+import NoBestPlayerScreen from "../NoBestPlayerScreen/NoBestPlayerScreen";
 
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
+
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
 import { strings } from "../../config/i18n";
@@ -29,19 +30,7 @@ class BestPlayersScreenBlur extends React.Component {
   }
 
   componentWillMount() {
-    // const ga = new Analytics(
-    //     Settings.analyticsCode,
-    //     DeviceInfo.getUniqueID(),
-    //     1,
-    //     DeviceInfo.getUserAgent()
-    // );
-    // const screenView = new GAHits.ScreenView(
-    //     Settings.analyticsAppName,
-    //     this.constructor.name,
-    //     DeviceInfo.getReadableVersion(),
-    //     DeviceInfo.getBundleId()
-    // );
-    // ga.send(screenView);
+
   }
 
   componentDidMount() {
@@ -73,7 +62,10 @@ class BestPlayersScreenBlur extends React.Component {
             this.view = view;
           }}
           navigation={this.props.navigation}
+          props={{ ...this.props }}
         />
+        {/* <NoBestPlayerScreen /> */}
+
         <Blur viewRef={this.state.viewRef} />
       </Aux>
     );

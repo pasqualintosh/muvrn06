@@ -22,7 +22,7 @@ import Emoji from "@ardentlabs/react-native-emoji";
 import Icon from "react-native-vector-icons/Ionicons";
 import {
   setCarProperties,
-  UpdateProfile
+  updateProfileNew
 } from "./../../domains/login/ActionCreators";
 
 let Picker = Platform.OS === "ios" ? PickerIos : PickerAndroid;
@@ -35,17 +35,13 @@ class PersonalCarScreen extends React.Component {
     super(props);
     this.state = {
       car_id: null,
-      car_owning_answer: 0, // 0 || 1 || 2
-      car_year: strings("choose"), // -> number
+      car_user: 0, // 0 || 1 || 2
+      temp_car_year: strings("id_0_67"),
+      car_year: strings("id_0_67"), // -> number
       car_segment_answer: "", // "medium" || "large" || "mini" || "small"
       car_fuel: "", // 0 ... 5
       car_year_possibilities: ["-"],
-      car_segment_possibilities: [
-        strings("mini"),
-        strings("small"),
-        strings("medium"),
-        strings("large")
-      ],
+      car_segment_possibilities: ["mini", "small", "medium", "large"],
       car_fuel_possibilities: [
         "petrol",
         "diesel",
@@ -56,6 +52,7 @@ class PersonalCarScreen extends React.Component {
       ],
       modal_visible: false
     };
+    this.go_to_moto = false;
   }
 
   static navigationOptions = {
@@ -64,6 +61,12 @@ class PersonalCarScreen extends React.Component {
 
   componentWillMount() {
     this.props.dispatch(getMobilityCarValues());
+
+    try {
+      this.go_to_moto = this.props.navigation.state.params.go_to_moto;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   componentWillReceiveProps(props) {
@@ -87,16 +90,20 @@ class PersonalCarScreen extends React.Component {
 
       if (
         props.registerState.get_mobility_car_values.length > 0 &&
-        (props.loginState.infoProfile.car != {} ||
-          props.loginState.infoProfile.car != null)
+        (props.loginState.infoProfile.car_typology != {} ||
+          props.loginState.infoProfile.car_typology != null)
       ) {
         try {
+          let car = props.registerState.get_mobility_car_values.filter(car => {
+            return car.id == props.loginState.infoProfile.car_typology;
+          })[0];
+
           this.setState(
             {
-              car_owning_answer: props.loginState.infoProfile.car_owning_answer,
-              car_fuel: props.loginState.infoProfile.car.fuel,
-              car_year: props.loginState.infoProfile.car.year,
-              car_segment_answer: props.loginState.infoProfile.car.segment
+              car_user: props.loginState.infoProfile.car_user,
+              car_fuel: car.fuel,
+              car_year: car.year,
+              car_segment_answer: car.segment
             },
             () => {
               const filtered_car_m_v = this.props.registerState.get_mobility_car_values.filter(
@@ -134,24 +141,25 @@ class PersonalCarScreen extends React.Component {
   handleCarOwningAnswer = val => {
     if (val != 0) {
       this.setState({
-        car_owning_answer: val
+        car_user: val
       });
     } else {
       this.setState({
-        car_owning_answer: val,
-        car_year: strings("choose"),
+        car_user: val,
+        car_year: strings("id_0_67"),
         car_segment_answer: "",
         car_fuel: 0
       });
       this.props.dispatch(
-        UpdateProfile({
+        updateProfileNew({
           data: {
-            public_profile: { car: null, car_owning_answer: 0 }
+            car_typology: null,
+            car_user: 0
           }
         })
       );
       this.props.dispatch(setCarProperties(null));
-      this.props.navigation.goBack(null);
+      this.props.navigation.navigate("PersonalFrequentTripDataScreen");
     }
   };
 
@@ -233,7 +241,7 @@ class PersonalCarScreen extends React.Component {
                 style={[
                   styles.checkboxesGradient,
                   {
-                    opacity: this.state.car_owning_answer == index ? 1 : 0
+                    opacity: this.state.car_user == index ? 1 : 0
                   }
                 ]}
               />
@@ -254,9 +262,9 @@ class PersonalCarScreen extends React.Component {
           alignItems: "center"
         }}
       >
-        {this.renderCarOwningCheckbox(0, strings("no"))}
-        {this.renderCarOwningCheckbox(1, strings("yes"))}
-        {this.renderCarOwningCheckbox(2, strings("yes__it_is_at_m"))}
+        {this.renderCarOwningCheckbox(0, strings("id_0_54"))}
+        {this.renderCarOwningCheckbox(1, strings("id_0_55"))}
+        {this.renderCarOwningCheckbox(2, strings("id_0_56"))}
       </View>
     );
   }
@@ -271,18 +279,25 @@ class PersonalCarScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
         <TouchableWithoutFeedback
+          // onPress={() => {
+          //   this.setState({ modal_visible: false }, () => {});
+          // }}
           onPress={() => {
-            this.setState({ modal_visible: false }, () => {});
+            this.setState({
+              modal_visible: false,
+              car_year: this.state.temp_car_year
+            });
+            this.handleCarYearChange(this.state.temp_car_year);
           }}
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -296,7 +311,10 @@ class PersonalCarScreen extends React.Component {
         key={index}
         label={
           "" +
-          element.replace("2017-2019", "from 2017 onwards").replace(/_/g, " ")
+          element
+            .replace("2017-2019", strings("id_0_77"))
+            .replace("up_to_1992", strings("id_0_70"))
+            .replace(/_/g, " ")
         }
         value={"" + element}
       />
@@ -309,7 +327,7 @@ class PersonalCarScreen extends React.Component {
       >
         <View
           style={{
-            height: 250,
+            height: 400,
             backgroundColor: "white",
             borderRadius: 4,
             borderColor: "rgba(0, 0, 0, 0.1)",
@@ -322,15 +340,15 @@ class PersonalCarScreen extends React.Component {
               width: 250,
               height: 250
             }}
-            selectedValue={"" + this.state.car_year}
+            selectedValue={"" + this.state.temp_car_year}
             onValueChange={(itemValue, itemIndex) => {
-              this.setState({ modal_visible: false });
-              this.handleCarYearChange(itemValue);
+              this.setState({ temp_car_year: itemValue });
+              // this.handleCarYearChange(itemValue);
             }}
           >
             {values}
           </Picker>
-          {/* {this.renderButtonsModal()} */}
+          {this.renderButtonsModal()}
         </View>
       </Modal>
     );
@@ -362,10 +380,8 @@ class PersonalCarScreen extends React.Component {
           >
             <Text>
               {this.state.car_year
-                ? this.state.car_year
-                    .replace("2017-2019", "from 2017")
-                    .replace(/_/g, " ")
-                : strings("choose")}
+                .replace("2017-2019", strings("id_0_77"))
+                .replace(/_/g, " ")}
               &nbsp;
             </Text>
             <Icon
@@ -378,6 +394,30 @@ class PersonalCarScreen extends React.Component {
         </TouchableWithoutFeedback>
       </View>
     );
+  }
+
+  renderCarSegmentTranslated(val) {
+    switch (val) {
+      case "small":
+        return strings("id_0_79");
+        break;
+
+      case "medium":
+        return strings("id_0_80");
+        break;
+
+      case "large":
+        return strings("id_0_81");
+        break;
+
+      case "mini":
+        return strings("id_0_82");
+        break;
+
+      default:
+        return val;
+        break;
+    }
   }
 
   renderCarSegment() {
@@ -409,7 +449,9 @@ class PersonalCarScreen extends React.Component {
                   ]}
                 />
               </View>
-              <Text style={styles.checkboxesText}>{element}</Text>
+              <Text style={styles.checkboxesText}>
+                {this.renderCarSegmentTranslated(element)}
+              </Text>
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -499,9 +541,7 @@ class PersonalCarScreen extends React.Component {
                 />
               </View>
             </TouchableWithoutFeedback>
-            <Text style={styles.textHeader}>
-              Do you have a car? <Emoji name="car" /> <Emoji name="taxi" />
-            </Text>
+            <Text style={styles.textHeader}>{strings("id_0_53")}</Text>
           </View>
         </View>
         <View
@@ -577,9 +617,7 @@ class PersonalCarScreen extends React.Component {
             }}
           >
             <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>
-                We need this information to estimate your CO2 emissions.
-              </Text>
+              <Text style={styles.textFooter}>{strings("id_0_64")}</Text>
             </View>
 
             <View style={[styles.buttonContainer]}>
@@ -588,7 +626,7 @@ class PersonalCarScreen extends React.Component {
                 onPress={() => {
                   this.props.dispatch(
                     setCarProperties({
-                      car_owning_answer: this.state.car_owning_answer,
+                      car_user: this.state.car_user,
                       car_year: this.state.car_year,
                       car_segment_answer: this.state.car_segment_answer,
                       car_fuel_possibilities: this.state.car_fuel_possibilities
@@ -596,11 +634,13 @@ class PersonalCarScreen extends React.Component {
                   );
 
                   if (
-                    this.state.car_owning_answer != 0 &&
+                    this.state.car_user != 0 &&
                     this.state.car_segment_answer != "" &&
                     this.state.car_year != "choose"
                   )
-                    this.props.navigation.navigate("PersonalCarFuelScreen");
+                    this.props.navigation.navigate("PersonalCarFuelScreen", {
+                      go_to_moto: this.go_to_moto
+                    });
                   else {
                   }
                 }}
@@ -608,7 +648,7 @@ class PersonalCarScreen extends React.Component {
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />

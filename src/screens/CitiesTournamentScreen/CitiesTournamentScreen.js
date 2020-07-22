@@ -21,9 +21,14 @@ import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
 import LinearGradient from "react-native-linear-gradient";
 
-import { imagesCity, divisionTournamentCitiesInA } from "./../../components/FriendItem/FriendItem";
-import { citiesDescription, citiesColor } from "./../CityScreenCards/CityScreenCards";
-
+import {
+  imagesCity,
+  divisionTournamentCitiesInA
+} from "./../../components/FriendItem/FriendItem";
+import {
+  citiesDescription,
+  citiesColor
+} from "./../CityScreenCards/CityScreenCards";
 
 import ArrowGame from "./../../components/ArrowGame/ArrowGame";
 import { strings } from "../../config/i18n";
@@ -31,42 +36,41 @@ import {
   getScheduleWeek,
   getWeeklySingleMatch,
   getSeasonRanking,
-  getPlayoffMatch
+  getSchedulePlayoff
 } from "./../../domains/screen/ActionCreators";
 import Aux from "../../helpers/Aux";
 import pointsDecimal from "../../helpers/pointsDecimal";
 import { getCurrentMatchState } from "./../../domains/screen/Selectors";
 import { data, currentMatch } from "../../helpers/tournament";
-import { orderByB } from "../CitiesStandingsScreen/CitiesStandingsScreen"
-import SponsorTournament from "../../components/SponsorTournament/SponsorTournament"
-import { playoffPhrase, playoffStart  } from "../ScheduleGameScreen/ScheduleGameScreen"
-
-
+import { orderByB } from "../CitiesStandingsScreen/CitiesStandingsScreen";
+import SponsorTournament from "../../components/SponsorTournament/SponsorTournament";
+import {
+  playoffPhrase,
+  playoffStart
+} from "../ScheduleGameScreen/ScheduleGameScreen";
 
 class CitiesTournamentScreen extends React.Component {
   constructor(props) {
     super(props);
 
-    const IsTeresina = this.props.city == "Teresina"
+    const IsTeresina = this.props.city == "Teresina";
 
     // calcolo la settimana corrente
 
-    const Match = currentMatch(data)
-    const division = divisionTournamentCitiesInA(this.props.city)
-    const Now = new Date().getTime()
-    
-    
-    const playoff = playoffStart(Now)
-    console.log(playoff)
-    let phrase = 0
-    
+    const Match = currentMatch(data);
+    const division = divisionTournamentCitiesInA(this.props.city);
+    const Now = new Date().getTime();
+
+    const playoff = playoffStart(Now);
+    console.log(playoff);
+    let phrase = 0;
+
     if (playoff) {
       // devo vedere in che settimana del playoff sono
-      const playoffState = playoffPhrase(Now)
-      phrase = playoffState.phrase
-      console.log(phrase)
+      const playoffState = playoffPhrase(Now);
+      phrase = playoffState.phrase;
+      console.log(phrase);
     }
-
 
     this.state = {
       day: 0,
@@ -76,15 +80,15 @@ class CitiesTournamentScreen extends React.Component {
       minutesStartMatch: 0,
 
       weekNum: Match.weekCurrent + phrase,
-      
+
       week: [],
       recapMatch: { total_point_away: 0, total_point_home: 0 },
       match: null,
       match_id: 0,
       refreshing: false,
       start_match: Match.start_match,
-      positionCity: '-',
-      typePosition: 'th',
+      positionCity: "-",
+      typePosition: "th",
       citiesStandings: [],
       endTimer: false,
       backgroundColorCity: "#242438",
@@ -100,7 +104,7 @@ class CitiesTournamentScreen extends React.Component {
     let positionCity = 8;
 
     if (data.length) {
-      data = orderByB(data, this.state.division)
+      data = orderByB(data, this.state.division);
 
       for (i = 0; i < data.length; i++) {
         const City = data[i];
@@ -111,20 +115,25 @@ class CitiesTournamentScreen extends React.Component {
       }
     }
 
-
-    let typePosition = "th"
+    let typePosition = "th";
     if (positionCity == 1) {
-      typePosition = "st"
+      typePosition = "st";
     } else if (positionCity == 2) {
-      typePosition = "nd"
+      typePosition = "nd";
     } else if (positionCity == 3) {
-      typePosition = "rd"
+      typePosition = "rd";
     }
 
     this.setState({
       citiesStandings: data,
       positionCity: positionCity,
       typePosition
+    });
+  };
+
+  stopUpdateData = () => {
+    this.setState({
+      refreshing: false
     });
   };
 
@@ -136,13 +145,15 @@ class CitiesTournamentScreen extends React.Component {
 
     if (data.length) {
       end_match = data[0].season_match.end_match;
-
+      start_match = data[0].season_match.start_match;
+      console.log(data);
       this.timerTournament(end_match);
       this.timer = setInterval(() => this.timerTournament(end_match), 60000);
     }
 
     this.setState({
-      week: data
+      week: data,
+      start_match
     });
 
     this.props.dispatch(getSeasonRanking({}, this.saveCitiesStandings));
@@ -190,15 +201,13 @@ class CitiesTournamentScreen extends React.Component {
     // dipende se ho il torneo o no
     if (this.state.phrase) {
       this.props.dispatch(
-        getPlayoffMatch({ season_playoff: this.state.phrase })
+        getSchedulePlayoff({ season_playoff: this.state.phrase }, this.saveWeek)
       );
     } else {
       this.props.dispatch(
         getScheduleWeek({ week: this.state.weekNum }, this.saveWeek)
       );
     }
-    
-    
   };
 
   // salvo la mia partita
@@ -212,20 +221,17 @@ class CitiesTournamentScreen extends React.Component {
   componentWillMount() {
     if (this.state.phrase) {
       this.props.dispatch(
-        getPlayoffMatch({ season_playoff: this.state.phrase })
+        getSchedulePlayoff({ season_playoff: this.state.phrase }, this.saveWeek)
       );
     } else {
-    this.props.dispatch(
-      getScheduleWeek({ week: this.state.weekNum }, this.saveWeek)
-    );
+      this.props.dispatch(
+        getScheduleWeek({ week: this.state.weekNum }, this.saveWeek)
+      );
     }
 
     this.setState({
-
       backgroundColorCity: citiesColor(this.props.city)
-    })
-
-
+    });
 
     //this.timerTournament();
     // this.timer = setInterval(() => this.timerTournament(), 60000);
@@ -238,6 +244,8 @@ class CitiesTournamentScreen extends React.Component {
 
   timerTournament = end_match => {
     // (year, month, day, hours, minutes, seconds, milliseconds)
+
+    console.log(end_match);
 
     let startTournament = new Date(end_match);
     console.log(startTournament);
@@ -260,11 +268,14 @@ class CitiesTournamentScreen extends React.Component {
         endTimer: true
       });
       if (this.timer) clearTimeout(this.timer);
-      // vedo la prossima settimana quando inizia il match 
-      const NextMatch = currentMatch(data, false, 5)
-      console.log(NextMatch)
-      this.timerNewMatchTournament(NextMatch.start_match)
-      this.timer = setInterval(() => this.timerNewMatchTournament(NextMatch.start_match), 60000);
+
+      // con il torneo non ne ho bisogno di controllare il prossimo match
+
+      // vedo la prossima settimana quando inizia il match
+      // const NextMatch = currentMatch(data, false, 5)
+      // console.log(NextMatch)
+      // this.timerNewMatchTournament(NextMatch.start_match)
+      // this.timer = setInterval(() => this.timerNewMatchTournament(NextMatch.start_match), 60000);
     } else if (e_days > 0 || e_hrs > 0 || e_a_mins > 0) {
       this.setState({
         day: e_days,
@@ -274,9 +285,8 @@ class CitiesTournamentScreen extends React.Component {
     }
   };
 
-  timerNewMatchTournament = (start_match) => {
+  timerNewMatchTournament = start_match => {
     // (year, month, day, hours, minutes, seconds, milliseconds)
-
 
     let startTournament = new Date(start_match);
     console.log(startTournament);
@@ -298,26 +308,18 @@ class CitiesTournamentScreen extends React.Component {
         endTimer: false
       });
       if (this.timerNext) clearTimeout(this.timerNext);
-      const Match = currentMatch(data)
+      const Match = currentMatch(data);
       this.setState({
-
         weekNum: Match.weekCurrent,
 
-        start_match: Match.start_match,
-
-      })
+        start_match: Match.start_match
+      });
 
       this.props.dispatch(
         getScheduleWeek({ week: Match.weekCurrent }, this.saveWeek)
       );
-
-
-
-
-
     } else if (e_days > 0 || e_hrs > 0 || e_a_mins > 0) {
       this.setState({
-
         hourStartMatch: e_a_hrs,
         minutesStartMatch: e_a_mins
       });
@@ -398,15 +400,13 @@ class CitiesTournamentScreen extends React.Component {
     this.props.navigation.navigate("CityDetailScreenBlurFromGlobal", {
       city: id,
       cityName: city,
-      cityId: this.props.infoProfile.city ? this.props.infoProfile.city.id : 0,
+      cityId: this.props.infoProfile.city ? this.props.infoProfile.city.id : 0
     });
   };
 
   render() {
     //  cityInTournament={cityInTournament}
     // id={id}
-
-
 
     // <View style={{
     //   borderBottomColor: this.state.division ? '#60368C' : '#E20000',
@@ -421,18 +421,15 @@ class CitiesTournamentScreen extends React.Component {
     //     <Text style={[styles.position]}>{this.state.typePosition}</Text>
     //   </Text>
 
-
     // </View>
-
 
     const width = Dimensions.get("window").width * 0.3;
     return (
       <ScrollView
         style={{
           width: Dimensions.get("window").width,
-          height: Dimensions.get("window").height,
+          height: Dimensions.get("window").height
           // backgroundColor: "#F7F8F9"
-
         }}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -446,13 +443,15 @@ class CitiesTournamentScreen extends React.Component {
           <Aux>
             <ImageBackground
               source={require("./../../assets/images/cities/city_page_bg.png")}
-              style={
-                {
-                  width: Dimensions.get("window").width,
-                  // height: Dimensions.get("window").height * 0.4,
-                  height: this.state.IsTeresina ? 240 : 140, backgroundColor: this.state.backgroundColorCity, flexDirection: "column", alignContent: "center", justifyContent: 'flex-start'
-                }
-              }
+              style={{
+                width: Dimensions.get("window").width,
+                // height: Dimensions.get("window").height * 0.4,
+                height: this.state.IsTeresina ? 240 : 140,
+                backgroundColor: this.state.backgroundColorCity,
+                flexDirection: "column",
+                alignContent: "center",
+                justifyContent: "flex-start"
+              }}
             >
               <View
                 style={{
@@ -461,13 +460,12 @@ class CitiesTournamentScreen extends React.Component {
                   flexDirection: "row",
                   alignItems: "center",
                   justifyContent: "center",
-                  alignContent: "center",
-
+                  alignContent: "center"
                 }}
               >
                 <TouchableOpacity
                   onPress={() => this.goToCity(this.props.id, this.props.city)}
-                // disabled={true}
+                  // disabled={true}
                 >
                   <View
                     style={{
@@ -505,30 +503,23 @@ class CitiesTournamentScreen extends React.Component {
                     <Text style={[styles.nameNewText]}>
                       {this.props.city.toUpperCase()}
                     </Text>
-
                   </View>
                 </TouchableOpacity>
-
-
-
-
-
-
               </View>
-
             </ImageBackground>
             <View style={styles.backgroundImage}></View>
 
-            <View style={{
-              flex: 3,
-              width: Dimensions.get("window").width,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-around",
-              alignContent: "center",
-              top: -70
-
-            }}>
+            <View
+              style={{
+                flex: 3,
+                width: Dimensions.get("window").width,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-around",
+                alignContent: "center",
+                top: -70
+              }}
+            >
               <View
                 style={{
                   flex: 1,
@@ -537,7 +528,6 @@ class CitiesTournamentScreen extends React.Component {
                   alignItems: "center"
                 }}
               >
-
                 <LinearGradient
                   start={{ x: 0.0, y: 0.0 }}
                   end={{ x: 0.0, y: 1.0 }}
@@ -545,49 +535,44 @@ class CitiesTournamentScreen extends React.Component {
                   colors={["#E82F73", "#F49658"]}
                   style={styles.buttonIcon}
                 >
-
-
-
-
-
-
                   <TouchableOpacity
                     onPress={() =>
                       this.props.navigation.navigate("CitiesStandingBlur")
                     }
                     style={styles.buttonIconTouch}
-
-
                   >
-                    <View style={{
-                      width: 50,
-                      height: 93,
-                      paddingBottom: 3
-
-
-                    }}>
+                    <View
+                      style={{
+                        width: 50,
+                        height: 93,
+                        paddingBottom: 3
+                      }}
+                    >
                       <View
                         style={{
                           flex: 1,
                           flexDirection: "column",
                           alignItems: "center",
-                          justifyContent: "flex-end",
-
+                          justifyContent: "flex-end"
                         }}
                       >
-
-                        <View style={{
-                          height: 40, width: 40, flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}>
+                        <View
+                          style={{
+                            height: 40,
+                            width: 40,
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
                           <Text>
                             <Text style={[styles.positionNumber]}>
                               {this.state.positionCity}
                             </Text>
-                            <Text style={[styles.position]}>{this.state.typePosition}</Text>
+                            <Text style={[styles.position]}>
+                              {this.state.typePosition}
+                            </Text>
                           </Text>
-
                         </View>
                       </View>
                     </View>
@@ -618,32 +603,24 @@ class CitiesTournamentScreen extends React.Component {
                         weekCurrent: this.state.weekNum - 1
                       })
                     }
-
                     style={styles.buttonIconTouch}
-
-
                   >
-                    <View style={{
-                      width: 50,
-                      height: 93,
-                      paddingBottom: 3
-
-
-                    }}>
+                    <View
+                      style={{
+                        width: 50,
+                        height: 93,
+                        paddingBottom: 3
+                      }}
+                    >
                       <View
                         style={{
                           flex: 1,
                           flexDirection: "column",
                           alignItems: "center",
-                          justifyContent: "flex-end",
-
+                          justifyContent: "flex-end"
                         }}
                       >
-
-
-
                         <Svg height="40" width="40">
-
                           <View
                             style={{
                               position: "absolute",
@@ -656,8 +633,7 @@ class CitiesTournamentScreen extends React.Component {
                               name="schedule_icn_1"
                               size={40}
                               color={"#ffffff"}
-                              style={{ top: -3, }}
-
+                              style={{ top: -3 }}
                             />
                             <OwnIcon
                               name="schedule_icn_2"
@@ -673,11 +649,7 @@ class CitiesTournamentScreen extends React.Component {
                             />
                           </View>
                         </Svg>
-
-
-
                       </View>
-
                     </View>
                   </TouchableOpacity>
                 </LinearGradient>
@@ -693,7 +665,6 @@ class CitiesTournamentScreen extends React.Component {
                     alignItems: "center"
                   }}
                 >
-
                   <LinearGradient
                     start={{ x: 0.0, y: 0.0 }}
                     end={{ x: 0.0, y: 1.0 }}
@@ -701,42 +672,33 @@ class CitiesTournamentScreen extends React.Component {
                     colors={["#E82F73", "#F49658"]}
                     style={styles.buttonIcon}
                   >
-
-
-
-
-
-
                     <TouchableOpacity
                       onPress={() =>
-                        this.props.navigation.navigate("BestPlayersScreenBlur", {
-                          infoProfile: this.props.infoProfile
-                        })
+                        this.props.navigation.navigate(
+                          "BestPlayersScreenBlur",
+                          {
+                            infoProfile: this.props.infoProfile
+                          }
+                        )
                       }
                       style={styles.buttonIconTouch}
-
-
                     >
-                      <View style={{
-                        width: 50,
-                        height: 93,
-                        paddingBottom: 3,
-                        
-
-
-                      }}>
+                      <View
+                        style={{
+                          width: 50,
+                          height: 93,
+                          paddingBottom: 3
+                        }}
+                      >
                         <View
                           style={{
                             flex: 1,
                             flexDirection: "column",
                             alignItems: "center",
-                            justifyContent: "flex-end",
-
+                            justifyContent: "flex-end"
                           }}
                         >
-
                           <Svg height="40" width="40">
-
                             <OwnIcon
                               name="best_player_icn"
                               size={40}
@@ -749,11 +711,11 @@ class CitiesTournamentScreen extends React.Component {
                   </LinearGradient>
                   <View style={{ height: 10 }} />
                   <Text style={styles.Map}>BEST PLAYERS</Text>
-                </View>) : (<View />
-                )}
-
+                </View>
+              ) : (
+                <View />
+              )}
             </View>
-
 
             <View
               style={{
@@ -762,10 +724,13 @@ class CitiesTournamentScreen extends React.Component {
                 flexDirection: "row"
               }}
             />
-            {this.state.IsTeresina ? <View></View> : <View style={{ top: -70 }}>
-              <SponsorTournament navigation={this.props.navigation} />
-            </View>
-            }
+            {this.state.IsTeresina ? (
+              <View></View>
+            ) : (
+              <View style={{ top: -70 }}>
+                <SponsorTournament navigation={this.props.navigation} />
+              </View>
+            )}
             <View
               style={{
                 height: 100,
@@ -775,17 +740,19 @@ class CitiesTournamentScreen extends React.Component {
             />
             <ImageBackground
               source={require("./../../assets/images/ongoing_match_wave.png")}
-              style={[styles.backgroundImageAbsolute, {top: this.state.IsTeresina ? 210 : 110,}]}
+              style={[
+                styles.backgroundImageAbsolute,
+                { top: this.state.IsTeresina ? 210 : 110 }
+              ]}
             >
               <Image
                 source={require("../../assets/images/cities/sct_logo.png")}
                 style={{
                   width: 60,
                   height: 60,
-                  position: 'absolute',
+                  position: "absolute",
                   top: -20,
                   right: 30
-
                 }}
               />
 
@@ -809,9 +776,13 @@ class CitiesTournamentScreen extends React.Component {
                     alignItems: "center"
                   }}
                 >
-                  <Text style={[styles.nameText]}>{this.state.endTimer ? "FINAL RESULT" : "ONGOING MATCH"}</Text>
+                  <Text style={[styles.nameText]}>
+                    {this.state.endTimer ? "FINAL RESULT" : "ONGOING MATCH"}
+                  </Text>
                   <Text style={[styles.levelText]}>
-                   { this.state.phrase ? "Playoff - Week " + this.state.weekNum : "Regular Season - Week " + this.state.weekNum}
+                    {this.state.phrase
+                      ? "Playoff - Week " + this.state.weekNum
+                      : "Regular Season - Week " + this.state.weekNum}
                   </Text>
                 </View>
                 <View
@@ -835,15 +806,25 @@ class CitiesTournamentScreen extends React.Component {
                     }}
                   >
                     <Text style={styles.name10Text}>
-                      {this.props.match ? this.props.match.season_match.city_home.city_name : this.state.recapMatch.season_match.city_home.city_name}
+                      {this.props.match
+                        ? this.props.match.season_match.city_home.city_name
+                        : this.state.recapMatch.season_match.city_home
+                            .city_name}
                     </Text>
                     <Text style={styles.level10Text}>
                       {citiesDescription(
-                        this.props.match ? this.props.match.season_match.city_home.city_name : this.state.recapMatch.season_match.city_home.city_name
+                        this.props.match
+                          ? this.props.match.season_match.city_home.city_name
+                          : this.state.recapMatch.season_match.city_home
+                              .city_name
                       )}
                     </Text>
                     <Text style={styles.value}>
-                      {pointsDecimal(this.props.match ? this.props.match.total_point_home : this.state.recapMatch.total_point_home)}
+                      {pointsDecimal(
+                        this.props.match
+                          ? this.props.match.total_point_home
+                          : this.state.recapMatch.total_point_home
+                      )}
                     </Text>
                   </View>
                   <View
@@ -857,20 +838,28 @@ class CitiesTournamentScreen extends React.Component {
                       alignItems: "center"
                     }}
                   >
-                  <View style={{ top: 5}}>
-                    <ArrowGame
-                      width={40}
-                      right={
-                        (this.props.match ? this.props.match.total_point_home : this.state.recapMatch.total_point_home) <
-                        (this.props.match ? this.props.match.total_point_away : this.state.recapMatch.total_point_away)
-                      }
-                      color={"#E83475"}
-                      height={100}
-                      center={
-                        (this.props.match ? this.props.match.total_point_home : this.state.recapMatch.total_point_home) ==
-                        (this.props.match ? this.props.match.total_point_away : this.state.recapMatch.total_point_away)
-                      }
-                    />
+                    <View style={{ top: 5 }}>
+                      <ArrowGame
+                        width={40}
+                        right={
+                          (this.props.match
+                            ? this.props.match.total_point_home
+                            : this.state.recapMatch.total_point_home) <
+                          (this.props.match
+                            ? this.props.match.total_point_away
+                            : this.state.recapMatch.total_point_away)
+                        }
+                        color={"#E83475"}
+                        height={100}
+                        center={
+                          (this.props.match
+                            ? this.props.match.total_point_home
+                            : this.state.recapMatch.total_point_home) ==
+                          (this.props.match
+                            ? this.props.match.total_point_away
+                            : this.state.recapMatch.total_point_away)
+                        }
+                      />
                     </View>
                     <LinearGradient
                       start={{ x: 0.0, y: 0.0 }}
@@ -885,11 +874,10 @@ class CitiesTournamentScreen extends React.Component {
                           width: 50,
                           height: 25,
                           borderRadius: 15,
-                          alignItems: "center",
-                          
+                          alignItems: "center"
                         }}
 
-                      // disabled={this.props.status === "Inviting" ? true : false}
+                        // disabled={this.props.status === "Inviting" ? true : false}
                       >
                         <View
                           style={{
@@ -909,10 +897,10 @@ class CitiesTournamentScreen extends React.Component {
                               }}
                             >
                               Live
-          </Text>
+                            </Text>
                           ) : (
-                              <ActivityIndicator size="small" color="white" />
-                            )}
+                            <ActivityIndicator size="small" color="white" />
+                          )}
                         </View>
                       </TouchableOpacity>
                     </LinearGradient>
@@ -929,25 +917,34 @@ class CitiesTournamentScreen extends React.Component {
                     }}
                   >
                     <Text style={styles.name10Text}>
-                      {this.props.match ? this.props.match.season_match.city_away.city_name : this.state.recapMatch.season_match.city_away.city_name}
+                      {this.props.match
+                        ? this.props.match.season_match.city_away.city_name
+                        : this.state.recapMatch.season_match.city_away
+                            .city_name}
                     </Text>
                     <Text style={styles.level10Text}>
                       {citiesDescription(
-                        this.props.match ? this.props.match.season_match.city_away.city_name : this.state.recapMatch.season_match.city_away.city_name
+                        this.props.match
+                          ? this.props.match.season_match.city_away.city_name
+                          : this.state.recapMatch.season_match.city_away
+                              .city_name
                       )}
                     </Text>
                     <Text style={styles.value}>
-                      {pointsDecimal(this.props.match ? this.props.match.total_point_away : this.state.recapMatch.total_point_away)}
+                      {pointsDecimal(
+                        this.props.match
+                          ? this.props.match.total_point_away
+                          : this.state.recapMatch.total_point_away
+                      )}
                     </Text>
                   </View>
                 </View>
               </View>
-
             </ImageBackground>
           </Aux>
         ) : (
-            this.loading()
-          )}
+          this.loading()
+        )}
       </ScrollView>
     );
   }
@@ -958,20 +955,18 @@ const styles = StyleSheet.create({
     width: Dimensions.get("window").width,
     height: 200,
     top: -40,
-    flexDirection: 'column',
-    justifyContent: 'center',
+    flexDirection: "column",
+    justifyContent: "center",
     alignItems: "center",
     alignContent: "center"
-
   },
   backgroundImageAbsolute: {
     width: Dimensions.get("window").width,
     height: 200,
-    position: 'absolute',
-    
-    
-    flexDirection: 'column',
-    justifyContent: 'center',
+    position: "absolute",
+
+    flexDirection: "column",
+    justifyContent: "center",
     alignItems: "center",
     alignContent: "center"
   },
@@ -987,40 +982,30 @@ const styles = StyleSheet.create({
     height: 25,
     borderRadius: 15,
     alignItems: "center",
-    backgroundColor: 'transparent',
-                          shadowRadius: 5,
+    backgroundColor: "transparent",
+    shadowRadius: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1,
-    
-    
+    elevation: 1
   },
   buttonIconTouch: {
     width: 50,
     height: 96,
-    
+
     shadowRadius: 5,
-shadowColor: "#000",
-shadowOffset: { width: 0, height: 5 },
-shadowOpacity: 0.5,
-elevation: 1,
-
-
-
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.5,
+    elevation: 1
   },
   buttonIcon: {
     width: 50,
     height: 96,
     // backgroundColor: 'transparent',
 
-
-
     borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
-    
-    
-
+    borderBottomRightRadius: 25
   },
   value: {
     color: "#3D3D3D",

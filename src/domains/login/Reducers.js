@@ -35,7 +35,12 @@ import {
   SET_SESSION_TOKEN,
   ADD_PAGE_COUNTED,
   RESET_PAGE_COUNTED,
-  SET_SODDFRUST_FLAG
+  SET_SODDFRUST_FLAG,
+  REFRESHING_TOKEN,
+  DONE_REFRESHING_TOKEN,
+  SAVE_TRIPS,
+  DELETE_ROUTE,
+  EDIT_MFR
 } from "./ActionTypes";
 import DefaultState from "./DefaultState";
 
@@ -172,6 +177,21 @@ export default function loginReducer(state = DefaultState, action) {
     //     };
     //   }
     //   break;
+    case SAVE_TRIPS:
+      {
+        const Route = action.payload.filter(
+          trip => trip.end_time && trip.validation && trip.validation != 3
+        );
+        //  const Route = action.payload.filter(trip => trip.validation)
+
+        return {
+          ...state,
+          status: "",
+          Route
+        };
+      }
+      break;
+
     case UPDATE_COMPLETE_UPDATE_FEED:
       {
         // mi salvo quando ho completato un feed
@@ -179,27 +199,27 @@ export default function loginReducer(state = DefaultState, action) {
 
         let feedUpdateNew = state.periodicFeed
           ? {
-            0: { open: "", completed: "" },
-            1: { open: "", completed: "" },
-            2: { open: "", completed: "" },
-            3: { open: "", completed: "" },
-            4: { open: "", completed: "" },
-            5: { open: "", completed: "" },
-            6: { open: "", completed: "" },
-            7: { open: "", completed: "" },
-            8: { open: "", completed: "" },
+              0: { open: "", completed: "" },
+              1: { open: "", completed: "" },
+              2: { open: "", completed: "" },
+              3: { open: "", completed: "" },
+              4: { open: "", completed: "" },
+              5: { open: "", completed: "" },
+              6: { open: "", completed: "" },
+              7: { open: "", completed: "" },
+              8: { open: "", completed: "" },
               ...state.periodicFeed
             }
           : {
-            0: { open: "", completed: "" },
-            1: { open: "", completed: "" },
-            2: { open: "", completed: "" },
-            3: { open: "", completed: "" },
-            4: { open: "", completed: "" },
-            5: { open: "", completed: "" },
-            6: { open: "", completed: "" },
-            7: { open: "", completed: "" },
-            8: { open: "", completed: "" },
+              0: { open: "", completed: "" },
+              1: { open: "", completed: "" },
+              2: { open: "", completed: "" },
+              3: { open: "", completed: "" },
+              4: { open: "", completed: "" },
+              5: { open: "", completed: "" },
+              6: { open: "", completed: "" },
+              7: { open: "", completed: "" },
+              8: { open: "", completed: "" }
             };
         // specifico quale feed ho completato
 
@@ -243,7 +263,7 @@ export default function loginReducer(state = DefaultState, action) {
               5: { open: "", completed: "" },
               6: { open: "", completed: "" },
               7: { open: "", completed: "" },
-              8: { open: "", completed: "" },
+              8: { open: "", completed: "" }
             };
         // specifico quale feed ho completato aprendolo
 
@@ -379,7 +399,10 @@ export default function loginReducer(state = DefaultState, action) {
               return {
                 ...state,
                 status: "Connected",
-                infoProfile: {...state.infoProfile, ...action.payload.infoProfile},
+                infoProfile: {
+                  ...state.infoProfile,
+                  ...action.payload.infoProfile
+                },
 
                 periodicFeed: { ...feedUpdateNew }
               };
@@ -387,7 +410,10 @@ export default function loginReducer(state = DefaultState, action) {
               return {
                 ...state,
                 status: "Connected",
-                infoProfile: {...state.infoProfile, ...action.payload.infoProfile},
+                infoProfile: {
+                  ...state.infoProfile,
+                  ...action.payload.infoProfile
+                }
               };
             }
           } else {
@@ -396,7 +422,10 @@ export default function loginReducer(state = DefaultState, action) {
             return {
               ...state,
               status: "Connected",
-              infoProfile: {...state.infoProfile, ...action.payload.infoProfile},
+              infoProfile: {
+                ...state.infoProfile,
+                ...action.payload.infoProfile
+              }
             };
           }
         } else {
@@ -685,11 +714,23 @@ export default function loginReducer(state = DefaultState, action) {
         };
       }
       break;
-    case RESET_TUTORIAL:
+    case RESET_TUTORIAL: {
+      return {
+        ...state,
+        tutorial: { ...state.tutorial, [action.payload]: false }
+      };
+    }
+    case REFRESHING_TOKEN: {
+      return {
+        ...state,
+        refreshTokenPromise: action.refreshTokenPromise
+      };
+    }
+    case DONE_REFRESHING_TOKEN:
       {
         return {
           ...state,
-          tutorial: { ...state.tutorial, [action.payload]: false }
+          refreshTokenPromise: null
         };
       }
       break;
@@ -864,7 +905,20 @@ export default function loginReducer(state = DefaultState, action) {
       {
         return {
           ...state,
-          typeform_soddfrust_2: action.payload
+          typeform_soddfrust_3: action.payload
+        };
+      }
+      break;
+
+    case EDIT_MFR:
+      {
+        let mfrList = state.mostFrequentRoute.filter(element => {
+          return element.id != action.payload.frequent_trip.id;
+        });
+
+        return {
+          ...state,
+          mostFrequentRoute: [...mfrList, action.payload.frequent_trip]
         };
       }
       break;

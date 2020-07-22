@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, NetInfo } from "react-native";
+import { View, Text } from "react-native";
+import { NetInfo } from "@react-native-community/netinfo";
 
 import { createStackNavigator } from "react-navigation";
 import TabWithButton from "../TabWithButton/TabWithButton";
@@ -73,23 +74,25 @@ class StackMenu extends React.Component {
     this.state = {};
     this.handleChange = this.handleChange.bind(this);
     // la prima volta all'avvio dell'app
-    NetInfo.getConnectionInfo().then(connectionInfo => {
-      this.props.dispatch(changeConnectionStatus(connectionInfo));
-    });
+    // NetInfo.getConnectionInfo().then(connectionInfo => {
+    //   this.props.dispatch(changeConnectionStatus(connectionInfo));
+    // });
   }
 
   componentDidMount() {
     // gestore eventi se cambia la connessione chiamo la funzione che manda un azione per cambiare lo stato su redux
-    NetInfo.addEventListener("connectionChange", this.handleChange);
+    // NetInfo.addEventListener("connectionChange", this.handleChange);
     // // se si avvia l'app si effettua il refresh token se sono presenti username e password messe
     // // altrimenti si fa il login
     // this.props.dispatch(logOut());
     // this.props.dispatch(RefreshToken());
   }
 
-  /* componentWillUnmount() {
+  /* 
+  componentWillUnmount() {
     NetInfo.removeEventListener("change", this.handleChange);
-  } */
+  } 
+  */
 
   // aggiorno lo stato con la nuova connessione
   handleChange(isConnected) {

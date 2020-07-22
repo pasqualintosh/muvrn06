@@ -17,8 +17,13 @@ import NotificationNumberCircle from "../NotificationNumberCircle/NotificationNu
 import Icon from "react-native-vector-icons/Ionicons";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import { connect } from "react-redux";
-import { logOut } from "../../domains/login/ActionCreators";
+import { logOutNew } from "../../domains/login/ActionCreators";
 import { strings } from "../../config/i18n";
+import {
+  frequentTripsState,
+  frequentTripsNotSaveState
+} from "./../../domains/login/Selectors.js";
+import { getMostFrequentRoute } from "./../../domains/login/ActionCreators";
 
 class DrawerScreen extends React.Component {
   navigateToScreen = route => () => {
@@ -30,23 +35,23 @@ class DrawerScreen extends React.Component {
   };
 
   actionLogOut = () => {
-    this.props.dispatch(logOut());
+    this.props.dispatch(logOutNew());
   };
 
   logout = () => {
     Alert.alert(
-      strings("logout"),
-      "Are you sure you want to logout?",
+      strings("id_14_01"),
+      strings("id_14_02"),
 
       [
         {
-          text: strings("yes"),
+          text: strings("id_14_03"),
           onPress: () => {
             this.actionLogOut();
           }
         },
         {
-          text: strings("no"),
+          text: strings("id_14_04"),
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         }
@@ -89,7 +94,7 @@ class DrawerScreen extends React.Component {
                     onPress={this.navigateToScreen("ProfileStack")}
                     style={styles.title}
                   >
-                    {strings("profile")}
+                    {strings("id_5_15")}
                   </Text>
                   <View style={{ width: 15 }} />
                   <OwnIcon name={"profile_icn"} size={25} color={"#FFFFFF"} />
@@ -98,24 +103,37 @@ class DrawerScreen extends React.Component {
             </TouchableWithoutFeedback>
             <TouchableWithoutFeedback
               onPress={() => {
-                if (this.props.routine.length == 0) {
-                  this.props.navigation.navigate("ChangeFrequentTripScreen");
-                } else {
-                  // this.navigateToScreen("PersonalFrequentTripDataScreen");
-                  this.props.navigation.navigate(
-                    "PersonalFrequentTripDataScreen"
-                  );
-                }
+                // if (this.props.routine.length == 0) {
+                // this.props.navigation.navigate("ChangeFrequentTripScreen");
+                // this.props.navigation.navigate(
+                //   "PersonalFrequentTripDataScreen"
+                // );
+                // } else {
+                // this.navigateToScreen("PersonalFrequentTripDataScreen");
+                // this.props.navigation.navigate(
+                //   "PersonalFrequentTripDataScreen"
+                // );
+
+                // this.props.dispatch(getMostFrequentRoute());
+                this.props.navigation.navigate(
+                  "PersonalFrequentTripDataScreen"
+                );
+                // this.props.navigation.navigate("PersonalMotoScreen");
+
+                // this.props.navigation.navigate("FrequentRoutineMapDetail", {
+                //   routine: this.props.routine[0]
+                // });
+                // }
               }}
             >
               <View style={styles.menuItem}>
-                {0 ? (
+                {this.props.routine.length ? (
+                  <View />
+                ) : (
                   <NotificationNumberCircle
                     style={styles.notification}
                     numberNotification={1}
                   />
-                ) : (
-                  <View />
                 )}
                 <View style={styles.textIcon}>
                   <Text
@@ -124,14 +142,14 @@ class DrawerScreen extends React.Component {
                     // )}
                     style={styles.title}
                   >
-                    {strings("frequent_trips")}
+                    {strings("id_6_01")}
                   </Text>
                   <View style={{ width: 15 }} />
                   <OwnIcon name={"frequent_icn"} size={25} color={"#FFFFFF"} />
                 </View>
               </View>
             </TouchableWithoutFeedback>
-            <TouchableWithoutFeedback
+            {/* <TouchableWithoutFeedback
               onPress={this.navigateToScreen("PersonalMobilityDataScreen")}
             >
               <View style={styles.menuItem}>
@@ -156,7 +174,7 @@ class DrawerScreen extends React.Component {
                   <OwnIcon name={"garage_icn"} size={25} color={"#FFFFFF"} />
                 </View>
               </View>
-            </TouchableWithoutFeedback>
+            </TouchableWithoutFeedback> */}
             <TouchableWithoutFeedback
               onPress={this.navigateToScreen("FriendStack")}
             >
@@ -174,14 +192,14 @@ class DrawerScreen extends React.Component {
                     onPress={this.navigateToScreen("FriendStack")}
                     style={styles.title}
                   >
-                    {strings("friends")}
+                    {strings("id_20_03")}
                   </Text>
                   <View style={{ width: 15 }} />
                   <OwnIcon name={"friends_icn"} size={25} color={"#FFFFFF"} />
                 </View>
               </View>
             </TouchableWithoutFeedback>
-            <TouchableWithoutFeedback
+            {/* <TouchableWithoutFeedback
               onPress={this.navigateToScreen("ChartsStack")}
             >
               <View style={styles.menuItem}>
@@ -198,13 +216,13 @@ class DrawerScreen extends React.Component {
                     onPress={this.navigateToScreen("ChartsStack")}
                     style={styles.title}
                   >
-                    {strings("stats")}
+                    {strings("id_5_16")}
                   </Text>
                   <View style={{ width: 15 }} />
                   <OwnIcon name={"stats_icn"} size={25} color={"#FFFFFF"} />
                 </View>
               </View>
-            </TouchableWithoutFeedback>
+            </TouchableWithoutFeedback> */}
             <TouchableWithoutFeedback
               onPress={this.navigateToScreen("Trophies")}
             >
@@ -222,7 +240,9 @@ class DrawerScreen extends React.Component {
                     onPress={this.navigateToScreen("Trophies")}
                     style={styles.title}
                   >
-                    {strings("trophies")}
+                    {strings("id_9_01")
+                      .charAt(0)
+                      .toUpperCase() + strings("id_9_01").slice(1)}
                   </Text>
                   <View style={{ width: 15 }} />
                   <OwnIcon name={"trophies_icn"} size={25} color={"#FFFFFF"} />
@@ -246,16 +266,41 @@ class DrawerScreen extends React.Component {
                     onPress={this.navigateToScreen("RewardsStack")}
                     style={styles.title}
                   >
-                    {strings("rewards")}
+                    {strings("id_10_01")
+                      .charAt(0)
+                      .toUpperCase() + strings("id_10_01").slice(1)}
                   </Text>
                   <View style={{ width: 15 }} />
                   <OwnIcon name={"rewards_icn"} size={25} color={"#FFFFFF"} />
                 </View>
               </View>
             </TouchableWithoutFeedback>
-
             <TouchableWithoutFeedback
-              onPress={this.navigateToScreen("SettingsStack")}
+              onPress={this.navigateToScreen("RulesStack")}
+            >
+              <View style={styles.menuItem}>
+                {0 ? (
+                  <NotificationNumberCircle
+                    style={styles.notification}
+                    numberNotification={1}
+                  />
+                ) : (
+                  <View />
+                )}
+                <View style={styles.textIcon}>
+                  <Text
+                    onPress={this.navigateToScreen("RulesStack")}
+                    style={styles.title}
+                  >
+                    {strings("id_11_01")}
+                  </Text>
+                  <View style={{ width: 15 }} />
+                  <OwnIcon name={"rules_icn"} size={25} color={"#FFFFFF"} />
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+            <TouchableWithoutFeedback
+              onPress={this.navigateToScreen("FAQStack")}
             >
               <View style={styles.menuLastItem}>
                 {0 ? (
@@ -268,26 +313,50 @@ class DrawerScreen extends React.Component {
                 )}
                 <View style={styles.textIcon}>
                   <Text
-                    onPress={this.navigateToScreen("SettingsStack")}
+                    onPress={this.navigateToScreen("FAQStack")}
                     style={styles.title}
                   >
-                    {strings("settings")}
+                    {strings("id_12_43")}
                   </Text>
                   <View style={{ width: 15 }} />
-                  <OwnIcon name={"settings_icn"} size={25} color={"#FFFFFF"} />
+                  <OwnIcon name={"faq_icn"} size={25} color={"#FFFFFF"} />
                 </View>
               </View>
             </TouchableWithoutFeedback>
           </View>
         </View>
         <View>
+          <TouchableWithoutFeedback
+            onPress={this.navigateToScreen("SettingsStack")}
+          >
+            <View style={styles.menuLastItem}>
+              {0 ? (
+                <NotificationNumberCircle
+                  style={styles.notification}
+                  numberNotification={1}
+                />
+              ) : (
+                <View />
+              )}
+              <View style={styles.textIcon}>
+                <Text
+                  onPress={this.navigateToScreen("SettingsStack")}
+                  style={styles.title}
+                >
+                  {strings("id_13_49")}
+                </Text>
+                <View style={{ width: 15 }} />
+                <OwnIcon name={"settings_icn"} size={25} color={"#FFFFFF"} />
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
           <TouchableWithoutFeedback onPress={this.logout}>
             <View style={styles.lastItem}>
               <View />
 
               <View style={styles.textLastIcon}>
                 <Text onPress={this.logout} style={styles.title}>
-                  {strings("logout")}
+                  {strings("id_14_01")}
                 </Text>
                 <View style={{ width: 15 }} />
                 <OwnIcon
@@ -345,9 +414,10 @@ styles = StyleSheet.create({
     margin: 10
   },
   menuItem: {
-    height: Dimensions.get("window").height * 0.09,
+    height: Dimensions.get("window").height * 0.08,
     maxHeight: 65,
     paddingRight: 15,
+    paddingLeft: 15,
 
     justifyContent: "space-between",
     flexDirection: "row",
@@ -359,7 +429,7 @@ styles = StyleSheet.create({
     borderBottomWidth: 1
   },
   menuLastItem: {
-    height: Dimensions.get("window").height * 0.09,
+    height: Dimensions.get("window").height * 0.08,
     maxHeight: 65,
     paddingRight: 15,
 
@@ -370,7 +440,7 @@ styles = StyleSheet.create({
     marginLeft: 20
   },
   lastItem: {
-    height: Dimensions.get("window").height * 0.09,
+    height: Dimensions.get("window").height * 0.08,
     paddingRight: 15,
     maxHeight: 65,
 
@@ -400,7 +470,7 @@ DrawerScreen.propTypes = {
 const logOutAction = connect(state => {
   // prendo solo le routine
   return {
-    routine: state.login.mostFrequentRoute ? state.login.mostFrequentRoute : []
+    routine: frequentTripsState(state)
   };
 });
 

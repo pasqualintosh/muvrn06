@@ -126,7 +126,9 @@ class RewardsUser extends React.PureComponent {
     let userAvatar = limitAvatar(this.props.user.avatar);
 
     // role: "muver"
-    const role = Number.isInteger(this.props.user.role) ? this.props.user.role : 0
+    const role = Number.isInteger(this.props.user.role)
+      ? this.props.user.role
+      : 0;
 
     const colorCircle = ["#60368C", "#6CBA7E", "#E83475", "#FAB21E"];
     const colorText = ["#FFFFFF", "#000000", "#FFFFFF", "#000000"];
@@ -137,7 +139,7 @@ class RewardsUser extends React.PureComponent {
     if (this.props.rowIDColor) {
       backgroundColor = this.props.rowIDColor % 2 === 0 ? "#FFFFFF" : "#F7F8F9";
     }
-      
+
     return (
       <View
         key={this.props.rowID}
@@ -162,25 +164,28 @@ class RewardsUser extends React.PureComponent {
           <View style={styles.userAvatarContainer}>
             {/* <View style={styles.userAvatar} /> */}
             <Image style={styles.userAvatarImage} source={images[userAvatar]} />
+            {/* 
             <View style={[styles.userBadge, { backgroundColor: colorKpi }]}>
               <Text style={[styles.badgeText, { color: colorTextRelative }]}>
                 {this.props.user.level
                   ? this.props.user.level.name.charAt(0).toUpperCase()
                   : "N"}
               </Text>
-            </View>
+            </View> 
+            */}
           </View>
           <View style={{ width: 20 }} />
           {this.props.community ? (
             <View style={styles.ViewLabel}>
               <Text style={[styles.userLabel, { color }]}>
-                {this.props.user.first_name
+                {/* {this.props.user.first_name
                   ? this.props.user.first_name.charAt(0).toUpperCase() +
                     this.props.user.first_name.toLowerCase().slice(1)
                   : ""}{" "}
                 {this.props.user.last_name
                   ? this.props.user.last_name.substr(0, 1) + "."
-                  : " "}
+                  : " "} */}
+                {this.props.user.username}
               </Text>
               <View
                 style={{
@@ -199,13 +204,14 @@ class RewardsUser extends React.PureComponent {
           ) : (
             <View style={styles.ViewLabel}>
               <Text style={[styles.userLabel, { color }]}>
-                {this.props.user.first_name
+                {/* {this.props.user.first_name
                   ? this.props.user.first_name.charAt(0).toUpperCase() +
                     this.props.user.first_name.toLowerCase().slice(1)
                   : ""}{" "}
                 {this.props.user.last_name
                   ? this.props.user.last_name.substr(0, 1) + "."
-                  : " "}
+                  : " "} */}
+                {this.props.user.username}
               </Text>
             </View>
           )}
@@ -214,7 +220,6 @@ class RewardsUser extends React.PureComponent {
             style={{
               width: 45,
               height: 100,
-
               borderRightColor: "#FAB21E",
               borderLeftColor: "#FAB21E",
               borderRightWidth: 1,

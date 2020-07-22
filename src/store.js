@@ -10,16 +10,22 @@ import statisticsReducer from "./domains/statistics/Reducers";
 import trainingsReducer from "./domains/trainings/Reducers";
 import screensReducer from "./domains/screen/Reducers";
 import followReducer from "./domains/follow/Reducers";
+import challengesReducer from "./domains/challenges/Reducers";
+import tournamentsReducer from "./domains/tournaments/Reducers";
+import notificationReducer from "./domains/notification/Reducers";
+
+import authMiddleware from "./domains/login/ActionCreators";
 
 import thunk from "redux-thunk";
-import { Platform, AsyncStorage } from "react-native";
+import { Platform } from "react-native";
+import AsyncStorage from "@react-native-community/async-storage";
 
 import {
   createMigrate,
   persistStore,
   persistCombineReducers,
   REHYDRATE,
-  PURGE
+  PURGE,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import hardSet from "redux-persist/lib/stateReconciler/hardSet";
@@ -43,6 +49,7 @@ const persistConfig = {
   version: 1,
   key: "root",
   storage: AsyncStorage,
+  timeout: null,
   whitelist: [
     "tracking",
     "login",
@@ -50,9 +57,12 @@ const persistConfig = {
     "statistics",
     "trainings",
     "follow",
-    "screen"
+    "screen",
+    "challenges",
+    "notification",
+    "tournaments",
   ],
-  stateReconciler: hardSet
+  stateReconciler: hardSet,
 };
 
 const persistedReducer = persistCombineReducers(persistConfig, {
@@ -64,16 +74,23 @@ const persistedReducer = persistCombineReducers(persistConfig, {
   statistics: statisticsReducer,
   trainings: trainingsReducer,
   screen: screensReducer,
-  follow: followReducer
+  follow: followReducer,
+  challenges: challengesReducer,
+  notification: notificationReducer,
+  tournaments: tournamentsReducer,
 });
+const middlewares = [authMiddleware, thunk];
+// const middlewares = [ thunk];
 
 const store = createStore(
   persistedReducer,
   // window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__(),
-  compose(applyMiddleware(thunk))
+  compose(applyMiddleware(...middlewares))
 );
 const persistor = persistStore(store, null, () => {
   store.getState();
 });
 
-export { store, persistor };
+const dev_mode = false; // ATTENZIONE DA DISATTIVARE!!!
+
+export { store, persistor, dev_mode };

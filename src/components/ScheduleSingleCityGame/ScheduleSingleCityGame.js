@@ -45,7 +45,7 @@ class ScheduleSingleCityGame extends React.Component {
           backgroundColor: '#FFFFFF'
         }}
       >
-        <Text style={styles.gameGroup}>START</Text>
+        <Text style={styles.gameGroup}>Last 16</Text>
       </View>)
     } else if (this.props.indexWeek == 8) {
       if (this.props.indexMatch == 0) {
@@ -59,7 +59,7 @@ class ScheduleSingleCityGame extends React.Component {
           backgroundColor: '#FFFFFF'
         }}
       >
-        <Text style={styles.gameGroup}>GRUPPO VINCENTI</Text>
+        <Text style={styles.gameGroup}>Best Eight</Text>
       </View>)
       } else if (this.props.indexMatch == 4) {
         return (<View
@@ -72,7 +72,7 @@ class ScheduleSingleCityGame extends React.Component {
             backgroundColor: '#FFFFFF'
           }}
         >
-          <Text style={styles.gameGroup}>GRUPPO PERDENTI</Text>
+          <Text style={styles.gameGroup}>Ninth to Sixteenth</Text>
         </View>)
         } else {
           return (<View />)
@@ -89,7 +89,7 @@ class ScheduleSingleCityGame extends React.Component {
           backgroundColor: '#FFFFFF'
         }}
       >
-        <Text style={styles.gameGroup}>GRUPPO VINCENTI 1</Text>
+        <Text style={styles.gameGroup}>Best Four</Text>
       </View>)
       } else if (this.props.indexMatch == 2) {
         return (<View
@@ -102,7 +102,7 @@ class ScheduleSingleCityGame extends React.Component {
             backgroundColor: '#FFFFFF'
           }}
         >
-          <Text style={styles.gameGroup}>GRUPPO PERDENTI 1</Text>
+          <Text style={styles.gameGroup}>Fifth to Eighth</Text>
         </View>)
         } else if (this.props.indexMatch == 4) {
           return (<View
@@ -115,7 +115,7 @@ class ScheduleSingleCityGame extends React.Component {
               backgroundColor: '#FFFFFF'
             }}
           >
-            <Text style={styles.gameGroup}>GRUPPO PERDENTI 2</Text>
+            <Text style={styles.gameGroup}>Ninth to Twelfth</Text>
           </View>)
           } else if (this.props.indexMatch == 6) {
             return (<View
@@ -128,7 +128,7 @@ class ScheduleSingleCityGame extends React.Component {
                 backgroundColor: '#FFFFFF'
               }}
             >
-              <Text style={styles.gameGroup}>GRUPPO PERDENTI 3</Text>
+              <Text style={styles.gameGroup}>Thirteenth to Sixteenth</Text>
             </View>)
             }else {
           return (<View />)

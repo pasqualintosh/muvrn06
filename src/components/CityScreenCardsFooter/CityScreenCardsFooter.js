@@ -11,6 +11,7 @@ import {
 import {
   imagesBanners
 } from "../../components/FriendItem/FriendItem";
+import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
 class CityScreenCardsFooter extends React.Component {
   render() {
@@ -31,11 +32,12 @@ class CityScreenCardsFooter extends React.Component {
         <View style={styles.three}>
           <View style={styles.columnView}>
             <View style={styles.rowView}>
-              <Image
+           
+              { this.props.idCity ?   <Image
                 style={{ width: 40, height: 40 }}
                 // source={require("../../assets/images/avatars/0Biker1xhdpi.png")}
                 source={imagesBanners[this.props.idCity]}
-              />
+              /> : <OwnIcon name="MUV_logo" size={40} color="black" />}
             </View>
           </View>
         </View>

@@ -8,6 +8,7 @@ import {
   Platform,
   NativeModules,
   TouchableWithoutFeedback,
+  Alert,
   Picker as PickerIos
 } from "react-native";
 import WavyArea from "./../../components/WavyArea/WavyArea";
@@ -20,26 +21,25 @@ import {
   getMobilityMotoValues
 } from "./../../domains/register/ActionCreators";
 import {
-  setMotoProperties,
-  UpdateProfile
+  updateProfileNew,
+  setMotoProperties
 } from "./../../domains/login/ActionCreators";
 import PickerAndroid from "./../../components/PickerAndroid/PickerAndroid";
 import Modal from "react-native-modal";
 import Emoji from "@ardentlabs/react-native-emoji";
 import Icon from "react-native-vector-icons/Ionicons";
-
+import OwnIcon from "./../../components/OwnIcon/OwnIcon";
 let Picker = Platform.OS === "ios" ? PickerIos : PickerAndroid;
 let PickerItem = Picker.Item;
-
 import { strings } from "../../config/i18n";
 
-class PersonalMotoScreen extends React.Component {
+class MotoSegmentScreen extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      moto_owning_answer: 0, // 0 || 1 || 2
+      motorbike_user: 0, // 0 || 1 || 2
       moto_id: null,
-      moto_year: strings("choose"), // -> number
+      moto_year: strings("id_0_67"), // -> number
       moto_engine_answer: 0, // 0 || 1 || 2
       moto_cc_answer: "", // 0 || 1 || 2 || 3
       moto_year_possibilities: ["-"],
@@ -82,25 +82,16 @@ class PersonalMotoScreen extends React.Component {
 
       this.setState({ moto_year_possibilities });
 
-      if (
-        props.registerState.get_mobility_moto_values.length > 0 &&
-        (props.loginState.infoProfile.moto != {} &&
-          props.loginState.infoProfile.moto != null)
-      ) {
-        try {
-          this.setState(
-            {
-              moto_owning_answer:
-                props.loginState.infoProfile.moto_owning_answer,
-              moto_cc_answer: props.loginState.infoProfile.moto.type,
-              moto_year: props.loginState.infoProfile.moto.year,
-              moto_engine_answer: props.loginState.infoProfile.moto.engine
-            },
-            () => {}
-          );
-        } catch (error) {
-          console.log(error);
-        }
+      try {
+        let moto = props.registerState.get_mobility_moto_values.filter(moto => {
+          return moto.id == props.loginState.infoProfile.motorbike_typology;
+        })[0];
+        this.setState({
+          motorbike_user: props.loginState.infoProfile.motorbike_user,
+          moto_engine_answer: moto.engine
+        });
+      } catch (error) {
+        console.log(error);
       }
     }
   }
@@ -108,24 +99,25 @@ class PersonalMotoScreen extends React.Component {
   handleMotoOwningAnswer = val => {
     if (val != 0) {
       this.setState({
-        moto_owning_answer: val
+        motorbike_user: val
       });
     } else {
-      this.setState({
-        moto_owning_answer: val,
-        moto_year: strings("choose"),
-        moto_engine_answer: "",
-        moto_cc_answer: 0
-      });
-      this.props.dispatch(
-        UpdateProfile({
-          data: {
-            public_profile: { moto: null, moto_owning_answer: 0 }
-          }
-        })
+      this.setState(
+        {
+          motorbike_user: val,
+          moto_year: strings("choose"),
+          moto_engine_answer: "",
+          moto_cc_answer: 0
+        },
+        () => {
+          this.props.dispatch(
+            updateProfileNew({
+              motorbike_user: 0,
+              moto_typology: null
+            })
+          );
+        }
       );
-      this.props.dispatch(setMotoProperties(null));
-      this.props.navigation.goBack(null);
     }
   };
 
@@ -160,49 +152,96 @@ class PersonalMotoScreen extends React.Component {
   };
 
   handleMotoStrokesChange = val => {
-    if (this.state.moto_year != "choose") {
-      this.setState({
-        moto_engine_answer: val
-      });
+    this.setState({
+      moto_engine_answer: val
+    });
 
-      const filtered_moto_m_v = this.props.registerState.get_mobility_moto_values.filter(
-        e => {
-          return e.year == this.state.moto_year && e.engine == val;
-        }
+    this.props.dispatch(updateState({ moto_engine: val }));
+  };
+
+  renderTarget = val => {
+    if (this.state.moto_engine_answer === val) {
+      return (
+        <View>
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              position: "absolute",
+              top: 0,
+              left: -35,
+              borderLeftColor: "#fff",
+              borderTopColor: "#fff",
+              borderLeftWidth: 1,
+              borderTopWidth: 1
+            }}
+          />
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              position: "absolute",
+              top: 0,
+              right: -30,
+              borderRightColor: "#fff",
+              borderTopColor: "#fff",
+              borderRightWidth: 1,
+              borderTopWidth: 1
+            }}
+          />
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              position: "absolute",
+              top: 70,
+              left: -35,
+              borderLeftColor: "#fff",
+              borderBottomColor: "#fff",
+              borderLeftWidth: 1,
+              borderBottomWidth: 1
+            }}
+          />
+          <View
+            style={{
+              width: 10,
+              height: 10,
+              position: "absolute",
+              top: 70,
+              right: -30,
+              borderRightColor: "#fff",
+              borderBottomColor: "#fff",
+              borderRightWidth: 1,
+              borderBottomWidth: 1
+            }}
+          />
+        </View>
       );
-
-      let moto_cc_possibilities = [];
-
-      filtered_moto_m_v.forEach((item, index) => {
-        if (moto_cc_possibilities.length > 0) {
-          if (!moto_cc_possibilities.includes(item.type))
-            moto_cc_possibilities.push(item.type);
-        } else {
-          moto_cc_possibilities.push(item.type);
-        }
-      });
-
-      console.log(moto_cc_possibilities);
-
-      this.setState({ moto_cc_possibilities }, () => {
-        this.props.dispatch(updateState({ moto: null }));
-      });
     }
   };
 
   renderMotoEngine() {
     return this.state.moto_engine_possibilities.map((element, index) => {
+      console.log(element);
       return (
         <View key={index} style={styles.answerBoxes}>
           <TouchableWithoutFeedback
-            onPress={() => this.handleMotoStrokesChange(element)}
+            onPress={() => {
+              if (this.state.motorbike_user != 0)
+                this.handleMotoStrokesChange(element);
+            }}
           >
             <View style={styles.checkboxesContainer}>
+              {/* 
               <View
                 style={[
                   styles.checkboxes,
                   {
                     // backgroundColor: this.props.checkboxColor
+                    backgroundColor:
+                      this.state.motorbike_user != 0
+                        ? "#F7F8F9"
+                        : "#ffffff60"
                   }
                 ]}
               >
@@ -210,7 +249,7 @@ class PersonalMotoScreen extends React.Component {
                   start={{ x: 0.0, y: 0.0 }}
                   end={{ x: 0.0, y: 1 }}
                   locations={[0, 1.0]}
-                  colors={["#E82F73", "#F49658"]}
+                  colors={["#7D4D99", "#6497CC"]}
                   style={[
                     styles.checkboxesGradient,
                     {
@@ -218,10 +257,34 @@ class PersonalMotoScreen extends React.Component {
                     }
                   ]}
                 />
+              </View> 
+              */}
+              {this.renderTarget(element)}
+              <OwnIcon
+                name={"onboarding-stroke_icn"}
+                size={70}
+                color={this.state.motorbike_user != 0 ? "#fff" : "#3d3d3d50"}
+                style={{ marginVertical: 7 }}
+                // color={
+                //   this.state.car_fuel_possibilities.includes(val)
+                //     ? "#fff"
+                //     : "#3d3d3d50"
+                // }
+              />
+              <View style={{ height: 25 }} />
+              <View
+                style={{ justifyContent: "center", alignContent: "center" }}
+              >
+                {element == "2_stroke" ? (
+                  <Text style={styles.checkboxesText}>
+                    {strings("id_0_85")}
+                  </Text>
+                ) : (
+                  <Text style={styles.checkboxesText}>
+                    {strings("id_0_86")}
+                  </Text>
+                )}
               </View>
-              <Text style={styles.checkboxesText}>
-                {element.replace(/_/g, "-")}
-              </Text>
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -231,26 +294,29 @@ class PersonalMotoScreen extends React.Component {
 
   renderMotoOwningCheckbox(index, label) {
     return (
-      <View style={styles.answerBoxes}>
+      <View style={styles.answerBoxesYesorNo}>
         <TouchableWithoutFeedback
           onPress={() => this.handleMotoOwningAnswer(index)}
         >
-          <View style={styles.checkboxesContainer}>
+          <View style={styles.checkboxesContainerYesOrNo}>
             <View style={[styles.checkboxes]}>
               <LinearGradient
                 start={{ x: 0.0, y: 0.0 }}
                 end={{ x: 0.0, y: 1 }}
                 locations={[0, 1.0]}
-                colors={["#E82F73", "#F49658"]}
+                colors={["#7D4D99", "#6497CC"]}
                 style={[
                   styles.checkboxesGradient,
                   {
-                    opacity: this.state.moto_owning_answer == index ? 1 : 0
+                    opacity: this.state.motorbike_user == index ? 1 : 0
                   }
                 ]}
               />
             </View>
-            <Text style={styles.checkboxesText}>{label}</Text>
+            <View style={{ height: 25 }} />
+            <View style={{ justifyContent: "center", alignContent: "center" }}>
+              <Text style={styles.checkboxesText}>{label}</Text>
+            </View>
           </View>
         </TouchableWithoutFeedback>
       </View>
@@ -266,9 +332,9 @@ class PersonalMotoScreen extends React.Component {
           alignItems: "center"
         }}
       >
-        {this.renderMotoOwningCheckbox(0, strings("no"))}
-        {this.renderMotoOwningCheckbox(1, strings("yes"))}
-        {this.renderMotoOwningCheckbox(2, strings("yes__it_is_at_m"))}
+        {this.renderMotoOwningCheckbox(0, strings("id_0_54"))}
+        {this.renderMotoOwningCheckbox(1, strings("id_0_55"))}
+        {this.renderMotoOwningCheckbox(2, strings("id_0_56"))}
       </View>
     );
   }
@@ -283,7 +349,7 @@ class PersonalMotoScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -294,7 +360,7 @@ class PersonalMotoScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_67").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -310,7 +376,7 @@ class PersonalMotoScreen extends React.Component {
           "" +
           element
             .replace("2007-2019", "2007-2012")
-            .replace("2013-2019", strings("from_2013_onwar"))
+            .replace("2013-2019", strings("id_0_96"))
             .replace(/_/g, " ")
         }
         value={"" + element}
@@ -358,15 +424,17 @@ class PersonalMotoScreen extends React.Component {
         {this.renderModal()}
         <TouchableWithoutFeedback
           onPress={() => {
-            this.setState({
-              modal_visible: true,
-              moto_year: this.state.moto_year_possibilities[0]
-            });
+            if (this.state.motorbike_user != 0)
+              this.setState({
+                modal_visible: true,
+                moto_year: this.state.moto_year_possibilities[0]
+              });
           }}
         >
           <View
             style={{
-              backgroundColor: "#fff",
+              backgroundColor:
+                this.state.motorbike_user != 0 ? "#fff" : "#ffffff60",
               borderRadius: 4,
               width: 180,
               height: 80,
@@ -378,11 +446,9 @@ class PersonalMotoScreen extends React.Component {
           >
             <Text>
               {this.state.moto_year
-                ? this.state.moto_year
-                    .replace("2007-2019", "2007-2012")
-                    .replace("2013-2019", "from 2013")
-                    .replace(/_/g, " ")
-                : strings("choose")}
+                .replace("2007-2019", "2007-2012")
+                .replace("2013-2019", "from 2013")
+                .replace(/_/g, " ")}
               &nbsp;
             </Text>
             <Icon
@@ -411,7 +477,7 @@ class PersonalMotoScreen extends React.Component {
         y: 1,
         style: {
           position: "absolute",
-          top: 0
+          top: 10
         }
       };
       if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
@@ -426,7 +492,7 @@ class PersonalMotoScreen extends React.Component {
           y: 1,
           style: {
             position: "absolute",
-            top: 0
+            top: 10
           }
         };
       }
@@ -442,7 +508,7 @@ class PersonalMotoScreen extends React.Component {
         y: 1,
         style: {
           position: "absolute",
-          top: 0
+          top: 10
         }
       };
     return (
@@ -452,53 +518,52 @@ class PersonalMotoScreen extends React.Component {
       >
         <View
           style={{
-            height:
-              Platform.OS == "ios"
-                ? Dimensions.get("window").height * 0.2
-                : Dimensions.get("window").height * 0.16,
+            height: 100,
             backgroundColor: "transparent"
           }}
         >
-          <WavyArea
-            data={negativeData}
-            color={"#fff"}
-            style={styles.topOverlayWave}
+          <ImageBackground
+            source={require("../../assets/images/white_wave_onbording_top.png")}
+            style={styles.backgroundImageWave}
           />
-          <View style={styles.textHeaderContainer}>
-            <TouchableWithoutFeedback
-              onPress={() => {
-                this.props.navigation.goBack(null);
-              }}
-            >
-              <View style={{ width: 30, height: 30 }}>
-                <Icon
-                  name="ios-arrow-back"
-                  style={{ marginTop: 4 }}
-                  size={18}
-                  color="#3d3d3d"
-                />
-              </View>
-            </TouchableWithoutFeedback>
-            <Text style={styles.textHeader}>
-              Do you have a moto? <Emoji name="racing_motorcycle" />{" "}
-              <Emoji name="racing_motorcycle" />
-            </Text>
+          <View
+            style={{
+              height: 100,
+              backgroundColor: "transparent",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignContent: "center"
+            }}
+          >
+            <View style={styles.textHeaderContainer}>
+              <TouchableWithoutFeedback
+                onPress={() => {
+                  this.props.navigation.goBack(null);
+                }}
+              >
+                <View style={{ width: 30, height: 30 }}>
+                  <Icon
+                    name="ios-arrow-back"
+                    style={{ marginTop: Platform.OS == "ios" ? 4 : 2 }}
+                    size={18}
+                    color="#3d3d3d"
+                  />
+                </View>
+              </TouchableWithoutFeedback>
+              <Text style={styles.textHeader}>{strings("id_0_83")}</Text>
+            </View>
           </View>
         </View>
         <View
           style={{
-            height: Dimensions.get("window").height * 0.6,
-            backgroundColor: "transparent",
+            height: Dimensions.get("window").height - 230,
+            width: Dimensions.get("window").width * 0.9,
+            alignSelf: "center",
             justifyContent: "space-around"
           }}
         >
-          <View
-            style={{
-              height: Dimensions.get("window").height * 0.15
-            }}
-          >
-            {this.renderMotoOwning()}
-          </View>
+          <View>{this.renderMotoOwning()}</View>
+          {/* 
           <View
             style={{
               height: Dimensions.get("window").height * 0.2,
@@ -508,28 +573,44 @@ class PersonalMotoScreen extends React.Component {
           >
             <Text style={styles.textSection}>Year:</Text>
             {this.renderMotoYear()}
-          </View>
+          </View> 
+          */}
           <View
             style={{
-              height: Dimensions.get("window").height * 0.2,
               justifyContent: "center",
               alignItems: "center"
             }}
           >
             <View
               style={{
-                height: Dimensions.get("window").height * 0.05,
                 justifyContent: "center",
                 alignItems: "center"
               }}
             >
-              <Text style={styles.textSection}>Engine:</Text>
+              <Text
+                style={[
+                  styles.textSection,
+                  {
+                    color: this.state.motorbike_user != 0 ? "#fff" : "#3d3d3d50"
+                  }
+                ]}
+              >
+                {strings("id_0_84")}
+              </Text>
             </View>
             <View
               style={{
-                height: Dimensions.get("window").height * 0.15,
-                flexDirection: "row",
+                height: 10,
                 justifyContent: "center",
+                alignItems: "center"
+              }}
+            />
+            <View
+              style={{
+                height: 150,
+                width: Dimensions.get("window").width * 0.9,
+                flexDirection: "row",
+                justifyContent: "space-around",
                 alignItems: "center"
               }}
             >
@@ -539,57 +620,61 @@ class PersonalMotoScreen extends React.Component {
         </View>
         <View
           style={{
-            height: Dimensions.get("window").height * 0.2,
-            backgroundColor: "transparent"
+            height: 130,
+            backgroundColor: "transparent",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignContent: "center"
           }}
         >
-          {/* <WavyArea
-            data={positiveData}
-            color={"#fff"}
-            style={styles.topOverlayWave}
-          /> */}
           <View
             style={{
               flexDirection: "row",
               justifyContent: "center",
-              alignItems: "center",
-              top: 60
+              alignItems: "center"
             }}
           >
             <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>
-                We need this information to estimate your CO2 emissions.
-              </Text>
+              <Text style={styles.textFooter}>{strings("id_0_64")}</Text>
             </View>
 
             <View style={[styles.buttonContainer]}>
-              {/* <BoxShadow setting={shadowOpt} /> */}
               <TouchableWithoutFeedback
                 onPress={() => {
                   this.props.dispatch(
-                    setMotoProperties({
-                      moto_owning_answer: this.state.moto_owning_answer,
-                      moto_year: this.state.moto_year,
-                      moto_engine_answer: this.state.moto_engine_answer,
-                      moto_cc_possibilities: this.state.moto_cc_possibilities
+                    updateState({
+                      moto_engine_answer: this.state.moto_engine_answer
                     })
                   );
+                  if (this.state.motorbike_user != 0)
+                    if (this.state.moto_engine_answer != 0) {
+                      this.props.dispatch(
+                        setMotoProperties({
+                          motorbike_user: this.state.motorbike_user,
+                          moto_engine_answer: this.state.moto_engine_answer
+                        })
+                      );
 
-                  if (
-                    this.state.moto_owning_answer != 0 &&
-                    this.state.moto_engine_answer != 0 &&
-                    this.state.moto_year != "choose"
-                  )
-                    this.props.navigation.navigate("PersonalMotoCcScreen");
-                  else {
-                  }
+                      this.props.dispatch(
+                        updateProfileNew({
+                          data: {
+                            motorbike_user: this.state.motorbike_user
+                          }
+                        })
+                      );
+
+                      this.props.navigation.navigate("PersonalMotoCcScreen");
+                    } else {
+                      Alert.alert(strings("id_0_10"), strings("id_0_65"));
+                    }
+                  else this.props.navigation.navigate("PersonalMotoCcScreen");
                 }}
                 disabled={this.props.status === "In register" ? true : false}
               >
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />
@@ -621,8 +706,13 @@ const styles = StyleSheet.create({
     height: Dimensions.get("window").height * 0.2,
     top: Dimensions.get("window").height * 0.8
   },
+  backgroundImageWave: {
+    height: 100,
+    width: Dimensions.get("window").width,
+    position: "absolute"
+    // top: Dimensions.get("window").height * 0.04 + 14
+  },
   textHeaderContainer: {
-    marginTop: Platform.OS == "ios" ? 30 : 15,
     marginLeft: 20,
     flexDirection: "row",
     width: Dimensions.get("window").width * 0.85
@@ -634,12 +724,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold"
   },
   textFooterContainer: {
-    padding: 5,
-    width: Dimensions.get("window").width * 0.7,
-    justifyContent: "center",
-    alignItems: "flex-start",
-    alignSelf: "flex-start",
-    marginBottom: Platform.OS == "ios" ? 20 : 30
+    width: Dimensions.get("window").width * 0.6,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    alignSelf: "center"
   },
   textFooter: {
     fontFamily: "OpenSans-Regular",
@@ -649,10 +737,10 @@ const styles = StyleSheet.create({
     textAlign: "left"
   },
   buttonContainer: {
-    width: Dimensions.get("window").width * 0.2,
+    width: Dimensions.get("window").width * 0.3,
     height: 60,
     backgroundColor: "transparent",
-    justifyContent: "flex-start",
+    justifyContent: "center",
     alignItems: "center",
     alignSelf: "center"
   },
@@ -674,9 +762,15 @@ const styles = StyleSheet.create({
     fontFamily: "OpenSans-Regular",
     fontSize: 14
   },
-  answerBoxes: {
+  answerBoxesYesorNo: {
     height: 80,
     marginVertical: 5,
+    justifyContent: "center",
+    alignItems: "center"
+  },
+  answerBoxes: {
+    height: 150,
+
     justifyContent: "center",
     alignItems: "center"
   },
@@ -700,13 +794,21 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: "#fff",
     fontSize: 11,
-    marginLeft: 6
+
+    textAlign: "center"
   },
-  checkboxesContainer: {
-    height: 80,
+  checkboxesContainerYesOrNo: {
+    height: 90,
     width: Dimensions.get("window").width * 0.2,
     flexDirection: "column",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    alignItems: "center"
+  },
+  checkboxesContainer: {
+    height: 150,
+    width: Dimensions.get("window").width * 0.2,
+    flexDirection: "column",
+    justifyContent: "flex-start",
     alignItems: "center"
   },
   buttonsContainer: {
@@ -734,7 +836,7 @@ const styles = StyleSheet.create({
     fontFamily: "OpenSans-ExtraBold",
     color: "#fff",
     fontSize: 16,
-    fontWeight: "400"
+    fontWeight: "bold"
   }
 });
 
@@ -781,4 +883,4 @@ const withData = connect(state => {
   };
 });
 
-export default withData(PersonalMotoScreen);
+export default withData(MotoSegmentScreen);

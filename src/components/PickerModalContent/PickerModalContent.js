@@ -151,7 +151,7 @@ class PickerModalContent extends React.Component {
         ))}
       </Picker>
 
-      {this._renderButton("Confirm", () => {
+      {this._renderButton(strings("id_13_23"), () => {
         this.setState({ isModalVisible: false });
         this.props.changeState(
           this.props.value === "to fill"
@@ -174,7 +174,7 @@ class PickerModalContent extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -185,7 +185,7 @@ class PickerModalContent extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -359,7 +359,13 @@ class PickerModalContent extends React.Component {
             }
             style={{
               flexDirection: "row",
-              justifyContent: "flex-end"
+              alignSelf: "center",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignContent: "center",
+    alignItems: "center",
+    height: Dimensions.get("window").height * 0.1,
+    width: Dimensions.get("window").width * 0.45
             }}
           >
             {/*
@@ -406,9 +412,17 @@ class PickerModalContent extends React.Component {
               this.props.navigate ? this.props.navigate : this._toggleModal
             }
             style={{
+              
+              
               flexDirection: "row",
-              alignContent: "center",
-              justifyContent: "flex-end"
+              alignSelf: "center",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignContent: "center",
+    alignItems: "center",
+
+    height: Dimensions.get("window").height * 0.1,
+    width: Dimensions.get("window").width * 0.45
             }}
           >
             {/* <Text style={styles.Right}>

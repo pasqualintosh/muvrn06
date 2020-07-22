@@ -24,9 +24,8 @@ class SponsorInfoTournament extends React.PureComponent {
   //  {/* +"!\n" */}
 
   detailSponsor = () => {
-    this.props.navigation.navigate('DetailSponsorTournamentScreenBlur')
-    
-  }
+    this.props.navigation.navigate("DetailSponsorTournamentScreenBlur");
+  };
   render() {
     return (
       <View>
@@ -35,51 +34,54 @@ class SponsorInfoTournament extends React.PureComponent {
           style={styles.backgroundImage}
         />
         <ImageBackground
-              source={require("../../assets/images/airlite_logo.png")}
-              style={{
-                height: 45,
-                width: 100,
-                left: Dimensions.get("window").width * 0.1,
-                position: "absolute",
-                top: 45
-              }}
-            />
-       
+          source={require("../../assets/images/sponsor_logo_muv.png")}
+          style={{
+            height: 45,
+            width: 100,
+            left: Dimensions.get("window").width * 0.1,
+            position: "absolute",
+            top: 45
+          }}
+        />
 
-        
-          <View style={styles.sponsorContainer}>
-          <View style={{ width: Dimensions.get("window").width * 0.8, flexDirection: "column", alignContent: "center", justifyContent: 'center', alignSelf: "center"}}>
-  
-           <Text>
-            <Text
-                    style={{
-                      fontFamily: "Montserrat-ExtraBold",
-                      marginVertical: 5,
-                      color: "#3D3D3D",
-                      fontSize: 15,
-                      textAlign: "left"
-                    }}
-                  >
-                   {"Airlite "}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: "OpenSans-Bold",
-                      marginVertical: 5,
-                      color: "#3D3D3D",
-                      fontSize: 13,
-                      textAlign: "left"
-                    }}
-                  >
-                     {strings("is_a_100__natur")}
-                  </Text>
-                  </Text>
-            </View>
+        <View style={styles.sponsorContainer}>
+          <View
+            style={{
+              width: Dimensions.get("window").width * 0.8,
+              flexDirection: "column",
+              alignContent: "center",
+              justifyContent: "center",
+              alignSelf: "center"
+            }}
+          >
+            <Text>
+              <Text
+                style={{
+                  fontFamily: "Montserrat-ExtraBold",
+                  marginVertical: 5,
+                  color: "#3D3D3D",
+                  fontSize: 15,
+                  textAlign: "left"
+                }}
+              >
+                {"MUV "}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "OpenSans-Bold",
+                  marginVertical: 5,
+                  color: "#3D3D3D",
+                  fontSize: 13,
+                  textAlign: "left"
+                }}
+              >
+                {
+                  "is a 100% natural paint that, thanks to its innovative technology, eliminates bacteria, prevents the growth of mold and reduces air pollution bringing air back to purity."
+                }
+              </Text>
+            </Text>
           </View>
-         
-
-        
-                  
+        </View>
       </View>
     );
   }

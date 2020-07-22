@@ -18,10 +18,7 @@ import { Input } from "react-native-elements";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import InputPassword from "../../components/InputLogin/InputPassword";
 import { connect } from "react-redux";
-import {
-  ChangePassword,
-  deleteProfile
-} from "./../../domains/login/ActionCreators";
+
 import { START_LOGIN } from "../../domains/login/ActionTypes";
 
 import { strings } from "../../config/i18n";
@@ -44,7 +41,7 @@ class SponsorshipScreen extends React.Component {
   //             left: Platform.OS == "android" ? 20 : 0
   //           }}
   //         >
-  //           {strings("change_password")}
+  //           {strings("id_13_24")}
   //         </Text>
   //       )
   //     };
@@ -72,9 +69,10 @@ class SponsorshipScreen extends React.Component {
   };
 
   videoGDPR = () => {
-    this.props.navigation.navigate("GDPRVideoScreen", { typeGDPR: 'SponsorshipScreen'});
+    this.props.navigation.navigate("GDPRVideoScreen", {
+      typeGDPR: "SponsorshipScreen"
+    });
   };
-
 
   componentDidMount() {}
 
@@ -123,9 +121,7 @@ class SponsorshipScreen extends React.Component {
                   />
                 </View>
               </TouchableWithoutFeedback>
-              <Text style={styles.textHeader}>
-                {strings("informed_consen")}
-              </Text>
+              <Text style={styles.textHeader}>{strings("id_13_26")}</Text>
             </View>
           </View>
         </View>
@@ -191,10 +187,7 @@ class SponsorshipScreen extends React.Component {
             bottom: 0
           }}
         >
-        <View
-            
-            style={[styles.button, { marginTop: 10 }]}
-          >
+          <View style={[styles.button, { marginTop: 10 }]}>
             <TouchableHighlight
               onPress={this.videoGDPR}
               style={{
@@ -214,12 +207,7 @@ class SponsorshipScreen extends React.Component {
                   flexDirection: "row"
                 }}
               >
-              <OwnIcon
-            name="video_btn_icn"
-            size={30}
-            color="#E83475"
-           
-          />
+                <OwnIcon name="video_btn_icn" size={30} color="#E83475" />
               </View>
             </TouchableHighlight>
           </View>
@@ -228,10 +216,7 @@ class SponsorshipScreen extends React.Component {
               width: 20
             }}
           />
-          <View
-            
-            style={[styles.button, { marginTop: 10 }]}
-          >
+          <View style={[styles.button, { marginTop: 10 }]}>
             <TouchableHighlight
               onPress={() => this.nextGDPR(false)}
               style={{
@@ -252,7 +237,7 @@ class SponsorshipScreen extends React.Component {
                 }}
               >
                 <Text style={{ color: "#3D3D3D" }}>
-                  {strings("no").toUpperCase()}
+                  {strings("id_14_04").toUpperCase()}
                 </Text>
               </View>
             </TouchableHighlight>
@@ -264,9 +249,10 @@ class SponsorshipScreen extends React.Component {
             }}
           />
           <View
-          
-            style={[styles.button, { marginTop: 10,
-              backgroundColor: '#6CBA7E' }]}
+            style={[
+              styles.button,
+              { marginTop: 10, backgroundColor: "#6CBA7E" }
+            ]}
           >
             <TouchableHighlight
               onPress={() => this.nextGDPR(true)}
@@ -288,7 +274,7 @@ class SponsorshipScreen extends React.Component {
                 }}
               >
                 <Text style={{ color: "#FFFFFF" }}>
-                  {strings("yes").toUpperCase()}
+                  {strings("id_14_03").toUpperCase()}
                 </Text>
               </View>
             </TouchableHighlight>
@@ -344,7 +330,7 @@ const styles = {
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
     elevation: 1,
-    backgroundColor: '#F7F8F9' 
+    backgroundColor: "#F7F8F9"
   },
   textFooter: {
     fontFamily: "OpenSans-Regular",

@@ -10,57 +10,72 @@ import {
   CLEAR_BRANCH_TEMP_DATA,
   SET_REFERRAL_FROM_REGISTRATION,
   CLEAR_REFERRAL_FROM_REGISTRATION,
-  SET_CAR_SEGMENT
+  SET_CAR_SEGMENT,
 } from "./ActionTypes";
 import axios from "axios";
 import {
   requestBackend,
+  requestNewBackend,
   startLogin,
+  startLoginNew,
   getProfile,
-  saveIcloud
+  saveIcloud,
 } from "../login/ActionCreators";
 import { Alert } from "react-native";
 import WebService from "./../../config/WebService";
 import Settings from "./../../config/Settings";
+import { getDevice } from "../../helpers/deviceInfo";
 import DeviceInfo from "react-native-device-info";
 
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 import { strings } from "../../config/i18n";
 import { Client } from "bugsnag-react-native";
-const bugsnag = new Client("58b3b39beb78eba9efdc2d08aeb15d84");
+const bugsnag = new Client(WebService.BugsnagAppId);
+import haversine from "./../../helpers/haversine";
 
 export function updateState(userState) {
   console.log(userState);
   return {
     type: UPDATE_STATE,
-    payload: userState
+    payload: userState,
   };
 }
 
 export function getCity(position) {
-  return dispatch => {
+  return (dispatch) => {
     axios
-      .get(WebService.url + "/api/v1/city", {
-        params: {
-          latitude: position.latitude,
-          longitude: position.longitude,
-          limit: 1,
-          language: "en_US"
-        }
+      .get(WebService.url + "/api/v1/tools/cities/", {
+        params: {},
       })
-      .then(res => {
-        console.log(res);
+      .then((res) => {
+        let locations = res.data.map((v) => {
+          return v.location;
+        });
+        let distances = locations.map((v) => {
+          return haversine(
+            position.latitude,
+            position.longitude,
+            v.latitude,
+            v.longitude
+          );
+        });
+
+        let index_of_min_value = distances.reduce(
+          (iMin, x, i, arr) => (x < arr[iMin] ? i : iMin),
+          0
+        );
+
         // cityId è l'id per il database
         // nearestCity il nome
         dispatch({
           type: UPDATE_STATE,
           payload: {
-            cityId: res.data[0][0],
-            nearestCity: res.data[0][1]
-          }
+            cityId: res.data[index_of_min_value].id,
+            nearestCity: res.data[index_of_min_value],
+          },
         });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         Alert.alert(
           "Oops",
@@ -71,12 +86,13 @@ export function getCity(position) {
 }
 
 export function getMobilityCarValues() {
-  return dispatch => {
+  return (dispatch) => {
     axios
-      .get(WebService.url + "/api/v1/car", {
-        params: {}
+      .get(WebService.url + "/api/v1/tools/user_car_possibilities/", {
+        params: {},
       })
-      .then(res => {
+      .then((res) => {
+        console.log(res);
         dataOrderedByFromYear = res.data.sort((a, b) => {
           return a.from_year - b.from_year;
         });
@@ -84,11 +100,11 @@ export function getMobilityCarValues() {
         dispatch({
           type: GET_MOBILITY_CAR_VALUES,
           payload: {
-            get_mobility_car_values: dataOrderedByFromYear
-          }
+            get_mobility_car_values: dataOrderedByFromYear,
+          },
         });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         Alert.alert(
           "Oops",
@@ -99,12 +115,12 @@ export function getMobilityCarValues() {
 }
 
 export function getMobilityMotoValues() {
-  return dispatch => {
+  return (dispatch) => {
     axios
-      .get(WebService.url + "/api/v1/moto", {
-        params: {}
+      .get(WebService.url + "/api/v1/tools/user_moto_possibilities/", {
+        params: {},
       })
-      .then(res => {
+      .then((res) => {
         dataOrderedByFromYear = res.data.sort((a, b) => {
           return a.from_year - b.from_year;
         });
@@ -112,11 +128,11 @@ export function getMobilityMotoValues() {
         dispatch({
           type: GET_MOBILITY_MOTO_VALUES,
           payload: {
-            get_mobility_moto_values: dataOrderedByFromYear
-          }
+            get_mobility_moto_values: dataOrderedByFromYear,
+          },
         });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
         Alert.alert(
           "Oops",
@@ -126,14 +142,93 @@ export function getMobilityMotoValues() {
   };
 }
 
+export function getAllAvatars(callback = () => {}) {
+  return async function (dispatch, getState) {
+    try {
+      const response = await requestBackend(
+        "get",
+        "/api/v1/account/avatar_list/",
+        null,
+        {},
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            listAvatar: response.data,
+          },
+        });
+        callback(response.data)
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+}
+
+export async function getAvatars(data, callback, error = () => {}) {
+  // const getParams = Object.keys(data).reduce((total, item, index) => {
+  //   console.log(total)
+  //   console.log( typeof data[item])
+  //   if (data.hasOwnProperty(item)) {
+  //     return total + "&" + item + "=" +  (typeof data[item] == "string" ?  data[item].toLowerCase() : data[item] );
+  //   }
+  //   return total;
+  // }, "");
+
+  // console.log(getParams);
+  console.log(data);
+  // axios.post(WebService.url + "/api/v1/account/avatar", data)
+  //   .then((res) => {
+  //     console(res);
+  //     callback(res.data);
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //     Alert.alert(
+  //       "Oops",
+  //       "Seems like there is an error during the capture of data used to get Avatars"
+  //     );
+  //   });
+  try {
+    const response = await requestBackend(
+      "post",
+      "/api/v1/account/avatar/",
+      null,
+      data,
+      "application/json",
+      "Bearer"
+    );
+    console.log(response);
+    if (response.status === 200) {
+      callback(response.data);
+    } else {
+      error()
+      Alert.alert(
+        "Oops",
+        "Seems like there is an error during the capture of data used to get Avatars"
+      );
+    }
+  } catch (error) {
+    console.log(error);
+    Alert.alert(
+      "Oops",
+      "Seems like there is an error during the capture of data used to get Avatars"
+    );
+  }
+}
+
 export function createAccount(account, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // sto provando a creare l'utente
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "In register"
-      }
+        status: "In register",
+      },
     });
     // provo a prendere i dati della registrazione, se qualcuno manca, aggiorno lo stato a '' cosi scompare il caricamneto
     // e potrei anche mandare un avviso
@@ -161,7 +256,7 @@ export function createAccount(account, callback) {
         customisation_gdpr,
         sponsorships_gdpr,
         commercialisation_gdpr,
-        mailinglist_gdpr
+        mailinglist_gdpr,
       } = getState().register;
 
       const overall_modal_split = generalModalSplit.reduce(
@@ -184,7 +279,7 @@ export function createAccount(account, callback) {
         end_type,
         start_type,
         end_point,
-        start_point
+        start_point,
       } = mostFrequentRaceFrequencyPosition;
 
       mfr_modal_split = {
@@ -193,7 +288,7 @@ export function createAccount(account, callback) {
         end_type,
         start_type,
         end_point: [end_point.longitude, end_point.latitude],
-        start_point: [start_point.longitude, start_point.latitude]
+        start_point: [start_point.longitude, start_point.latitude],
       };
       const data = {
         username,
@@ -214,7 +309,7 @@ export function createAccount(account, callback) {
         customisation_gdpr,
         sponsorships_gdpr,
         commercialisation_gdpr,
-        mailinglist_gdpr
+        mailinglist_gdpr,
       };
       console.log(data);
       console.log(JSON.stringify(data));
@@ -240,8 +335,8 @@ export function createAccount(account, callback) {
               username: email,
               id,
               password,
-              email
-            }
+              email,
+            },
           });
 
           // avvia il login con token
@@ -256,13 +351,13 @@ export function createAccount(account, callback) {
           // errore dati inseriti
           dispatch({
             type: START_LOGIN,
-            payload: { status: response.data.error }
+            payload: { status: response.data.error },
           });
         } else {
           // tolgo l'errore cosi so che ho ricevuto risposte e il caricamneto del crea utente ha concluso
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         }
       } catch (error) {
@@ -288,13 +383,13 @@ export function createAccount(account, callback) {
 }
 
 export function createAccountNoGDPR(account, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // sto provando a creare l'utente
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "In register"
-      }
+        status: "In register",
+      },
     });
     // provo a prendere i dati della registrazione, se qualcuno manca, aggiorno lo stato a '' cosi scompare il caricamneto
     // e potrei anche mandare un avviso
@@ -328,7 +423,7 @@ export function createAccountNoGDPR(account, callback) {
         frequent_trip_type_end,
         frequent_trip_start_time,
         frequent_trip_end_time,
-        frequent_trip_choosed_weekdays
+        frequent_trip_choosed_weekdays,
       } = getState().register;
 
       console.log(account);
@@ -385,7 +480,7 @@ export function createAccountNoGDPR(account, callback) {
           overall_modal_split_bike: 0,
           overall_modal_split_bus: 0,
           overall_modal_split_car_pooling: 0,
-          overall_modal_split_car: 0
+          overall_modal_split_car: 0,
         },
         // mfr_modal_split,
         // frequent_weekly_route: {
@@ -416,7 +511,7 @@ export function createAccountNoGDPR(account, callback) {
         pooling_pilot: account.pooling_pilot,
         pooling_passenger: account.pooling_passenger,
         bike_sharing_user: account.bike_sharing_user,
-        car_sharing_user: account.car_sharing_user
+        car_sharing_user: account.car_sharing_user,
       };
       console.log(data);
       console.log(JSON.stringify(data));
@@ -436,20 +531,6 @@ export function createAccountNoGDPR(account, callback) {
         );
         console.log(response);
         if (response.status === 201) {
-          // const ga = new Analytics(
-          //   Settings.analyticsCode,
-          //   DeviceInfo.getUniqueID(),
-          //   1,
-          //   DeviceInfo.getUserAgent()
-          // );
-          // let gaEvent = new GAHits.Event(
-          //   "pirate funell", // category
-          //   "acquisition", // action
-          //   "acquisition", // label
-          //   "acquisition" // value
-          // );
-          // ga.send(gaEvent);
-
           // salvo la password nel portachiavi
 
           // try {
@@ -468,8 +549,8 @@ export function createAccountNoGDPR(account, callback) {
               username: email,
               id,
               password,
-              email
-            }
+              email,
+            },
           });
 
           // avvia il login con token
@@ -478,23 +559,23 @@ export function createAccountNoGDPR(account, callback) {
 
           // mi sposto alla home che carica tutte le altre informazioni
         } else if (response.status === 400) {
-          const msg = new Error("register fail");
-          bugsnag.notify(msg, function(report) {
-            report.metadata = { problem: response.data, input: data };
-          });
           console.log(response);
           Alert.alert("Oops", strings("something_went_"));
+          const msg = new Error("register fail");
+          bugsnag.notify(msg, function (report) {
+            report.metadata = { problem: response.data, input: data };
+          });
 
           // errore dati inseriti
           dispatch({
             type: START_LOGIN,
-            payload: { status: response.data.error }
+            payload: { status: response.data.error },
           });
         } else {
           // tolgo l'errore cosi so che ho ricevuto risposte e il caricamneto del crea utente ha concluso
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         }
       } catch (error) {
@@ -508,7 +589,7 @@ export function createAccountNoGDPR(account, callback) {
     } catch (error) {
       // avviso mancano dei dati
       console.log(error);
-      bugsnag.notify(error, function(report) {
+      bugsnag.notify(error, function (report) {
         report.metadata = { input: data };
       });
       Alert.alert("Oops", strings("something_went_"));
@@ -523,13 +604,13 @@ export function createAccountNoGDPR(account, callback) {
 }
 
 export function createAccountV2(account, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // sto provando a creare l'utente
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "In register"
-      }
+        status: "In register",
+      },
     });
     // provo a prendere i dati della registrazione, se qualcuno manca, aggiorno lo stato a '' cosi scompare il caricamneto
     // e potrei anche mandare un avviso
@@ -563,7 +644,7 @@ export function createAccountV2(account, callback) {
         frequent_trip_type_end,
         frequent_trip_start_time,
         frequent_trip_end_time,
-        frequent_trip_choosed_weekdays
+        frequent_trip_choosed_weekdays,
       } = getState().register;
 
       console.log(account);
@@ -627,12 +708,12 @@ export function createAccountV2(account, callback) {
           // car_sharing_user: account.car_sharing_user,
           status,
           avatar,
-          city: parseInt(cityId)
+          city: parseInt(cityId),
         },
         private_profile: {
           first_name: name,
           last_name: surname,
-          phone: phone
+          phone: phone,
         },
         username,
         password,
@@ -643,8 +724,8 @@ export function createAccountV2(account, callback) {
           overall_modal_split_bike: 0,
           overall_modal_split_bus: 0,
           overall_modal_split_car_pooling: 0,
-          overall_modal_split_car: 0
-        }
+          overall_modal_split_car: 0,
+        },
         // mfr_modal_split,
         // frequent_weekly_route: {
         //   monday: frequent_trip_choosed_weekdays[1],
@@ -676,20 +757,6 @@ export function createAccountV2(account, callback) {
         );
         console.log(response);
         if (response.status === 201) {
-          // const ga = new Analytics(
-          //   Settings.analyticsCode,
-          //   DeviceInfo.getUniqueID(),
-          //   1,
-          //   DeviceInfo.getUserAgent()
-          // );
-          // let gaEvent = new GAHits.Event(
-          //   "pirate funell", // category
-          //   "acquisition", // action
-          //   "acquisition", // label
-          //   "acquisition" // value
-          // );
-          // ga.send(gaEvent);
-
           // salvo la password nel portachiavi
 
           // try {
@@ -708,8 +775,8 @@ export function createAccountV2(account, callback) {
               username: email,
               id,
               password,
-              email
-            }
+              email,
+            },
           });
 
           // avvia il login con token
@@ -719,28 +786,30 @@ export function createAccountV2(account, callback) {
           // mi sposto alla home che carica tutte le altre informazioni
         } else if (response.status === 400) {
           // se contiene due parametri specifici come nome e cognome allora utilizzo il nuovo formato gdpr
-          if (response.data.hasOwnProperty('first_name') && response.data.hasOwnProperty('last_name')) {
-            dispatch(createAccountNoGDPR(account, callback))
+          if (
+            response.data.hasOwnProperty("first_name") &&
+            response.data.hasOwnProperty("last_name")
+          ) {
+            dispatch(createAccountNoGDPR(account, callback));
           } else {
             const msg = new Error("register fail");
-            bugsnag.notify(msg, function(report) {
+            bugsnag.notify(msg, function (report) {
               report.metadata = { problem: response.data, input: data };
             });
             console.log(response);
             Alert.alert("Oops", strings("something_went_"));
-  
+
             // errore dati inseriti
             dispatch({
               type: START_LOGIN,
-              payload: { status: response.data.error }
+              payload: { status: response.data.error },
             });
-          } 
-          
+          }
         } else {
           // tolgo l'errore cosi so che ho ricevuto risposte e il caricamneto del crea utente ha concluso
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         }
       } catch (error) {
@@ -748,8 +817,8 @@ export function createAccountV2(account, callback) {
         dispatch({
           type: START_LOGIN,
           payload: {
-            status: ""
-          }
+            status: "",
+          },
         });
         Alert.alert("Oops", strings("something_went_"));
         // dispatch({
@@ -760,7 +829,662 @@ export function createAccountV2(account, callback) {
     } catch (error) {
       // avviso mancano dei dati
       console.log(error);
-      bugsnag.notify(error, function(report) {
+      bugsnag.notify(error, function (report) {
+        report.metadata = { input: data };
+      });
+      Alert.alert("Oops", strings("something_went_"));
+      // dispatch({
+      //   type: START_LOGIN,
+      //   payload: {
+      //     status: ""
+      //   }
+      // });
+    }
+  };
+}
+
+// registrazione con il nuovo muv
+export function createAccountNew(account, callback = () => {}) {
+  return async function (dispatch, getState) {
+    // sto provando a creare l'utente
+    dispatch({
+      type: START_LOGIN,
+      payload: {
+        status: "In register",
+      },
+    });
+    
+
+    try {
+      // test di creazione account
+      let {
+        username,
+        password,
+        avatar,
+        name,
+        surname,
+        email,
+        phone,
+        customisation_gdpr,
+        sponsorships_gdpr,
+        commercialisation_gdpr,
+        mailinglist_gdpr,
+        frequent_trip_start_time,
+        location,
+        moto: motorbike_typology,
+        car: car_typology,
+        cityId: city,
+        car_owning_answer: car_user,
+        moto_owning_answer: motorbike_user,
+        weight,
+        date_of_birth,
+        gender,
+        height,
+        bike_owning_answer: bike_tipology
+      } = getState().register;
+
+      console.log(account);
+
+      phone = phone.length ? phone : "+39";
+
+      const user_agent = await getDevice();
+
+     
+
+      // const scheduled_notification = frequent_trip_start_time != null && frequent_trip_start_time != undefined
+      //   ? frequent_trip_start_time
+      //   : "10:00";
+
+      //
+
+      /* const data = {
+        password,
+        customized_game_experience: commercialisation_gdpr,
+        sponsor_and_rewards: sponsorships_gdpr,
+        shared_mobility_data: customisation_gdpr,
+        mailing_list: mailinglist_gdpr,
+        // "city": "1",
+        avatar,
+        role: 1,
+        email,
+        username,
+        first_name: name,
+        last_name: surname,
+        mobile_phone: phone,
+
+        // date_of_birth: "25/12/2000",
+        // "gender": "1",
+        // "height": "180",
+        // "weight": "90",
+        coins: "0",
+        points: "0",
+        // "walking_index": "1",
+        // "biking_index": "2",
+        // "lpt_index":"33",
+        // "carpooling_index": "44",
+        // "global_index": "50",
+        user_agent,
+        scheduled_notification,
+        // "employment": "1",
+        // "bike_tipology": "1",
+        // "lpt_user": "1",
+        // "train_user": "2",
+        // "car_user": "3",
+        // "car_typology": "1",
+        // "motorbike_user": "1",
+        // "motorbike_typology": "1",
+        // "car_pooler": "2",
+        // "moto_pooler": "3",
+        // "bike_sharing_user": "1",
+        // "car_sharing_user": "1",
+        // "scooter_sharing_user": "1",
+        level_of_experience: "1",
+        location: {
+          latitude: "37.0625",
+          longitude: "-95.677068"
+        }
+      } */
+
+      const data = {
+        client_id: WebService.client_id,
+        client_secret: WebService.client_secret,
+        customized_game_experience: commercialisation_gdpr,
+        sponsor_and_rewards: sponsorships_gdpr,
+        shared_mobility_data: customisation_gdpr,
+        mailing_list: mailinglist_gdpr,
+        // city: "1",
+        avatar,
+        // avatar: "1",
+        role: "1",
+        email: email.toLowerCase(),
+        password,
+        username: username.toLowerCase(),
+        first_name: name,
+        last_name: surname,
+        // mobile_phone: "+39123456789",
+        // date_of_birth: "25/12/2000",
+        // gender: "1",
+        // height: "180",
+        // weight: "90",
+        coins: "0",
+        points: "0",
+        // walking_index: "1",
+        // biking_index: "2",
+        // lpt_index:"33",
+        // carpooling_index: "44",
+        // global_index: "50",
+        user_agent,
+        // scheduled_notification,
+        // employment: "1",
+        // bike_tipology: "1",
+        // lpt_user: "1",
+        // train_user: "2",
+        // car_user: "3",
+        // car_typology: "1",
+        // motorbike_user: "1",
+        // motorbike_typology: "1",
+        // car_pooler: "2",
+        // moto_pooler: "3",
+        // bike_sharing_user: "1",
+        // car_sharing_user: "1",
+        // scooter_sharing_user: "1",
+        level_of_experience: "1",
+        location,
+        motorbike_typology: (motorbike_typology? motorbike_typology : undefined),
+        city,
+        car_typology: (car_typology? car_typology : undefined),
+        car_user: (car_user? car_user : undefined),
+        motorbike_user: (motorbike_user? motorbike_user : undefined),
+        bike_tipology: (bike_tipology? bike_tipology : undefined),
+        weight,
+       
+        date_of_birth: (date_of_birth? date_of_birth : undefined),
+        gender: (gender? gender : undefined),
+        height: (height? height : undefined),
+        weight: (weight? weight : undefined),
+        
+        app_version: DeviceInfo.getVersion()
+      };
+
+      console.log(data);
+
+      try {
+        callback(); // riattivo il pulsante
+
+        const response = await requestNewBackend(
+          "post",
+          "/api/v1/account/?token=" + WebService.tokenServer,
+          null,
+          data,
+          "application/json",
+          "Bearer"
+        );
+        console.log(response);
+        if (response.status === 201) {
+          // utente creato
+          const { email, id } = response.data;
+          // ci sono anche le info utili per il profilo
+          
+          dispatch({
+            type: START_LOGIN,
+            payload: {
+              email,
+              username,
+              id,
+              password,
+              tutorial: {
+                tutorialStart: false,
+                tutorialLive: false,
+                tutorialMetro: false,
+                tutorialCarPooling: false
+              },
+            },
+          });
+          // ci sono anche le info utili per il profilo
+          dispatch({
+            type: START_LOGIN,
+            payload: {
+              infoProfile: { ...response.data, password: "" },
+            },
+          });
+
+          dispatch(startLoginNew({ email, password }, true));
+
+          // mi sposto alla home che carica tutte le altre informazioni
+        } else if (response.status === 400) {
+          const msg = new Error("register fail 400");
+          bugsnag.notify(msg, function (report) {
+            report.metadata = { problem: response.data, input: data };
+          });
+          // tolgo l'errore cosi so che ho ricevuto risposte e il caricamneto del crea utente ha concluso
+          dispatch({
+            type: FAIL_LOGIN,
+            payload: { error_description: "error" },
+          });
+        } else {
+          const msg = new Error("register fail diverso da 400");
+          bugsnag.notify(msg, function (report) {
+            report.metadata = { problem: response, input: data };
+          });
+          // tolgo l'errore cosi so che ho ricevuto risposte e il caricamneto del crea utente ha concluso
+          dispatch({
+            type: FAIL_LOGIN,
+            payload: { error_description: "error" },
+          });
+        }
+      } catch (error) {
+        console.log(error);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+        Alert.alert("Oops", strings("something_went_"));
+        // dispatch({
+        //   type: FAIL_LOGIN,
+        //   payload: { error_description: "error" }
+        // });
+      }
+    } catch (error) {
+      // avviso mancano dei dati
+      console.log(error);
+      bugsnag.notify(error, function (report) {
+        report.metadata = { input: data };
+      });
+      Alert.alert("Oops", strings("something_went_"));
+      // dispatch({
+      //   type: START_LOGIN,
+      //   payload: {
+      //     status: ""
+      //   }
+      // });
+    }
+  };
+}
+
+export function checkFilterUniqueAccount(
+  account,
+  existParams = () => {},
+  notParams = () => {},
+  error = () => {}
+) {
+  return async function (dispatch, getState) {
+    try {
+      console.log(account);
+
+      // converto l'oggetto in una stringa pe la get con params &
+
+      const getParams = Object.keys(account).reduce((total, item, index) => {
+        // if (
+        //   index
+        // ) {
+        if (account.hasOwnProperty(item)) {
+          return total + "&" + item + "=" + account[item].toLowerCase();
+        }
+        return total;
+        // } else {
+        //   if (account.hasOwnProperty(item)) {
+        //     return "" + item + "=" + account[item];
+        //   }
+        //   return "";
+
+        // }
+      }, "");
+
+      console.log(getParams);
+
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/account/check_user_badword/?token=" +
+          WebService.tokenServer +
+          getParams,
+        null,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // {
+        //     “username”: true,
+        //     “email”: true,
+        //     “badword”: false
+        // }
+        if (
+          !response.data.username &&
+          !response.data.email &&
+          !response.data.badword
+        ) {
+          // vado avanti, tutti i parametri soddisfano i filtri e l'unicità
+          notParams();
+        } else {
+          existParams(response.data);
+        }
+      } else {
+        error();
+        // tolgo l'errore cosi so che ho ricevuto risposte e il caricamneto del crea utente ha concluso
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch({
+        type: START_LOGIN,
+        payload: {
+          status: "",
+        },
+      });
+      Alert.alert("Oops", strings("something_went_"));
+      // dispatch({
+      //   type: FAIL_LOGIN,
+      //   payload: { error_description: "error" }
+      // });
+    }
+  };
+}
+// {{baseUrl}}/account/check_user/?token=3a9e8cfb-bfc6-4a1f-b5c6-152b75a98688&amp;username=newuser&amp;email=user@example.com
+// controllo di alcuni parametri nella registrazione/login utente che devono essere univoci tipo username e mail
+export function checkUniqueAccount(
+  account,
+  existParams = () => {},
+  notParams = () => {},
+  error = () => {}
+) {
+  return async function (dispatch, getState) {
+    try {
+      console.log(account);
+
+      // converto l'oggetto in una stringa pe la get con params &
+
+      const getParams = Object.keys(account).reduce((total, item, index) => {
+        // if (
+        //   index
+        // ) {
+        if (account.hasOwnProperty(item)) {
+          return total + "&" + item + "=" + account[item].toLowerCase();
+        }
+        return total;
+        // } else {
+        //   if (account.hasOwnProperty(item)) {
+        //     return "" + item + "=" + account[item];
+        //   }
+        //   return "";
+
+        // }
+      }, "");
+
+      console.log(getParams);
+
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/account/check_user/?token=" +
+          WebService.tokenServer +
+          getParams,
+        null,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // se esiste
+        if (response.data.length) {
+          // trovato, vedo cosa ho trovato
+          existParams(response.data);
+        } else {
+          // se non esiste vado avanti
+          notParams();
+        }
+      } else {
+        error();
+        // tolgo l'errore cosi so che ho ricevuto risposte e il caricamneto del crea utente ha concluso
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch({
+        type: START_LOGIN,
+        payload: {
+          status: "",
+        },
+      });
+      Alert.alert("Oops", strings("something_went_"));
+      // dispatch({
+      //   type: FAIL_LOGIN,
+      //   payload: { error_description: "error" }
+      // });
+    }
+  };
+}
+
+// registrazione con il nuovo muv con i social
+export function createAccountNewSocial(account, callback = () => {}) {
+  return async function (dispatch, getState) {
+    // sto provando a creare l'utente
+    dispatch({
+      type: START_LOGIN,
+      payload: {
+        status: "In register",
+      },
+    });
+    // provo a prendere i dati della registrazione, se qualcuno manca, aggiorno lo stato a '' cosi scompare il caricamneto
+    // e potrei anche mandare un avviso
+
+    try {
+      // test di creazione account
+      let {
+        username,
+        password,
+        avatar,
+        name,
+        surname,
+        email,
+        phone,
+        customisation_gdpr,
+        sponsorships_gdpr,
+        commercialisation_gdpr,
+        mailinglist_gdpr,
+        frequent_trip_start_time,
+        social_backend,
+        access_token_social,
+        location,
+        moto: motorbike_typology,
+        car: car_typology,
+        cityId: city,
+        car_owning_answer: car_user,
+        moto_owning_answer: motorbike_user,
+        weight,
+        date_of_birth,
+        gender,
+        height,
+        bike_owning_answer: bike_tipology
+      } = getState().register;
+
+      console.log(account);
+
+      phone = phone.length ? phone : "+39";
+
+      const user_agent = await getDevice();
+
+      // const scheduled_notification =
+      //   frequent_trip_start_time != null &&
+      //   frequent_trip_start_time != undefined
+      //     ? frequent_trip_start_time
+      //     : "10:00";
+
+      const data = {
+        client_id: WebService.client_id,
+        client_secret: WebService.client_secret,
+        grant_type: "convert_token",
+        backend: social_backend,
+        token: access_token_social,
+        customized_game_experience: commercialisation_gdpr,
+        sponsor_and_rewards: sponsorships_gdpr,
+        shared_mobility_data: customisation_gdpr,
+        mailing_list: mailinglist_gdpr,
+
+        // city: "1",
+        avatar: avatar,
+        //  avatar: 1,
+        role: "1",
+        email: email.toLowerCase(),
+        username: username.toLowerCase(),
+        first_name: name,
+        last_name: surname,
+        // mobile_phone: "+39123456789",
+        // date_of_birth: "25/12/2000",
+        // gender: "1",
+        // height: "180",
+        // weight: "90",
+        coins: "0",
+        points: "0",
+        // walking_index: "1",
+        // biking_index: "2",
+        // lpt_index: "33",
+        // carpooling_index: "44",
+        // global_index: "50",
+        user_agent,
+        // scheduled_notification,
+        // employment: "1",
+        // bike_tipology: "1",
+        // lpt_user: "1",
+        // train_user: "2",
+        // car_user: "3",
+        // car_typology: "1",
+        // motorbike_user: "1",
+        // motorbike_typology: "1",
+        // car_pooler: "2",
+        // moto_pooler: "3",
+        // bike_sharing_user: "1",
+        // car_sharing_user: "1",
+        // scooter_sharing_user: "1",
+        level_of_experience: "1",
+        location,
+        motorbike_typology: (motorbike_typology? motorbike_typology : undefined),
+        city,
+        car_typology: (car_typology? car_typology : undefined),
+        car_user: (car_user? car_user : undefined),
+        motorbike_user: (motorbike_user? motorbike_user : undefined),
+        bike_tipology: (bike_tipology? bike_tipology : undefined),
+        weight,
+       
+        date_of_birth: (date_of_birth? date_of_birth : undefined),
+        gender: (gender? gender : undefined),
+        height: (height? height : undefined),
+        weight: (weight? weight : undefined),
+        
+        app_version: DeviceInfo.getVersion()
+      };
+
+      console.log(data);
+
+      try {
+        callback(); // riattivo il pulsante
+
+        const response = await requestNewBackend(
+          "post",
+          "/api/v1/auth/convert-token",
+          null,
+          data,
+          "application/json",
+          "Bearer"
+        );
+        console.log(response);
+        if (response.status === 200) {
+          // // utente creato
+          // const { email, id } = response.data;
+          // dispatch({
+          //   type: START_LOGIN,
+          //   payload: {
+          //     username: email,
+          //     id,
+          //     password,
+          //     email
+          //   }
+          // });
+
+          // con la registrazione sociale mi collego direttamente senza login
+
+          const { access_token, refresh_token, expires_in } = response.data;
+          let date = +new Date().getTime();
+          // per 1000 perche expires_in è in secondi
+          date = date + 1000 * expires_in;
+          dispatch({
+            type: START_LOGIN,
+            payload: {
+              email,
+              username,
+              password,
+              access_token,
+              refresh_token,
+              date,
+              status: "",
+              tutorial: {
+                tutorialStart: false,
+                tutorialLive: false,
+                tutorialMetro: false,
+                tutorialCarPooling: false
+              },
+            },
+          });
+          // dispatch(startLogin({ username: email, password }, true));
+
+          // mi sposto alla home che carica tutte le altre informazioni
+        } else if (response.status === 500) {
+          // errore legato al backend
+          //  dispatch(createAccountNewSocial())
+        } else if (response.status === 400) {
+          // se contiene due parametri specifici come nome e cognome allora utilizzo il nuovo formato gdpr
+          if (
+            response.data.hasOwnProperty("first_name") &&
+            response.data.hasOwnProperty("last_name")
+          ) {
+            dispatch(createAccountNoGDPR(account, callback));
+          } else {
+            const msg = new Error("register fail");
+            bugsnag.notify(msg, function (report) {
+              report.metadata = { problem: response.data, input: data };
+            });
+            console.log(response);
+            Alert.alert("Oops", strings("something_went_"));
+
+            // errore dati inseriti
+            dispatch({
+              type: START_LOGIN,
+              payload: { status: response.data.error },
+            });
+          }
+        } else {
+          // tolgo l'errore cosi so che ho ricevuto risposte e il caricamneto del crea utente ha concluso
+          dispatch({
+            type: FAIL_LOGIN,
+            payload: { error_description: "error" },
+          });
+        }
+      } catch (error) {
+        console.log(error);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+        Alert.alert("Oops", strings("something_went_"));
+        // dispatch({
+        //   type: FAIL_LOGIN,
+        //   payload: { error_description: "error" }
+        // });
+      }
+    } catch (error) {
+      // avviso mancano dei dati
+      console.log(error);
+      bugsnag.notify(error, function (report) {
         report.metadata = { input: data };
       });
       Alert.alert("Oops", strings("something_went_"));
@@ -775,7 +1499,7 @@ export function createAccountV2(account, callback) {
 }
 
 export function checkEmail(email, callback) {
-  return async function(dispatch) {
+  return async function (dispatch) {
     let now = +new Date();
     try {
       const response = await requestBackend(
@@ -790,7 +1514,7 @@ export function checkEmail(email, callback) {
         console.log(response.data.result);
         dispatch({
           type: CHECK_EMAIL,
-          payload: { email_is_present: response.data.result }
+          payload: { email_is_present: response.data.result },
         });
         // chiamo la callback, che setta lo stato interno allo stato e se è valida ovvero non c'e l'email allora vado avanti
         callback(!response.data.result);
@@ -798,7 +1522,7 @@ export function checkEmail(email, callback) {
         console.log(response.data.result);
         dispatch({
           type: CHECK_EMAIL,
-          payload: { email_is_present: response.data.result }
+          payload: { email_is_present: response.data.result },
         });
         // chiamo la callback, che setta lo stato interno allo stato e se è valida ovvero non c'e l'email allora vado avanti
         callback(!response.data.result);
@@ -823,46 +1547,50 @@ export function saveBranchTempData(
   referral_url,
   link_status
 ) {
-  return async function(dispatch) {
+  return async function (dispatch) {
     dispatch({
       type: SAVE_BRANCH_TEMP_DATA,
-      payload: { followed_user_id, referral_url, link_status }
+      payload: { followed_user_id, referral_url, link_status },
     });
   };
 }
 
 export function clearBranchTempData() {
-  return async function(dispatch) {
+  return async function (dispatch) {
     dispatch({
       type: CLEAR_BRANCH_TEMP_DATA,
-      payload: { followed_user_id: null, referral_url: null, link_status: null }
+      payload: {
+        followed_user_id: null,
+        referral_url: null,
+        link_status: null,
+      },
     });
   };
 }
 
 export function setReferralFromRegistration() {
-  return async function(dispatch) {
+  return async function (dispatch) {
     dispatch({
       type: SET_REFERRAL_FROM_REGISTRATION,
-      payload: {}
+      payload: {},
     });
   };
 }
 
 export function clearReferralFromRegistration() {
-  return async function(dispatch) {
+  return async function (dispatch) {
     dispatch({
       type: CLEAR_REFERRAL_FROM_REGISTRATION,
-      payload: {}
+      payload: {},
     });
   };
 }
 
 export function setCarSegment(segment) {
-  return async function(dispatch) {
+  return async function (dispatch) {
     dispatch({
       type: SET_CAR_SEGMENT,
-      payload: { car_segment: segment }
+      payload: { car_segment: segment },
     });
   };
 }

@@ -32,7 +32,9 @@ import {
   getLeaderboardByCity,
   getMonthlyLeaderboardByCity,
   getWeeklyLeaderboardByCity,
-  getWeeklyFriendLeaderboard
+  getWeeklyFriendLeaderboard,
+  getWeeklyLeaderboardNew,
+  getSpecificPositionNew
 } from "./../../domains/standings/ActionCreators";
 import { connect } from "react-redux";
 import pointsDecimal from "../../helpers/pointsDecimal";
@@ -58,7 +60,8 @@ class StandingsScreen extends React.Component {
     this.state = {
       showLoading: true,
       refreshing: false,
-      refreshingFriend: false
+      refreshingFriend: false,
+      endScrollRefresh: false
     };
 
     this.displayStandings = false;
@@ -66,11 +69,10 @@ class StandingsScreen extends React.Component {
   componentWillMount() {
     // pushNotifications.configure();
     // pushNotifications.userIsStillNotification();
-
     // this.props.dispatch(getLeaderboardByCity());
-    if (this.props.standingsState.error) {
-      Alert.alert("Oops", "Seems like an error occured, pull to refresh");
-    }
+    // if (this.props.standingsState.error) {
+    //   Alert.alert("Oops", "Seems like an error occured, pull to refresh");
+    // }
   }
 
   myProfile = () => {
@@ -87,7 +89,7 @@ class StandingsScreen extends React.Component {
     //   if (this.props.selectedTime == "monthly")
     //     this.props.dispatch(getMonthlyLeaderboard());
     //   else if (this.props.selectedTime == "weekly")
-    //     this.props.dispatch(getWeeklyLeaderboard());
+    //     this.props.dispatch(getWeeklyLeaderboardNew());
     //   else this.props.dispatch(getLeaderboard());
     // else if (this.props.activeSelectable == "city")
     //   if (this.props.selectedTime == "monthly")
@@ -95,9 +97,9 @@ class StandingsScreen extends React.Component {
     //   else if (this.props.selectedTime == "weekly")
     //     this.props.dispatch(getWeeklyLeaderboardByCity());
     //   else this.props.dispatch(getLeaderboardByCity());
-
+    getSpecificPositionNew();
     if (this.props.activeSelectable == "global") {
-      this.props.dispatch(getWeeklyLeaderboard());
+      this.props.dispatch(getWeeklyLeaderboardNew());
     } else if (this.props.activeSelectable == "city") {
       this.props.dispatch(getWeeklyLeaderboardByCity());
     } else {
@@ -130,7 +132,7 @@ class StandingsScreen extends React.Component {
   //     //   if (props.selectedTime == "monthly")
   //     //     this.props.dispatch(getMonthlyLeaderboard());
   //     //   else if (props.selectedTime == "weekly")
-  //     //     this.props.dispatch(getWeeklyLeaderboard());
+  //     //     this.props.dispatch(getWeeklyLeaderboardNew());
   //     //   else this.props.dispatch(getLeaderboard());
   //     // else if (props.activeSelectable == "city")
   //     //   if (props.selectedTime == "monthly")
@@ -159,6 +161,58 @@ class StandingsScreen extends React.Component {
       clearTimeout(loading);
     }, 1000);
   }
+
+  isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }) => {
+    const paddingToBottom = 25;
+    return (
+      layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - paddingToBottom
+    );
+  };
+
+  endRequestInEndDrag = () => {
+    this.setState({ endScrollRefresh: false });
+  };
+
+  // quando scendo tutti gli utenti, ne carico altri
+  onScrollEndDrag = event => {
+    // console.log("scroll");
+    // // console.log(this.props.allFeedOrder.length);
+
+    if (this.isCloseToBottom(event.nativeEvent)) {
+      const activeSelectable = this.props.activeSelectable;
+
+      let number = 0;
+      if (activeSelectable == "global") {
+        number = this.props.standingsState.standing.length;
+      } else if (activeSelectable == "city") {
+        number = this.props.standingsState.cityStanding.length;
+      } else if (activeSelectable == "friend") {
+        number = this.props.standingsState.infoUserFriendsClassification
+          .numFriend;
+      } else {
+        // community
+
+        number = this.props.standingsState.infoUserCommunityClassification
+          .numFriend;
+      }
+      this.setState({ endScrollRefresh: true });
+      if (this.props.activeSelectable == "global") {
+        this.props.dispatch(
+          getWeeklyLeaderboardNew({
+            limit: 100,
+            offset: parseInt(number / 100) * 100,
+            afterRequest: this.endRequestInEndDrag
+          })
+        );
+      } else if (this.props.activeSelectable == "city") {
+        this.props.dispatch(getWeeklyLeaderboardByCity());
+      } else {
+        this.props.dispatch(getWeeklyFriendLeaderboard());
+        this.props.dispatch(getFollowingUser());
+      }
+    }
+  };
 
   displayWavyArea() {
     if (this.displayStandings)
@@ -194,6 +248,7 @@ class StandingsScreen extends React.Component {
           }
           style={styles.challengesList}
           dataSource={dataSource}
+          onScrollEndDrag={this.onScrollEndDrag}
           renderRow={(item, sectionID, rowID) => {
             const row = parseInt(rowID) + 1;
             if (row === 1) {
@@ -211,7 +266,7 @@ class StandingsScreen extends React.Component {
                   }
                   <UserItem
                     navigation={this.props.navigation}
-                    myProfile={this.myProfile}
+                    // myProfile={this.myProfile}
                     user={{
                       ...item,
                       position: row,
@@ -244,7 +299,7 @@ class StandingsScreen extends React.Component {
               return (
                 <Aux key={rowID}>
                   <UserItem
-                    myProfile={this.myProfile}
+                    // myProfile={this.myProfile}
                     navigation={this.props.navigation}
                     user={{
                       ...item,
@@ -271,13 +326,14 @@ class StandingsScreen extends React.Component {
                     }
                     colorStar={colorStar}
                   />
-                  {this.endList(activeSelectable, number)}
+                  {this.endScroll(this.state.endScrollRefresh)}
+                  {/* {this.endList(activeSelectable, number)} */}
                 </Aux>
               );
             } else {
               return (
                 <UserItem
-                  myProfile={this.myProfile}
+                  // myProfile={this.myProfile}
                   navigation={this.props.navigation}
                   user={{
                     ...item,
@@ -340,7 +396,7 @@ class StandingsScreen extends React.Component {
         <InviteNoFriendScreen
           infoProfile={this.props.infoProfile}
           navigation={this.props.navigation}
-          Points={this.props.Points}
+          Points={0}
         />
         <View
           style={{
@@ -430,6 +486,38 @@ class StandingsScreen extends React.Component {
     );
   }
 
+  endScroll = endScrollRefresh => {
+    return (
+      <View>
+        {endScrollRefresh ? (
+          <ActivityIndicator
+            style={{
+              alignContent: "center",
+              flex: 1,
+              paddingTop: 10,
+
+              alignItems: "center",
+              alignSelf: "center"
+            }}
+            size="large"
+            color="#3D3D3D"
+          />
+        ) : (
+          <View />
+        )}
+        <View
+          style={{
+            height: Dimensions.get("window").height / 10
+          }}
+        />
+        {
+          // aggiungo delo spazio in meno dato che il padding lo aggiunto prima su android e quindi qua non lo aggiungo
+        }
+        <View style={{ height: Dimensions.get("window").height * 0.23 }} />
+      </View>
+    );
+  };
+
   // metto aggiungi amici alla fine sono sono in friend
   // aggiungo delo spazio in piu cosi posso scrollare tutta la lista anche se c'e l'onda e la notifica
   // se la classifica è bloccata, c'e uno spazio in piu dato header piu grande
@@ -440,7 +528,7 @@ class StandingsScreen extends React.Component {
           <InviteItem
             infoProfile={this.props.infoProfile}
             navigation={this.props.navigation}
-            Points={this.props.Points}
+            Points={0}
           />
           <View
             style={{
@@ -457,7 +545,7 @@ class StandingsScreen extends React.Component {
           <InviteItem
             infoProfile={this.props.infoProfile}
             navigation={this.props.navigation}
-            Points={this.props.Points}
+            Points={0}
             description={
               number > 3
                 ? strings("invite_your_fri")
@@ -1232,19 +1320,17 @@ class StandingsScreen extends React.Component {
               alignContent: "center"
             }}
           >
-            {this.selectTypeNew(community, checkSponsor)}
+            {/* {this.selectTypeNew(community, checkSponsor)} */}
             <View>
               <UserItem
-                myProfile={this.myProfile}
+                // myProfile={this.myProfile}
                 navigation={this.props.navigation}
                 currentUser={true}
                 user={{
-                  referred_route__user__first_name: this.props.infoProfile
-                    .first_name,
-                  referred_route__user__last_name: this.props.infoProfile
-                    .last_name,
-                  referred_route__user__avatar: this.props.infoProfile.avatar,
-                  id: this.props.infoProfile.user_id,
+                  username: this.props.infoProfile.username,
+
+                  avatar: this.props.infoProfile.avatar,
+                  id: this.props.infoProfile.id,
 
                   points: totPoints,
                   position:
@@ -1308,16 +1394,14 @@ const getStandingsState = createSelector(
 
 const getLevel = state => state.trainings.name;
 
-const getLevelState = createSelector(
-  [getLevel],
-  level => (level ? level : "Newbie")
+const getLevelState = createSelector([getLevel], level =>
+  level ? level : "Newbie"
 );
 
 const getRole = state => state.login.role;
 
-const getRoleState = createSelector(
-  [getRole],
-  role => (role.roleUser ? (role.roleUser ? role.roleUser : 0) : 0)
+const getRoleState = createSelector([getRole], role =>
+  role.roleUser ? (role.roleUser ? role.roleUser : 0) : 0
 );
 
 /* 
@@ -1331,13 +1415,7 @@ const withConnect = connect(state => {
     infoProfile: getProfileState(state),
     level: getLevelState(state),
     role: getRoleState(state),
-    followed: getFollowedState(state),
-    Points:
-      state.statistics.statistics === []
-        ? 0
-        : state.statistics.statistics.reduce((total, elem, index, array) => {
-            return total + elem.points;
-          }, 0)
+    followed: getFollowedState(state)
   };
 });
 

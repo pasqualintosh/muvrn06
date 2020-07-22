@@ -6,6 +6,7 @@ import { connect } from "react-redux";
 import { createSelector } from "reselect";
 import { getMostFrequentRoute } from "./../../domains/login/ActionCreators";
 import CityScreenCards from "./..//CityScreenCards/CityScreenCards";
+import CO2Wave from "../../components/CO2Wave/CO2Wave";
 
 import { strings } from "../../config/i18n";
 
@@ -13,11 +14,9 @@ class CityDetailScreen extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-     
-    };
+    this.state = {};
   }
-  
+
   static navigationOptions = ({ navigation }) => {
     return {
       headerTitle: (
@@ -26,7 +25,7 @@ class CityDetailScreen extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("profile")}
+          {strings("id_5_15")}
         </Text>
       )
     };
@@ -37,12 +36,10 @@ class CityDetailScreen extends React.Component {
   }
 
   render() {
-   
-        const city = this.props.navigation.getParam("city", 6);
-        const cityName = this.props.navigation.getParam("cityName", "palermo");
-        const city_id = this.props.navigation.getParam("cityId", 0);
-        
-    
+    const city = this.props.navigation.getParam("city", 6);
+    const cityName = this.props.navigation.getParam("cityName", "palermo");
+    const city_id = this.props.navigation.getParam("cityId", 0);
+
     return (
       <View
         style={{
@@ -69,13 +66,12 @@ class CityDetailScreen extends React.Component {
             showsVerticalScrollIndicator={false}
             ref={ref => (this.ref = ref)}
           >
-            
-
             <CityScreenCards
               city={cityName.toUpperCase()}
               cityId={city}
               city_id={city_id}
             />
+            {/* <CO2Wave CO2={1234} type={'City'}></CO2Wave> */}
             <View
               style={{
                 height: 200,
@@ -88,6 +84,5 @@ class CityDetailScreen extends React.Component {
     );
   }
 }
-
 
 export default CityDetailScreen;

@@ -100,11 +100,8 @@ class EmptyCityTournament extends React.Component {
     // Mon Jun 03 2019 06:31:00 GMT+0200
 
     // 2019-09-16T04:00:00Z
-    
 
-    let startTournament = new Date(
-      "2019-09-23T04:30:00Z"
-    ).getTime();
+    let startTournament = new Date("2019-09-23T04:30:00Z").getTime();
     console.log(startTournament);
 
     let today = new Date();

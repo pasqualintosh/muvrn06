@@ -15,10 +15,10 @@ import Blur from "../../components/Blur/Blur";
 import NotificationPoint from "./../../components/NotificationPoint/NotificationPoint";
 import StandingsScreen from "../StandingsScreen/StandingsScreen";
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
+
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 import Icon from "react-native-vector-icons/Ionicons";
-// import ModalDropdown from "react-native-modal-dropdown";
+import ModalDropdown from "react-native-modal-dropdown";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import { connect } from "react-redux";
 import {
@@ -32,8 +32,10 @@ import {
   getWeeklyLeaderboardByCity,
   getWeeklyLeaderboardByCommunity,
   getWeeklyFriendLeaderboard,
-  getTrophies,
-  getNextSunday
+  getTrophiesNew,
+  getNextSunday,
+  getWeeklyLeaderboardNew,
+  getSpecificPositionNew
 } from "./../../domains/standings/ActionCreators";
 
 import { getFollowingUser } from "./../../domains/follow/ActionCreators";
@@ -145,7 +147,7 @@ class StandingsScreenBlur extends React.Component {
       // altrimenti l'attesa e conclusa
       this.setState({ time: seconds, blockRanking: false });
       // ricarico i dati
-      this.props.dispatch(getWeeklyLeaderboard());
+      this.props.dispatch(getWeeklyLeaderboardNew());
       this.props.dispatch(getWeeklyLeaderboardByCity());
     }
 
@@ -174,7 +176,7 @@ class StandingsScreenBlur extends React.Component {
       now.getDay() === 0 &&
       now.getHours() >= EndGMTTournament - DifferenceMinutesUTC
     ) {
-      this.props.dispatch(getTrophies());
+      this.props.dispatch(getTrophiesNew());
       if (!this.timeoutId) {
         this.updateCurrentTime();
       }
@@ -184,7 +186,7 @@ class StandingsScreenBlur extends React.Component {
       now.getDay() === 1 &&
       now.getHours() < 3 - DifferenceMinutesUTC
     ) {
-      this.props.dispatch(getTrophies());
+      this.props.dispatch(getTrophiesNew());
       if (!this.timeoutId) {
         this.updateCurrentTime();
       }
@@ -216,7 +218,7 @@ class StandingsScreenBlur extends React.Component {
       this.setState({
         blockRanking: true
       });
-      this.props.dispatch(getTrophies());
+      this.props.dispatch(getTrophiesNew());
       if (!this.timeoutId) {
         this.updateCurrentTime();
       }
@@ -224,7 +226,7 @@ class StandingsScreenBlur extends React.Component {
       now.getDay() === 1 &&
       now.getHours() < 3 - DifferenceMinutesUTC
     ) {
-      this.props.dispatch(getTrophies());
+      this.props.dispatch(getTrophiesNew());
       this.setState({
         blockRanking: true
       });
@@ -235,7 +237,7 @@ class StandingsScreenBlur extends React.Component {
       now.getDay() === 2 &&
       now.getHours() > 8 - DifferenceMinutesUTC
     ) {
-      this.props.dispatch(getTrophies());
+      this.props.dispatch(getTrophiesNew());
       this.setState({
         blockRanking: true
       });
@@ -247,19 +249,7 @@ class StandingsScreenBlur extends React.Component {
   };
 
   componentWillMount() {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // const screenView = new GAHits.ScreenView(
-    //   Settings.analyticsAppName,
-    //   this.constructor.name,
-    //   DeviceInfo.getReadableVersion(),
-    //   DeviceInfo.getBundleId()
-    // );
-    // ga.send(screenView);
+
   }
 
   static navigationOptions = ({ navigation, screenProps }) => ({
@@ -379,24 +369,26 @@ class StandingsScreenBlur extends React.Component {
           {this.state.activeSelectable.slice(1)}
           {" Ranking"} 
           */}
-          Weekly Challenges
+          {strings("id_4_01")}
         </Text>
       )
     });
 
     this.addTrackerGA();
 
+    getSpecificPositionNew();
+
     if (this.props.selectedLeaderboard === "city") {
       this.props.dispatch(getWeeklyLeaderboardByCity());
     } else if (this.props.selectedLeaderboard === "global") {
-      this.props.dispatch(getWeeklyLeaderboard());
+      this.props.dispatch(getWeeklyLeaderboardNew());
     } else if (this.props.selectedLeaderboard === "friend") {
       this.props.dispatch(getWeeklyFriendLeaderboard());
       this.props.dispatch(getFollowingUser());
     } else if (this.props.selectedLeaderboard == "community") {
       this.props.dispatch(getWeeklyLeaderboardByCommunity());
     } else {
-      this.props.dispatch(getWeeklyLeaderboard());
+      this.props.dispatch(getWeeklyLeaderboardNew());
       // this.props.dispatch(getWeeklyLeaderboardByCity());
     }
   }
@@ -408,7 +400,7 @@ class StandingsScreenBlur extends React.Component {
           left: Platform.OS == "android" ? 20 : 0
         }}
       >
-        Weekly Challenges
+        {strings("id_4_01")}
       </Text>
     ),
     headerLeft: null,
@@ -468,7 +460,7 @@ class StandingsScreenBlur extends React.Component {
       this.props.dispatch(getMonthlyLeaderboardByCity());
       this.props.dispatch(setLeaderboardTiming(selectTab, idx));
     } else if (weeklySelect) {
-      this.props.dispatch(getWeeklyLeaderboard());
+      this.props.dispatch(getWeeklyLeaderboardNew());
       this.props.dispatch(getWeeklyLeaderboardByCity());
       this.props.dispatch(setLeaderboardTiming(selectTab, idx));
     } else if (selectTab === "community") {
@@ -514,12 +506,10 @@ class StandingsScreenBlur extends React.Component {
         }}
       >
         <Text style={styles.restartTxt}>
-          <Text style={styles.restartBoldTxt}>
-            {strings("the_challenge_i")}
-          </Text>
-          {". " + strings("see_you_on") + " "}
-          <Text style={styles.restartBoldTxt}>{strings("monday")}</Text>
-          {" " + strings("for_the_next_on")}
+          <Text style={styles.restartBoldTxt}>{strings("id_4_10")}</Text>
+          {". " + strings("id_4_11") + " "}
+          <Text style={styles.restartBoldTxt}>{strings("id_4_12")}</Text>
+          {" " + strings("id_4_13")}
         </Text>
       </View>
     );
@@ -530,7 +520,7 @@ class StandingsScreenBlur extends React.Component {
     // return ({strings("missing") + " "}
     // <Text style={styles.countdownBoldTxt}>
     //   {this.state.days_until_end_date}
-    //   {" " + strings("days")}
+    //   {" " + strings("id_4_02")}
     // </Text>
     // {" " + strings("left_to_the_end")})
 
@@ -558,7 +548,7 @@ class StandingsScreenBlur extends React.Component {
               {" " + days_txt}
             </Text>
 
-            {" " + strings("left_to_the_end")}
+            {" " + strings("id_4_08")}
           </Text>
         ) : (
           <Aux>
@@ -569,7 +559,7 @@ class StandingsScreenBlur extends React.Component {
                     " " +
                     hours_txt +
                     " " +
-                    strings("and") +
+                    strings("id_4_09") +
                     " "
                   : ""}
                 {this.state.minute_until_end_date}
@@ -583,7 +573,7 @@ class StandingsScreenBlur extends React.Component {
               />
             </View>
             <Text style={styles.countdownTxtWhite}>
-              {" " + strings("left_to_the_end")}
+              {" " + strings("id_4_08")}
             </Text>
           </Aux>
         )}
@@ -615,14 +605,14 @@ class StandingsScreenBlur extends React.Component {
         this.props.dispatch(getWeeklyLeaderboardByCity());
       }
     } else if (selectedLeaderboard === "global") {
-      this.props.dispatch(getWeeklyLeaderboard());
+      this.props.dispatch(getWeeklyLeaderboardNew());
     } else if (selectedLeaderboard === "friend") {
       this.props.dispatch(getWeeklyFriendLeaderboard());
       this.props.dispatch(getFollowingUser());
     } else if (selectedLeaderboard == "community") {
       this.props.dispatch(getWeeklyLeaderboardByCommunity());
     } else {
-      this.props.dispatch(getWeeklyLeaderboard());
+      this.props.dispatch(getWeeklyLeaderboardNew());
       // this.props.dispatch(getWeeklyLeaderboardByCity());
     }
 
@@ -918,14 +908,18 @@ class StandingsScreenBlur extends React.Component {
       // if (this.state.blockRanking) {
       const time = new Date(this.state.time * 1000).toISOString().slice(11, 19);
       let days_txt =
-        this.state.days_until_end_date > 1 ? strings("days") : strings("day");
+        this.state.days_until_end_date > 1
+          ? strings("id_4_02")
+          : strings("id_4_03");
 
       let hours_txt =
-        this.state.hour_until_end_date > 1 ? strings("hours") : strings("hour");
+        this.state.hour_until_end_date > 1
+          ? strings("id_4_04")
+          : strings("id_4_05");
       let min_txt =
         this.state.minute_until_end_date > 1
-          ? strings("_453_minutes")
-          : strings("minute");
+          ? strings("id_4_06")
+          : strings("id_4_07");
       const checkDay = this.state.days_until_end_date > 0;
       // #FC6754
       return (
@@ -1188,14 +1182,18 @@ class StandingsScreenBlur extends React.Component {
     // if (this.state.blockRanking) {
     const time = new Date(this.state.time * 1000).toISOString().slice(11, 19);
     let days_txt =
-      this.state.days_until_end_date > 1 ? strings("days") : strings("day");
+      this.state.days_until_end_date > 1
+        ? strings("id_4_02")
+        : strings("id_4_03");
 
     let hours_txt =
-      this.state.hour_until_end_date > 1 ? strings("hours") : strings("hour");
+      this.state.hour_until_end_date > 1
+        ? strings("id_4_04")
+        : strings("id_4_05");
     let min_txt =
       this.state.minute_until_end_date > 1
-        ? strings("_453_minutes")
-        : strings("minute");
+        ? strings("id_4_06")
+        : strings("id_4_07");
     const checkDay = this.state.days_until_end_date > 0;
     // #FC6754
     return (
@@ -1562,41 +1560,41 @@ const styles = StyleSheet.create({
     fontFamily: "OpenSans-Regular",
     textAlign: "center",
     color: "#3D3D3D",
-    fontSize: 12
+    fontSize: 10
   },
   countdownBoldTxt: {
     fontFamily: "OpenSans-Bold",
     textAlign: "center",
     fontWeight: "bold",
     color: "#FC6754",
-    fontSize: 12
+    fontSize: 10
   },
   restartBoldTxt: {
     fontFamily: "OpenSans-Bold",
     textAlign: "center",
     fontWeight: "bold",
     color: "#FFFFFF",
-    fontSize: 12
+    fontSize: 10
   },
   restartTxt: {
     fontFamily: "OpenSans-Regular",
     textAlign: "center",
 
     color: "#FFFFFF",
-    fontSize: 12
+    fontSize: 8
   },
   countdownTxtWhite: {
     fontFamily: "OpenSans-Regular",
     textAlign: "center",
     color: "#FFFFFF",
-    fontSize: 12
+    fontSize: 10
   },
   countdownBoldTxtWhite: {
     fontFamily: "OpenSans-Bold",
     textAlign: "center",
     fontWeight: "bold",
     color: "#FFFFFF",
-    fontSize: 12
+    fontSize: 10
   }
 });
 
@@ -1631,19 +1629,16 @@ const getActiveSelectableState = createSelector(
   selectedLeaderboard => (selectedLeaderboard ? selectedLeaderboard : "city")
 );
 
-const getCityState = createSelector(
-  [getCity],
-  infoProfile =>
-    infoProfile.city
+const getCityState = createSelector([getCity], infoProfile =>
+  infoProfile.city
+    ? infoProfile.city.city_name
       ? infoProfile.city.city_name
-        ? infoProfile.city.city_name
-        : "City"
       : "City"
+    : "City"
 );
 
-const getCommunityState = createSelector(
-  [getCity],
-  infoProfile => (infoProfile.community ? infoProfile.community : null)
+const getCommunityState = createSelector([getCity], infoProfile =>
+  infoProfile.community ? infoProfile.community : null
 );
 
 const getStandingsState = createSelector(
@@ -1651,10 +1646,7 @@ const getStandingsState = createSelector(
   standings => standings
 );
 
-const getSessionToken = createSelector(
-  [getLocalSession],
-  s => s
-);
+const getSessionToken = createSelector([getLocalSession], s => s);
 
 const withData = connect(state => {
   return {

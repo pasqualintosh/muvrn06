@@ -41,6 +41,7 @@ class RecapActivity extends React.PureComponent {
 
   getImagePath = label => {
     switch (label) {
+      
       case "walk":
         return (
           <Image
@@ -85,6 +86,13 @@ class RecapActivity extends React.PureComponent {
             style={{ width: 100, height: 100 }}
           />
         );
+        case "car":
+        return (
+          <Image
+            source={require("../../assets/images/carpooling_icn.png")}
+            style={{ width: 100, height: 100 }}
+          />
+        );
       case "multiple":
         return (
           <Image
@@ -106,24 +114,24 @@ class RecapActivity extends React.PureComponent {
     const timeAgo = this.props.DataNow - this.props.Data;
     // minuti
     let time = timeAgo / 60000;
-    let text = strings("mins");
+    let text = strings("id_4_06");
 
     if (parseInt(time) !== 0) {
       // ore
       let timeNew = time / 60;
       if (parseInt(timeNew) !== 0) {
         time = timeNew;
-        text = strings("hours");
+        text = strings("id_4_04");
         // giorni
         timeNew = time / 24;
         if (parseInt(timeNew) !== 0) {
           time = timeNew;
-          text = strings("day");
+          text = strings("id_4_03");
           // mesi
           timeNew = time / 30;
           if (parseInt(timeNew) !== 0) {
             time = timeNew;
-            text = strings("months");
+            text = strings("id_18_18");
           }
         }
       }
@@ -132,88 +140,42 @@ class RecapActivity extends React.PureComponent {
 
     let Data = {};
     if (this.props.fromDb) {
+      const time_travelled = this.props.Data - this.props.dateStart;
       DataTrip = {
-        // route: this.props.route,
-        referred_route_id: this.props.referred_route_id,
-        referred_route: this.props.referred_route,
-        activity: this.props.modal_type,
         modalType: this.props.modal_type,
-        modalTypeArray: this.props.modal_type_array
-          ? this.props.modal_type_array
-          : null,
-        timeTavelled: this.props.time_travelled,
-        timeAgo: time,
-        textAgo: text,
+        referred_route_id: this.props.referred_route_id,
+        timeTravelled: time_travelled / 1000,
         totPoints: this.props.totPoints,
         validated: this.props.validated,
-        distanceTravelled: this.props.distance_travelled,
+        distanceTravelled: Number.parseFloat(this.props.distance).toFixed(2),
         calories: this.props.calories,
-        // firstLat: this.props.firstLat,
-        // firstLon: this.props.firstLon,
-        data: this.props.Data,
+        routinary: this.props.routinary,
+        typology: this.props.typology,
+        multipliers: this.props.multipliers,
+        dateStart: this.props.dateStart,
+        dateEnd: this.props.Data,
+
         fromDb: this.props.fromDb,
         color: this.getModalColor()
       };
     } else {
-      PreviousRouteMultiple = this.props.id.map(
-        value => this.props.AllRoute[value]
-      );
-      console.log(PreviousRouteMultiple);
-
       try {
-        let emptyTrip = {
-          calories: 0,
-          coins: 0,
-
-          totPoints: 0,
-          time_travelled: 0,
-
-          modal_type: [],
-          route: [],
-          routeAnalyzed: [],
-          totDistance: 0,
-
-          validated: false
-        };
-        PreviousRouteMultiple.forEach(elem => {
-          emptyTrip.calories += elem.calories;
-          emptyTrip.coins += elem.coins;
-
-          emptyTrip.totDistance += Number.parseFloat(elem.totDistance);
-          emptyTrip.totPoints += elem.totPoints;
-          emptyTrip.time_travelled += elem.time_travelled;
-          PreviousRouteMultiple.length !== 1
-            ? emptyTrip.modal_type.push(elem.modal_type)
-            : (emptyTrip.modal_type = elem.modal_type);
-
-          emptyTrip.route.push(elem.route);
-          emptyTrip.routeAnalyzed.push([...elem.routeAnalyzed, ...elem.route]);
-
-          if (elem.validated) emptyTrip.validated = true;
-        });
-
-        const firstLat = emptyTrip.routeAnalyzed[0][0].latitude;
-        const firstLon = emptyTrip.routeAnalyzed[0][0].longitude;
-
-        console.log(emptyTrip);
+        const time_travelled = this.props.Data - this.props.dateStart;
 
         DataTrip = {
-          route: emptyTrip.routeAnalyzed,
-          activity: emptyTrip.modal_type,
           modalType: this.props.modal_type,
-          modalTypeArray: emptyTrip.modal_type ? emptyTrip.modal_type : null,
-          timeTavelled: emptyTrip.time_travelled / 1000,
-          timeAgo: time,
-          textAgo: text,
-          totPoints: emptyTrip.totPoints,
-          validated: emptyTrip.validated,
-          distanceTravelled: Number.parseFloat(emptyTrip.totDistance).toFixed(
-            2
-          ),
-          calories: emptyTrip.calories,
-          firstLat: firstLat,
-          firstLon: firstLon,
-          data: this.props.Data,
+          referred_route_id: 0,
+          timeTravelled: time_travelled / 1000,
+          totPoints: this.props.totPoints,
+          validated: this.props.validated,
+          distanceTravelled: Number.parseFloat(this.props.distance).toFixed(2),
+          calories: this.props.calories,
+          routinary: this.props.routinary,
+          typology: this.props.typology,
+          multipliers: this.props.multipliers,
+          dateStart: this.props.dateStart,
+          dateEnd: this.props.Data,
+
           fromDb: this.props.fromDb,
           color: this.getModalColor()
         };
@@ -233,7 +195,7 @@ class RecapActivity extends React.PureComponent {
 
   getModalColor = () => {
     let color = "#B3B3B3";
-    if (this.props.validated) {
+    if (this.props.validated == 1) {
       switch (this.props.modal_type) {
         case "Biking":
           {
@@ -243,6 +205,7 @@ class RecapActivity extends React.PureComponent {
         case "Walking":
           {
             color = "#6CBA7E";
+            
           }
           break;
         case "Public":
@@ -258,6 +221,13 @@ class RecapActivity extends React.PureComponent {
             color = "#60368C";
           }
           break;
+          case "Carpooling":
+            case "Car":
+          {
+            color = "#3363AD";
+           
+          
+          }
         default:
           {
             color = "#3d3d3d";
@@ -314,15 +284,18 @@ class RecapActivity extends React.PureComponent {
     );
   };
 
+ 
+
   descriptionFeed = () => {
-    if (this.props.validated) {
+    if (this.props.validated == 1) {
       if (this.props.modal_type !== "Multiple") {
         return this.getFeedContentFromString(
           this.props.modal_type == "Walking"
-            ? strings("_517_congrats__you_j")
+            ? strings("id_18_04")
             : this.props.modal_type == "Biking"
-            ? strings("_518_congrats__you_j")
-            : strings("_519_congrats__you_j"),
+            ? strings("id_18_05")
+            : this.props.modal_type == "Carpooling" 
+            ? strings("id_18_05") : strings("id_18_06"),
           this.props.totPoints.toFixed(0)
         );
 
@@ -339,37 +312,27 @@ class RecapActivity extends React.PureComponent {
         // );
       } else {
         return this.getFeedContentFromString(
-          strings("this_looks_like"),
+          strings("id_18_09"),
           this.props.totPoints.toFixed(0)
         );
       }
     } else {
       // se non è valida
-      return <Text style={styles.textDescr}>{strings("something_got_w")}</Text>;
+      return <Text style={styles.textDescr}>{strings("id_18_11")}</Text>;
     }
   };
 
   descriptionTitle = () => {
     // se valida
-    if (this.props.validated) {
+    if (this.props.validated == 1) {
       if (this.props.modal_type !== "Multiple") {
-        return (
-          <Text style={styles.textModalSplit}>
-            {strings("trip_completed_")}
-          </Text>
-        );
+        return <Text style={styles.textModalSplit}>{strings("id_18_03")}</Text>;
       } else {
-        return (
-          <Text style={styles.textModalSplit}>
-            {strings("multiple_trip_c")}
-          </Text>
-        );
+        return <Text style={styles.textModalSplit}>{strings("id_18_08")}</Text>;
       }
     } else {
       // se non è valida
-      return (
-        <Text style={styles.textModalSplit}>{strings("sorry__we_didn_")}</Text>
-      );
+      return <Text style={styles.textModalSplit}>{strings("id_18_10")}</Text>;
     }
   };
 
@@ -424,76 +387,80 @@ class RecapActivity extends React.PureComponent {
     let label = timeAgo(this.props.DataNow, this.props.Data);
 
     return (
-      <View >
-      <TouchableOpacity style={styles.view} activeOpacity={0.7} onPress={this.moveMapRecap}>
-        <View style={styles.viewStyle}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              width: Dimensions.get("window").width * 0.15,
-              // height: 55
-              // backgroundColor: "#ffa"
-              // borderLeftColor: "#9D9B9C80",
-              // borderLeftWidth: 1.5
-            }}
-          >
-            {this.getImagePath(this.props.modal_type.toLowerCase())}
-          </View>
-          <View
-            style={{
-              width: Dimensions.get("window").width * 0.55,
-              flexDirection: "column",
-              justifyContent: "space-between"
-            }}
-          >
-            <Text style={styles.textTitle}>
-              {this.descriptionTitle()}
-              {label}
-            </Text>
-            {this.descriptionFeed()}
-          </View>
-          {this.props.validated ? (
+      <View>
+        <TouchableOpacity
+          style={styles.view}
+          activeOpacity={0.7}
+          onPress={this.moveMapRecap}
+        >
+          <View style={styles.viewStyle}>
             <View
               style={{
                 flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center",
-                width: Dimensions.get("window").width * 0.05,
-                // height: 85
+                width: Dimensions.get("window").width * 0.15
+                // height: 55
+                // backgroundColor: "#ffa"
                 // borderLeftColor: "#9D9B9C80",
                 // borderLeftWidth: 1.5
               }}
             >
-              {/* 
-                <Text style={styles.textPoints}>
-                  {this.props.totPoints.toFixed(0)}
-                </Text>
-                <Text style={styles.pt}>pt</Text> 
-              */}
-              {this.renderCircle(this.props.validated, this.getModalColor())}
+              {this.getImagePath(this.props.modal_type.toLowerCase())}
             </View>
-          ) : (
             <View
               style={{
-                width: Dimensions.get("window").width * 0.05
-
-                // borderLeftColor: "#9D9B9C80",
-                // borderLeftWidth: 1.5
+                width: Dimensions.get("window").width * 0.55,
+                flexDirection: "column",
+                justifyContent: "space-between"
               }}
             >
-              {/* 
+              <Text style={styles.textTitle}>
+                {this.descriptionTitle()}
+                {label}
+              </Text>
+              {this.descriptionFeed()}
+            </View>
+            {this.props.validated == 1 ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: Dimensions.get("window").width * 0.05
+                  // height: 85
+                  // borderLeftColor: "#9D9B9C80",
+                  // borderLeftWidth: 1.5
+                }}
+              >
+                {/* 
                 <Text style={styles.textPoints}>
                   {this.props.totPoints.toFixed(0)}
                 </Text>
                 <Text style={styles.pt}>pt</Text> 
               */}
-              {this.getEndImagePathNotValid()}
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
+                {this.renderCircle(this.props.validated, this.getModalColor())}
+              </View>
+            ) : (
+              <View
+                style={{
+                  width: Dimensions.get("window").width * 0.05
+
+                  // borderLeftColor: "#9D9B9C80",
+                  // borderLeftWidth: 1.5
+                }}
+              >
+                {/* 
+                <Text style={styles.textPoints}>
+                  {this.props.totPoints.toFixed(0)}
+                </Text>
+                <Text style={styles.pt}>pt</Text> 
+              */}
+                {this.getEndImagePathNotValid()}
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -525,8 +492,7 @@ const styles = {
     shadowColor: "#B2B2B2",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.6,
-    marginBottom: 20,
-   
+    marginBottom: 20
   },
   viewStyle: {
     width: Dimensions.get("window").width * 0.9,
@@ -534,11 +500,10 @@ const styles = {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    alignSelf: "center",
-    
+    alignSelf: "center"
   },
   margin: {
-    borderColor: 'transparent'
+    borderColor: "transparent"
   },
   textTitle: {
     fontSize: 11,

@@ -15,11 +15,13 @@ import {
   RefreshControl,
   ActivityIndicator,
   FlatList,
-  NativeModules
+  NativeModules,
 } from "react-native";
 import { getModalType } from "../../domains/tracking/ActionCreators";
 import RecapActivity from "../RecapActivity/RecapActivity";
-import RecapActivityIndicator from "../RecapActivityIndicator/RecapActivityIndicator";
+import RecapActivityLoading from "../RecapActivityLoading/RecapActivityLoading";
+import RecapFriendRequestReceived from "../RecapFriendRequestReceived/RecapFriendRequestReceived";
+
 import pointsDecimal from "../../helpers/pointsDecimal";
 import { connect } from "react-redux";
 
@@ -27,62 +29,63 @@ import RecapTraining from "../RecapTraining/RecapTraining";
 import RecapImageFeed from "../RecapImageFeed/RecapImageFeed";
 import RecapSocial from "../RecapSocial/RecapSocial";
 
+import DontMUVFeed from "../DontMUVFeed/DontMUVFeed";
+import MUVForwardFeed from "../MUVForwardFeed/MUVForwardFeed";
+
 import InviteFriendFeed from "../InviteFriendFeed/InviteFriendFeed";
 import { getSelectedLeaderboardState } from "../../domains/standings/Selectors";
 import {
   getWeekActivitiesState,
-  getPermActivitiesState
+  getPermActivitiesState,
+  getStatusActivityState
 } from "../../domains/statistics/Selectors";
 
 import InfoCityTournamentHomePadding from "../InfoCityTournamentHomePadding/InfoCityTournamentHomePadding";
 
 import Aux from "../../helpers/Aux";
+import { getAllowedTournamentsState } from "../../domains/tournaments/Selectors";
 
 import {
   createSelector,
   createSelectorCreator,
-  defaultMemoize
+  defaultMemoize,
 } from "reselect";
 import { isEqual } from "lodash";
 
-import {
-  getProfile,
-  GetListRoute,
-  getMostFrequentRoute,
-  getRole,
-  addCompletePeriodicFeed,
-  addOpenPeriodicFeed
-} from "./../../domains/login/ActionCreators";
+import { startApp, GetListRoute } from "./../../domains/login/ActionCreators";
 import {
   resumeRoute,
-  ResetPreviousRoute
+  ResetPreviousRoute,
 } from "./../../domains/tracking/ActionCreators";
 import {
   getStats,
-  changeScreenStatistics
+  changeScreenStatistics,
 } from "./../../domains/statistics/ActionCreators";
-import {
-  getTrophies,
-  getSpecificPosition
-} from "./../../domains/standings/ActionCreators";
+import { getSpecificPositionNew } from "./../../domains/standings/ActionCreators";
 
 import {
   getUserLevel,
   changeScreenProfile,
   putEventOfflineFor,
   getSpecialTrainingSessionSubscribed,
-  getSpecialTrainingSessions
+  getSpecialTrainingSessions,
 } from "./../../domains/trainings/ActionCreators";
 import {
   setFriendSelected,
-  getFollowersUser
+  getFollowersUser,
 } from "./../../domains/follow/ActionCreators";
+
+
+import {
+  getlistFriendState,
+  getlistRequestFriendState
+} from "./../../domains/follow/Selectors";
 
 import Svg, {
   Circle,
   Rect,
   Text as TextSvg,
-  Image as ImageSvg
+  Image as ImageSvg,
 } from "react-native-svg";
 
 import { Tester } from "./../../config/Tester";
@@ -96,16 +99,20 @@ class ListRecapActivity extends React.Component {
       ValueBlur: 0,
       viewRef: null,
       refreshing: false,
-      endScrollRefresh: false
+      endScrollRefresh: false,
+      PreviousRoutePack: [],
+      PreviousRouteCompletePack: [],
+      validationNum: 0,
+      dataList: [],
     };
   }
-  getSameReferredRouteIdFromSavedArray = id => {
+  getSameReferredRouteIdFromSavedArray = (id) => {
     let sameReferredRouteId = [];
     let found = false;
 
     let count = 0;
     try {
-      this.props.dataSaved.forEach(el => {
+      this.props.dataSaved.forEach((el) => {
         if (el.referred_route_id == id) {
           found = true;
           sameReferredRouteId.push(el);
@@ -124,8 +131,8 @@ class ListRecapActivity extends React.Component {
     // this.props.dispatch(changeScreenProfile("myself"));
     // this.props.navigation.navigate("Profile");
 
-    this.props.navigation.navigate("ChangeAvatarScreen", {
-      avatar: this.props.avatar
+    this.props.navigation.navigate("Info", {
+      avatar: this.props.avatar,
     });
   };
 
@@ -135,7 +142,7 @@ class ListRecapActivity extends React.Component {
       ? this.props.selectedLeaderboard
       : "global";
     this.props.navigation.navigate("StandingsScreen", {
-      TypeRanking
+      TypeRanking,
     });
   };
 
@@ -150,7 +157,7 @@ class ListRecapActivity extends React.Component {
     let jsonWithMultiRoutesSpread = [];
 
     try {
-      this.props.dataSaved.forEach(element => {
+      this.props.dataSaved.forEach((element) => {
         const condition =
           this.getSameReferredRouteIdFromSavedArray(
             element.referred_route_id
@@ -169,12 +176,12 @@ class ListRecapActivity extends React.Component {
       // console.error(error);
     }
 
-    let jsonWithSingleRoutes = loginRoutes.filter(el => {
+    let jsonWithSingleRoutes = loginRoutes.filter((el) => {
       return !idToSkip.includes(el.referred_route_id);
     });
 
     try {
-      jsonWithMultiRoutes.forEach(el => {
+      jsonWithMultiRoutes.forEach((el) => {
         let emptyTrip = {
           calories: 0,
           coins: 0,
@@ -190,9 +197,9 @@ class ListRecapActivity extends React.Component {
           validated: false,
           created_at: "2018-08-02T10:40:55.670962Z",
           end_time: "2018-08-02T10:40:34.640000Z",
-          updated_at: "2018-08-02T10:40:55.670973Z"
+          updated_at: "2018-08-02T10:40:55.670973Z",
         };
-        el.forEach(elem => {
+        el.forEach((elem) => {
           emptyTrip.calories += elem.calories;
           emptyTrip.coins += elem.coins;
           emptyTrip.distance_travelled += Number.parseFloat(
@@ -217,17 +224,12 @@ class ListRecapActivity extends React.Component {
 
     let jsonSingleAndMultiRoute = [
       ...jsonWithMultiRoutesSpread,
-      ...jsonWithSingleRoutes
+      ...jsonWithSingleRoutes,
     ];
 
     return jsonSingleAndMultiRoute.sort((a, b) => {
       return new Date(b.created_at) - new Date(a.created_at);
     });
-
-    // // console.log(jsonWithMultiRoutesSpread); // json con le tratte multiple spalmate
-    // // console.log(jsonWithMultiRoutes.length); // json con le tratte multiple
-    // // console.log(jsonWithSingleRoutes); // json con le tratte singole
-    // // console.log(this.props.dataSaved.length); // json con tutte le tratte
   };
 
   infoCityTournamentPadding = () => {
@@ -247,7 +249,7 @@ class ListRecapActivity extends React.Component {
           <TouchableWithoutFeedback
             disabled={this.props.ValueBlur ? true : false}
             style={{
-              opacity: 0
+              opacity: 0,
             }}
             onPress={this.moveSettings}
           >
@@ -257,7 +259,7 @@ class ListRecapActivity extends React.Component {
                   fontFamily: "Montserrat-ExtraBold",
                   textAlign: "center",
                   fontSize: 22,
-                  color: "#fff"
+                  color: "#fff",
                 }}
               >
                 {"                       "}
@@ -269,7 +271,7 @@ class ListRecapActivity extends React.Component {
           <TouchableWithoutFeedback
             disabled={this.props.ValueBlur ? true : false}
             style={{
-              opacity: 0
+              opacity: 0,
             }}
             onPress={this.moveRanking}
           >
@@ -280,7 +282,7 @@ class ListRecapActivity extends React.Component {
                   textAlign: "center",
                   fontSize: 14,
                   color: "transparent",
-                  fontWeight: "bold"
+                  fontWeight: "bold",
                 }}
               >
                 World Ranking
@@ -291,7 +293,7 @@ class ListRecapActivity extends React.Component {
                   textAlign: "center",
                   fontSize: 12,
                   color: "transparent",
-                  fontWeight: "bold"
+                  fontWeight: "bold",
                 }}
               >
                 World Ranking
@@ -305,7 +307,7 @@ class ListRecapActivity extends React.Component {
               width: 80,
               height: 80,
               position: "absolute",
-              right: Dimensions.get("window").width / 2 - 40
+              right: Dimensions.get("window").width / 2 - 40,
             }}
             onPress={this.moveProfile}
           >
@@ -314,7 +316,7 @@ class ListRecapActivity extends React.Component {
                 width: 80,
                 height: 80,
                 position: "absolute",
-                right: Dimensions.get("window").width / 2 - 40
+                right: Dimensions.get("window").width / 2 - 40,
               }}
             />
           </TouchableWithoutFeedback>
@@ -349,62 +351,60 @@ class ListRecapActivity extends React.Component {
   feedOrdedAll = (item, index, DateNow) => {
     // recap di tutte le info online come eventi, sessioni, route e livello
     //
-
-    if (item.Quiz) {
-      if (item.enableQuiz.length) {
+    if (item) {
+      if (item.DontMUVFeed) {
         // quiz o survey
         return (
-          <RecapTraining
+          <DontMUVFeed
             key={index}
-            modal_type={item.enableQuiz}
-            changeScreen={this.changeScreen}
-            dispatch={this.props.dispatch}
+            DataNow={DateNow.getTime()}
+            Data={DateNow.getTime()}
           />
         );
-      }
-    } else if (item.routeNum) {
-      // tratta in caricamento
-      return (
-        <View key={index}>
-          <RecapActivityIndicator
-            status={
-              item.status === "validation" || item.status === "send route"
-            }
-            modal_type={item.activityChoice}
-            validated={false}
-            DataNow={DateNow}
-            Data={item.dateEnd}
-            NumRoute={item.routeNum}
-            NumRouteAnalyzed={item.routeAnalyNum}
-            reload={this.reload}
-
-            // firstLat={item.route.coordinates[0][1]}
-            // firstLon={item.route.coordinates[0][0]}
-          />
-        </View>
-      );
-    } else if (item.level) {
-      return (
-        <View key={index}>
-          <RecapTraining
-            modal_type="Level"
+      } else if (item.MUVForwardFeed) {
+        // quiz o survey
+        return (
+          <MUVForwardFeed
+            key={index}
             DataNow={DateNow.getTime()}
-            Data={new Date(item.updated_at).getTime()}
-            avatar={this.props.avatar}
-            changeScreen={this.changeScreen}
-            level={item.level}
-            dispatch={this.props.dispatch}
+            Data={DateNow.getTime()}
+            infoProfile={this.props.profileState}
           />
-        </View>
-      );
-    } else if (item.Health) {
-      if (item.enableHealth) {
+        );
+      } else if (item.Quiz) {
+        if (item.enableQuiz.length) {
+          // quiz o survey
+          return (
+            <RecapTraining
+              key={index}
+              modal_type={item.enableQuiz}
+              changeScreen={this.changeScreen}
+              dispatch={this.props.dispatch}
+            />
+          );
+        }
+      } else if (item.loading) {
+        // tratta in caricamento
         return (
           <View key={index}>
-            <RecapImageFeed
+            <RecapActivityLoading
+              modal_type={item.activityChoice}
+              validated={false}
+              DataNow={DateNow}
+              Data={item.dateEnd}
+
+              // firstLat={item.route.coordinates[0][1]}
+              // firstLon={item.route.coordinates[0][0]}
+            />
+          </View>
+        );
+      } else if (item.level) {
+        return (
+          <View key={index}>
+            <RecapTraining
               modal_type="Level"
               DataNow={DateNow.getTime()}
-              Data={DateNow.getTime()}
+              Data={new Date(item.updated_at).getTime()}
               avatar={this.props.avatar}
               changeScreen={this.changeScreen}
               level={item.level}
@@ -412,440 +412,590 @@ class ListRecapActivity extends React.Component {
             />
           </View>
         );
-      } else {
-        <View key={index} />;
-      }
-    } else if (item.event) {
-      return (
-        <View key={index}>
-          <RecapTraining
-            modal_type="Event"
-            description={item.event.text_description}
-            DataNow={DateNow.getTime()}
-            Data={new Date(item.updated_at).getTime()}
-            avatar={this.props.avatar}
-            changeScreen={this.changeScreen}
-            dispatch={this.props.dispatch}
-          />
-        </View>
-      );
-    } else if (item.trainingSessionId) {
-      return (
-        <View key={index}>
-          <RecapTraining
-            modal_type="Session"
-            description={item.text_description}
-            DataNow={DateNow.getTime()}
-            Data={new Date(item.updated_at).getTime()}
-            avatar={this.props.avatar}
-            changeScreen={this.changeScreen}
-            dispatch={this.props.dispatch}
-          />
-        </View>
-      );
-    } else if (item.type) {
-      // nessun feed
-      if (item.type === "nothing") {
-        return <View key={index} />;
-      } else if (item.type === "quiz") {
+      } else if (item.Health) {
+       /*  if (item.enableHealth) {
+          return (
+            <View key={index}>
+              <RecapImageFeed
+                modal_type="Level"
+                DataNow={DateNow.getTime()}
+                Data={DateNow.getTime()}
+                avatar={this.props.avatar}
+                changeScreen={this.changeScreen}
+                level={item.level}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else  */
+        {
+          return (<View key={index} />);
+        }
+      } else if (item.points_member_number) {
+        if (item.points_member_number) {
+          return (
+            <View key={index}>
+              <RecapImageFeed
+                modal_type="tournament"
+                DataNow={new Date(item.start_time).getTime()}
+                Data={DateNow.getTime()}
+                title={item.title}
+                description={item.description}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else {
+          return <View key={index} />;
+        }
+      } else if (item.event) {
         return (
           <View key={index}>
             <RecapTraining
-              modal_type="QuizComplete"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              obtainable_coins={item.obtainable_coins}
-              changeScreen={this.changeScreen}
-              dispatch={this.props.dispatch}
-            />
-          </View>
-        );
-      } else if (item.type === "typeform") {
-        return (
-          <View key={index}>
-            <RecapTraining
-              modal_type="typeform"
+              modal_type="Event"
+              description={item.event.text_description}
               DataNow={DateNow.getTime()}
               Data={new Date(item.updated_at).getTime()}
               avatar={this.props.avatar}
+              changeScreen={this.changeScreen}
               dispatch={this.props.dispatch}
-              // obtainable_coins={item.obtainable_coins}
-              // changeScreen={this.changeScreen}
             />
           </View>
         );
-      } else if (item.type === "typeform_2") {
+      } else if (item.trainingSessionId) {
         return (
           <View key={index}>
             <RecapTraining
-              modal_type="typeform_2"
+              modal_type="Session"
+              description={item.text_description}
               DataNow={DateNow.getTime()}
               Data={new Date(item.updated_at).getTime()}
               avatar={this.props.avatar}
-              dispatch={this.props.dispatch}
-              // obtainable_coins={item.obtainable_coins}
-              // changeScreen={this.changeScreen}
-            />
-          </View>
-        );
-      } else if (item.type === "survey") {
-        return (
-          <View key={item.updated_at}>
-            <RecapTraining
-              modal_type="SurveyComplete"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              obtainable_coins={item.obtainable_coins}
               changeScreen={this.changeScreen}
               dispatch={this.props.dispatch}
             />
           </View>
         );
-      } else if (item.type === "addFrequentTrips") {
+      } else if (item.type) {
+        // nessun feed
+        if (item.type === "nothing") {
+          return <View key={index} />;
+        } else if (item.type === "quiz") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="QuizComplete"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                obtainable_coins={item.obtainable_coins}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else if (item.type === "typeform") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="typeform"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                avatar={this.props.avatar}
+                dispatch={this.props.dispatch}
+                // obtainable_coins={item.obtainable_coins}
+                // changeScreen={this.changeScreen}
+              />
+            </View>
+          );
+        } else if (item.type === "typeform_2") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="typeform_2"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                avatar={this.props.avatar}
+                dispatch={this.props.dispatch}
+                // obtainable_coins={item.obtainable_coins}
+                // changeScreen={this.changeScreen}
+              />
+            </View>
+          );
+        } else if (item.type === "survey") {
+          return (
+            <View key={item.updated_at}>
+              <RecapTraining
+                modal_type="SurveyComplete"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                obtainable_coins={item.obtainable_coins}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else if (item.type === "addFrequentTrips") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="addFrequentTrips"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                changeScreen={this.changeScreen}
+                avatar={this.props.avatar}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else if (item.type === "updateProfile") {
+          return (
+            <View key={item.updated_at}>
+              <RecapTraining
+                modal_type="updateProfile"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                changeScreen={this.changeScreen}
+                avatar={this.props.avatar}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else if (item.type === "mobilityHabits") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="mobilityHabits"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                changeScreen={this.changeScreen}
+                cityName={item.city}
+                avatar={this.props.avatar}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else if (item.type === "feedback") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="feedback"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                changeScreen={this.changeScreen}
+                avatar={this.props.avatar}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else if (item.type === "facebookLike") {
+          return (
+            <View key={index}>
+              <RecapSocial
+                modal_type="facebookLike"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                changeScreen={this.changeScreen}
+                avatar={this.props.avatar}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else if (item.type === "instagramLike") {
+          return (
+            <View key={index}>
+              <RecapSocial
+                modal_type="instagramLike"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                changeScreen={this.changeScreen}
+                avatar={this.props.avatar}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else if (item.type === "rememberLevel") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="rememberLevel"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                changeScreen={this.changeScreen}
+                avatar={this.props.avatar}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else if (item.type === "inviteFriend") {
+          return (
+            <View key={index}>
+              <InviteFriendFeed
+                modal_type="inviteFriend"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                infoProfile={this.props.profileState}
+                navigation={this.props.navigation}
+              />
+            </View>
+          );
+        } else if (item.type === "new_st") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="newST"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.start_time).getTime()}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                textSponsor={
+                  getSponsor(item.id) ? getSponsor(item.id).name : ""
+                }
+                textTraining={item.text_description + ""}
+                customisationGdpr={
+                  this.props.profileState.customized_game_experience
+                }
+                sponsorshipsGdpr={this.props.profileState.sponsor_and_rewards}
+              />
+            </View>
+          );
+        } else if (item.type === "completed_st") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="completedST"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.start_time).getTime()}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                // textSponsor={"Manuel Gaetani"}
+                textSponsor={
+                  getSponsor(item.id) ? getSponsor(item.id).name : ""
+                }
+                textTraining={item.text_description}
+                reward={item.id_reward}
+              />
+            </View>
+          );
+        } else if (item.type === "enrolled_tournament") {
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="enrolledTournament"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                // textSponsor={"Manuel Gaetani"}
+                // textSponsor={getSponsor(item.id) ? getSponsor(item.id).name : ""}
+                team_name={item.text_description}
+                team_logo={item.team.logo}
+                team={item.team}
+                reward={item.id}
+                first_team_screen_visible={this.props.firstTeamScreenState}
+              />
+            </View>
+          );
+        } else {
+          return <View key={item.updated_at} />;
+        }
+      }  else if (item.from_user) {
+        // amici 
+          return (
+            <View key={item.created + index}>
+              <RecapFriendRequestReceived
+                modal_type="FriendRequestReceived"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.created).getTime()}
+                avatar={item.from_user.avatar}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                username={item.from_user.username}
+                id={item.from_user.id}
+                
+                // first_name={item.user_follower.first_name}
+                // last_name={item.user_follower.last_name}
+              />
+            </View>
+          );
+        } else if (item.avatar) {
+        // amici 
+          return (
+            <View key={item.created + index}>
+              <RecapTraining
+                modal_type="Friend"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.created).getTime()}
+                avatar={item.avatar}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                username={item.username}
+                id={item.id}
+                
+                // first_name={item.user_follower.first_name}
+                // last_name={item.user_follower.last_name}
+              />
+            </View>
+          );
+        } else if (item.user_follower) {
+        if (item.numFollowed > 1) {
+          return (
+            <View key={item.updated_at + index}>
+              <RecapTraining
+                modal_type="MultipleFollowed"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                avatar={item.user_follower.avatar}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                first_name={item.user_follower.first_name}
+                last_name={item.user_follower.last_name}
+                numFollowed={item.numFollowed}
+              />
+            </View>
+          );
+        } else if (
+          item.coin_follower_earned &&
+          item.coin_follower_earned === 2
+        ) {
+          return (
+            <View key={item.updated_at + index}>
+              <RecapTraining
+                modal_type="InviteAccepted"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                avatar={item.user_follower.avatar}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                first_name={item.user_follower.first_name}
+                last_name={item.user_follower.last_name}
+                coin_follower_earned={item.coin_follower_earned}
+              />
+            </View>
+          );
+        } else if (
+          item.coin_follower_earned &&
+          item.coin_follower_earned === 1
+        ) {
+          return (
+            <View key={item.updated_at + index}>
+              <RecapTraining
+                modal_type="InviteConfirmed"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                avatar={item.user_follower.avatar}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                first_name={item.user_follower.first_name}
+                last_name={item.user_follower.last_name}
+                coin_followed_earned={item.coin_follower_earned}
+              />
+            </View>
+          );
+        } else {
+          return (
+            <View key={item.updated_at + index}>
+              <RecapTraining
+                modal_type="Followed"
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                avatar={item.user_follower.avatar}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+                first_name={item.user_follower.first_name}
+                last_name={item.user_follower.last_name}
+              />
+            </View>
+          );
+        }
+      } else if (item.trophy) {
         return (
           <View key={index}>
             <RecapTraining
-              modal_type="addFrequentTrips"
+              modal_type="Trophies"
+              trophy={item.trophy}
               DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
+              Data={new Date(item.created_at).getTime()}
+              city={item.city ? item.city : 1}
+              // avatar={this.props.avatar}
               changeScreen={this.changeScreen}
-              avatar={this.props.avatar}
               dispatch={this.props.dispatch}
             />
           </View>
         );
-      } else if (item.type === "updateProfile") {
-        return (
-          <View key={item.updated_at}>
-            <RecapTraining
-              modal_type="updateProfile"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              changeScreen={this.changeScreen}
-              avatar={this.props.avatar}
-              dispatch={this.props.dispatch}
-            />
-          </View>
-        );
-      } else if (item.type === "mobilityHabits") {
-        return (
-          <View key={index}>
-            <RecapTraining
-              modal_type="mobilityHabits"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              changeScreen={this.changeScreen}
-              cityName={item.city}
-              avatar={this.props.avatar}
-              dispatch={this.props.dispatch}
-            />
-          </View>
-        );
-      } else if (item.type === "feedback") {
-        return (
-          <View key={index}>
-            <RecapTraining
-              modal_type="feedback"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              changeScreen={this.changeScreen}
-              avatar={this.props.avatar}
-              dispatch={this.props.dispatch}
-            />
-          </View>
-        );
-      } else if (item.type === "facebookLike") {
-        return (
-          <View key={index}>
-            <RecapSocial
-              modal_type="facebookLike"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              changeScreen={this.changeScreen}
-              avatar={this.props.avatar}
-              dispatch={this.props.dispatch}
-            />
-          </View>
-        );
-      } else if (item.type === "instagramLike") {
-        return (
-          <View key={index}>
-            <RecapSocial
-              modal_type="instagramLike"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              changeScreen={this.changeScreen}
-              avatar={this.props.avatar}
-              dispatch={this.props.dispatch}
-            />
-          </View>
-        );
-      } else if (item.type === "rememberLevel") {
-        return (
-          <View key={index}>
-            <RecapTraining
-              modal_type="rememberLevel"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              changeScreen={this.changeScreen}
-              avatar={this.props.avatar}
-              dispatch={this.props.dispatch}
-            />
-          </View>
-        );
-      } else if (item.type === "inviteFriend") {
-        return (
-          <View key={index}>
-            <InviteFriendFeed
-              modal_type="inviteFriend"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              changeScreen={this.changeScreen}
-              dispatch={this.props.dispatch}
-              infoProfile={this.props.profileState}
-              navigation={this.props.navigation}
-            />
-          </View>
-        );
-      } else if (item.type === "new_st") {
-        return (
-          <View key={index}>
-            <RecapTraining
-              modal_type="newST"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              changeScreen={this.changeScreen}
-              dispatch={this.props.dispatch}
-              textSponsor={getSponsor(item.id) ? getSponsor(item.id).name : ""}
-              textTraining={item.text_description + ""}
-              customisationGdpr={this.props.profileState.customisation_gdpr}
-              sponsorshipsGdpr={this.props.profileState.sponsorships_gdpr}
-            />
-          </View>
-        );
-      } else if (item.type === "completed_st") {
-        return (
-          <View key={index}>
-            <RecapTraining
-              modal_type="completedST"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              changeScreen={this.changeScreen}
-              dispatch={this.props.dispatch}
-              // textSponsor={"Manuel Gaetani"}
-              textSponsor={getSponsor(item.id) ? getSponsor(item.id).name : ""}
-              textTraining={item.text_description}
-              reward={item.id_reward}
-            />
-          </View>
-        );
-      } else {
-        return <View key={item.updated_at} />;
-      }
-    } else if (item.user_follower) {
-      // singolo amico o gruppo d'amici
+      }  else if (item.dateBonus) {
+        // feed relativo al bonus se uso l'app piu giorni e faccio un minino di attivita 
+        
+        if (item.bonusType) {
+          // devo 
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="BonusActivities"
+                bonusType={item.bonusType}
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.dateBonus).getTime()}
+                // Data={new Date(item.activity_day).getTime()}
+                // avatar={this.props.avatar}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else {
+          return <View key={index} />;
+        }
+      } else if (item.activities_minutes) {
+        // feed relativo all'attività effettuata al giorno
 
-      // console.log(item);
-      // singolo amico o gruppo d'amici
-      if (item.numFollowed > 1) {
-        return (
-          <View key={item.updated_at + index}>
-            <RecapTraining
-              modal_type="MultipleFollowed"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              avatar={item.user_follower.avatar}
-              changeScreen={this.changeScreen}
-              dispatch={this.props.dispatch}
-              first_name={item.user_follower.first_name}
-              last_name={item.user_follower.last_name}
-              numFollowed={item.numFollowed}
-            />
-          </View>
-        );
-      } else if (item.coin_follower_earned && item.coin_follower_earned === 2) {
-        // console.log("InviteAccepted");
-        return (
-          <View key={item.updated_at + index}>
-            <RecapTraining
-              modal_type="InviteAccepted"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              avatar={item.user_follower.avatar}
-              changeScreen={this.changeScreen}
-              dispatch={this.props.dispatch}
-              first_name={item.user_follower.first_name}
-              last_name={item.user_follower.last_name}
-              coin_follower_earned={item.coin_follower_earned}
-            />
-          </View>
-        );
-      } else if (item.coin_follower_earned && item.coin_follower_earned === 1) {
-        // console.log("InviteConfirmed");
-        return (
-          <View key={item.updated_at + index}>
-            <RecapTraining
-              modal_type="InviteConfirmed"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              avatar={item.user_follower.avatar}
-              changeScreen={this.changeScreen}
-              dispatch={this.props.dispatch}
-              first_name={item.user_follower.first_name}
-              last_name={item.user_follower.last_name}
-              coin_followed_earned={item.coin_follower_earned}
-            />
-          </View>
-        );
+        // potrei usare anche activities_day se mi interessa avere feed con attività nulle
+        //  id: 9
+        // activities_minutes: 232
+        // points: 300
+        // support_device: "Watch4,1"
+        // activities_day: "2020-05-10"
+        // created_at: "2020-05-10T21:42:57.411708+02:00"
+        // updated_at: "2020-05-10T21:42:57.411750+02:00"
+        if (item.activities_minutes > 1999) {
+          // devo 
+          return (
+            <View key={index}>
+              <RecapTraining
+                modal_type="DailyActivities"
+                activity_minutes={item.activities_minutes}
+                points={item.points}
+                activity_day={item.activities_day}
+                DataNow={DateNow.getTime()}
+                Data={new Date(item.updated_at).getTime()}
+                // Data={new Date(item.activity_day).getTime()}
+                // avatar={this.props.avatar}
+                changeScreen={this.changeScreen}
+                dispatch={this.props.dispatch}
+              />
+            </View>
+          );
+        } else {
+          return <View key={index} />;
+        }
       } else {
-        return (
-          <View key={item.updated_at + index}>
-            <RecapTraining
-              modal_type="Followed"
-              DataNow={DateNow.getTime()}
-              Data={new Date(item.updated_at).getTime()}
-              avatar={item.user_follower.avatar}
-              changeScreen={this.changeScreen}
-              dispatch={this.props.dispatch}
-              first_name={item.user_follower.first_name}
-              last_name={item.user_follower.last_name}
-            />
-          </View>
-        );
+        // tratte offline
+        if (item.offline) {
+          if (typeof item.activityChoice.type != "Multiple") {
+            return (
+              <View key={index}>
+                <RecapActivity
+                  modal_type={item.activityChoice.type}
+                  totPoints={item.totPoints}
+                  validated={item.validated}
+                  DataNow={DateNow}
+                  Data={item.dateEnd}
+                  fromDb={false}
+                  id={item.id}
+                  AllRoute={this.props.AllRoute}
+                  dispatch={this.props.dispatch}
+                  calories={item.calories}
+                  routinary={item.routinary}
+                  typology={item.typology}
+                  multipliers={item.multipliers}
+                  dateStart={item.dateStart}
+                  distance={item.distance}
+                />
+              </View>
+            );
+          } else if (typeof item.activityChoice.type == "Multiple") {
+            const typeModality = "Multiple";
+            return (
+              <View key={index}>
+                <RecapActivity
+                  modal_type={typeModality}
+                  totPoints={item.totPoints}
+                  validated={item.validated}
+                  DataNow={DateNow}
+                  Data={item.dateEnd}
+                  fromDb={false}
+                  id={item.id}
+                  AllRoute={this.props.AllRoute}
+                  dispatch={this.props.dispatch}
+                  calories={item.calories}
+                  routinary={item.routinary}
+                  typology={item.typology}
+                  multipliers={item.multipliers}
+                  dateStart={item.dateStart}
+                  distance={item.distance}
+                />
+              </View>
+            );
+          }
+        } else {
+          // tratte online
+          // tratta singola
+          if (item.typology) {
+            if (item.typology.length == 1) {
+              const typeModality = getModalType(item.typology[0]);
+              return (
+                <View key={index}>
+                  <RecapActivity
+                    modal_type={typeModality}
+                    DataNow={DateNow}
+                    Data={new Date(item.end_time).getTime()}
+                    totPoints={item.points}
+                    validated={
+                      item.validation != 2 && item.validation != 4
+                        ? true
+                        : false
+                    }
+                    distance_travelled={item.distance}
+                    referred_route_id={item.id}
+                    fromDb={true}
+                    calories={item.calories}
+                    routinary={item.routinary}
+                    typology={item.typology}
+                    multipliers={item.multipliers}
+                    dateStart={new Date(item.start_time).getTime()}
+                    distance={item.distance}
+                    dispatch={this.props.dispatch}
+                  />
+                </View>
+              );
+            } else if (item.typology.length > 1) {
+              const typeModality = "Multiple";
+              return (
+                <View key={index}>
+                  <RecapActivity
+                    modal_type={typeModality}
+                    modal_type_array={item.typology}
+                    DataNow={DateNow}
+                    Data={new Date(item.end_time).getTime()}
+                    totPoints={item.points}
+                    validated={
+                      item.validation != 2 && item.validation != 4
+                        ? true
+                        : false
+                    }
+                    distance_travelled={item.distance}
+                    referred_route_id={item.id}
+                    fromDb={true}
+                    calories={item.calories}
+                    routinary={item.routinary}
+                    typology={item.typology}
+                    multipliers={item.multipliers}
+                    dateStart={new Date(item.start_time).getTime()}
+                    distance={item.distance}
+                    dispatch={this.props.dispatch}
+                  />
+                </View>
+              );
+            } else {
+              return <View key={index} />;
+            }
+          } else {
+            return <View key={index} />;
+          }
+        }
       }
-    } else if (item.trophy) {
-      return (
-        <View key={index}>
-          <RecapTraining
-            modal_type="Trophies"
-            typeTrophie={item.trophy.name}
-            DataNow={DateNow.getTime()}
-            Data={new Date(item.updated_at).getTime()}
-            city={item.city ? item.city : 1}
-            // avatar={this.props.avatar}
-            changeScreen={this.changeScreen}
-            dispatch={this.props.dispatch}
-          />
-        </View>
-      );
-    } else if (item.activity_minutes) {
-      // feed relativo all'attività effettuata al giorno
-      return (
-        <View key={index}>
-          <RecapTraining
-            modal_type="DailyActivities"
-            activity_minutes={item.activity_minutes}
-            points={item.points}
-            activity_day={item.activity_day}
-            DataNow={DateNow.getTime()}
-            Data={new Date(item.updated_at).getTime()}
-            // Data={new Date(item.activity_day).getTime()}
-            // avatar={this.props.avatar}
-            changeScreen={this.changeScreen}
-            dispatch={this.props.dispatch}
-          />
-        </View>
-      );
     } else {
-      // tratte dall'online
-      if (item.end_time) {
-        // if (typeof item.modal_type != "object" && item.points > 0)
-        if (typeof item.modal_type != "object") {
-          const typeModality = getModalType(item.modal_type);
-          return (
-            <View key={index}>
-              <RecapActivity
-                modal_type={typeModality}
-                time_travelled_second={item.time_travelled}
-                totPoints={item.points}
-                validated={item.validated}
-                distance_travelled={item.distance_travelled}
-                time_travelled={item.time_travelled}
-                referred_route_id={item.referred_route_id}
-                referred_route={
-                  item.referred_route
-                    ? item.referred_route
-                    : { referred_most_freq_route: null }
-                }
-                calories={item.calories}
-                DataNow={DateNow}
-                Data={new Date(item.end_time).getTime()}
-                dispatch={this.props.dispatch}
-                //route={item.route.coordinates}
-                //firstLat={item.route.coordinates[0][1]}
-                //firstLon={item.route.coordinates[0][0]}
-                fromDb={true}
-              />
-            </View>
-          );
-        } else if (item.modal_type) {
-          const typeModality = "Multiple";
-          return (
-            <View key={index}>
-              <RecapActivity
-                modal_type={typeModality}
-                modal_type_array={item.modal_type}
-                time_travelled_second={item.time_travelled}
-                totPoints={item.points}
-                validated={item.validated}
-                distance_travelled={item.distance_travelled}
-                time_travelled={item.time_travelled}
-                referred_route_id={item.referred_route_id}
-                referred_route={
-                  item.referred_route
-                    ? item.referred_route
-                    : { referred_most_freq_route: null }
-                }
-                calories={item.calories}
-                DataNow={DateNow}
-                Data={new Date(item.end_time).getTime()}
-                dispatch={this.props.dispatch}
-                //route={item.route}
-                //firstLat={item.route[0].coordinates[0][1]}
-                //firstLon={item.route[0].coordinates[0][0]}
-                fromDb={true}
-              />
-            </View>
-          );
-        }
-      } else {
-        if (typeof item.activityChoice.type !== "Multiple") {
-          return (
-            <View key={index}>
-              <RecapActivity
-                modal_type={item.activityChoice.type}
-                totPoints={item.totPoints}
-                validated={item.validated}
-                DataNow={DateNow}
-                Data={item.dateEnd}
-                fromDb={false}
-                id={item.id}
-                AllRoute={this.props.AllRoute}
-                dispatch={this.props.dispatch}
-              />
-            </View>
-          );
-        } else if (typeof item.activityChoice.type === "Multiple") {
-          const typeModality = "Multiple";
-          // console.log("recap multiplo");
-          // console.log(item);
-          return (
-            <View key={index}>
-              <RecapActivity
-                modal_type={typeModality}
-                totPoints={item.totPoints}
-                validated={item.validated}
-                DataNow={DateNow}
-                Data={item.dateEnd}
-                fromDb={false}
-                id={item.id}
-                AllRoute={this.props.AllRoute}
-                dispatch={this.props.dispatch}
-              />
-            </View>
-          );
-        }
-      }
+      return <View key={index} />;
     }
   };
 
@@ -853,6 +1003,13 @@ class ListRecapActivity extends React.Component {
   listStartEvents = () => {
     return (
       <View>
+        <RecapTraining
+          modal_type="updateProfile"
+          changeScreen={this.changeScreen}
+          dispatch={this.props.dispatch}
+          avatar={this.props.avatar}
+        />
+
         <RecapTraining
           modal_type="Muv"
           changeScreen={this.changeScreen}
@@ -869,12 +1026,12 @@ class ListRecapActivity extends React.Component {
           changeScreen={this.changeScreen}
           dispatch={this.props.dispatch}
         /> */}
-        <RecapTraining
+        {/* <RecapTraining
           modal_type="firstFrequentTrip"
           changeScreen={this.changeScreen}
           dispatch={this.props.dispatch}
           avatar={this.props.avatar}
-        />
+        /> */}
       </View>
     );
   };
@@ -893,16 +1050,13 @@ class ListRecapActivity extends React.Component {
   };
 
   // quando scendo tutte le route, ne carico altre 10
-  onScrollEndDrag = event => {
-    // console.log("scroll");
-    // // console.log(this.props.allFeedOrder.length);
-
+  onScrollEndDrag = (event) => {
     if (this.isCloseToBottom(event.nativeEvent)) {
       this.setState({ endScrollRefresh: true });
       this.props.dispatch(
         GetListRoute({
           numberRoute: this.props.feed.length + 2,
-          afterRequest: this.stopLoadingEnd
+          afterRequest: this.stopLoadingEnd,
         })
       );
     }
@@ -913,12 +1067,6 @@ class ListRecapActivity extends React.Component {
   };
 
   componentDidMount() {}
-
-  componentWillReceiveProps(props) {
-    // if (props.status !== "Get route") {
-    //   this.setState({ refreshing: false });
-    // }
-  }
 
   testSVG2 = () => {
     return (
@@ -962,7 +1110,7 @@ class ListRecapActivity extends React.Component {
               height: 50,
               borderRadius: 25,
 
-              backgroundColor: "white"
+              backgroundColor: "white",
             }}
           >
             <Image
@@ -972,7 +1120,7 @@ class ListRecapActivity extends React.Component {
                 position: "relative",
 
                 right: -5,
-                top: 5
+                top: 5,
               }}
               source={require("../../assets/images/bus_icn.png")}
             />
@@ -988,7 +1136,7 @@ class ListRecapActivity extends React.Component {
               borderTopRightRadius: 5,
               borderBottomRightRadius: 5,
 
-              backgroundColor: "white"
+              backgroundColor: "white",
             }}
           >
             <View
@@ -999,7 +1147,7 @@ class ListRecapActivity extends React.Component {
                 alignSelf: "center",
                 height: 30,
                 marginRight: 10,
-                marginLeft: 10
+                marginLeft: 10,
               }}
             >
               <Text
@@ -1007,7 +1155,7 @@ class ListRecapActivity extends React.Component {
                   color: "#3D3D3D",
                   textAlign: "center",
                   fontSize: 12,
-                  fontFamily: "OpenSans-Regular"
+                  fontFamily: "OpenSans-Regular",
                 }}
               >
                 LOCAL PUBLIC TRANSPORT
@@ -1069,95 +1217,88 @@ class ListRecapActivity extends React.Component {
   _onRefresh() {
     if (!this.state.refreshing) {
       this.setState({ refreshing: true });
-
-      this.props.dispatch(getUserLevel());
-
-      this.props.dispatch(ResetPreviousRoute());
-
-      this.props.dispatch(GetListRoute());
-
-      setTimeout(
-        () => {
-          this.props.dispatch(getRole());
-        },
-        Platform.OS === "android" ? 1000 : 0
-      );
-
-      setTimeout(
-        () => {
-          this.props.dispatch(putEventOfflineFor());
-        },
-        Platform.OS === "android" ? 1250 : 0
-      );
-
-      setTimeout(
-        () => {
-          this.props.dispatch(getProfile());
-        },
-        Platform.OS === "android" ? 2000 : 0
-      );
-
+      this.props.dispatch(startApp());
       setTimeout(() => {
         // console.log("check");
-        this.props.dispatch(resumeRoute());
+
         this.setState({ refreshing: false });
-      }, 2000);
+      }, 5000);
 
-      // this.props.dispatch(stop());
-      // poi route
-      AfterRefresh = setTimeout(
-        () => {
-          // console.log("2 secondi ");
-          this.props.dispatch(getMostFrequentRoute());
-        },
-        Platform.OS === "android" ? 5000 : 0
-      );
+      // this.props.dispatch(getUserLevel());
 
-      // poi classifica
+      // this.props.dispatch(ResetPreviousRoute());
 
-      AfterRoute = setTimeout(
-        () => {
-          this.props.dispatch(getSpecificPosition());
-        },
-        Platform.OS === "android" ? 6000 : 0
-      );
+      // this.props.dispatch(GetListRoute());
 
-      // poi statistiche
+      // setTimeout(
+      //   () => {
+      //     this.props.dispatch(getRole());
+      //   },
+      //   Platform.OS === "android" ? 1000 : 0
+      // );
 
-      AfterLeader = setTimeout(
-        () => {
-          this.props.dispatch(getStats());
-        },
-        Platform.OS === "android" ? 7000 : 0
-      );
+      // setTimeout(
+      //   () => {
+      //     this.props.dispatch(putEventOfflineFor());
+      //   },
+      //   Platform.OS === "android" ? 1250 : 0
+      // );
 
-      setTimeout(
-        () => {
-          this.props.dispatch(getTrophies());
-        },
-        Platform.OS === "android" ? 8000 : 0
-      );
+      // setTimeout(
+      //   () => {
+      //     this.props.dispatch(getProfile());
+      //   },
+      //   Platform.OS === "android" ? 2000 : 0
+      // );
 
-      setTimeout(
-        () => {
-          this.props.dispatch(getFollowersUser());
-        },
-        Platform.OS === "android" ? 9000 : 1000
-      );
+      // // this.props.dispatch(stop());
+      // // poi route
+      // AfterRefresh = setTimeout(
+      //   () => {
+      //     // console.log("2 secondi ");
+      //     this.props.dispatch(getMostFrequentRoute());
+      //   },
+      //   Platform.OS === "android" ? 5000 : 0
+      // );
 
-      setTimeout(
-        () => {
-          this.props.dispatch(getSpecialTrainingSessions());
-        },
-        Platform.OS === "android" ? 6500 : 1200
-      );
+      // // poi classifica
 
-      setTimeout(
-        () => {
-          this.props.dispatch(getSpecialTrainingSessionSubscribed());
-        },
-        Platform.OS === "android" ? 7000 : 1700
-      );
+      // // poi statistiche
+
+      // AfterLeader = setTimeout(
+      //   () => {
+      //     this.props.dispatch(getStats());
+      //   },
+      //   Platform.OS === "android" ? 7000 : 0
+      // );
+
+      // setTimeout(
+      //   () => {
+      //     this.props.dispatch(getTrophies());
+      //   },
+      //   Platform.OS === "android" ? 8000 : 0
+      // );
+
+      // setTimeout(
+      //   () => {
+      //     this.props.dispatch(getFollowersUser());
+      //   },
+      //   Platform.OS === "android" ? 9000 : 1000
+      // );
+
+      // setTimeout(
+      //   () => {
+      //     this.props.dispatch(getSpecialTrainingSessions());
+      //   },
+      //   Platform.OS === "android" ? 6500 : 1200
+      // );
+
+      // setTimeout(
+      //   () => {
+      //     this.props.dispatch(getSpecialTrainingSessionSubscribed());
+      //   },
+      //   Platform.OS === "android" ? 7000 : 1700
+      // );
     }
   }
 
@@ -1169,7 +1310,7 @@ class ListRecapActivity extends React.Component {
     );
   };
 
-  changeScreen = screen => {
+  changeScreen = (screen) => {
     // if (screen === "trophies" || screen === "stats") {
     //   this.props.dispatch(changeScreenStatistics(screen));
     // } else if (screen === "trainings" || screen === "myself") {
@@ -1186,7 +1327,7 @@ class ListRecapActivity extends React.Component {
     }
   };
 
-  endScroll = endScrollRefresh => {
+  endScroll = (endScrollRefresh) => {
     return (
       <View>
         {endScrollRefresh ? (
@@ -1197,7 +1338,7 @@ class ListRecapActivity extends React.Component {
               paddingTop: 10,
 
               alignItems: "center",
-              alignSelf: "center"
+              alignSelf: "center",
             }}
             size="large"
             color="#3D3D3D"
@@ -1207,7 +1348,7 @@ class ListRecapActivity extends React.Component {
         )}
         <View
           style={{
-            height: Dimensions.get("window").height / 10
+            height: Dimensions.get("window").height / 10,
           }}
         />
         {
@@ -1225,24 +1366,16 @@ class ListRecapActivity extends React.Component {
     const DateNow = new Date();
     // console.log("lista");
 
-    // const dataList = [
-    //   { baseHeader: true },
-    //   ...this.props.PreviousRouteNotValidate,
-    //   ...this.props.PreviousRoute,
-    //   { enableQuiz: this.props.enableQuiz, Quiz: true },
-    //   ...this.props.allFeedOrder
-    // ];
-
     return (
       <FlatList
         style={{
           height: Dimensions.get("window").height - 100,
           width: Dimensions.get("window").width,
-          position: "absolute"
+          position: "absolute",
         }}
         showsVerticalScrollIndicator={false}
         onScroll={this.props.onScrollBlur}
-        onScrollEndDrag={this.onScrollEndDrag}
+        // onScrollEndDrag={this.onScrollEndDrag}
         scrollEventThrottle={400}
         refreshControl={
           <RefreshControl
@@ -1279,19 +1412,19 @@ const styles = {
     height: Dimensions.get("window").height * 0.23,
     width: Dimensions.get("window").width,
     flexDirection: "column",
-    justifyContent: "space-around"
+    justifyContent: "space-around",
   },
   centerContainer: {
     alignItems: "center",
     height: Dimensions.get("window").height * 0.1,
-    justifyContent: "center"
+    justifyContent: "center",
   },
   ThreeContainer: {
     flex: 3,
     height: Dimensions.get("window").height * 0.13,
     flexDirection: "row",
     justifyContent: "space-around",
-    alignItems: "center"
+    alignItems: "center",
   },
   circle: {
     width: 16,
@@ -1299,7 +1432,7 @@ const styles = {
     borderColor: "#fff",
     borderWidth: 1,
     borderRadius: 10,
-    marginTop: 15
+    marginTop: 15,
   },
   leftContainer: {
     width: Dimensions.get("window").width * 0.35,
@@ -1308,133 +1441,189 @@ const styles = {
     position: "absolute",
     left: Dimensions.get("window").width * 0.65,
     justifyContent: "center",
-    alignItems: "flex-start"
+    alignItems: "flex-start",
   },
   line: {
     width: "100%",
     height: 2,
     backgroundColor: "#fff",
-    marginTop: 45
+    marginTop: 45,
   },
   container: {
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "#F5FCFF"
+    backgroundColor: "#F5FCFF",
   },
   welcome: {
     fontSize: 20,
     textAlign: "center",
-    margin: 10
+    margin: 10,
   },
   button: {
-    backgroundColor: "#a1a1a1"
+    backgroundColor: "#a1a1a1",
   },
   listItem: {
     borderBottomWidth: 2,
     borderBottomColor: "#ddd",
-    padding: 20
+    padding: 20,
   },
   list: {
-    marginBottom: 20
+    marginBottom: 20,
   },
   listTrainings: {
-    marginBottom: 20
+    marginBottom: 20,
+  },
+};
+
+const getPoints = (state) => state.statistics.statistics;
+
+const getRoute = (state) => state.login.Route;
+
+const getAllPreviousRoute = (state) => state.tracking.PreviousRoute;
+
+const getAllEvents = (state) => state.trainings.training_events;
+
+const getAllSession = (state) => state.trainings.training_sessions;
+
+const getLevel = (state) => state.trainings.level_number;
+
+const getChange_level = (state) => state.trainings.change_level;
+
+const getQuiz = (state) => state.trainings.quiz;
+
+const getFollow = (state) => state.follow;
+
+const getChallenges = (state) => [
+  ...state.challenges.allowed_challenges,
+  ...state.challenges.active_challenges_array,
+  ...state.challenges.won_challenges_array,
+];
+
+const getTournamentQualificationScore = (state) =>
+  state.tournaments.tournament_qualification_scores
+    ? state.tournaments.tournament_qualification_scores
+    : [];
+
+const getTournamentTeams = (state) =>
+  state.tournaments.teams_by_tournament
+    ? state.tournaments.teams_by_tournament
+    : [];
+
+const getFirstTeamScreen = (state) => {
+  if (
+    state.tournaments.first_team_screen_visible == undefined ||
+    state.tournaments.first_team_screen_visible == true
+  ) {
+    return true;
+  } else {
+    return false;
   }
 };
 
-const getPoints = state => state.statistics.statistics;
-
-const getRoute = state => state.login.Route;
-
-const getAllPreviousRoute = state => state.tracking.PreviousRoute;
-
-const getAllEvents = state => state.trainings.training_events;
-
-const getAllSession = state => state.trainings.training_sessions;
-
-const getLevel = state => state.trainings.level_number;
-
-const getChange_level = state => state.trainings.change_level;
-
-const getQuiz = state => state.trainings.quiz;
-
-const getFollow = state => state.follow;
-
-const getFollowState = createSelector(
-  [getFollow],
-  follow => (follow ? follow.follow : [])
-);
-
-const getFollowedState = createSelector(
-  [getFollow],
-  follow => (follow ? follow.follow : [])
-);
-
-const getFollowedGroup = createSelector(
-  [getFollowedState],
-  followed => {
-    // suddivido i follow per giorno
-    let feedGroup = [];
-
-    for (indexFollowed = 0; indexFollowed < followed.length; indexFollowed++) {
-      const elem = followed[indexFollowed];
-      // console.log("singolo");
-      // console.log(elem);
-      let singleFeedGroup = elem;
-      singleFeedGroup.numFollowed = 1;
-
-      for (
-        indexFollowed2 = indexFollowed + 1;
-        indexFollowed2 < followed.length;
-        indexFollowed2++
-      ) {
-        const elem2 = followed[indexFollowed2];
-        // console.log("singolo successivo");
-        // console.log(elem2);
-        const date = new Date(elem.updated_at);
-        const day = date.toDateString();
-        const date2 = new Date(elem2.updated_at);
-        const day2 = date2.toDateString();
-        if (day === day2) {
-          singleFeedGroup.numFollowed = singleFeedGroup.numFollowed
-            ? singleFeedGroup.numFollowed + 1
-            : 1;
-
-          indexFollowed++;
-          continue;
-        } else {
-          break;
+const getTournamentQualificationScoreState = createSelector(
+  [getTournamentQualificationScore, getTournamentTeams],
+  (tournament_qualification_scores, teams_by_tournament) => {
+    if (teams_by_tournament.length > 0) {
+      let feed_cards = tournament_qualification_scores.map((score) => {
+        if (score.status == 2) {
+          let team = teams_by_tournament.filter(
+            (team) => team.id == score.team
+          )[0];
+          return {
+            type: "enrolled_tournament",
+            ...score,
+            text_description: team.name,
+            team,
+            id: score.id,
+            updated_at: new Date(score.created_at),
+          };
         }
-      }
-      feedGroup = [...feedGroup, singleFeedGroup];
+      });
+
+      return feed_cards;
+    } else {
+      return [
+        {
+          type: "nothing",
+          updated_at: new Date(),
+        },
+      ];
     }
-    // console.log("gruppo");
-    // console.log(feedGroup);
-    return feedGroup;
   }
 );
 
-const getQuizComplete = state =>
+const getRewards = (state) =>
+  state.challenges.user_rewards ? state.challenges.user_rewards : [];
+
+const getFollowState = createSelector([getFollow], (follow) =>
+  follow ? follow.follow : []
+);
+
+const getFollowedState = createSelector([getFollow], (follow) =>
+  follow ? follow.follow : []
+);
+
+const getFollowedGroup = createSelector([getFollowedState], (followed) => {
+  // suddivido i follow per giorno
+  let feedGroup = [];
+
+  for (indexFollowed = 0; indexFollowed < followed.length; indexFollowed++) {
+    const elem = followed[indexFollowed];
+    // console.log("singolo");
+    // console.log(elem);
+    let singleFeedGroup = elem;
+    singleFeedGroup.numFollowed = 1;
+
+    for (
+      indexFollowed2 = indexFollowed + 1;
+      indexFollowed2 < followed.length;
+      indexFollowed2++
+    ) {
+      const elem2 = followed[indexFollowed2];
+      // console.log("singolo successivo");
+      // console.log(elem2);
+      const date = new Date(elem.updated_at);
+      const day = date.toDateString();
+      const date2 = new Date(elem2.updated_at);
+      const day2 = date2.toDateString();
+      if (day === day2) {
+        singleFeedGroup.numFollowed = singleFeedGroup.numFollowed
+          ? singleFeedGroup.numFollowed + 1
+          : 1;
+
+        indexFollowed++;
+        continue;
+      } else {
+        break;
+      }
+    }
+    feedGroup = [...feedGroup, singleFeedGroup];
+  }
+  // console.log("gruppo");
+  // console.log(feedGroup);
+  return feedGroup;
+});
+
+const getQuizComplete = (state) =>
   state.trainings.quizComplete ? state.trainings.quizComplete : [];
 
-const getTypeQuiz = state => state.trainings.typeQuiz;
+const getTypeQuiz = (state) => state.trainings.typeQuiz;
 
-const getLengthPreviousRoute = state =>
+const getLengthPreviousRoute = (state) =>
   state.tracking.PreviousRoute.length
     ? state.tracking.PreviousRoute.reduce(
-        (acc, item) => acc + item.route.length,
+        (acc, item) => (acc + item.validation ? item.validation : 0),
         0
       )
     : 0;
 
 // trofei
-const getTrophiesRedux = state => state.standings.trophies;
+const getTrophiesRedux = (state) => state.standings.trophies;
 
 // prendo i trofei
-const getTrophiesState = createSelector(
-  [getTrophiesRedux],
-  trophies => (trophies ? trophies : [])
+const getTrophiesState = createSelector([getTrophiesRedux], (trophies) =>
+  trophies ? trophies : []
 );
 
 // prendo livello se maggiore di 1
@@ -1445,19 +1634,15 @@ const getLevelState = createSelector(
 );
 // prendo solo quei quiz in cui ho risposto
 // ? per il momento da togliere appena uniformo i dati
-const getQuizCompleteState = createSelector(
-  [getQuizComplete],
-  quizComplete =>
-    quizComplete.filter(elem =>
-      elem.answer_chosen_id ? elem.answer_chosen_id.length : true
-    )
+const getQuizCompleteState = createSelector([getQuizComplete], (quizComplete) =>
+  quizComplete.filter((elem) =>
+    elem.answer_chosen_id ? elem.answer_chosen_id.length : true
+  )
 );
 
 // prendo gli eventi completati
-const getCompleteEvents = createSelector(
-  [getAllEvents],
-  training_events => {
-    /* training_events.filter(
+const getCompleteEvents = createSelector([getAllEvents], (training_events) => {
+  /* training_events.filter(
       item =>
         item.status &&
         item.event.text_description !== "Answer a quick quiz" &&
@@ -1465,36 +1650,35 @@ const getCompleteEvents = createSelector(
           "Answer a quick survey about your mobility habits"
     ) */
 
-    // return training_sessions.filter(item => item.status === 3);
-    let idEvents = [];
-    return training_events.reduce((total, item) => {
-      if (
-        item.status &&
-        item.event.text_description !== "Answer a quick quiz" &&
-        item.event.text_description !==
-          "Answer a quick survey about your mobility habits" &&
-        idEvents.indexOf(item.event.id) === -1
-      ) {
-        idEvents = [...idEvents, item.event.id];
-        return [...total, item];
-      } else {
-        // se si ripete non lo salvo
-        return total;
-      }
-    }, []);
-  }
-);
+  // return training_sessions.filter(item => item.status === 3);
+  let idEvents = [];
+  return training_events.reduce((total, item) => {
+    if (
+      item.status &&
+      item.event.text_description !== "Answer a quick quiz" &&
+      item.event.text_description !==
+        "Answer a quick survey about your mobility habits" &&
+      idEvents.indexOf(item.event.id) === -1
+    ) {
+      idEvents = [...idEvents, item.event.id];
+      return [...total, item];
+    } else {
+      // se si ripete non lo salvo
+      return total;
+    }
+  }, []);
+});
 
-const userTypeformObj = state => {
+const userTypeformObj = (state) => {
   return {
     email: state.login.username,
-    typeform_user: state.login.typeform_user
+    typeform_user: state.login.typeform_user,
   };
 };
 
-const newSTObj = state => state.trainings.special_training_sessions;
-const profileDataObj = state => state.login.infoProfile;
-const specialTraining = state => state.trainings.special_training_sessions;
+const newSTObj = (state) => state.trainings.special_training_sessions;
+const profileDataObj = (state) => state.login.infoProfile;
+const specialTraining = (state) => state.trainings.special_training_sessions;
 
 const getNewSTFeedPush = createSelector(
   [newSTObj, profileDataObj],
@@ -1504,10 +1688,8 @@ const getNewSTFeedPush = createSelector(
     if (newST && newST.length) {
       // // console.log(state.trainings.special_training_sessions);
       // // mi prendo solo gli special trainings attivi
-      console.log("profileData");
-      console.log(profileData);
 
-      newST.forEach(e => {
+      newST.forEach((e) => {
         if (
           e.special_training &&
           Now <= new Date(e.special_training.end_special_training)
@@ -1515,14 +1697,14 @@ const getNewSTFeedPush = createSelector(
           if (e.community_id == null)
             new_st.push({
               text_description: e.text_description,
-              ...e.special_training
+              ...e.special_training,
             });
           else {
             if (profileData.community != null && profileData.community != {}) {
               if (profileData.community.id == e.community_id) {
                 new_st.push({
                   text_description: e.text_description,
-                  ...e.special_training
+                  ...e.special_training,
                 });
               }
             }
@@ -1535,60 +1717,48 @@ const getNewSTFeedPush = createSelector(
   }
 );
 
-const completedSTObj = state =>
+const completedSTObj = (state) =>
   state.trainings.completed_st_pivots
     ? state.trainings.completed_st_pivots
     : [];
 
-const subscribedSTObj = state =>
+const subscribedSTObj = (state) =>
   state.trainings.subscribed_special_training
     ? state.trainings.subscribed_special_training
     : [];
 
-const frequentTrips = state => state.login.mostFrequentRoute;
-// se ho meno di 3 frequent trips ti dico di aggiungerne una
-const frequentTripsState = createSelector(
-  [frequentTrips],
-  route => (route ? (route.length < 3 ? 1 : 0) : 0)
-);
+const infoProfile = (state) => state.login.infoProfile;
 
-const infoProfile = state => state.login.infoProfile;
-
-const getCityState = createSelector(
-  [infoProfile],
-  infoProfile =>
-    infoProfile.city
+const getCityState = createSelector([infoProfile], (infoProfile) =>
+  infoProfile.city
+    ? infoProfile.city.city_name
       ? infoProfile.city.city_name
-        ? infoProfile.city.city_name
-        : "City"
       : "City"
+    : "City"
 );
 
-const getinfoProfileState = createSelector(
-  [infoProfile],
-  info => {
-    if (info) {
-      // controllo i vari dati di info e vedo se manca qualche dato
-      if (!info.birthdate) {
-        return 1;
-      } else if (!info.height) {
-        return 1;
-      } else if (!info.weight) {
-        return 1;
-      } else if (!info.gender) {
-        return 1;
-      } else if (!info.first_name.length) {
-        return 1;
-      } else if (!info.last_name.length) {
-        return 1;
-      } else {
-        return 0;
-      }
+const getinfoProfileState = createSelector([infoProfile], (info) => {
+  if (info) {
+    // controllo i vari dati di info e vedo se manca qualche dato
+    if (!info.birthdate) {
+      return 1;
+    } else if (!info.height) {
+      return 1;
+    } else if (!info.weight) {
+      return 1;
+    } else if (!info.gender) {
+      return 1;
+    } else if (!info.first_name.length) {
+      return 1;
+    } else if (!info.last_name.length) {
+      return 1;
     } else {
       return 0;
     }
+  } else {
+    return 0;
   }
-);
+});
 
 // funzione random con un seme cosi con un valore restituisce sempre un valore
 export function alea(seed) {
@@ -1597,7 +1767,7 @@ export function alea(seed) {
   }
   function Mash() {
     var n = 4022871197;
-    return function(r) {
+    return function (r) {
       for (var t, s, u = 0, e = 0.02519603282416938; u < r.length; u++)
         (s = r.charCodeAt(u)),
           (f = e * (n += s) - ((n * e) | 0)),
@@ -1605,7 +1775,7 @@ export function alea(seed) {
       return (n | 0) * 2.3283064365386963e-10;
     };
   }
-  return (function() {
+  return (function () {
     var m = Mash(),
       a = m(" "),
       b = m(" "),
@@ -1614,7 +1784,7 @@ export function alea(seed) {
       y;
     (seed = seed.toString()), (a -= m(seed)), (b -= m(seed)), (c -= m(seed));
     a < 0 && a++, b < 0 && b++, c < 0 && c++;
-    return function() {
+    return function () {
       var y = x * 2.3283064365386963e-10 + a * 2091639;
       (a = b), (b = c);
       return (c = y - (x = y | 0));
@@ -1622,35 +1792,32 @@ export function alea(seed) {
   })();
 }
 
-const getPeriodicFeed = state =>
+const getPeriodicFeed = (state) =>
   state.login.periodicFeed ? state.login.periodicFeed : {};
 
 // le vari feed peridioci che possono esserci
-const getPeriodicFeed0 = state =>
+const getPeriodicFeed0 = (state) =>
   state.login.periodicFeed
     ? state.login.periodicFeed[0]
     : { open: "", completed: "" };
-const getPeriodicFeed1 = state =>
+const getPeriodicFeed1 = (state) =>
   state.login.periodicFeed
     ? state.login.periodicFeed[1]
     : { open: "", completed: "" };
-const getPeriodicFeed2 = state =>
+const getPeriodicFeed2 = (state) =>
   state.login.periodicFeed
     ? state.login.periodicFeed[2]
     : { open: "", completed: "" };
-const getPeriodicFeed3 = state =>
+const getPeriodicFeed3 = (state) =>
   state.login.periodicFeed
     ? state.login.periodicFeed[3]
     : { open: "", completed: "" };
-const getPeriodicFeed4 = state =>
+const getPeriodicFeed4 = (state) =>
   state.login.periodicFeed
     ? state.login.periodicFeed[4]
     : { open: "", completed: "" };
 
-const getPeriodicFeedState = createSelector(
-  getPeriodicFeed,
-  items => items
-);
+const getPeriodicFeedState = createSelector(getPeriodicFeed, (items) => items);
 
 const getPeriodicOpenFeedState = createSelector(
   [
@@ -1658,7 +1825,7 @@ const getPeriodicOpenFeedState = createSelector(
     getPeriodicFeed1,
     getPeriodicFeed2,
     getPeriodicFeed3,
-    getPeriodicFeed4
+    getPeriodicFeed4,
   ],
   (item0, item1, item2, item3, item4) => {
     const open0 = item0.open;
@@ -1672,7 +1839,7 @@ const getPeriodicOpenFeedState = createSelector(
       open1,
       open2,
       open3,
-      open4
+      open4,
     };
   }
 );
@@ -1683,7 +1850,7 @@ const getPeriodicCompletedFeedState = createSelector(
     getPeriodicFeed1,
     getPeriodicFeed2,
     getPeriodicFeed3,
-    getPeriodicFeed4
+    getPeriodicFeed4,
   ],
   (item0, item1, item2, item3, item4) => {
     const completed0 = item0.completed;
@@ -1697,48 +1864,45 @@ const getPeriodicCompletedFeedState = createSelector(
       completed1,
       completed2,
       completed3,
-      completed4
+      completed4,
     };
   }
 );
 
-const getCheckTypeformFeed = createSelector(
-  userTypeformObj,
-  userTypeform => {
-    let languageSet = "";
-    if (Platform.OS == "ios") {
-      languageSet = NativeModules.SettingsManager.settings.AppleLocale;
-      if (languageSet === undefined) {
-        // iOS 13 workaround, take first of AppleLanguages array  ["en", "en-NZ"]
-        languageSet = NativeModules.SettingsManager.settings.AppleLanguages[0];
-        if (languageSet == undefined) {
-          languageSet = "en"; // default language
-        }
+const getCheckTypeformFeed = createSelector(userTypeformObj, (userTypeform) => {
+  let languageSet = "";
+  if (Platform.OS == "ios") {
+    languageSet = NativeModules.SettingsManager.settings.AppleLocale;
+    if (languageSet === undefined) {
+      // iOS 13 workaround, take first of AppleLanguages array  ["en", "en-NZ"]
+      languageSet = NativeModules.SettingsManager.settings.AppleLanguages[0];
+      if (languageSet == undefined) {
+        languageSet = "en"; // default language
       }
-    } else languageSet = NativeModules.I18nManager.localeIdentifier;
+    }
+  } else languageSet = NativeModules.I18nManager.localeIdentifier;
 
-    languageSet = languageSet.substr(0, 2);
+  languageSet = languageSet.substr(0, 2);
 
-    if (
-      languageSet == "it" ||
-      languageSet == "en" ||
-      languageSet == "es" ||
-      languageSet == "ct"
-    ) {
-      if (!userTypeform.typeform_user) {
-        return {
-          8: { open: "", completed: "" }
-        };
-      } else {
-        // non ritorno nulla dato che non c'e il feed da visualizzare
-        return {};
-      }
+  if (
+    languageSet == "it" ||
+    languageSet == "en" ||
+    languageSet == "es" ||
+    languageSet == "ct"
+  ) {
+    if (!userTypeform.typeform_user) {
+      return {
+        8: { open: "", completed: "" },
+      };
     } else {
       // non ritorno nulla dato che non c'e il feed da visualizzare
       return {};
     }
+  } else {
+    // non ritorno nulla dato che non c'e il feed da visualizzare
+    return {};
   }
-);
+});
 
 const getUpdateProfileState = createSelector(
   [getCityState, getPeriodicFeedState],
@@ -1770,12 +1934,12 @@ const getUpdateProfileState = createSelector(
         6: { open: "", completed: "" },
         7: { open: "", completed: "" },
         8: { open: "", completed: "" },
-        ...feedUpdateObject
+        ...feedUpdateObject,
       });
       // quelli aperti
-      const feedUpdate = feedUpdateAll.map(feed => feed.open);
+      const feedUpdate = feedUpdateAll.map((feed) => feed.open);
       // quelli completati
-      const feedUpdateCompleted = feedUpdateAll.map(feed => feed.completed);
+      const feedUpdateCompleted = feedUpdateAll.map((feed) => feed.completed);
       // console.log("from object to array");
       // console.log(feedUpdate);
       // console.log(feedUpdateCompleted);
@@ -1858,65 +2022,65 @@ const getUpdateProfileState = createSelector(
         if (chosenTypeFeed === 0) {
           return {
             type: "updateProfile",
-            updated_at: dateFeedPeriodic
+            updated_at: dateFeedPeriodic,
           };
         } else if (chosenTypeFeed === 1) {
           return {
             type: "addFrequentTrips",
-            updated_at: dateFeedPeriodic
+            updated_at: dateFeedPeriodic,
           };
         } else if (chosenTypeFeed === 2) {
           return {
             type: "mobilityHabits",
             updated_at: dateFeedPeriodic,
-            city: city
+            city: city,
           };
         } else if (chosenTypeFeed === 3) {
           return {
             type: "feedback",
-            updated_at: dateFeedPeriodic
+            updated_at: dateFeedPeriodic,
           };
         } else if (chosenTypeFeed === 4) {
           return {
             type: "rememberLevel",
-            updated_at: dateFeedPeriodic
+            updated_at: dateFeedPeriodic,
           };
         } else if (chosenTypeFeed === 5) {
           return {
             type: "inviteFriend",
-            updated_at: dateFeedPeriodic
+            updated_at: dateFeedPeriodic,
           };
         } else if (chosenTypeFeed === 6) {
           return {
             type: "facebookLike",
-            updated_at: dateFeedPeriodic
+            updated_at: dateFeedPeriodic,
           };
         } else if (chosenTypeFeed === 7) {
           return {
             type: "instagramLike",
-            updated_at: dateFeedPeriodic
+            updated_at: dateFeedPeriodic,
           };
         } else if (chosenTypeFeed === 8) {
           return {
             type: "typeform",
-            updated_at: dateFeedPeriodic
+            updated_at: dateFeedPeriodic,
           };
         } else {
           return {
             type: "nothing",
-            updated_at: dateFeedPeriodic
+            updated_at: dateFeedPeriodic,
           };
         }
       } else {
         return {
           type: "nothing",
-          updated_at: now.setHours(8)
+          updated_at: now.setHours(8),
         };
       }
     } else {
       return {
         type: "nothing",
-        updated_at: now.setHours(8)
+        updated_at: now.setHours(8),
       };
     }
   }
@@ -1924,7 +2088,7 @@ const getUpdateProfileState = createSelector(
 
 const getCompleteSession = createSelector(
   [getAllSession],
-  training_sessions => {
+  (training_sessions) => {
     // return training_sessions.filter(item => item.status === 3);
     let idSession = [];
     return training_sessions.reduce((total, item) => {
@@ -1942,131 +2106,179 @@ const getCompleteSession = createSelector(
   }
 );
 
-const getPreviousRouteNotSaveState = createSelector(
-  [getAllPreviousRoute],
-  PreviousRoute => PreviousRoute.filter(item => !item.Saved)
-);
-
-const getLengthPreviousRouteState = createSelector(
-  [getLengthPreviousRoute],
-  length => length
-);
-
-const ChangeRouteState = createSelector(
-  [getLengthPreviousRouteState, getAllPreviousRoute],
-  (_, PreviousRoute) => PreviousRoute.filter(item => !item.Saved)
-);
-
-const getPreviousRoute = createSelector(
-  [ChangeRouteState],
-  PreviousRoute => PreviousRoute.filter(item => item.modal_type)
-);
-
-const getPreviousRouteValiding = createSelector(
-  [ChangeRouteState],
-  PreviousRoute => PreviousRoute.filter(item => !item.modal_type)
-);
-
-const getPreviousRouteNotValidateState = createSelector(
-  [getAllPreviousRoute],
-  PreviousRoute =>
-    PreviousRoute.reduce((acc, item) => acc + item.route.length, 0)
-);
-
 const getRouteState = createSelector(
   [getRoute],
   // Route => Route.filter(item => item.points)
   // Route => Route.filter(item => item.validated == true)
-  Route => {
-    // return Route;
-    // controllo se end_time per vedere se ci sono tratte multiple
-    let end_time = [];
-    return Route.reduce((total, item) => {
-      if (end_time.indexOf(item.end_time) === -1) {
-        end_time = [...end_time, item.end_time];
-        return [...total, item];
-      } else {
-        // se si ripete non lo salvo
-        return total;
+  (Route) => {
+    return Route;
+  }
+);
+
+const RouteIdState = createSelector([getRouteState], (RouteBackend) =>
+  RouteBackend.map((elem) => elem.id)
+);
+
+const getPreviousRouteNotSaveState = createSelector(
+  [getAllPreviousRoute],
+  (PreviousRoute) => PreviousRoute.filter((item) => !item.Saved)
+);
+
+const getPreviousRouteCounter = createSelector(
+  [getAllPreviousRoute],
+  (PreviousRoute) =>
+    PreviousRoute.reduce(
+      (acc, item) =>
+        acc + item.validation ? (item.validation != 3 ? 1 : 0) : 0,
+      0
+    )
+);
+
+const getPreviousRouteOfflineState = createSelector(
+  [getAllPreviousRoute, RouteIdState],
+  (PreviousRoute, RouteBackend) => {
+    return PreviousRoute.filter((item) => !RouteBackend.includes(item.id));
+  }
+);
+
+const getPreviousRouteNotValidate = createSelector(
+  [getPreviousRouteOfflineState],
+  (PreviousRoute) => {
+    return PreviousRoute.filter(
+      (item) => !item.validation || item.validation == 3
+    );
+  }
+);
+
+const getPreviousRouteValidate = createSelector(
+  [getPreviousRouteOfflineState],
+  (PreviousRoute) => {
+    return PreviousRoute.filter(
+      (item) => item.validation && item.validation != 3
+    );
+  }
+);
+
+const getPreviousRouteNotValidateState = createSelector(
+  [getPreviousRouteNotValidate],
+  (PreviousRouteReverse) => {
+    let PreviousRoutePack = [];
+
+    for (i = PreviousRouteReverse.length - 1; i >= 0; i--) {
+      console.log(PreviousRouteReverse[i]);
+      if (!PreviousRouteReverse[i].isSegment) {
+        // se almeno una trace è in corso di validazione allora l'aggiungo
+        let PreviousRouteMultiple = {
+          loading: true,
+          activityChoice: PreviousRouteReverse[i].activityChoice,
+          dateEnd: PreviousRouteReverse[i].end_time,
+        };
+
+        // eventuali altri segment
+        while (i > 0 && PreviousRouteReverse[i - 1].isSegment) {
+          // console.log("tratte multiple");
+
+          PreviousRouteMultiple = {
+            ...PreviousRouteMultiple,
+            activityChoice: { type: "Multiple" },
+          };
+
+          i--;
+        }
+        PreviousRoutePack = [...PreviousRoutePack, PreviousRouteMultiple];
       }
-    }, []);
+    }
+    return PreviousRoutePack;
   }
 );
 
-const getNewSTFeed = createSelector(
-  getNewSTFeedPush,
-  newST => {
-    return newST.map(e => {
-      return {
-        type: "new_st",
-        ...e,
-        updated_at: e.start_special_training
-          ? e.start_special_training
-          : new Date()
-      };
-    });
+const getPreviousRouteValidateState = createSelector(
+  [getPreviousRouteValidate],
+  (PreviousRouteReverse) => {
+    let PreviousRouteCompletePack = [];
+
+    for (i = PreviousRouteReverse.length - 1; i >= 0; i--) {
+      console.log(PreviousRouteReverse[i]);
+      if (!PreviousRouteReverse[i].isSegment) {
+        let PreviousRouteMultiple = {
+          id: PreviousRouteReverse[i].id,
+          offline: true,
+          activityChoice: PreviousRouteReverse[i].activityChoice,
+          dateEnd: new Date(PreviousRouteReverse[i].end_time).getTime(),
+          dateStart: new Date(PreviousRouteReverse[i].start_time).getTime(),
+
+          totPoints: Number.parseFloat(PreviousRouteReverse[i].points),
+          validated: PreviousRouteReverse[i].validation,
+          calories: PreviousRouteReverse[i].calories,
+          routinary: PreviousRouteReverse[i].routinary,
+          typology: PreviousRouteReverse[i].typology,
+          multipliers: PreviousRouteReverse[i].multipliers,
+          distance: PreviousRouteReverse[i].distance,
+        };
+
+        // eventuali altri segment
+        while (i > 0 && PreviousRouteReverse[i - 1].isSegment) {
+          // console.log("tratte multiple");
+          PreviousRouteMultiple = {
+            ...PreviousRouteMultiple,
+            activityChoice: { type: "Multiple" },
+          };
+
+          i--;
+        }
+        // se la trace ha punti
+        /* if (parseInt(pointValidation)) {
+      PreviousRoutePack = [...PreviousRoutePack, PreviousRouteMultiple];
+    } */
+        PreviousRouteCompletePack = [
+          ...PreviousRouteCompletePack,
+          PreviousRouteMultiple,
+        ];
+      }
+    }
+
+    return PreviousRouteCompletePack;
   }
 );
 
-const getSoddFrustTypeform = state => state.login.typeform_soddfrust_2;
+const getLengthPreviousRouteState = createSelector(
+  [getLengthPreviousRoute],
+  (length) => length
+);
+
+const ChangeRouteState = createSelector(
+  [getLengthPreviousRouteState, getAllPreviousRoute],
+  (_, PreviousRoute) => PreviousRoute
+);
+
+const getPreviousRoute = createSelector([ChangeRouteState], (PreviousRoute) =>
+  PreviousRoute.filter((item) => item.modal_type)
+);
+
+const getPreviousRouteValiding = createSelector(
+  [ChangeRouteState],
+  (PreviousRoute) => PreviousRoute.filter((item) => !item.modal_type)
+);
+
+const getNewSTFeed = createSelector(getNewSTFeedPush, (newST) => {
+  return newST.map((e) => {
+    return {
+      type: "new_st",
+      ...e,
+      updated_at: e.start_special_training
+        ? e.start_special_training
+        : new Date(),
+    };
+  });
+});
+
+const getSoddFrustTypeform = (state) => state.login.typeform_soddfrust_3;
 
 const getSoddFrustFeed = createSelector(
   getSoddFrustTypeform,
-  soddFrustTypeform => {
-    if (soddFrustTypeform == 0)
-      return {
-        type: "typeform_2",
-        updated_at: new Date()
-      };
-    else
-      return {
-        type: "nothing",
-        updated_at: new Date()
-      };
-  }
-);
+  (soddFrustTypeform) => {
+    let d = new Date();
 
-const getCompletedSTFeed = createSelector(
-  [completedSTObj, newSTObj, subscribedSTObj],
-  (completedST, newST, subscribedST) => {
-    // if (state.trainings.completed_st_pivots.length > 0) {
-    //   return state.trainings.completed_st_pivots;
-    // } else return [];
-
-    return completedST.map(e => {
-      let st = newST.filter(el => {
-        return el.special_training;
-      });
-
-      let id_st = st.filter(el => {
-        return el.text_description == e.text_description;
-      })[0].special_training.id;
-
-      let id_reward = subscribedST.filter(el => {
-        return el.training_title == e.text_description;
-      })[0].reward_id;
-
-      return {
-        type: "completed_st",
-        ...e,
-        text_description: e.text_description,
-        id: id_st,
-        id_reward
-      };
-    });
-  }
-);
-
-const getTypeformFeed = createSelector(
-  userTypeformObj,
-  userTypeform => {
-    // console.log("check typeform");
-    let random_n = Math.random() * 100;
-    // if (random_n > 0 && random_n < 10) {
-    // if (Tester.includes(userTypeform.email)) {
-    // if (false) {
-
-    // const languageSet = getLanguageI18n();
     let languageSet = "";
     if (Platform.OS == "ios") {
       languageSet = NativeModules.SettingsManager.settings.AppleLocale;
@@ -2081,132 +2293,318 @@ const getTypeformFeed = createSelector(
 
     languageSet = languageSet.substr(0, 2);
 
-    // if (new Date().getDay() == 1)
-    if (new Date().getDay() >= 1 && new Date().getDay() <= 3)
-      if (
-        languageSet == "it" ||
-        languageSet == "en" ||
-        languageSet == "es" ||
-        languageSet == "ct"
-      )
-        if (!userTypeform.typeform_user)
-          return {
-            type: "typeform",
-            updated_at: new Date()
-          };
-        else
-          return {
-            type: "nothing",
-            updated_at: new Date()
-          };
+    // console.log("languageSet");
+    // console.log(languageSet);
+
+    if (
+      languageSet == "it" &&
+      soddFrustTypeform == 0 &&
+      d.getDay() == 1 &&
+      d.getHours() > 8 &&
+      d.getHours() < 12
+    )
+      return {
+        type: "typeform_2",
+        updated_at: new Date(),
+      };
+    else
+      return {
+        type: "nothing",
+        updated_at: new Date(),
+      };
+  }
+);
+
+const getCompletedSTFeed = createSelector(
+  [completedSTObj, newSTObj, subscribedSTObj],
+  (completedST, newST, subscribedST) => {
+    // if (state.trainings.completed_st_pivots.length > 0) {
+    //   return state.trainings.completed_st_pivots;
+    // } else return [];
+
+    return completedST.map((e) => {
+      let st = newST.filter((el) => {
+        return el.special_training;
+      });
+
+      let id_st = st.filter((el) => {
+        return el.text_description == e.text_description;
+      })[0].special_training.id;
+
+      let id_reward = subscribedST.filter((el) => {
+        return el.training_title == e.text_description;
+      })[0].reward_id;
+
+      return {
+        type: "completed_st",
+        ...e,
+        text_description: e.text_description,
+        id: id_st,
+        id_reward,
+      };
+    });
+  }
+);
+
+const getTypeformFeed = createSelector(userTypeformObj, (userTypeform) => {
+  // console.log("check typeform");
+  let random_n = Math.random() * 100;
+  // if (random_n > 0 && random_n < 10) {
+  // if (Tester.includes(userTypeform.email)) {
+  // if (false) {
+
+  // const languageSet = getLanguageI18n();
+  let languageSet = "";
+  if (Platform.OS == "ios") {
+    languageSet = NativeModules.SettingsManager.settings.AppleLocale;
+    if (languageSet === undefined) {
+      // iOS 13 workaround, take first of AppleLanguages array  ["en", "en-NZ"]
+      languageSet = NativeModules.SettingsManager.settings.AppleLanguages[0];
+      if (languageSet == undefined) {
+        languageSet = "en"; // default language
+      }
+    }
+  } else languageSet = NativeModules.I18nManager.localeIdentifier;
+
+  languageSet = languageSet.substr(0, 2);
+
+  // if (new Date().getDay() == 1)
+  if (new Date().getDay() >= 1 && new Date().getDay() <= 3)
+    if (
+      languageSet == "it" ||
+      languageSet == "en" ||
+      languageSet == "es" ||
+      languageSet == "ct"
+    )
+      if (!userTypeform.typeform_user)
+        return {
+          type: "typeform",
+          updated_at: new Date(),
+        };
       else
         return {
           type: "nothing",
-          updated_at: new Date()
+          updated_at: new Date(),
         };
     else
       return {
         type: "nothing",
-        updated_at: new Date()
+        updated_at: new Date(),
       };
-    // } else {
-    //   return {
-    //     type: "nothing",
-    //     updated_at: new Date()
-    //   };
-    // }
-    // }
+  else
+    return {
+      type: "nothing",
+      updated_at: new Date(),
+    };
+  // } else {
+  //   return {
+  //     type: "nothing",
+  //     updated_at: new Date()
+  //   };
+  // }
+  // }
+});
+
+const getChallengesState = createSelector(getChallenges, (Challenges) => {
+  let mapped_challenges = Challenges.map((e) => {
+    return {
+      ...e,
+      text_description: e.title,
+      id: e.id,
+      id_reward: e.rewards[0],
+      start_time: e.start_signin_time,
+      end_time: e.start_signin_time,
+      type: "new_st",
+    };
+  });
+
+  // piccolo workaround - da fixare
+  let mapped_challenges_without_duplicates = removeDuplicates(
+    mapped_challenges,
+    "text_description"
+  );
+
+  return mapped_challenges_without_duplicates;
+});
+
+const getRewardsState = createSelector(
+  [getRewards, getChallenges],
+  (Rewards, Challenges) => {
+    let won_challenges_array = [];
+    Rewards.forEach((e) => {
+      won_challenges_array.push(e.challenge);
+    });
+
+    let mapped_challenges = Challenges.map((e) => {
+      let attribution_date = new Date();
+      if (won_challenges_array.includes(e.id)) {
+        attribution_date = Rewards.filter((el) => {
+          if (el.challenge == e.id) return el.attribution_date;
+        })[0].attribution_date;
+
+        return {
+          ...e,
+          text_description: e.title,
+          id: e.id,
+          id_reward: e.rewards[0],
+          start_time: attribution_date,
+          end_time: attribution_date,
+          type: "completed_st",
+        };
+      } else
+        return {
+          type: "nothing",
+          updated_at: new Date(),
+        };
+    });
+
+    // piccolo workaround - da fixare
+    let mapped_challenges_without_duplicates = removeDuplicates(
+      mapped_challenges,
+      "text_description"
+    );
+
+    return mapped_challenges_without_duplicates;
   }
 );
+
+function removeDuplicates(originalArray, prop) {
+  var newArray = [];
+  var lookupObject = {};
+
+  for (var i in originalArray) {
+    lookupObject[originalArray[i][prop]] = originalArray[i];
+  }
+
+  for (i in lookupObject) {
+    if (typeof lookupObject[i] != "function") newArray.push(lookupObject[i]);
+  }
+  return newArray;
+}
 
 // getUpdateProfileState Profile Profile
 
 const getAllFeedOrder = createSelector(
   [
+    // getTournamentQualificationScoreState,
+    getRewardsState,
+    getChallengesState,
     getRouteState,
     getCompleteEvents,
     getCompleteSession,
     getLevelState,
     getQuizCompleteState,
     getTrophiesState,
-    getUpdateProfileState,
-    getFollowedGroup,
+    // getUpdateProfileState,
+    // getFollowedGroup,
     getNewSTFeed,
     getCompletedSTFeed,
-    getWeekActivitiesState
-    // getSoddFrustFeed
+    getWeekActivitiesState,
+    
+    // getAllowedTournamentsState,
+    // getSoddFrustFeed,
+    getlistFriendState,
+    getlistRequestFriendState,
+    getStatusActivityState
   ],
 
   (
+    // TournamentQualificationScores,
+    Rewards,
+    Challenges,
     Route,
     Events,
     Session,
     Level,
     Quiz,
     Trophies,
-    Profile,
-    Followed,
+    // Profile,
+    // Followed,
     NewST,
     CompletedST,
-    WeekActivities
-    // soddFrustFeed
+    WeekActivities,
+    // Tournament,
+    // soddFrustFeed,
+    Friends,
+    RequestFriend,
+    StatusActivity
   ) => {
     return [
+      // ...TournamentQualificationScores,
+      ...Rewards,
+      ...Challenges,
       ...Route,
       ...Events,
       ...Session,
       ...Level,
       ...Quiz,
       ...Trophies,
-      Profile,
-      ...Followed,
+      // Profile,
+      // ...Followed,
       ...NewST,
       ...CompletedST,
-      ...WeekActivities
-      // soddFrustFeed
+      ...WeekActivities,
+      // ...Tournament,
+      // soddFrustFeed,
+      ...Friends,
+      ...RequestFriend,
+      StatusActivity
     ].sort(compare);
   }
 );
 
 function compare(a, b) {
-  if (new Date(a.end_time).getTime() < new Date(b.end_time).getTime()) return 1;
-  else if (new Date(a.end_time).getTime() > new Date(b.end_time).getTime())
-    return -1;
-  else if (new Date(a.end_time).getTime() < new Date(b.updated_at).getTime())
-    return 1;
-  else if (new Date(a.end_time).getTime() > new Date(b.updated_at).getTime())
-    return -1;
-  else if (new Date(a.updated_at).getTime() < new Date(b.end_time).getTime())
-    return 1;
-  else if (new Date(a.updated_at).getTime() > new Date(b.end_time).getTime())
-    return -1;
-  else if (new Date(a.updated_at).getTime() < new Date(b.updated_at).getTime())
-    return 1;
-  else if (new Date(a.updated_at).getTime() > new Date(b.updated_at).getTime())
-    return -1;
+  let aTime = 0;
+  let btime = 0;
+  if (a.points_member_number) {
+    aTime = a.start_time;
+  } else if (a.end_time) {
+    aTime = a.end_time;
+  } else if (a.updated_at) {
+    aTime = a.updated_at;
+  }  else if (a.created) {
+    aTime = a.created;
+  } else if (a.created_at) {
+    aTime = a.created_at;
+  } else if (a.dateBonus) {
+    aTime = a.dateBonus;
+  }
+
+  
+  
+
+  if (b.points_member_number) {
+    bTime = b.start_time;
+  } else if (b.end_time) {
+    bTime = b.end_time;
+  } else if (b.updated_at) {
+    bTime = b.updated_at;
+  }  else if (b.created) {
+    bTime = b.created;
+  } else if (b.created_at) {
+    bTime = b.created_at;
+  }  else if (b.dateBonus) {
+    bTime = b.dateBonus;
+  }
+
+  if (new Date(aTime).getTime() < new Date(bTime).getTime()) return 1;
+  else if (new Date(aTime).getTime() > new Date(bTime).getTime()) return -1;
+
   return 0;
 }
 
-const RouteEndState = createSelector(
-  [getRouteState],
-  RouteBackend => RouteBackend.map(elem => new Date(elem.end_time).getTime())
-);
-
-const getTrainings = state => state.trainings;
+const getTrainings = (state) => state.trainings;
 
 const getTrainingsState = createSelector(
   [getTrainings],
-  trainings => trainings
+  (trainings) => trainings
 );
 
-const getQuizState = createSelector(
-  [getQuiz],
-  Quiz => Quiz
-);
+const getQuizState = createSelector([getQuiz], (Quiz) => Quiz);
 const getQuizTypeState = createSelector(
   [getTypeQuiz, getTrainingsState],
   (TypeQuiz, trainings) =>
-    trainings.training_events.filter(elem =>
+    trainings.training_events.filter((elem) =>
       elem.event.quiz || elem.event.survey ? !elem.status : 0
     ).length
       ? TypeQuiz
@@ -2214,17 +2612,17 @@ const getQuizTypeState = createSelector(
 );
 
 const getPreviousRouteAllState = createSelector(
-  [getPreviousRoute, RouteEndState],
+  [getPreviousRoute, RouteIdState],
   (PreviousRoute, RouteBackend) => {
     return PreviousRoute.filter(
-      item => !RouteBackend.includes(item.route[0].key)
+      (item) => !RouteBackend.includes(item.end_time)
     );
   }
 );
 
 const getPreviousRouteState = createSelector(
-  [getPreviousRouteAllState],
-  PreviousRouteReverse => {
+  [ChangeRouteState],
+  (PreviousRouteReverse) => {
     // console.log("controllo validi");
 
     let PreviousRoutePack = [];
@@ -2233,64 +2631,86 @@ const getPreviousRouteState = createSelector(
     for (i = PreviousRouteReverse.length - 1; i >= 0; i--) {
       // console.log(i);
       if (!PreviousRouteReverse[i].isSegment) {
-        let PreviousRouteMultiple = {
-          id: [i],
+        let isValidation = PreviousRouteReverse[i].validation ? false : true;
 
-          activityChoice: PreviousRouteReverse[i].activityChoice,
-          dateEnd:
-            PreviousRouteReverse[i].route[
-              PreviousRouteReverse[i].route.length - 1
-            ].key,
-
-          totPoints: Number.parseFloat(PreviousRouteReverse[i].totPoints),
-          validated: PreviousRouteReverse[i].validated
-            ? PreviousRouteReverse[i].validated
-            : false
-        };
-
-        let pointValidation = PreviousRouteReverse[i].totPoints;
-
-        // eventuali altri segment
-        while (i > 0 && PreviousRouteReverse[i - 1].isSegment) {
-          // console.log("tratte multiple");
-          PreviousRouteMultiple = {
-            dateEnd: PreviousRouteMultiple.dateEnd,
-            activityChoice: { type: "Multiple" },
-            id: [...PreviousRouteMultiple.id, i - 1],
-
-            totPoints:
-              PreviousRouteMultiple.totPoints +
-              Number.parseFloat(PreviousRouteReverse[i - 1].totPoints),
-            validated: PreviousRouteReverse[i - 1].validated
-              ? PreviousRouteReverse[i - 1].validated
-              : PreviousRouteMultiple.validated
+        if (isValidation) {
+          // se almeno una trace è in corso di validazione allora l'aggiungo
+          let PreviousRouteMultiple = {
+            status: PreviousRouteReverse[i].status,
+            routeNum: PreviousRouteReverse[i].route.length,
+            activityNum: PreviousRouteReverse[i].activity.length,
+            activityChoice: PreviousRouteReverse[i].activityChoice,
+            dateEnd: PreviousRouteReverse[i].end_time,
           };
 
-          pointValidation = pointValidation
-            ? pointValidation
-            : PreviousRouteReverse[i - 1].totPoints;
+          // eventuali altri segment
+          while (i > 0 && PreviousRouteReverse[i - 1].isSegment) {
+            // console.log("tratte multiple");
 
-          i--;
-        }
-        // se la trace ha punti
-        /* if (parseInt(pointValidation)) {
+            PreviousRouteMultiple = {
+              dateEnd: PreviousRouteMultiple.dateEnd,
+              activityChoice: { type: "Multiple" },
+              status:
+                PreviousRouteMultiple.status !== ""
+                  ? PreviousRouteReverse[i - 1].status
+                  : PreviousRouteMultiple.status,
+              routeNum:
+                PreviousRouteMultiple.routeNum +
+                PreviousRouteReverse[i - 1].route.length,
+
+              activityNum:
+                PreviousRouteMultiple.activityNum +
+                PreviousRouteReverse[i - 1].activity.length,
+            };
+
+            i--;
+          }
+          PreviousRoutePack = [...PreviousRoutePack, PreviousRouteMultiple];
+        } else {
+          let PreviousRouteMultiple = {
+            id: [i],
+
+            activityChoice: PreviousRouteReverse[i].activityChoice,
+            dateEnd: new Date(PreviousRouteReverse[i].end_time).getTime(),
+
+            totPoints: Number.parseFloat(PreviousRouteReverse[i].points),
+            validated: PreviousRouteReverse[i].validation ? true : false,
+          };
+
+          console.log(PreviousRouteMultiple);
+
+          // eventuali altri segment
+          while (i > 0 && PreviousRouteReverse[i - 1].isSegment) {
+            // console.log("tratte multiple");
+            PreviousRouteMultiple = {
+              dateEnd: PreviousRouteMultiple.dateEnd,
+              activityChoice: { type: "Multiple" },
+              id: [...PreviousRouteMultiple.id, i - 1],
+
+              totPoints: PreviousRouteMultiple.totPoints,
+              validated: PreviousRouteMultiple.validated,
+            };
+
+            i--;
+          }
+          // se la trace ha punti
+          /* if (parseInt(pointValidation)) {
           PreviousRoutePack = [...PreviousRoutePack, PreviousRouteMultiple];
         } */
-        PreviousRoutePack = [...PreviousRoutePack, PreviousRouteMultiple];
+          PreviousRoutePack = [...PreviousRoutePack, PreviousRouteMultiple];
+        }
       }
     }
     return PreviousRoutePack;
   }
 );
 
-const getPointsState = createSelector(
-  [getPoints],
-  statistics =>
-    statistics === []
-      ? 0
-      : statistics.reduce((total, elem, index, array) => {
-          return total + elem.points;
-        }, 0)
+const getPointsState = createSelector([getPoints], (statistics) =>
+  statistics === []
+    ? 0
+    : statistics.reduce((total, elem, index, array) => {
+        return total + elem.points;
+      }, 0)
 );
 
 /* 
@@ -2320,7 +2740,7 @@ const getPreviousRouteNotValidateStateSingle = createSelector(
 
 const getPreviousRouteNotValidateStateMultiple = createSelector(
   [ChangeRouteState],
-  PreviousRoute => {
+  (PreviousRoute) => {
     let PreviousRouteReverse = PreviousRoute;
     let PreviousRoutePack = [];
     // console.log("controllo non validi");
@@ -2329,23 +2749,22 @@ const getPreviousRouteNotValidateStateMultiple = createSelector(
     for (i = PreviousRouteReverse.length - 1; i >= 0; i--) {
       // console.log(i);
 
+      // !PreviousRouteReverse[i].isSegment && PreviousRouteReverse[i].sub_trip
       if (!PreviousRouteReverse[i].isSegment) {
         // almeno uno deve essere in corso di validazione
 
         // controllo la fine se è stata validata ovvero tutte le altre sono state validate se l'ultima è valida
-        let isValidation = PreviousRouteReverse[i].modal_type ? false : true;
+        let isValidation = PreviousRouteReverse[i].validation ? false : true;
+        // let isValidation = PreviousRouteReverse[i].modal_type ? false : true;
 
         if (isValidation) {
           // se almeno una trace è in corso di validazione allora l'aggiungo
           let PreviousRouteMultiple = {
             status: PreviousRouteReverse[i].status,
             routeNum: PreviousRouteReverse[i].route.length,
-            routeAnalyNum: PreviousRouteReverse[i].routeAnalyzed.length,
+            activityNum: PreviousRouteReverse[i].activity.length,
             activityChoice: PreviousRouteReverse[i].activityChoice,
-            dateEnd:
-              PreviousRouteReverse[i].route[
-                PreviousRouteReverse[i].route.length - 1
-              ].key
+            dateEnd: PreviousRouteReverse[i].end_time,
           };
 
           // eventuali altri segment
@@ -2363,9 +2782,9 @@ const getPreviousRouteNotValidateStateMultiple = createSelector(
                 PreviousRouteMultiple.routeNum +
                 PreviousRouteReverse[i - 1].route.length,
 
-              routeAnalyNum:
-                PreviousRouteMultiple.routeAnalyNum +
-                PreviousRouteReverse[i - 1].routeAnalyzed.length
+              activityNum:
+                PreviousRouteMultiple.activityNum +
+                PreviousRouteReverse[i - 1].activity.length,
             };
 
             i--;
@@ -2379,7 +2798,7 @@ const getPreviousRouteNotValidateStateMultiple = createSelector(
 );
 
 // da index a lingua
-convertLanguagesLanguage = indexLang => {
+convertLanguagesLanguage = (indexLang) => {
   switch (indexLang) {
     case 0:
       return "en";
@@ -2414,29 +2833,24 @@ convertLanguagesLanguage = indexLang => {
 // l'evento del quiz o del survey non deve completato mentre il resto si
 // quindi tutti gli eventi 1 ma soltanto quiz e survey 0
 // in logica negato quindi se tutti almeno uno ha la condizione opposta non abilito
-const enableQuizState = createSelector(
-  [getTrainingsState],
-  trainings =>
-    trainings.training_events.filter(elem =>
-      elem.event.quiz || elem.event.survey ? elem.status : !elem.status
-    ).length
-      ? false
-      : true
+const enableQuizState = createSelector([getTrainingsState], (trainings) =>
+  trainings.training_events.filter((elem) =>
+    elem.event.quiz || elem.event.survey ? elem.status : !elem.status
+  ).length
+    ? false
+    : true
 );
 
-const getProfileLogin = state => state.login.infoProfile;
+const getProfileLogin = (state) => state.login.infoProfile;
 
-const getProfileState = createSelector(
-  [getProfileLogin],
-  profile => profile
-);
+const getProfileState = createSelector([getProfileLogin], (profile) => profile);
 
-const getInfoUserGlobalClassification = state =>
+const getInfoUserGlobalClassification = (state) =>
   state.standings.infoUserGlobalClassification;
 
 const getInfoUserGlobalClassificationState = createSelector(
   [getInfoUserGlobalClassification],
-  infoUserGlobalClassification => infoUserGlobalClassification
+  (infoUserGlobalClassification) => infoUserGlobalClassification
 );
 
 // const getSelectedTimingState = createSelector(
@@ -2446,36 +2860,38 @@ const getInfoUserGlobalClassificationState = createSelector(
 
 const getFeedState = createSelector(
   [
-    getPreviousRouteNotValidateStateMultiple,
-    getPreviousRouteState,
+    getPreviousRouteNotValidateState,
+    getPreviousRouteValidateState,
     enableQuizState,
     getQuizTypeState,
-    getAllFeedOrder
-    // getPermActivitiesState
+    getAllFeedOrder,
+    getPermActivitiesState,
   ],
   (
     PreviousRouteNotValidate,
     PreviousRoute,
     enableQuiz,
     typeQuiz,
-    allFeedOrder
-    // permHealth
+    allFeedOrder,
+    permHealth
   ) => [
     { baseHeader: true },
+    // { MUVForwardFeed: true },
+    // { DontMUVFeed: true },
     ...PreviousRouteNotValidate,
     ...PreviousRoute,
     { enableQuiz: enableQuiz ? typeQuiz : "", Quiz: true },
-    // { enableHealth: !permHealth, Health: true },
-    ...allFeedOrder
+    { enableHealth: !permHealth, Health: true },
+    ...allFeedOrder,
   ]
 );
 
-const info = connect(state => {
+const info = connect((state) => {
   // prendo solo le tratte gia validate ovvero hanno la modalita specificata
   // reverse, ruoto l'array essendo che le route piu nuove sono alla fine, cosi nella home ho prima quelle piu nuove
   //  userState: state.login
 
-  // const RouteEnd = RouteEndState(state);
+  // const RouteEnd = RouteIdState(state);
 
   /* riuniti tutti in allfeedorder cosi posso ordinare
   loginRoutes: getRouteState(state),
@@ -2493,12 +2909,13 @@ const info = connect(state => {
     selectedLeaderboard: getSelectedLeaderboardState(state),
     profileState: getProfileState(state),
     // selectedTiming: getSelectedTimingState(state),
-    AllRoute: getAllPreviousRoute(state),
+    AllRoute: state.tracking.PreviousRoute,
     // PreviousRoute: getPreviousRouteState(state),
     // PreviousRouteNotValidate: getPreviousRouteNotValidateStateMultiple(state),
 
     // allFeedOrder: getAllFeedOrder(state),
-    feed: getFeedState(state)
+    feed: getFeedState(state),
+    firstTeamScreenState: getFirstTeamScreen(state),
 
     // quiz: getQuizState(state),
     // enableQuiz: enableQuizState(state) ? getQuizTypeState(state) : ""

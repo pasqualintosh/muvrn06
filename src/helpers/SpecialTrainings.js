@@ -2,6 +2,7 @@ import {
   checkModalTypeDispatch,
   checkCounterRouteInSeriesEvent,
   checkFrequentTripEvent,
+  checkHomeWorkFrequentTripEvent,
   toggleStTeatro,
   toggleStBallarak,
   toggleStMuvtoget,
@@ -19,7 +20,8 @@ export class SpecialTrainings {
     updateStatus,
     s_point,
     e_point,
-    dispatch
+    dispatch,
+    most_frequent_routes
   ) {
     this.available_st = available_st;
     this.route_to_check = route_to_check;
@@ -30,6 +32,7 @@ export class SpecialTrainings {
     this.s_point = s_point;
     this.e_point = e_point;
     this.dispatch = dispatch;
+    this.most_frequent_routes = most_frequent_routes;
 
     this.log =
       "\neventi da controllare " +
@@ -77,6 +80,15 @@ export class SpecialTrainings {
     this.kalsa = "Alla scoperta della Kalsa";
     this.muvimento = "Il MUVimento ti fa bello!";
     this.ridemybike = "I want to ride my bike!";
+    this.airlite = "Love is in the not polluted air";
+    this.hflows = "Human Flows";
+    this.muvmusic = "MUV & MUSIC";
+    this.santelia = "Stay Active: be happy!";
+    this.forest = "5000 pts = 1 tree for Gardunha forest";
+    this.freschette = "Scopri il centro storico nei weekend festivi";
+    this.glifo = "Il movimento è cultura";
+    this.barmus8 = "Sustainability is Culture!";
+    this.barmus9 = "Culturize yourself!";
 
     this.st_burnit = false; // valorizzo un flag per ogni st
     this.st_letsmuv = false; // valorizzo un flag per ogni st
@@ -113,6 +125,15 @@ export class SpecialTrainings {
     this.st_kalsa = false; // valorizzo un flag per ogni st
     this.st_muvimento = false; // valorizzo un flag per ogni st
     this.st_ridemybike = false; // valorizzo un flag per ogni st
+    this.st_airlite = false; // valorizzo un flag per ogni st
+    this.st_hflows = false; // valorizzo un flag per ogni st
+    this.st_muvmusic = false; // valorizzo un flag per ogni st
+    this.st_santelia = false; // valorizzo un flag per ogni st
+    this.st_forest = false; // valorizzo un flag per ogni st
+    this.st_freschette = false; // valorizzo un flag per ogni st
+    this.st_glifo = false; // valorizzo un flag per ogni st
+    this.st_barmus8 = false; // valorizzo un flag per ogni st
+    this.st_barmus9 = false; // valorizzo un flag per ogni st
 
     this.calcAllST();
   }
@@ -246,6 +267,33 @@ export class SpecialTrainings {
           }
           if (el.text_description.includes(this.ridemybike)) {
             if (el.status === 0) this.calcSTRidemyBike(el);
+          }
+          if (el.text_description.includes(this.airlite)) {
+            if (el.status === 0) this.calcSTAirlite(el);
+          }
+          if (el.text_description.includes(this.hflows)) {
+            if (el.status === 0) this.calcSTHFlows(el);
+          }
+          if (el.text_description.includes(this.muvmusic)) {
+            if (el.status === 0) this.calcSTMuvMusic(el);
+          }
+          if (el.text_description.includes(this.santelia)) {
+            if (el.status === 0) this.calcSTSantelia(el);
+          }
+          if (el.text_description.includes(this.forest)) {
+            this.calcSTForest(el);
+          }
+          if (el.text_description.includes(this.freschette)) {
+            if (el.status === 0) this.calcSTFreschette(el);
+          }
+          if (el.text_description.includes(this.glifo)) {
+            if (el.status === 0) this.calcSTGlifo(el);
+          }
+          if (el.text_description.includes(this.barmus8)) {
+            if (el.status === 0) this.calcSTBarc8(el);
+          }
+          if (el.text_description.includes(this.barmus9)) {
+            if (el.status === 0) this.calcSTBarc9(el);
           }
         }
       });
@@ -976,7 +1024,7 @@ export class SpecialTrainings {
     let h = ts.getHours();
     let m = ts.getMinutes();
 
-    if (h > 6 && (h <= 11 && m <= 30)) {
+    if (h > 6 && h <= 11 && m <= 30) {
       let flag_walk = checkModalTypeDispatch(this.route_to_check, {
         event: { modal_type: "1" }
       });
@@ -2422,7 +2470,7 @@ export class SpecialTrainings {
         lon = e[1];
       }
 
-      const thresholdGPS = 150; // circa 75km
+      const thresholdGPS = 75; // circa 37km
       // const thresholdGPS = 0.3; // circa 150mt
       const distance = haversine(lat, lon, latitude, longitude);
 
@@ -2778,6 +2826,684 @@ export class SpecialTrainings {
     // alert(this.log);
   }
 
+  calcSTAirlite(el) {
+    this.log += "\nhai sottoscritto airlite";
+
+    const r_points = this.route_to_check.segment.reduce(
+      (total, elem) => total + elem.points,
+      0
+    );
+
+    const check_if_event_status_exist =
+      this.st_redux_state["AirliteInST_" + el.st_event[0].reward_id] &&
+      this.st_redux_state["AirliteInST_" + el.st_event[0].reward_id] != {}
+        ? true
+        : false;
+
+    this.log += "\npunti tratta " + r_points;
+    this.log += "\ncheck_if_event_status_exist " + check_if_event_status_exist;
+
+    if (check_if_event_status_exist) {
+      let last_date = new Date(
+        this.st_redux_state["AirliteInST_" + el.st_event[0].reward_id].date
+      );
+      let week_counter = this.st_redux_state[
+        "AirliteInST_" + el.st_event[0].reward_id
+      ].week_counter;
+      let counter = this.st_redux_state[
+        "AirliteInST_" + el.st_event[0].reward_id
+      ].counter;
+      let today = new Date();
+
+      let msec = today - last_date;
+      let mins = Math.floor(msec / 60000);
+      let hrs = Math.floor(mins / 60);
+      let days = Math.floor(hrs / 24);
+
+      this.log += "\ndays " + days;
+      this.log += "\ncounter " + counter;
+
+      if (days == 1) {
+        let flag = checkHomeWorkFrequentTripEvent(
+          this.route_to_check,
+          this.most_frequent_routes
+        );
+        this.log += "\nflag " + flag;
+
+        if (flag) {
+          if (counter + 1 >= 4) {
+            // hai completato lo special training
+            this.st_airlite = true;
+            this.log += "\ncondizioni st soddisfatte";
+            this.completed_special_training.push({
+              id: el.special_training.id,
+              reward_id: el.st_event[0].reward_id,
+              status: 1,
+              text_description: el.text_description
+            });
+          }
+          this.updateStatus("AirliteInST_" + el.st_event[0].reward_id, {
+            date: new Date(),
+            counter: counter + 1
+          });
+        }
+      } else {
+        let flag = checkHomeWorkFrequentTripEvent(
+          this.route_to_check,
+          this.most_frequent_routes
+        );
+        this.log += "\nflag " + flag;
+        if (flag)
+          this.updateStatus("AirliteInST_" + el.st_event[0].reward_id, {
+            counter: 1,
+            date: new Date()
+          });
+      }
+    } else {
+      let flag = checkHomeWorkFrequentTripEvent(
+        this.route_to_check,
+        this.most_frequent_routes
+      );
+      this.log += "\nflag " + flag;
+      if (flag)
+        this.updateStatus("AirliteInST_" + el.st_event[0].reward_id, {
+          counter: 1,
+          date: new Date()
+        });
+    }
+    // alert(this.log);
+  }
+
+  calcSTHFlows(el) {
+    this.log += "\nhai sottoscritto h flows";
+
+    let flag = this.calcDistFromHFlows();
+    console.log(flag);
+    this.log += "\n flag " + flag;
+    if (flag) {
+      // evento completato
+      this.log += "\nevento completato";
+
+      this.st_hflows = true;
+      this.log += "\ncondizioni st soddisfatte";
+      this.completed_special_training.push({
+        id: el.special_training.id,
+        reward_id: el.st_event[0].reward_id,
+        status: 1,
+        text_description: el.text_description
+      });
+
+      this.updateStatus("HFlowsInST_" + el.st_event[0].reward_id, {
+        date: new Date()
+      });
+    }
+
+    // alert(this.log);
+  }
+
+  calcDistFromHFlows() {
+    // circa 6000 metri
+    const thresholdGPS = 11.25;
+    const distance = haversine(
+      this.e_point.latitude,
+      this.e_point.longitude,
+      38.1823062,
+      13.0984117
+    );
+
+    console.log(distance);
+    this.log += "\ndistance " + distance;
+
+    const distance_from_centro = distance <= thresholdGPS ? true : false;
+    // const distance_from_centro = true;
+
+    if (distance_from_centro) return true;
+    else return false;
+  }
+
+  calcSTMuvMusic(el) {
+    this.log += "\nhai sottoscritto muv music";
+
+    const r_points = this.route_to_check.segment.reduce(
+      (total, elem) => total + elem.points,
+      0
+    );
+
+    const check_if_event_status_exist =
+      this.st_redux_state["MuvMusicInST_" + el.st_event[0].reward_id] &&
+      this.st_redux_state["MuvMusicInST_" + el.st_event[0].reward_id] != {}
+        ? true
+        : false;
+
+    this.log += "\npunti tratta " + r_points;
+    this.log += "\ncheck_if_event_status_exist " + check_if_event_status_exist;
+
+    if (check_if_event_status_exist) {
+      let last_date = new Date(
+        this.st_redux_state["MuvMusicInST_" + el.st_event[0].reward_id].date
+      );
+      let week_counter = this.st_redux_state[
+        "MuvMusicInST_" + el.st_event[0].reward_id
+      ].week_counter;
+      let counter = this.st_redux_state[
+        "MuvMusicInST_" + el.st_event[0].reward_id
+      ].counter;
+      let today = new Date();
+
+      let msec = today - last_date;
+      let mins = Math.floor(msec / 60000);
+      let hrs = Math.floor(mins / 60);
+      let days = Math.floor(hrs / 24);
+
+      this.log += "\ndays " + days;
+      this.log += "\ncounter " + counter;
+
+      if (days >= 1 && days <= 7) {
+        let flag = checkHomeWorkFrequentTripEvent(
+          this.route_to_check,
+          this.most_frequent_routes
+        );
+        this.log += "\nflag " + flag;
+
+        if (flag) {
+          if (counter + 1 >= 3) {
+            // hai completato lo special training
+            this.st_muvmusic = true;
+            this.log += "\ncondizioni st soddisfatte";
+            this.completed_special_training.push({
+              id: el.special_training.id,
+              reward_id: el.st_event[0].reward_id,
+              status: 1,
+              text_description: el.text_description
+            });
+          }
+          this.updateStatus("MuvMusicInST_" + el.st_event[0].reward_id, {
+            date: new Date(),
+            counter: counter + 1
+          });
+        }
+      } else {
+        let flag = checkHomeWorkFrequentTripEvent(
+          this.route_to_check,
+          this.most_frequent_routes
+        );
+        this.log += "\nflag " + flag;
+        if (flag)
+          this.updateStatus("MuvMusicInST_" + el.st_event[0].reward_id, {
+            counter: 1,
+            date: new Date()
+          });
+      }
+    } else {
+      let flag = checkHomeWorkFrequentTripEvent(
+        this.route_to_check,
+        this.most_frequent_routes
+      );
+      this.log += "\nflag " + flag;
+      if (flag)
+        this.updateStatus("MuvMusicInST_" + el.st_event[0].reward_id, {
+          counter: 1,
+          date: new Date()
+        });
+    }
+    // alert(this.log);
+  }
+
+  calcSTSantelia(el) {
+    this.log += "\nhai sottoscritto sant elia";
+
+    const r_points = this.route_to_check.segment.reduce(
+      (total, elem) => total + elem.points,
+      0
+    );
+
+    let flag_walk = checkModalTypeDispatch(this.route_to_check, {
+      event: { modal_type: "1" }
+    });
+    let flag_bike = checkModalTypeDispatch(this.route_to_check, {
+      event: { modal_type: "2" }
+    });
+
+    const check_if_event_status_exist =
+      this.st_redux_state["SanteliaInST_" + el.st_event[0].reward_id] &&
+      this.st_redux_state["SanteliaInST_" + el.st_event[0].reward_id] != {}
+        ? true
+        : false;
+
+    this.log += "\npunti tratta " + r_points;
+    this.log += "\ncheck_if_event_status_exist " + check_if_event_status_exist;
+
+    if (check_if_event_status_exist) {
+      let last_date = new Date(
+        this.st_redux_state["SanteliaInST_" + el.st_event[0].reward_id].date
+      );
+
+      let counter = this.st_redux_state[
+        "SanteliaInST_" + el.st_event[0].reward_id
+      ].counter;
+      let today = new Date();
+
+      let msec = today - last_date;
+      let mins = Math.floor(msec / 60000);
+      let hrs = Math.floor(mins / 60);
+      let days = Math.floor(hrs / 24);
+
+      this.log += "\ndays " + days;
+      this.log += "\ncounter " + counter;
+
+      if (days <= 7) {
+        let code = 0;
+        if (flag_walk) {
+          code = this.addWalkCode(counter);
+        } else if (flag_bike) {
+          code = this.addBikeCode(counter);
+        } else {
+          code = this.addTplCode(counter);
+        }
+
+        if (r_points > 250) {
+          if (code == 7) {
+            // hai completato lo special training
+            this.st_santelia = true;
+            this.log += "\ncondizioni st soddisfatte";
+            this.completed_special_training.push({
+              id: el.special_training.id,
+              reward_id: el.st_event[0].reward_id,
+              status: 1,
+              text_description: el.text_description
+            });
+          }
+
+          this.updateStatus("SanteliaInST_" + el.st_event[0].reward_id, {
+            counter: code,
+            date: new Date()
+          });
+        }
+      } else {
+      }
+    } else {
+      if (r_points > 250) {
+        if (flag_walk) {
+          this.updateStatus("SanteliaInST_" + el.st_event[0].reward_id, {
+            counter: 1,
+            date: new Date()
+          });
+        } else if (flag_bike) {
+          this.updateStatus("SanteliaInST_" + el.st_event[0].reward_id, {
+            counter: 2,
+            date: new Date()
+          });
+        } else {
+          this.updateStatus("SanteliaInST_" + el.st_event[0].reward_id, {
+            counter: 3,
+            date: new Date()
+          });
+        }
+      }
+    }
+  }
+
+  addWalkCode(code) {
+    switch (code) {
+      case 2:
+        return 4;
+      case 3:
+        return 5;
+      case 6:
+        return 7;
+      default:
+        return code;
+    }
+  }
+
+  addBikeCode(code) {
+    switch (code) {
+      case 1:
+        return 4;
+      case 3:
+        return 6;
+      case 5:
+        return 7;
+      default:
+        return code;
+    }
+  }
+
+  addTplCode(code) {
+    switch (code) {
+      case 1:
+        return 5;
+      case 2:
+        return 6;
+      case 4:
+        return 7;
+      default:
+        return code;
+    }
+  }
+
+  calcSTForest(el) {
+    this.log += "\nhai sottoscritto garunha forest";
+
+    const r_points = this.route_to_check.segment.reduce(
+      (total, elem) => total + elem.points,
+      0
+    );
+
+    const check_if_event_status_exist =
+      this.st_redux_state["ForestInST_" + el.st_event[0].reward_id] &&
+      this.st_redux_state["ForestInST_" + el.st_event[0].reward_id] != {}
+        ? true
+        : false;
+
+    this.log += "\npunti tratta " + r_points;
+    this.log += "\ncheck_if_event_status_exist " + check_if_event_status_exist;
+
+    if (check_if_event_status_exist) {
+      let last_date = new Date(
+        this.st_redux_state["ForestInST_" + el.st_event[0].reward_id].date
+      );
+
+      let counter = this.st_redux_state[
+        "ForestInST_" + el.st_event[0].reward_id
+      ].counter;
+      let tree = this.st_redux_state["ForestInST_" + el.st_event[0].reward_id]
+        .tree
+        ? this.st_redux_state["ForestInST_" + el.st_event[0].reward_id].tree
+        : 0;
+      let today = new Date();
+
+      let msec = today - last_date;
+      let mins = Math.floor(msec / 60000);
+      let hrs = Math.floor(mins / 60);
+      let days = Math.floor(hrs / 24);
+
+      this.updateStatus("ForestInST_" + el.st_event[0].reward_id, {
+        counter: counter + r_points,
+        date: new Date(),
+        tree
+      });
+
+      if (counter + r_points > 5000) {
+        // hai completato lo special training
+        this.st_forest = true;
+        this.log += "\ncondizioni st soddisfatte";
+        this.completed_special_training.push({
+          id: el.special_training.id,
+          reward_id: el.st_event[0].reward_id,
+          status: 1,
+          text_description: el.text_description
+        });
+        this.updateStatus("ForestInST_" + el.st_event[0].reward_id, {
+          counter: 0,
+          date: new Date(),
+          tree: tree + 1
+        });
+      }
+    } else {
+      this.updateStatus("ForestInST_" + el.st_event[0].reward_id, {
+        counter: r_points,
+        date: new Date(),
+        tree: 0
+      });
+    }
+  }
+
+  calcSTFreschette(el) {
+    this.log += "\nhai sottoscritto calcSTFreschette";
+
+    const r_points = this.route_to_check.segment.reduce(
+      (total, elem) => total + elem.points,
+      0
+    );
+
+    const check_if_event_status_exist =
+      this.st_redux_state["FreschetteInST_" + el.st_event[0].reward_id] &&
+      this.st_redux_state["FreschetteInST_" + el.st_event[0].reward_id] != {}
+        ? true
+        : false;
+
+    this.log += "\npunti tratta " + r_points;
+    this.log += "\ncheck_if_event_status_exist " + check_if_event_status_exist;
+
+    let segments = this.route_to_check.segment[0].route.replace("(", "");
+    segments = segments.replace(")", "");
+    segments = segments.replace("LINESTRING ", "");
+    let splitted_segments = segments.split(",");
+    let lat_lon_alt_array = splitted_segments.map(e => {
+      return e.split(" ");
+    });
+
+    // console.log(segments);
+    // console.log(splitted_segments);
+    // console.log(lat_lon_alt_array);
+
+    console.log(this.route_to_check.segment[0].route);
+    let in_mercato = this.checkLatLonArrayInCoord(
+      lat_lon_alt_array,
+      38.1196797,
+      13.3567223
+    );
+
+    if (in_mercato) {
+      // evento completato
+      this.log += "\nevento completato";
+
+      this.st_freschette = true;
+      this.log += "\ncondizioni st soddisfatte";
+      this.completed_special_training.push({
+        id: el.special_training.id,
+        reward_id: el.st_event[0].reward_id,
+        status: 1,
+        text_description: el.text_description
+      });
+
+      this.updateStatus("FreschetteInST_" + el.st_event[0].reward_id, {
+        date: new Date()
+      });
+    }
+
+    if (check_if_event_status_exist) {
+    } else {
+    }
+    // alert(this.log);
+  }
+
+  calcSTGlifo(el) {
+    // calc giorno
+    this.log += "\nhai sottoscritto glifo";
+
+    const r_points = this.route_to_check.segment.reduce(
+      (total, elem) => total + elem.points,
+      0
+    );
+
+    const check_if_event_status_exist =
+      this.st_redux_state["GlifoInST_" + el.st_event[0].reward_id] &&
+      this.st_redux_state["GlifoInST_" + el.st_event[0].reward_id] != {}
+        ? true
+        : false;
+
+    this.log += "\npunti tratta " + r_points;
+    this.log += "\ncheck_if_event_status_exist " + check_if_event_status_exist;
+
+    if (check_if_event_status_exist) {
+      let last_date = new Date(
+        this.st_redux_state["GlifoInST_" + el.st_event[0].reward_id].date
+      );
+
+      let points = this.st_redux_state["GlifoInST_" + el.st_event[0].reward_id]
+        .points;
+      let today = new Date();
+
+      let msec = today - last_date;
+      let mins = Math.floor(msec / 60000);
+      let hrs = Math.floor(mins / 60);
+      let days = Math.floor(hrs / 24);
+
+      this.log += "\ndays " + days;
+
+      let tot_points = r_points + points;
+      this.log += "\npunteggio accumulato " + tot_points;
+
+      // hai fatto piu' di 1000 punti
+      // se sono passati al massimo due giorni
+      // se oggi e' o venerdi sabato o domenica
+      if (tot_points >= 2000) {
+        // hai completato lo special training
+        this.st_chiavetteri = true;
+        this.log += "\ncondizioni st soddisfatte";
+        this.completed_special_training.push({
+          id: el.special_training.id,
+          reward_id: el.st_event[0].reward_id,
+          status: 1,
+          text_description: el.text_description
+        });
+      }
+
+      this.updateStatus("GlifoInST_" + el.st_event[0].reward_id, {
+        points: tot_points,
+        date: new Date()
+      });
+    } else {
+      this.updateStatus("GlifoInST_" + el.st_event[0].reward_id, {
+        points: r_points,
+        date: new Date()
+      });
+    }
+    // alert(this.log);
+  }
+
+  calcSTBarc8(el) {
+    this.log += "\nhai sottoscritto STBarc8";
+
+    const r_calories = this.route_to_check.segment.reduce(
+      (total, elem) => total + elem.calories,
+      0
+    );
+
+    const check_if_event_status_exist =
+      this.st_redux_state["STSBar8InST_" + el.st_event[0].reward_id] &&
+      this.st_redux_state["STSBar8InST_" + el.st_event[0].reward_id] != {}
+        ? true
+        : false;
+
+    this.log += "\ncheck_if_event_status_exist " + check_if_event_status_exist;
+
+    let now = new Date();
+    let h = now.getHours();
+    if (h >= 9 && h <= 15)
+      if (check_if_event_status_exist) {
+        let last_date = new Date(
+          this.st_redux_state["STSBar8InST_" + el.st_event[0].reward_id].date
+        );
+        let counter = this.st_redux_state[
+          "STSBar8InST_" + el.st_event[0].reward_id
+        ].counter;
+        // this.log += "\ndays " + days;
+        this.log += "\ncounter " + counter;
+
+        if (counter + r_calories >= 1000) {
+          // hai completato lo special training
+          this.st_barmus9 = true;
+          this.log += "\ncondizioni st soddisfatte";
+          this.completed_special_training.push({
+            id: el.special_training.id,
+            reward_id: el.st_event[0].reward_id,
+            status: 1,
+            text_description: el.text_description
+          });
+        }
+        this.updateStatus("STSBar8InST_" + el.st_event[0].reward_id, {
+          date: new Date(),
+          counter: r_calories
+        });
+      } else {
+        if (r_calories >= 1000)
+          this.updateStatus("STSBar8InST_" + el.st_event[0].reward_id, {
+            date: new Date(),
+            counter: r_calories
+          });
+      }
+    // alert(this.log);
+  }
+
+  calcDistFromPiazzaEspana() {
+    // circa 600 metri
+    const thresholdGPS = 1.125;
+    const distance = haversine(
+      this.s_point.latitude,
+      this.s_point.longitude,
+      41.3745,
+      2.1495
+    );
+
+    const distance_from_centro = distance <= thresholdGPS ? true : false;
+    let flag = checkModalTypeDispatch(this.route_to_check, {
+      event: { modal_type: "1" }
+    });
+
+    if (distance_from_centro) return true;
+    else return false;
+  }
+
+  calcDistFromCarrerCastel() {
+    // circa 600 metri
+    const thresholdGPS = 1.125;
+    const distance = haversine(
+      this.e_point.latitude,
+      this.e_point.longitude,
+      41.36663,
+      2.16499
+    );
+
+    const distance_from_centro = distance <= thresholdGPS ? true : false;
+    let flag = checkModalTypeDispatch(this.route_to_check, {
+      event: { modal_type: "1" }
+    });
+
+    if (distance_from_centro) return true;
+    else return false;
+  }
+
+  calcSTBarc9(el) {
+    this.log += "\nhai sottoscritto STBarc9";
+
+    const r_calories = this.route_to_check.segment.reduce(
+      (total, elem) => total + elem.calories,
+      0
+    );
+
+    const check_if_event_status_exist =
+      this.st_redux_state["STSBar9InST_" + el.st_event[0].reward_id] &&
+      this.st_redux_state["STSBar9InST_" + el.st_event[0].reward_id] != {}
+        ? true
+        : false;
+
+    this.log += "\ncheck_if_event_status_exist " + check_if_event_status_exist;
+
+    let now = new Date();
+    let h = now.getHours();
+
+    if (false) {
+      // hai completato lo special training
+      this.st_barmus9 = true;
+      this.log += "\ncondizioni st soddisfatte";
+      this.completed_special_training.push({
+        id: el.special_training.id,
+        reward_id: el.st_event[0].reward_id,
+        status: 1,
+        text_description: el.text_description
+      });
+    }
+    this.updateStatus("STSBar9InST_" + el.st_event[0].reward_id, {
+      date: new Date(),
+      counter: r_calories
+    });
+
+    // alert(this.log);
+  }
+
   completedST() {
     return this.completed_special_training;
   }
@@ -2796,9 +3522,9 @@ const fake_route = {
   distance_travelled: 8.105,
   calories: 350,
   coins: 0,
-  points: 500,
+  points: 2250,
   time_travelled: 50,
-  referred_most_freq_route: 11,
+  referred_most_freq_route: 3940,
   segment: [
     {
       modal_type: 1,
@@ -2806,7 +3532,7 @@ const fake_route = {
       distance_travelled: 8.105,
       calories: 350,
       coins: 0,
-      points: 500,
+      points: 2250,
       time_travelled: 50,
       route:
         "LINESTRING (38.1111816 13.3598044 0, 38.1111816 13.3598044 0, 38.1111816 13.3598044 0)",

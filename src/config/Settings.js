@@ -1,6 +1,6 @@
 const Settings = {
-  analyticsCode: "UA-120221340-1",
-  analyticsAppName: "MUV"
+  analyticsCode: "UA-222478749-1",
+  analyticsAppName: "MUV GAME",
 };
 
 export default Settings;

@@ -1,11 +1,18 @@
-import { UPDATE_STATUS_SCREEN, GET_INFO_SCREEN, LOG_OUT, UPDATE_TOURNAMENT, UPDATE_PLAYOFF } from "./ActionTypes";
+import {
+  UPDATE_STATUS_SCREEN,
+  GET_INFO_SCREEN,
+  LOG_OUT,
+  UPDATE_TOURNAMENT,
+  UPDATE_PLAYOFF,
+  UPDATE_PLAYOFF_SCREEN
+} from "./ActionTypes";
 import { requestBackend, RefreshToken } from "../login/ActionCreators"; // da far puntare agli helper!!!
 
 // metodi per recuperare dati relativi a varie schermate tipo le sessioni, eventuali premi ecc che l'app deve caricare ma non deve rimanere quando si chiude l'app
 
 // ritorna tutti i dettagli di tutti gli eventi e sessioni relative a un livello
 export function getLevelEvents(dataUser = {}) {
-  return async function (dispatch, getState) {
+  return async function(dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // preparo la richiesta legata al login con username e password
@@ -127,7 +134,7 @@ export function getLevelEvents(dataUser = {}) {
 }
 
 export function getSchedule(dataUser = {}, callback = null) {
-  return async function (dispatch, getState) {
+  return async function(dispatch, getState) {
     let { access_token, date } = getState().login;
 
     if (dataUser.access_token) {
@@ -164,7 +171,7 @@ export function getSchedule(dataUser = {}, callback = null) {
           let schedule = response.data;
 
           if (callback) {
-            callback(schedule)
+            callback(schedule);
           }
 
           dispatch({
@@ -211,7 +218,7 @@ export function getSchedule(dataUser = {}, callback = null) {
 }
 
 export function getSeasonRanking(dataUser = {}, callback = null) {
-  return async function (dispatch, getState) {
+  return async function(dispatch, getState) {
     let { access_token, date } = getState().login;
 
     if (dataUser.access_token) {
@@ -248,7 +255,7 @@ export function getSeasonRanking(dataUser = {}, callback = null) {
           let schedule = response.data;
 
           if (callback) {
-            callback(schedule)
+            callback(schedule);
           }
 
           dispatch({
@@ -294,19 +301,17 @@ export function getSeasonRanking(dataUser = {}, callback = null) {
   };
 }
 
-
 export function getWeeklySingleMatch(dataUser = {}) {
-  return async function (dispatch, getState) {
+  return async function(dispatch, getState) {
     let { access_token, date } = getState().login;
-    const match_id = dataUser.match_id
+    const match_id = dataUser.match_id;
     // da dove devo iniziare a calcolare la settimana della sfida
-    const start_match = dataUser.start_match
+    const start_match = dataUser.start_match;
 
     // se devo ritornate i dati con una callback
-    const saveData = dataUser.saveData ? dataUser.saveData : null
-    // se devo salvare nello store 
-    const currentMatch = dataUser.currentMatch ? dataUser.currentMatch : false
-
+    const saveData = dataUser.saveData ? dataUser.saveData : null;
+    // se devo salvare nello store
+    const currentMatch = dataUser.currentMatch ? dataUser.currentMatch : false;
 
     if (dataUser.access_token) {
       access_token = dataUser.access_token;
@@ -317,7 +322,11 @@ export function getWeeklySingleMatch(dataUser = {}) {
     // se è scaduto o l'utente non è ancora connesso, si connette
     if (dateExpires >= date || !access_token) {
       dispatch(
-        RefreshToken({ ...dataUser, callback: getWeeklySingleMatch, access_token })
+        RefreshToken({
+          ...dataUser,
+          callback: getWeeklySingleMatch,
+          access_token
+        })
       );
     } else {
       dispatch({
@@ -343,7 +352,7 @@ export function getWeeklySingleMatch(dataUser = {}) {
           let schedule = response.data;
 
           if (saveData) {
-            saveData(schedule)
+            saveData(schedule);
           }
           if (currentMatch) {
             dispatch({
@@ -351,9 +360,6 @@ export function getWeeklySingleMatch(dataUser = {}) {
               payload: schedule
             });
           }
-
-
-
         } else if (response.status === 400) {
           dispatch({
             type: UPDATE_STATUS_SCREEN,
@@ -391,21 +397,26 @@ export function getWeeklySingleMatch(dataUser = {}) {
   };
 }
 
-export function getPlayoffMatch(dataUser = {}) {
-  return async function (dispatch, getState) {
+export function getPlayoffMatch(dataUser = {}, callbackAfterLoad = null) {
+  return async function(dispatch, getState) {
     let { access_token, date, infoProfile } = getState().login;
-    // il range va da 1 a 4, se metto 5 ovvero la pagina vincitore, in realta mi serve la 4 settimana e calcolo il vincitore 
-    const season_playoff = dataUser.season_playoff ? dataUser.season_playoff > 4 ? 4 : dataUser.season_playoff : 1
+    // il range va da 1 a 4, se metto 5 ovvero la pagina vincitore, in realta mi serve la 4 settimana e calcolo il vincitore
+    const season_playoff = dataUser.season_playoff
+      ? dataUser.season_playoff > 4
+        ? 4
+        : dataUser.season_playoff
+      : 1;
 
-    const city_id = infoProfile.city ? infoProfile.city.id ? infoProfile.city.id : 1122 : 1122
-    console.log(season_playoff)
+    const city_id = infoProfile.city
+      ? infoProfile.city.id
+        ? infoProfile.city.id
+        : 1122
+      : 1122;
+    console.log(season_playoff);
     // da dove devo iniziare a calcolare la settimana della sfida
 
-
     // se devo ritornate i dati con una callback
-    const saveData = dataUser.saveData ? dataUser.saveData : null
-
-
+    const saveData = dataUser.saveData ? dataUser.saveData : null;
 
     if (dataUser.access_token) {
       access_token = dataUser.access_token;
@@ -427,8 +438,6 @@ export function getPlayoffMatch(dataUser = {}) {
       });
 
       try {
-        
-
         // id=1&
         const response = await requestBackend(
           "get",
@@ -443,7 +452,10 @@ export function getPlayoffMatch(dataUser = {}) {
           let playoff = response.data;
 
           if (saveData) {
-            saveData(schedule)
+            saveData(schedule);
+          }
+          if (callbackAfterLoad) {
+            callbackAfterLoad(schedule);
           }
 
           dispatch({
@@ -452,10 +464,6 @@ export function getPlayoffMatch(dataUser = {}) {
             season_playoff: season_playoff,
             city_id
           });
-
-
-
-
         } else if (response.status === 400) {
           dispatch({
             type: UPDATE_STATUS_SCREEN,
@@ -495,9 +503,9 @@ export function getPlayoffMatch(dataUser = {}) {
 
 // GET SCHEDULE WEEK
 export function getScheduleWeek(dataUser = {}, callback = null) {
-  return async function (dispatch, getState) {
+  return async function(dispatch, getState) {
     let { access_token, date } = getState().login;
-    const week = dataUser.week
+    const week = dataUser.week;
 
     if (dataUser.access_token) {
       access_token = dataUser.access_token;
@@ -533,7 +541,7 @@ export function getScheduleWeek(dataUser = {}, callback = null) {
           let schedule = response.data;
 
           if (callback) {
-            callback(schedule, week)
+            callback(schedule, week);
           }
 
           dispatch({
@@ -579,16 +587,122 @@ export function getScheduleWeek(dataUser = {}, callback = null) {
   };
 }
 
+// GET SCHEDULE PLAYOFF
+export function getSchedulePlayoff(dataUser = {}, callback = null) {
+  return async function(dispatch, getState) {
+    let { access_token, date, infoProfile } = getState().login;
+    let season_playoff = dataUser.season_playoff;
+    const city_id = infoProfile.city
+      ? infoProfile.city.id
+        ? infoProfile.city.id
+        : 1122
+      : 1122;
+
+    if (dataUser.access_token) {
+      access_token = dataUser.access_token;
+      date = dataUser.date;
+    }
+
+    let dateExpires = +new Date();
+    // se è scaduto o l'utente non è ancora connesso, si connette
+    if (dateExpires >= date || !access_token) {
+      dispatch(
+        RefreshToken({
+          ...dataUser,
+          callback: getSchedulePlayoff,
+          access_token
+        })
+      );
+    } else {
+      dispatch({
+        type: UPDATE_STATUS_SCREEN,
+        payload: {
+          status: "load getSchedulePlayoff"
+        }
+      });
+
+      const season = "2019";
+      try {
+        // http://23.97.216.36:8000/api/v1/weekly_match?week=Playoff 8
+        // i valori sono 8 / 4/ 2 / 1
+        let playoffIndex = 8;
+        if (season_playoff == 2) {
+          playoffIndex = 4;
+        } else if (season_playoff == 3) {
+          playoffIndex = 2;
+        } else if (season_playoff == 4) {
+          playoffIndex = 1;
+        } else if (season_playoff > 4) {
+          playoffIndex = 1;
+          season_playoff = 4;
+        }
+        const response = await requestBackend(
+          "get",
+          "/api/v1/weekly_match?week=" + "Playoff " + playoffIndex,
+          access_token,
+          null,
+          null,
+          "Bearer"
+        );
+        console.log(response);
+        if (response.status === 200) {
+          let schedule = response.data;
+
+          if (callback) {
+            callback(schedule, season_playoff);
+          }
+
+          dispatch({
+            type: UPDATE_PLAYOFF_SCREEN,
+
+            payload: schedule,
+            season_playoff: season_playoff,
+            city_id
+          });
+        } else if (response.status === 400) {
+          dispatch({
+            type: UPDATE_STATUS_SCREEN,
+            payload: {
+              status: "error getSchedulePlayoff 400"
+            }
+          });
+        } else if (response.status === 403) {
+          // riprovo a fare la richiesta
+
+          dispatch({
+            type: UPDATE_STATUS_SCREEN,
+            payload: {
+              status: ""
+            }
+          });
+        } else {
+          dispatch({
+            type: UPDATE_STATUS_SCREEN,
+            payload: {
+              status: "Error getSchedulePlayoff"
+            }
+          });
+        }
+      } catch (error) {
+        console.log(error);
+        dispatch({
+          type: UPDATE_STATUS_SCREEN,
+          payload: {
+            status: "Error catch getSchedulePlayoff"
+          }
+        });
+      }
+    }
+  };
+}
 
 export function getBestPlayer(dataUser = {}) {
-  return async function (dispatch, getState) {
+  return async function(dispatch, getState) {
     let { access_token, date } = getState().login;
-    const city_id = dataUser.city_id ? dataUser.city_id : 1122
+    const city_id = dataUser.city_id ? dataUser.city_id : 1122;
 
     // se devo ritornate i dati con una callback
-    const saveData = dataUser.saveData ? dataUser.saveData : null
-
-
+    const saveData = dataUser.saveData ? dataUser.saveData : null;
 
     if (dataUser.access_token) {
       access_token = dataUser.access_token;
@@ -609,7 +723,6 @@ export function getBestPlayer(dataUser = {}) {
         }
       });
       try {
-
         const response = await requestBackend(
           "get",
           "/api/v1/best_players?season=2019&city_id=" + city_id,
@@ -623,11 +736,8 @@ export function getBestPlayer(dataUser = {}) {
           let player = response.data;
 
           if (saveData) {
-            saveData(player)
+            saveData(player);
           }
-
-
-
         } else if (response.status === 400) {
           dispatch({
             type: UPDATE_STATUS_SCREEN,
@@ -647,7 +757,7 @@ export function getBestPlayer(dataUser = {}) {
         } else if (response.status === 500) {
           // non ci sono best player
           if (saveData) {
-            saveData([])
+            saveData([]);
           }
         } else {
           dispatch({
@@ -670,16 +780,13 @@ export function getBestPlayer(dataUser = {}) {
   };
 }
 
-
 export function getWeeklyStandingsComplete(dataUser = {}) {
-  return async function (dispatch, getState) {
+  return async function(dispatch, getState) {
     let { access_token, date } = getState().login;
-    const city_id = dataUser.city_id ? dataUser.city_id : 1122
+    const city_id = dataUser.city_id ? dataUser.city_id : 1122;
 
     // se devo ritornate i dati con una callback
-    const saveData = dataUser.saveData ? dataUser.saveData : null
-
-
+    const saveData = dataUser.saveData ? dataUser.saveData : null;
 
     if (dataUser.access_token) {
       access_token = dataUser.access_token;
@@ -690,7 +797,11 @@ export function getWeeklyStandingsComplete(dataUser = {}) {
     // se è scaduto o l'utente non è ancora connesso, si connette
     if (dateExpires >= date || !access_token) {
       dispatch(
-        RefreshToken({ ...dataUser, callback: getWeeklyStandingsComplete, access_token })
+        RefreshToken({
+          ...dataUser,
+          callback: getWeeklyStandingsComplete,
+          access_token
+        })
       );
     } else {
       dispatch({
@@ -700,7 +811,6 @@ export function getWeeklyStandingsComplete(dataUser = {}) {
         }
       });
       try {
-
         const response = await requestBackend(
           "get",
           "/api/v1/weekly_standing_details?city_id=" + city_id,
@@ -714,11 +824,8 @@ export function getWeeklyStandingsComplete(dataUser = {}) {
           let player = response.data;
 
           if (saveData) {
-            saveData(player)
+            saveData(player);
           }
-
-
-
         } else if (response.status === 400) {
           dispatch({
             type: UPDATE_STATUS_SCREEN,

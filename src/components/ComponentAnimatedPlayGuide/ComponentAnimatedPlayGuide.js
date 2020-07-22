@@ -16,7 +16,6 @@ import LinearGradient from "react-native-linear-gradient";
 import { connect } from "react-redux";
 import { changeStatusButton } from "./../../domains/login/ActionCreators";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
-import DeviceInfo from "react-native-device-info";
 import Settings from "./../../config/Settings";
 // import { BoxShadow } from "react-native-shadow";
 import InteractionManager from "../../helpers/loadingComponent";
@@ -127,20 +126,7 @@ class ComponentAnimatedPlayGuide extends React.PureComponent {
   };
 
   sendEventPlay = () => {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // let event = this.state.events["play-clicked"];
-    // let gaEvent = new GAHits.Event(
-    //   "user interaction", // category
-    //   "play clicked", // action
-    //   "play/stop", // label
-    //   event // value
-    // );
-    // ga.send(gaEvent);
+
   };
 
   // metodo usato nelle icone che spuntano

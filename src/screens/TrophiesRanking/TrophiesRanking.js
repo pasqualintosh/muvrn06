@@ -8,11 +8,10 @@ import {
   ListView
 } from "react-native";
 
-
-
 import { styles, negativeData } from "./Style";
 import UserItem from "./../../components/UserItem/UserItem";
 import Aux from "./../../helpers/Aux";
+import WebService from "../../config/WebService";
 
 class TrophiesRanking extends React.Component {
   constructor(props) {
@@ -65,32 +64,21 @@ class TrophiesRanking extends React.Component {
                   />
                   <UserItem
                     user={{
-                      referred_route__user__first_name: item.user.first_name,
-                      referred_route__user__last_name: item.user.last_name,
-                      referred_route__user__avatar: item.user.avatar,
+                      username: item.user.username,
+
+                      avatar: item.user.avatar,
+                      id: 1,
 
                       points: item.points,
-                      position:
-                        item.trophy.key > 3
-                          ? item.trophy.key - 3
-                          : item.trophy.key
+                      position: item.position,
+                      referred_route__user__city_id: item.user.city
                     }}
                     rowID={rowID}
-                    level={
-                      item.user.level.name
-                        ? item.user.level.name.charAt(0).toUpperCase()
-                        : "N"
-                    }
-                    modalType={
-                      item.user.role
-                        ? item.user.role === "none" ||
-                          item.user.role === "muver"
-                          ? 0
-                          : parseInt(item.user.role)
-                        : 0
-                    }
-                    activeSelectable={item.city ? "local" : "global"}
+                    level={"N"}
+                    modalType={0}
+                    activeSelectable={"global"}
                     blockRanking={true}
+                    imageEnd={WebService.url + item.trophy.img_small}
                   />
                   {
                     // aggiungo delo spazio in piu cosi posso scrollare tutta la lista anche se c'e l'onda e la notifica
@@ -102,32 +90,21 @@ class TrophiesRanking extends React.Component {
                 <Aux key={rowID}>
                   <UserItem
                     user={{
-                      referred_route__user__first_name: item.user.first_name,
-                      referred_route__user__last_name: item.user.last_name,
-                      referred_route__user__avatar: item.user.avatar,
+                      username: item.user.username,
+
+                      avatar: item.user.avatar,
+                      id: 1,
 
                       points: item.points,
-                      position:
-                        item.trophy.key > 3
-                          ? item.trophy.key - 3
-                          : item.trophy.key
+                      position: item.position,
+                      referred_route__user__city_id: item.user.city
                     }}
                     rowID={rowID}
-                    level={
-                      item.user.level.name
-                        ? item.user.level.name.charAt(0).toUpperCase()
-                        : "N"
-                    }
-                    modalType={
-                      item.user.role
-                        ? item.user.role === "none" ||
-                          item.user.role === "muver"
-                          ? 0
-                          : parseInt(item.user.role)
-                        : 0
-                    }
-                    activeSelectable={item.city ? "local" : "global"}
+                    level={"N"}
+                    modalType={0}
+                    activeSelectable={"global"}
                     blockRanking={true}
+                    imageEnd={WebService.url + item.trophy.img_small}
                   />
                   {
                     // aggiungo delo spazio in piu cosi posso scrollare tutta la lista anche se c'e l'onda e la notifica
@@ -145,31 +122,21 @@ class TrophiesRanking extends React.Component {
               return (
                 <UserItem
                   user={{
-                    referred_route__user__first_name: item.user.first_name,
-                    referred_route__user__last_name: item.user.last_name,
-                    referred_route__user__avatar: item.user.avatar,
+                    username: item.user.username,
+
+                    avatar: item.user.avatar,
+                    id: 1,
 
                     points: item.points,
-                    position:
-                      item.trophy.key > 3
-                        ? item.trophy.key - 3
-                        : item.trophy.key
+                    position: item.position,
+                    referred_route__user__city_id: item.user.city
                   }}
                   rowID={rowID}
-                  level={
-                    item.user.level.name
-                      ? item.user.level.name.charAt(0).toUpperCase()
-                      : "N"
-                  }
-                  modalType={
-                    item.user.role
-                      ? item.user.role === "none" || item.user.role === "muver"
-                        ? 0
-                        : parseInt(item.user.role)
-                      : 0
-                  }
-                  activeSelectable={item.city ? "local" : "global"}
+                  level={"N"}
+                  modalType={0}
+                  activeSelectable={"global"}
                   blockRanking={true}
+                  imageEnd={WebService.url + item.trophy.img_small}
                 />
               );
             }
@@ -206,7 +173,7 @@ class TrophiesRanking extends React.Component {
         {this.renderBody()}
 
         <ImageBackground
-          source={trophiesView[this.props.trophy.trophy.key]}
+          source={trophiesView[this.props.trophy.position]}
           style={styles.backgroundImage}
         >
           <View style={[styles.userContainer, styles.firstUser]}>
@@ -214,40 +181,30 @@ class TrophiesRanking extends React.Component {
               <View>
                 <UserItem
                   user={{
-                    referred_route__user__first_name: this.props.trophy.user
-                      .first_name,
-                    referred_route__user__last_name: this.props.trophy.user
-                      .last_name,
-                    referred_route__user__avatar: this.props.trophy.user.avatar,
+                    username: this.props.trophy.user.username,
+
+                    avatar: this.props.trophy.user.avatar,
+                    id: 1,
 
                     points: this.props.trophy.points,
-                    position:
-                      this.props.trophy.trophy.key > 3
-                        ? this.props.trophy.trophy.key - 3
-                        : this.props.trophy.trophy.key
+                    position: this.props.trophy.position,
+                    referred_route__user__city_id: this.props.trophy.user.city
                   }}
                   // lo faccio piu piccolo dato che sopra metto il selettore per il periodo
                   fontColor={
-                    this.props.trophy.trophy.key === 3 ||
-                    this.props.trophy.trophy.key === 6
+                    this.props.trophy.position === 3 ||
+                    this.props.trophy.position === 6
                       ? true
                       : false
                   }
                   style={{ height: 75 }}
                   modalType={
-                    this.props.trophy.user.role
-                      ? this.props.trophy.user.role === "none" ||
-                        this.props.trophy.user.role === "muver"
-                        ? 0
-                        : parseInt(this.props.trophy.user.role)
-                      : 0
+                    //  this.props.trophy.user.role
+                    0
                   }
                   level={
-                    this.props.trophy.user.level.name
-                      ? this.props.trophy.user.level.name
-                          .charAt(0)
-                          .toUpperCase()
-                      : "N"
+                    //  this.props.trophy.user.level_of_experience
+                    "N"
                   }
                 />
               </View>

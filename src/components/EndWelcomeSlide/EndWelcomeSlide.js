@@ -10,7 +10,8 @@ import {
   Modal,
   Linking,
   Alert,
-  ScrollView
+  ScrollView,
+  SafeAreaView
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import CheckBox from "react-native-check-box";
@@ -28,6 +29,8 @@ import { connect } from "react-redux";
 import branch, { BranchEvent } from "react-native-branch";
 import { saveBranchTempData } from "./../../domains/register/ActionCreators";
 import { getMaintenance } from "./../../domains/login/ActionCreators";
+import GoogleLogin from "../../components/GoogleLogin/GoogleLogin";
+import FacebookLinkButton from "../../components/FacebookLinkButton/FacebookLinkButton";
 
 class EndWelcomeSlide extends React.Component {
   constructor(props) {
@@ -89,7 +92,7 @@ class EndWelcomeSlide extends React.Component {
       console.log("params: " + JSON.stringify(params));
     });
 
-    this.props.dispatch(getMaintenance());
+    // this.props.dispatch(getMaintenance());
   }
 
   static navigationOptions = {
@@ -322,55 +325,61 @@ class EndWelcomeSlide extends React.Component {
           visible={this.state.modalVisible}
           onRequestClose={() => {}}
         >
-          <View style={styles.modalContainer}>
-            <ScrollView
-              style={{
-                width: Dimensions.get("window").width * 0.95,
-                backgroundColor: "#F7F8F9",
-                alignSelf: "center"
-              }}
-            >
-              <HTML
-                onLinkPress={(event, href) => {
-                  Linking.openURL(href);
-                }}
-                html={terms}
-                containerStyle={{
-                  marginTop: 10
-                }}
-              />
-            </ScrollView>
-            <TouchableWithoutFeedback
-              style={{
-                width: Dimensions.get("window").height * 0.05,
-                height: Dimensions.get("window").height * 0.05,
-                position: "absolute",
-                top: 25,
-                right: 10
-              }}
-              onPress={() => {
-                this.setModalVisible(false);
-              }}
-            >
-              <View
+          <SafeAreaView style={styles.container}>
+            <View style={styles.modalContainer}>
+              <ScrollView
                 style={{
-                  width: Dimensions.get("window").height * 0.05,
-                  height: Dimensions.get("window").height * 0.05,
+                  width: Dimensions.get("window").width * 0.95,
                   backgroundColor: "#F7F8F9",
-                  position: "absolute",
-                  top: 25,
-                  right: 10
+                  alignSelf: "center"
                 }}
               >
-                <Icon
-                  name="ios-close-circle"
-                  // style={{ marginTop: 4 }}
-                  size={18}
-                  color="#3d3d3d"
+                <HTML
+                  onLinkPress={(event, href) => {
+                    Linking.openURL(href);
+                  }}
+                  html={terms}
+                  containerStyle={{
+                    marginTop: 10
+                  }}
                 />
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
+              </ScrollView>
+              <TouchableWithoutFeedback
+                style={{
+                  width: 40,
+                  height: 40,
+                  position: "absolute",
+                  backgroundColor: "trasparent",
+                  top: 15,
+                  right: 10
+                }}
+                onPress={() => {
+                  this.setModalVisible(false);
+                }}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    backgroundColor: "trasparent",
+                    position: "absolute",
+                    top: 15,
+                    right: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "row"
+                  }}
+                >
+                  <Icon
+                    name="ios-close-circle"
+                    // style={{ marginTop: 4 }}
+                    size={20}
+                    color="#3d3d3d"
+                  />
+                </View>
+              </TouchableWithoutFeedback>
+            </View>
+          </SafeAreaView>
         </Modal>
 
         {/* fine testo header */}
@@ -425,9 +434,22 @@ class EndWelcomeSlide extends React.Component {
         {/* checkboxes */}
         {this.renderWelcomeText()}
         {this.renderCheckboxes()}
+
         {/* fine checkboxes */}
 
         {/* bottone survey */}
+        <View style={styles.SocialbuttonContainer}>
+          <FacebookLinkButton
+            dispatch={this.props.dispatch}
+            register={true}
+            navigate={this.props.navigation.navigate}
+          />
+          <GoogleLogin
+            dispatch={this.props.dispatch}
+            register={true}
+            navigate={this.props.navigation.navigate}
+          />
+        </View>
         <TouchableWithoutFeedback
           onPress={() => {
             let flag = true;
@@ -464,10 +486,10 @@ class EndWelcomeSlide extends React.Component {
               height: Platform.OS == "ios" ? 20 : 30,
               top:
                 Platform.OS == "ios"
-                  ? Dimensions.get("window").height * 0.775 - 20
+                  ? Dimensions.get("window").height * 0.775 - 20 - 90
                   : Dimensions.get("window").height > 830
-                  ? Dimensions.get("window").height * 0.75 - 20
-                  : Dimensions.get("window").height * 0.775 - 20,
+                  ? Dimensions.get("window").height * 0.75 - 20 - 90
+                  : Dimensions.get("window").height * 0.775 - 20 - 90,
               left: Dimensions.get("window").width * 0.35,
               backgroundColor: "transparent",
               // backgroundColor: "#000",

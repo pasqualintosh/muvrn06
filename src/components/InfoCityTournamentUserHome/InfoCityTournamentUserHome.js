@@ -28,14 +28,22 @@ import {
   getCommunityInfoState,
   getSelectedLeaderboardState
 } from "../../domains/standings/Selectors";
-import { TournamentCities, citiesImage, imagesCity } from "./../../components/FriendItem/FriendItem";
+import {
+  TournamentCities,
+  citiesImage,
+  imagesCity
+} from "./../../components/FriendItem/FriendItem";
 import { images } from "./../../components/InfoUserHome/InfoUserHome";
-
 
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import ArrowImageMatch from "../../components/ArrowImageMatch/ArrowImageMatch";
 
+import InfoActivityUserHome from "../../components/InfoActivityUserHome/InfoActivityUserHome";
 
+
+import { strings } from "../../config/i18n";
+import { getMyTeamsState } from "./../../domains/tournaments/Selectors";
+import { getUniversityImg } from "./../../screens/ChooseTeamScreen/ChooseTeamScreen";
 
 class InfoCityTournamentUserHome extends React.PureComponent {
   constructor(props) {
@@ -48,7 +56,6 @@ class InfoCityTournamentUserHome extends React.PureComponent {
 
   goToLive = () => {
     this.props.navigation.navigate("CityTournament");
-
 
     // if (this.props.match.season_match) {
     //   // se ho i dati vado nel live
@@ -72,24 +79,16 @@ class InfoCityTournamentUserHome extends React.PureComponent {
   };
 
   render() {
-    let userAvatar = limitAvatar(this.props.avatarId);
+   
+    let userAvatar = limitAvatar(this.props.infoProfile.avatar);
     let city = this.props.infoProfile.city
       ? this.props.infoProfile.city.city_name
         ? this.props.infoProfile.city.city_name
         : ""
       : "";
 
-    const cityInTournament = TournamentCities(city);
-    let id = 0
-    if (cityInTournament) {
-      id = citiesImage(city);
-    }
-
-    const name = this.props.infoProfile.first_name
-      ? this.props.infoProfile.first_name.toUpperCase() +
-      " " +
-      this.props.infoProfile.last_name.charAt(0).toUpperCase() +
-      "."
+    const name = this.props.infoProfile.username
+      ? this.props.infoProfile.username.toUpperCase()
       : "";
 
     let ranking = "-";
@@ -160,6 +159,9 @@ class InfoCityTournamentUserHome extends React.PureComponent {
           ? this.props.infoUserGlobalClassification.number
           : "-";
     }
+
+    // const myTeam = this.props.myteam.name;
+    const myTeam = false;
 
     return (
       <View
@@ -247,7 +249,7 @@ class InfoCityTournamentUserHome extends React.PureComponent {
             >
               {name !== " ." ? name : ""}
             </Text>
-            {cityInTournament ? (
+            {myTeam ? (
               <View
                 style={{
                   flexDirection: "row",
@@ -281,8 +283,8 @@ class InfoCityTournamentUserHome extends React.PureComponent {
                 </Text>
               </View>
             ) : (
-                <View />
-              )}
+              <InfoActivityUserHome />
+            )}
           </View>
           <View style={styles.ThreeContainer}>
             <Image
@@ -294,21 +296,11 @@ class InfoCityTournamentUserHome extends React.PureComponent {
             />
             <View
               style={{
-                
                 width: Dimensions.get("window").width - 170,
                 height: 80,
                 flex: 1,
                 flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-                // alignSelf: 'flex-start'
-              }}
-            >
-            <View
-              style={{
-                flexDirection: "column",
-                justifyContent: "center",
-                alignContent: "center",
+                justifyContent: "space-around",
                 alignItems: "center"
                 // alignSelf: 'flex-start'
               }}
@@ -316,122 +308,131 @@ class InfoCityTournamentUserHome extends React.PureComponent {
               <View
                 style={{
                   flexDirection: "column",
-
                   justifyContent: "center",
-                  alignContent: "flex-start",
-                  alignItems: "flex-start"
+                  alignContent: "center",
+                  alignItems: "center"
                   // alignSelf: 'flex-start'
                 }}
               >
                 <View
                   style={{
-                    flexDirection: "row",
+                    flexDirection: "column",
+
                     justifyContent: "center",
-                    alignContent: "center"
+                    alignContent: "flex-start",
+                    alignItems: "flex-start"
+                    // alignSelf: 'flex-start'
                   }}
                 >
-                  <Text>
-                    <Text
-                      style={{
-                        fontFamily: "OpenSans-Regular",
-                        textAlign: "center",
-                        fontSize: 22,
-                        color: "white",
-                        fontWeight: "bold"
-                      }}
-                    >
-                      {ranking}
-                    </Text>
-                    <Text
-                      style={{
-                        fontFamily: "OpenSans-Regular",
-                        textAlign: "center",
-                        fontSize: 14,
-                        //marginVertical: 8,
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      alignContent: "center"
+                    }}
+                  >
+                    <Text>
+                      <Text
+                        style={{
+                          fontFamily: "OpenSans-Regular",
+                          textAlign: "center",
+                          fontSize: 22,
+                          color: "white",
+                          fontWeight: "bold"
+                        }}
+                      >
+                        {ranking}
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: "OpenSans-Regular",
+                          textAlign: "center",
+                          fontSize: 14,
+                          //marginVertical: 8,
 
-                        color: "white",
-                        fontWeight: "bold"
-                      }}
-                    >
-                      /{numPlayer}
+                          color: "white",
+                          fontWeight: "bold"
+                        }}
+                      >
+                        /{numPlayer}
+                      </Text>
                     </Text>
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily: "OpenSans-Regular",
+                      textAlign: "center",
+                      fontSize: 12,
+                      color: "white",
+                      // fontWeight: "bold",
+                      textAlignVertical: "center"
+                    }}
+                  >
+                    {typeLeaderboard}
                   </Text>
                 </View>
-                <Text
-                  style={{
-                    fontFamily: "OpenSans-Regular",
-                    textAlign: "center",
-                    fontSize: 12,
-                    color: "white",
-                    // fontWeight: "bold",
-                    textAlignVertical: "center"
-                  }}
-                >
-                  {typeLeaderboard}
-                </Text>
               </View>
-            </View>
 
-            <View
-              style={{
-                flexDirection: "column",
-               
-                justifyContent: "center",
-                alignContent: "center",
-                alignItems: "center"
-                // alignSelf: 'flex-start'
-              }}
-            >
               <View
                 style={{
                   flexDirection: "column",
 
                   justifyContent: "center",
-                  alignContent: "flex-start",
-                  alignItems: "flex-start"
+                  alignContent: "center",
+                  alignItems: "center"
                   // alignSelf: 'flex-start'
                 }}
               >
                 <View
                   style={{
-                    flexDirection: "row",
+                    flexDirection: "column",
+
                     justifyContent: "center",
-                    alignContent: "center"
+                    alignContent: "flex-start",
+                    alignItems: "flex-start"
+                    // alignSelf: 'flex-start'
                   }}
                 >
-                  <Text>
-                    <Text
-                      style={{
-                        fontFamily: "OpenSans-Regular",
-                        textAlign: "center",
-                        fontSize: 22,
-                        color: "white",
-                        fontWeight: "bold"
-                      }}
-                    >
-                      {/* {pointsDecimal(this.props.points)} */}
-                      {pointsDecimal(points)}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      alignContent: "center"
+                    }}
+                  >
+                    <Text>
+                      <Text
+                        style={{
+                          fontFamily: "OpenSans-Regular",
+                          textAlign: "center",
+                          fontSize: 22,
+                          color: "white",
+                          fontWeight: "bold"
+                        }}
+                      >
+                        {/* {pointsDecimal(this.props.points)} */}
+                        {pointsDecimal(points)}
+                      </Text>
                     </Text>
+                  </View>
+
+                  <Text
+                    style={{
+                      fontFamily: "OpenSans-Regular",
+                      textAlign: "center",
+                      fontSize: 12,
+                      color: "white",
+                      // fontWeight: "bold",
+                      textAlignVertical: "center"
+                    }}
+                  >
+                    {strings("id_1_01")}
                   </Text>
                 </View>
-                
-                <Text
-                  style={{
-                    fontFamily: "OpenSans-Regular",
-                    textAlign: "center",
-                    fontSize: 12,
-                    color: "white",
-                    // fontWeight: "bold",
-                    textAlignVertical: "center"
-                  }}
-                >
-                  Weekly Points
-              </Text>
-              </View>
               </View>
             </View>
 
-            {!cityInTournament ? (
+            {!myTeam ? (
               <View
                 style={{
                   width: 90,
@@ -466,26 +467,47 @@ class InfoCityTournamentUserHome extends React.PureComponent {
                 style={{
                   width: 90,
                   height: 80,
-
                   flexDirection: "column",
                   justifyContent: "center",
                   alignItems: "center"
                 }}
               >
-              <ArrowImageMatch city={city} />
+                {/* <ArrowImageMatch city={city} /> */}
                
+                {/*
+                <View
+                  style={{
+                    width: 90,
+                    height: 80,
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <Image
+                    source={require("../../assets/images/cities/team_live_bg_sx.png")}
+                    style={{
+                      width: 70,
+                      height: 70,
+                      position: "absolute"
+                    }}
+                  />
+                  <Image
+                    source={getUniversityImg(this.props.myteam.logo)}
+                    style={{
+                      width: 45,
+                      height: 45
+                    }}
+                  /> 
+                </View>
+                */}
               </View>
-              )}
+            )}
           </View>
         </View>
       </View>
     );
   }
 }
-
-
-
-
 
 const getProfileInfo = state => state.login.infoProfile;
 const getProfileNotSave = state => state.login.infoProfileNotSave;
@@ -519,7 +541,8 @@ const withData = connect(state => {
     selectedLeaderboard: getSelectedLeaderboardState(state),
     // selectedTiming: getSelectedTimingState(state),
     infoProfile: getProfileState(state),
-    level: state.trainings.name
+    level: state.trainings.name,
+    myteam: getMyTeamsState(state)
   };
 });
 
@@ -544,7 +567,7 @@ export const styles = StyleSheet.create({
       Platform.OS === "ios"
         ? Dimensions.get("window").height * 0.25 + 86
         : Dimensions.get("window").height * 0.25 +
-        Dimensions.get("window").height * 0.1
+          Dimensions.get("window").height * 0.1
   },
   gradientContainerResult: {
     position: "absolute",
@@ -569,7 +592,7 @@ export const styles = StyleSheet.create({
       Platform.OS === "ios"
         ? Dimensions.get("window").height * 0.25 + 86
         : Dimensions.get("window").height * 0.25 +
-        Dimensions.get("window").height * 0.1
+          Dimensions.get("window").height * 0.1
   },
   gradientContainerImageBicycle: {
     position: "absolute",

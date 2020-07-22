@@ -37,7 +37,7 @@ class MotoSegmentScreen extends React.Component {
     this.state = {
       moto_owning_answer: 0, // 0 || 1 || 2
       moto_id: null,
-      moto_year: strings("choose"), // -> number
+      moto_year: strings("id_0_67"), // -> number
       moto_engine_answer: 0, // 0 || 1 || 2
       moto_cc_answer: "", // 0 || 1 || 2 || 3
       moto_year_possibilities: ["-"],
@@ -88,12 +88,21 @@ class MotoSegmentScreen extends React.Component {
         moto_owning_answer: val
       });
     } else {
-      this.setState({
-        moto_owning_answer: val,
-        moto_year: strings("choose"),
-        moto_engine_answer: "",
-        moto_cc_answer: 0
-      });
+      this.setState(
+        {
+          moto_owning_answer: val,
+          moto_year: strings("choose"),
+          moto_engine_answer: "",
+          moto_cc_answer: 0
+        },
+        () => {
+          this.props.dispatch(
+            updateState({
+              moto: null
+            })
+          );
+        }
+      );
     }
   };
 
@@ -225,7 +234,7 @@ class MotoSegmentScreen extends React.Component {
                   start={{ x: 0.0, y: 0.0 }}
                   end={{ x: 0.0, y: 1 }}
                   locations={[0, 1.0]}
-                  colors={["#E82F73", "#F49658"]}
+                  colors={["#7D4D99", "#6497CC"]}
                   style={[
                     styles.checkboxesGradient,
                     {
@@ -255,11 +264,11 @@ class MotoSegmentScreen extends React.Component {
               >
                 {element == "2_stroke" ? (
                   <Text style={styles.checkboxesText}>
-                    {strings("_2_stroke")}
+                    {strings("id_0_85")}
                   </Text>
                 ) : (
                   <Text style={styles.checkboxesText}>
-                    {strings("_4_stroke")}
+                    {strings("id_0_86")}
                   </Text>
                 )}
               </View>
@@ -282,7 +291,7 @@ class MotoSegmentScreen extends React.Component {
                 start={{ x: 0.0, y: 0.0 }}
                 end={{ x: 0.0, y: 1 }}
                 locations={[0, 1.0]}
-                colors={["#E82F73", "#F49658"]}
+                colors={["#7D4D99", "#6497CC"]}
                 style={[
                   styles.checkboxesGradient,
                   {
@@ -310,9 +319,9 @@ class MotoSegmentScreen extends React.Component {
           alignItems: "center"
         }}
       >
-        {this.renderMotoOwningCheckbox(0, strings("no"))}
-        {this.renderMotoOwningCheckbox(1, strings("yes"))}
-        {this.renderMotoOwningCheckbox(2, strings("yes__it_is_at_m"))}
+        {this.renderMotoOwningCheckbox(0, strings("id_0_54"))}
+        {this.renderMotoOwningCheckbox(1, strings("id_0_55"))}
+        {this.renderMotoOwningCheckbox(2, strings("id_0_56"))}
       </View>
     );
   }
@@ -327,7 +336,7 @@ class MotoSegmentScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -338,7 +347,7 @@ class MotoSegmentScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_67").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -354,7 +363,7 @@ class MotoSegmentScreen extends React.Component {
           "" +
           element
             .replace("2007-2019", "2007-2012")
-            .replace("2013-2019", strings("from_2013_onwar"))
+            .replace("2013-2019", strings("id_0_96"))
             .replace(/_/g, " ")
         }
         value={"" + element}
@@ -528,9 +537,7 @@ class MotoSegmentScreen extends React.Component {
                   />
                 </View>
               </TouchableWithoutFeedback>
-              <Text style={styles.textHeader}>
-                {strings("do_you_have_a_m")}
-              </Text>
+              <Text style={styles.textHeader}>{strings("id_0_83")}</Text>
             </View>
           </View>
         </View>
@@ -576,7 +583,7 @@ class MotoSegmentScreen extends React.Component {
                   }
                 ]}
               >
-                {strings("engine")}
+                {strings("id_0_84")}
               </Text>
             </View>
             <View
@@ -621,9 +628,7 @@ class MotoSegmentScreen extends React.Component {
             }}
           >
             <View style={styles.textFooterContainer}>
-              <Text style={styles.textFooter}>
-                {strings("we_need_this_in")}
-              </Text>
+              <Text style={styles.textFooter}>{strings("id_0_64")}</Text>
             </View>
 
             <View style={[styles.buttonContainer]}>
@@ -639,16 +644,16 @@ class MotoSegmentScreen extends React.Component {
                     if (this.state.moto_engine_answer != 0) {
                       this.props.navigation.navigate("SurveyMoto");
                     } else {
-                      Alert.alert("Oops", strings("seems_like_you_"));
+                      Alert.alert(strings("id_0_10"), strings("id_0_65"));
                     }
-                  else this.props.navigation.navigate("SurveyUserData");
+                  else this.props.navigation.navigate("GDPRScreen");
                 }}
                 disabled={this.props.status === "In register" ? true : false}
               >
                 <View style={[styles.buttonBox]}>
                   {this.props.status !== "In register" ? (
                     <Text style={styles.buttonGoOnText}>
-                      {this.props.text ? this.props.text : strings("go_on")}
+                      {this.props.text ? this.props.text : strings("id_0_15")}
                     </Text>
                   ) : (
                     <ActivityIndicator size="small" color="#6497CC" />

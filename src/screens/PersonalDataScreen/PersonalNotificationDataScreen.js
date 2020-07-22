@@ -22,7 +22,7 @@ import { Tester } from "./../../config/Tester";
 import { pushNotifications } from "./../../services/";
 import {
   postMostFrequentRouteNotSave,
-  UpdateProfile,
+  updateProfileNew,
   setNotificationTime,
   setNotificationBoolean,
   setWeekDaysNotification,
@@ -38,14 +38,18 @@ import Icon from "react-native-vector-icons/Ionicons";
 import SwitchAndroid from "react-native-switch-pro";
 
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
-import DeviceInfo from "react-native-device-info";
+
 import Settings from "./../../config/Settings";
 
 import { strings } from "../../config/i18n";
+import {
+  frequentTripsState,
+  frequentTripsNotSaveState
+} from "./../../domains/login/Selectors.js";
 
 let Switch = Platform.OS == "ios" ? SwitchIos : SwitchAndroid;
 
-const SUNDAY_NOTIFICATION = "15:30";
+const ranking_notification = "15:30";
 
 class PersonalNotificationDataScreen extends React.Component {
   constructor() {
@@ -55,7 +59,7 @@ class PersonalNotificationDataScreen extends React.Component {
       isModalVisibleWeight: false,
       load: true,
       data: {},
-      notification_schedule: null,
+      scheduled_notification: null,
       notification_set: false,
       choosed_week_days: {
         0: false,
@@ -66,8 +70,8 @@ class PersonalNotificationDataScreen extends React.Component {
         5: true,
         6: false
       },
-      sunday_notification: false,
-      battery_notification: false,
+      ranking_notification: false,
+      smart_stop_notification: false,
       events: {}
     };
   }
@@ -80,7 +84,7 @@ class PersonalNotificationDataScreen extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("notifications")}
+          {strings("id_13_07")}
         </Text>
       )
     };
@@ -97,11 +101,15 @@ class PersonalNotificationDataScreen extends React.Component {
 
     this.setState(
       {
-        notification_schedule:
-          info.notification_schedule != null
-            ? info.notification_schedule
+        scheduled_notification:
+          info.scheduled_notification && info.scheduled_notification !== "--:--"
+            ? info.scheduled_notification
             : "--:--",
-        notification_set: info.notification_schedule != null ? true : false,
+        notification_set:
+          info.scheduled_notification && info.scheduled_notification !== "--:--"
+            ? true
+            : false,
+        ranking_notification: info.ranking_notification ? true : false,
         choosed_week_days: info.choosed_week_days
           ? info.choosed_week_days
           : {
@@ -114,41 +122,34 @@ class PersonalNotificationDataScreen extends React.Component {
               6: false
             },
         data: { ...infoProfileNotSave },
-        sunday_notification:
-          this.props.user.notification_sunday_ids != null &&
-          this.props.user.notification_sunday_ids != undefined &&
-          this.props.user.notification_sunday_ids != false
-            ? true
-            : false,
-        battery_notification:
-          this.props.user.notification_still != null &&
-          this.props.user.notification_still != undefined
-            ? this.props.user.notification_still
-            : false
+        smart_stop_notification: info.smart_stop_notification ? true : false,
+        challenge_notification: info.challenge_notification ? true : false
       },
       () => {
         if (
-          info.notification_schedule != null &&
+          info.scheduled_notification != null &&
           this.props.user.notification_scheduled_ids == null
         ) {
+          console.log(this.props.user);
+          console.log(info.scheduled_notification);
           this.setState({
-            notification_schedule: "--:--",
+            scheduled_notification: "--:--",
             notification_set: false
           });
 
           pushNotifications.deleteAllNotification();
-          if (this.state.sunday_notification) {
+          if (this.state.ranking_notification) {
             pushNotifications.deleteNotificationByIds(
               this.props.user.notification_sunday_ids
             );
             let ids = [];
             if (Platform.OS == "ios")
               ids = pushNotifications.localWeekNotification(
-                SUNDAY_NOTIFICATION
+                ranking_notification
               );
             else
               ids = pushNotifications.localWeeklyNotificationSchedule(
-                SUNDAY_NOTIFICATION
+                ranking_notification
               );
             this.props.dispatch(setSundayNotificationIds(ids));
           }
@@ -172,34 +173,68 @@ class PersonalNotificationDataScreen extends React.Component {
   };
 
   changeSundayNotification = () => {
-    let notification_state = !this.state.sunday_notification;
-    this.setState({ sunday_notification: notification_state }, () => {
-      if (notification_state) {
-        let ids = [];
-        if (Platform.OS == "ios")
-          ids = pushNotifications.localWeekNotification(SUNDAY_NOTIFICATION);
-        else
-          ids = pushNotifications.localWeeklyNotificationSchedule(
-            SUNDAY_NOTIFICATION
+    let notification_state = !this.state.ranking_notification;
+    this.setState(
+      prevState => {
+        return {
+          ranking_notification: !prevState.ranking_notification,
+          data: {
+            ...prevState.data,
+            ranking_notification: !prevState.ranking_notification
+          }
+        };
+      },
+      () => {
+        if (notification_state) {
+          let ids = [];
+          if (Platform.OS == "ios")
+            ids = pushNotifications.localWeekNotification(ranking_notification);
+          else
+            ids = pushNotifications.localWeeklyNotificationSchedule(
+              ranking_notification
+            );
+          this.props.dispatch(setSundayNotificationIds(ids));
+        } else {
+          pushNotifications.deleteNotificationByIds(
+            this.props.user.notification_sunday_ids
           );
-        this.props.dispatch(setSundayNotificationIds(ids));
-      } else {
-        pushNotifications.deleteNotificationByIds(
-          this.props.user.notification_sunday_ids
-        );
-        this.props.dispatch(deleteSundayNotificationIds());
+          this.props.dispatch(deleteSundayNotificationIds());
+        }
       }
-    });
+    );
   };
 
   changeStillNotification = () => {
-    let notification_state = !this.state.battery_notification;
-    this.setState({ battery_notification: notification_state }, () => {
-      if (notification_state) {
-        this.props.dispatch(setStillNotification(true));
-      } else {
-        this.props.dispatch(setStillNotification(false));
+    let notification_state = !this.state.smart_stop_notification;
+    this.setState(
+      prevState => {
+        return {
+          smart_stop_notification: !prevState.smart_stop_notification,
+          data: {
+            ...prevState.data,
+            smart_stop_notification: !prevState.smart_stop_notification
+          }
+        };
+      },
+      () => {
+        if (notification_state) {
+          this.props.dispatch(setStillNotification(true));
+        } else {
+          this.props.dispatch(setStillNotification(false));
+        }
       }
+    );
+  };
+
+  changeChallangelNotification = () => {
+    this.setState(prevState => {
+      return {
+        challenge_notification: !prevState.challenge_notification,
+        data: {
+          ...prevState.data,
+          challenge_notification: !prevState.challenge_notification
+        }
+      };
     });
   };
 
@@ -225,8 +260,8 @@ class PersonalNotificationDataScreen extends React.Component {
   };
 
   getNotificationHour = () => {
-    if (this.state.notification_schedule != null) {
-      const stringH = this.state.notification_schedule.substr(0, 2);
+    if (this.state.scheduled_notification != null) {
+      const stringH = this.state.scheduled_notification.substr(0, 2);
       return Number.parseInt(stringH);
     } else {
       return new Date().getHours();
@@ -237,12 +272,12 @@ class PersonalNotificationDataScreen extends React.Component {
   };
 
   getNotificationMinute = () => {
-    if (this.state.notification_schedule != null) {
+    if (this.state.scheduled_notification != null) {
       let stringM = "";
 
       if (this.getNotificationHour() < 10)
-        stringM = this.state.notification_schedule.substr(2, 2);
-      else stringM = this.state.notification_schedule.substr(3, 2);
+        stringM = this.state.scheduled_notification.substr(2, 2);
+      else stringM = this.state.scheduled_notification.substr(3, 2);
 
       return Number.parseInt(stringM);
     } else {
@@ -261,17 +296,17 @@ class PersonalNotificationDataScreen extends React.Component {
       this.props.dispatch(deleteScheduledNotificationIds());
       this.setState({
         notification_set: false,
-        notification_schedule: null
+        scheduled_notification: null
       });
       this.changeState(false, "notification_set", null);
       this.props.dispatch(
-        UpdateProfile({
+        updateProfileNew({
           data: {
-            public_profile: { notification_schedule: null }
+            scheduled_notification: null,
           }
         })
       );
-      if (this.state.sunday_notification) {
+      if (this.state.ranking_notification) {
         pushNotifications.deleteNotificationByIds(
           this.props.user.notification_sunday_ids
         );
@@ -292,11 +327,9 @@ class PersonalNotificationDataScreen extends React.Component {
     const value = `${h}:${m}`;
 
     this.props.dispatch(
-      UpdateProfile({
+      updateProfileNew({
         data: {
-          public_profile: {
-            notification_schedule: this.state.notification_schedule
-          }
+          scheduled_notification: this.state.scheduled_notification
         }
       })
     );
@@ -322,16 +355,16 @@ class PersonalNotificationDataScreen extends React.Component {
     // workaround da capire come scrivere meglio
     setTimeout(() => {
       pushNotifications.cancelAllLocalNotifications();
-      if (this.state.sunday_notification) {
+      if (this.state.ranking_notification) {
         pushNotifications.deleteNotificationByIds(
           this.props.user.notification_sunday_ids
         );
         let ids = [];
         if (Platform.OS == "ios")
-          ids = pushNotifications.localWeekNotification(SUNDAY_NOTIFICATION);
+          ids = pushNotifications.localWeekNotification(ranking_notification);
         else
           ids = pushNotifications.localWeeklyNotificationSchedule(
-            SUNDAY_NOTIFICATION
+            ranking_notification
           );
         this.props.dispatch(setSundayNotificationIds(ids));
       }
@@ -354,22 +387,9 @@ class PersonalNotificationDataScreen extends React.Component {
     setTimeout(() => {
       this.sendNewChange();
 
-      // const ga = new Analytics(
-      //   Settings.analyticsCode,
-      //   DeviceInfo.getUniqueID(),
-      //   1,
-      //   DeviceInfo.getUserAgent()
-      // );
-      // let event = this.state.events["notification-scheduled"];
-      // let gaEvent = new GAHits.Event(
-      //   "user interaction", // category
-      //   "notification scheduled", // action
-      //   "notification", // label
-      //   event // value
-      // );
-      // ga.send(gaEvent);
 
-      Alert.alert("Yeeey!", strings("your_notificati"));
+
+      Alert.alert(strings("id_13_59"), strings("id_13_60"));
     }, 1200);
   };
 
@@ -378,10 +398,8 @@ class PersonalNotificationDataScreen extends React.Component {
     if (this.props.user.infoProfile) {
       if (Object.keys(this.state.data).length) {
         this.props.dispatch(
-          UpdateProfile({
-            data: {
-              public_profile: { ...this.state.data }
-            }
+          updateProfileNew({
+            data: this.state.data
           })
         );
 
@@ -393,8 +411,8 @@ class PersonalNotificationDataScreen extends React.Component {
   };
 
   getNotificationHour = () => {
-    if (this.state.notification_schedule != null) {
-      const stringH = this.state.notification_schedule.substr(0, 2);
+    if (this.state.scheduled_notification != null) {
+      const stringH = this.state.scheduled_notification.substr(0, 2);
       return Number.parseInt(stringH);
     } else {
       return new Date().getHours();
@@ -402,12 +420,12 @@ class PersonalNotificationDataScreen extends React.Component {
   };
 
   getNotificationMinute = () => {
-    if (this.state.notification_schedule != null) {
+    if (this.state.scheduled_notification != null) {
       let stringM = "";
 
       if (this.getNotificationHour() < 10)
-        stringM = this.state.notification_schedule.substr(2, 2);
-      else stringM = this.state.notification_schedule.substr(3, 2);
+        stringM = this.state.scheduled_notification.substr(2, 2);
+      else stringM = this.state.scheduled_notification.substr(3, 2);
 
       return Number.parseInt(stringM);
     } else {
@@ -437,21 +455,18 @@ class PersonalNotificationDataScreen extends React.Component {
             width: Dimensions.get("window").width * 0.5
           }}
         >
-          <Text style={styles.left}>{strings("morning_start")}</Text>
-          <Text style={styles.leftDescription}>
-            {" "}
-            {strings("tired_of_gettin")}
-          </Text>
+          <Text style={styles.left}>{strings("id_13_41")}</Text>
+          <Text style={styles.leftDescription}>{strings("id_13_42")}</Text>
         </View>
 
         <TimePicker
           value={
-            this.state.notification_schedule
-              ? this.state.notification_schedule
+            this.state.scheduled_notification
+              ? this.state.scheduled_notification
               : "--:--"
           }
           mode="time"
-          type="notification_schedule"
+          type="scheduled_notification"
           changeState={this.changeNotificationScheduleTime}
           hour={this.getNotificationHour()}
           minute={this.getNotificationMinute()}
@@ -496,10 +511,8 @@ class PersonalNotificationDataScreen extends React.Component {
                 width: Dimensions.get("window").width * 0.5
               }}
             >
-              <Text style={styles.left}>{strings("weekly_challeng")}</Text>
-              <Text style={styles.leftDescription}>
-                {strings("get_personalize")}
-              </Text>
+              <Text style={styles.left}>{strings("id_13_43")}</Text>
+              <Text style={styles.leftDescription}>{strings("id_13_44")}</Text>
             </View>
             <View
               style={{
@@ -512,7 +525,7 @@ class PersonalNotificationDataScreen extends React.Component {
                 style={{ marginRight: 18 }}
                 onValueChange={this.changeSundayNotification}
                 onSyncPress={this.changeSundayNotification}
-                value={this.state.sunday_notification}
+                value={this.state.ranking_notification}
               />
             </View>
           </View>
@@ -533,15 +546,39 @@ class PersonalNotificationDataScreen extends React.Component {
                 justifyContent: "center"
               }}
             >
-              <Text style={styles.left}>{strings("smart_stop")}</Text>
-              <Text style={styles.leftDescription}>
-                {strings("get_a_notificat")}
-              </Text>
+              <Text style={styles.left}>{strings("id_13_45")}</Text>
+              <Text style={styles.leftDescription}>{strings("id_13_46")}</Text>
+            </View>
+            <Switch
+              style={{ marginRight: 18 }}
+              onValueChange={this.changeChallangelNotification}
+              value={this.state.challenge_notification}
+            />
+          </View>
+          <View
+            style={[
+              styles.other,
+              {
+                // borderBottomColor: "#5F5F5F",
+                // borderBottomWidth: 0.3
+              }
+            ]}
+          >
+            <View
+              style={{
+                flexDirection: "column",
+                height: 100,
+                width: Dimensions.get("window").width * 0.5,
+                justifyContent: "center"
+              }}
+            >
+              <Text style={styles.left}>{strings("id_13_47")}</Text>
+              <Text style={styles.leftDescription}>{strings("id_13_48")}</Text>
             </View>
             <Switch
               style={{ marginRight: 18 }}
               onValueChange={this.changeStillNotification}
-              value={this.state.battery_notification}
+              value={this.state.smart_stop_notification}
             />
           </View>
           <View
@@ -556,18 +593,10 @@ class PersonalNotificationDataScreen extends React.Component {
 const withData = connect(state => {
   // prendo solo le routine
   return {
-    routine: state.login.mostFrequentRoute ? state.login.mostFrequentRoute : [],
-    routineNotSave: state.login.mfr_modal_split_NotSave
-      ? state.login.mfr_modal_split_NotSave
-      : [],
+    routine: frequentTripsState(state),
+    routineNotSave: frequentTripsNotSaveState(state),
     user: state.login,
-    infoProfile: state.login.infoProfile,
-    points:
-      state.statistics.statistics === []
-        ? 0
-        : state.statistics.statistics.reduce((total, elem, index, array) => {
-            return total + elem.points;
-          }, 0)
+    infoProfile: state.login.infoProfile
   };
 });
 

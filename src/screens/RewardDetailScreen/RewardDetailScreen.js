@@ -10,40 +10,33 @@ import {
   TouchableWithoutFeedback,
   Linking,
   NativeModules,
-  ScrollView
+  ScrollView,
+  Alert
 } from "react-native";
 import { connect } from "react-redux";
 import LinearGradient from "react-native-linear-gradient";
 import OwnIcon from "./../../components/OwnIcon/OwnIcon";
-
 import {
   SlideButton,
   SlideDirection
 } from "./../../components/SlideButton/SlideButton";
-
 const SCREEN_WIDTH = Dimensions.get("window").width;
-
 import { strings } from "../../config/i18n";
 import { getSponsor } from "./../../helpers/specialTrainingSponsors";
 import { redeemSpecialTrainingSessions } from "./../../domains/trainings/ActionCreators";
-
 import { images } from "./../../components/InfoUserHome/InfoUserHome";
 import { translateSpecialEvent } from "../../helpers/translateSpecialEvent";
-
 let locale = undefined;
-
 if (Platform.OS == "ios") {
   locale = NativeModules.SettingsManager.settings.AppleLocale;
   if (locale === undefined) {
     // iOS 13 workaround, take first of AppleLanguages array  ["en", "en-NZ"]
-    locale = NativeModules.SettingsManager.settings.AppleLanguages[0]
+    locale = NativeModules.SettingsManager.settings.AppleLanguages[0];
     if (locale == undefined) {
-          locale = "en" // default language
+      locale = "en"; // default language
     }
-}
-}
-else locale = NativeModules.I18nManager.localeIdentifier;
-
+  }
+} else locale = NativeModules.I18nManager.localeIdentifier;
 locale = locale.substr(0, 2);
 const localeDateOpt = {
   //weekday: "long",
@@ -51,22 +44,36 @@ const localeDateOpt = {
   month: "long",
   day: "numeric"
 };
-
 import Settings from "./../../config/Settings";
-
 import {
   GoogleAnalyticsTracker,
   GoogleTagManager,
   GoogleAnalyticsSettings
 } from "react-native-google-analytics-bridge";
-
 let Tracker = new GoogleAnalyticsTracker(Settings.analyticsCode);
-
 import analytics from "@react-native-firebase/analytics";
 async function trackScreenView(screen) {
   // Set & override the MainActivity screen name
   await analytics().setCurrentScreen(screen, screen);
 }
+async function trackEvent(event, data) {
+  await analytics().logEvent(event, { data });
+}
+import {
+  rewardImage,
+  rewardImageBn,
+  getRewardImg,
+  getRewardImgBn
+} from "./../RewardsScreen/RewardsScreen";
+import { createSelector } from "reselect";
+import {
+  getChallenges,
+  getChallengesRewards,
+  getChallengesRewardsByUser,
+  getChallengeRankingByUser,
+  getRewardsCategory,
+  patchReward
+} from "./../../domains/challenges/ActionCreators";
 
 class RewardDetailScreen extends React.Component {
   constructor(props) {
@@ -79,14 +86,12 @@ class RewardDetailScreen extends React.Component {
       leftSwiped: false,
       rightSwiped: false,
       reward_description: "",
-      reward_is_redeemed: false
+      reward_is_redeemed: false,
+      reward: null,
+      reward_categories: [],
+      are_you_sure_btn: false
     };
 
-    this.special_training = null;
-    this.special_training_session = null;
-    this.end_st_date = null;
-    this.sponsor = null;
-    this.event = null;
     this.loaded = false;
     this.reward_component = null;
   }
@@ -99,90 +104,34 @@ class RewardDetailScreen extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {"Rewards"}
+          {strings("id_10_01")
+            .charAt(0)
+            .toUpperCase() + strings("id_10_01").slice(1)}
         </Text>
       )
     };
   };
 
-  componentDidMount() {
-    try {
-      this.special_training = this.props.trainingsState.subscribed_special_training.filter(
-        e => {
-          return e.reward_id == this.props.navigation.state.params.id;
-        }
-      )[0];
+  componentWillMount() {
+    console.log(this.props);
+    this.props.dispatch(getRewardsCategory());
 
-      this.special_training_session =
-        this.props.trainingsState.special_training_sessions.length > 0
-          ? this.props.trainingsState.special_training_sessions.filter(e => {
-              return e.text_description == this.special_training.training_title;
-            })[0]
-          : this.props.trainingsState.subscribed_special_training.filter(e => {
-              return e.training_title == this.special_training.training_title;
-            })[0];
+    this.setState({
+      reward: this.props.navigation.state.params.reward,
+      reward_categories: [...this.props.categoriesState]
+    });
+  }
 
-      const available_st_event = this.props.trainingsState.available_st_event
-        ? this.props.trainingsState.available_st_event
-        : [];
-      this.event = available_st_event.filter(e => {
-        return e.st_event[0].reward_id == this.props.navigation.state.params.id;
-      });
+  getItemImage(e) {
+    let n = new Date(),
+      category = this.state.reward_categories.filter(el => {
+        return el.id == e.reward.category;
+      })[0];
 
-      this.sponsor = getSponsor(
-        this.props.trainingsState.special_training_sessions.length > 0
-          ? this.special_training_session.text_description
-          : this.special_training_session.training_title
-      );
-
-      this.end_st_date = this.special_training_session.special_training
-        ? new Date(
-            this.special_training_session.special_training.end_special_training
-          )
-        : new Date(new Date().setDate(new Date().getDate() - 1));
-
-      this.setState({
-        reward_description: this.special_training_session.special_training
-          ? this.special_training_session.special_training.reward_description
-          : "",
-        reward_is_redeemed: this.checkIfIsRedeemed()
-      });
-
-      let start_date = this.special_training_session.special_training
-        ? new Date(
-            this.special_training_session.special_training.start_special_training
-          )
-        : new Date(new Date().setDate(new Date().getDate() - 1));
-      let today = new Date();
-
-      let e_msec = start_date - today;
-      let e_mins = Math.floor(e_msec / 60000);
-      let e_hrs = Math.floor(e_mins / 60);
-      let e_days = Math.floor(e_hrs / 24);
-      let e_a_hrs = e_hrs - e_days * 24;
-      let e_a_mins = Math.floor(e_msec / 60000) - e_hrs * 60;
-
-      if (e_days > 0 || e_hrs > 0)
-        this.setState({
-          days_until_start_date: e_days,
-          hour_until_start_date: e_a_hrs,
-          minute_until_start_date: e_a_mins
-        });
-
-      this.loaded = true;
-      console.log(this.state);
-      Tracker.trackScreenView(
-        "RewardsDetailScreen.js - " + this.special_training_session.title
-      );
-      trackScreenView(
-        "RewardsDetailScreen.js - " + this.special_training_session.title
-      );
-
-      this.reward_component = this.getLinkContentFromReward(
-        translateSpecialEvent(this.special_training_session.text_description)
-      );
-    } catch (error) {
-      console.log(error);
+    if (new Date(e.challenge.end_time) > n) {
+      return getRewardImg(category.name);
+    } else {
+      return getRewardImgBn(category.name);
     }
   }
 
@@ -211,314 +160,12 @@ class RewardDetailScreen extends React.Component {
       .catch(err => console.error("An error occurred", err));
   };
 
-  onLeftSlide() {
-    alert("slide left!");
-    var self = this;
-    this.setState({ swiped: true, leftSwiped: true }, () => {
-      setTimeout(
-        () => self.setState({ swiped: false, leftSwiped: false }),
-        2500
-      );
-    });
-  }
-
-  onRightSlide() {
-    Tracker.trackEvent(
-      "Special training rewards",
-      "Special training rewards slide to reward"
-    );
-    // alert("slide right!");
-    var self = this;
-    this.setState({ swiped: true, rightSwiped: true }, () => {
-      setTimeout(
-        () =>
-          self.setState({
-            swiped: false,
-            rightSwiped: false,
-            reward_is_redeemed: this.checkIfIsRedeemed()
-          }),
-        4000
-      );
-    });
-  }
-
-  onBothSlide() {
-    alert("slide both!");
-    var self = this;
-    this.setState({ swiped: true, bothSwiped: true }, () => {
-      setTimeout(
-        () => self.setState({ swiped: false, bothSwiped: false }),
-        2500
-      );
-    });
-  }
-
   getImage() {
     switch (
       this.special_training_session.special_training
         ? this.special_training_session.special_training.id
         : this.special_training_session.training_title
     ) {
-      case 12:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/bar.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 37:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/gifts.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case "Giretto d'Italia 2019":
-        return (
-          <Image
-            source={require("../../assets/images/rewards/gifts.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 38:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/games.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case "Mobilità Agrodolce 2019":
-        return (
-          <Image
-            source={require("../../assets/images/rewards/games.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 39:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/gifts.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case "Street Parade":
-        return (
-          <Image
-            source={require("../../assets/images/rewards/gifts.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 40:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/art.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case "Milano Bike Week":
-        return (
-          <Image
-            source={require("../../assets/images/rewards/art.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 41:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/games.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case "Passeio Ciclístico CAIS-PM-PI":
-        return (
-          <Image
-            source={require("../../assets/images/rewards/games.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 42:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/bar.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case "Movimento a ritmo africano":
-        return (
-          <Image
-            source={require("../../assets/images/rewards/bar.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 43:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/furniture.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case "Al mercato per una mattonella (che non si mangia)!":
-        return (
-          <Image
-            source={require("../../assets/images/rewards/furniture.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 44:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/games.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case "Take part and you will be rewarded!":
-        return (
-          <Image
-            source={require("../../assets/images/rewards/games.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 45:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/gifts.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case "Stunning Sant Andreu":
-        return (
-          <Image
-            source={require("../../assets/images/rewards/gifts.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
-      case 25:
-        return (
-          <Image
-            source={require("../../assets/images/rewards/bar.png")}
-            style={{
-              width: 50,
-              height: 50
-            }}
-            resizeMethod={"auto"}
-          />
-        );
-        break;
-
       default:
         return (
           <Image
@@ -577,319 +224,137 @@ class RewardDetailScreen extends React.Component {
               alignItems: "center"
             }}
           >
-            {/* 
             <Image
-              source={require("../../assets/images/rewards/subscriptions.png")}
+              source={this.getItemImage(this.state.reward)}
               style={{ width: 150, height: 150 }}
               resizeMethod={"auto"}
-            /> 
-            */}
-            {this.special_training_session ? this.getImage() : <View />}
+            />
           </View>
           <Text style={styles.poweredByText}>
-            {strings("powered_by") + " "}
+            {strings("id_3_04") + " "}
             <Text style={[styles.poweredByText, { fontWeight: "bold" }]}>
-              {this.sponsor ? this.sponsor.name : ""}
+              {this.state.reward.challenge.sponsor}
             </Text>
           </Text>
-          {/* <Text style={styles.rewardInfoText}>
-            {this.state.reward_description}
-          </Text> */}
 
-          {this.getLinkContentFromInfo(this.state.reward_description)}
+          {/* {this.getLinkContentFromInfo(this.state.reward.reward.name)} */}
+          <Text style={[styles.txtSTInfo, { color: "#fff" }]}>
+            {this.state.reward.reward.name}
+          </Text>
         </View>
       </LinearGradient>
     );
   }
 
-  renderPartnerInfoBox() {
-    return (
-      <View style={styles.partnerInfoBox}>
-        <TouchableWithoutFeedback
-          onPress={() => {
-            this.sendFeedBack();
-          }}
-        >
-          <View style={styles.iconContainer}>
-            <OwnIcon name="report_icn" size={40} color={"#3d3d3d"} />
-          </View>
-        </TouchableWithoutFeedback>
-        <TouchableWithoutFeedback
-          onPress={() => {
-            if (this.sponsor)
-              this.props.navigation.navigate("SponsorMapScreen", {
-                latitude: this.sponsor.position.lat,
-                longitude: this.sponsor.position.lon
-              });
-          }}
-        >
-          <View style={styles.iconContainer}>
-            <OwnIcon name="map_icn" size={40} color={"#3d3d3d"} />
-          </View>
-        </TouchableWithoutFeedback>
-      </View>
-    );
-  }
-
-  moveWeb = sponsor => {
-    Linking.canOpenURL(sponsor.website).then(supported => {
-      if (supported) {
-        Linking.openURL(sponsor.website);
-      } else {
-        console.log("Don't know how to open URI: " + sponsor.website);
-      }
-    });
-  };
-
-  getLinkContentFromReward = strReward => {
-    // lo converto in una stringa
-    var str = strReward + "";
-
-    // var str = "Hellofewfweesf  wweffewfewfew https://palermo.muv2020.eu/muv-open-day/ %sito% ciaowedsffewf";
-    var first_perc = str.indexOf("https");
-
-    if (first_perc == -1) {
-      console.log(translateSpecialEvent(str));
-      return <Text style={styles.txtSTInfo}>{translateSpecialEvent(str)}</Text>;
-    } else {
-      let last_perc = str.indexOf("/ ", first_perc);
-
-      let didascaliaStart = str.indexOf("%", last_perc);
-      let didascaliaEnd = str.indexOf("%", didascaliaStart + 1);
-
-      let introduction = str.substr(0, first_perc);
-
-      let link = str.substr(first_perc, last_perc - first_perc + 1);
-      let didascalia = str.substr(
-        didascaliaStart + 1,
-        didascaliaEnd - didascaliaStart - 1
-      );
-
-      let end = str.substr(didascaliaEnd + 1, str.lenght);
-
-      // let end = str.substr(last_perc + 1, str.lenght);
-      // document.getElementById("demo").innerHTML =   introduction + link + end ;
-
-      return (
-        <View>
-          <Text style={styles.txtSTInfo}>
-            {introduction}
-            <Text
-              style={[styles.txtSTInfo, { textDecorationLine: "underline" }]}
-              onPress={() => this.moveWeb({ website: link })}
-            >
-              {didascalia}
-            </Text>
-            {end}
-          </Text>
-        </View>
-      );
-    }
-  };
-
-  getLinkContentFromInfo = strReward => {
-    // lo converto in una stringa
-    var str = strReward + "";
-
-    // var str = "Hellofewfweesf  wweffewfewfew https://palermo.muv2020.eu/muv-open-day/ %sito% ciaowedsffewf";
-    var first_perc = str.indexOf("https");
-
-    if (first_perc == -1) {
-      return (
-        <Text style={styles.rewardInfoText}>{translateSpecialEvent(str)}</Text>
-      );
-    } else {
-      let last_perc = str.indexOf("/ ", first_perc);
-
-      let didascaliaStart = str.indexOf("%", last_perc);
-      let didascaliaEnd = str.indexOf("%", didascaliaStart + 1);
-
-      let introduction = str.substr(0, first_perc);
-
-      let link = str.substr(first_perc, last_perc - first_perc + 1);
-      let didascalia = str.substr(
-        didascaliaStart + 1,
-        didascaliaEnd - didascaliaStart - 1
-      );
-
-      let end = str.substr(didascaliaEnd + 1, str.lenght);
-
-      // let end = str.substr(last_perc + 1, str.lenght);
-      // document.getElementById("demo").innerHTML =   introduction + link + end ;
-
-      return (
-        <View>
-          <Text style={styles.rewardInfoText}>
-            {introduction}
-            <Text
-              style={[
-                styles.rewardInfoText,
-                { textDecorationLine: "underline" }
-              ]}
-              onPress={() => this.moveWeb({ website: link })}
-            >
-              {didascalia}
-            </Text>
-            {end}
-          </Text>
-        </View>
-      );
-    }
-  };
-
-  renderSTInfo() {
-    // console.log(this.special_training_session.special_training.id);
+  getCountdownTxt = (days_txt, hours_txt, min_txt, checkDay) => {
     return (
       <View
         style={{
           width: Dimensions.get("window").width * 0.8,
-          alignSelf: "center",
+          height: 60,
+          borderRadius: 15,
+          borderWidth: 2,
+          borderColor: "#F2875B",
           justifyContent: "center",
           alignItems: "center",
-          marginVertical: 13
+          alignSelf: "center",
+          flexDirection: "row",
+          marginBottom: 10
         }}
       >
-        {/* {this.getLinkContentFromReward(
-          translateSpecialEvent(
-            this.special_training_session
-              ? this.special_training_session.special_training
-                ? this.special_training_session.special_training.id
-                : this.special_training_session.training_description
-              : ""
-          )
-        )} */}
+        <OwnIcon
+          name="timer_icn"
+          size={20}
+          color={checkDay ? "#FC6754" : "#FAB21E"}
+        />
+        <View style={{ width: 5, height: 5 }} />
+        {checkDay ? (
+          <Text style={styles.countdownTxt}>
+            <Text style={styles.countdownBoldTxt}>
+              {Number.parseInt(this.state.days_until_end_date)}
+              {" " + days_txt}
+            </Text>
 
-        {this.reward_component ? this.reward_component : <View />}
-      </View>
-    );
-  }
-
-  renderEndCounter() {
-    if (
-      this.state.days_until_start_date != false ||
-      this.state.hour_until_start_date != false
-    )
-      return (
-        <View style={styles.endCounterContainer}>
-          <OwnIcon name="timer_icn" size={26} color="#3d3d3d" />
-          <Text style={styles.endCounerTxt}>
-            - {this.state.days_until_start_date}
-            {" " + strings("days") + " " + strings("and") + " "}
-            {this.state.hour_until_start_date}
-            {" " + strings("hours")}
+            {/* {" " + strings("id_4_08")} */}
+            {" " + strings("id_3_23")}
           </Text>
-        </View>
-      );
-    else return this.renderSlideBtn();
-  }
-
-  renderTxt() {
-    if (
-      this.state.days_until_start_date != false ||
-      this.state.hour_until_start_date != false
-    )
-      return (
-        <View
-          style={[styles.endCounterContainer, { justifyContent: "flex-end" }]}
-        >
-          <Text style={styles.rewardTxt}>{strings("to_redeem_your_")}</Text>
-        </View>
-      );
-    else return <View />;
-  }
-
-  renderSlideBtn() {
-    const SlideButtonView = (
-      <View style={slide_btn_styles.container}>
-        <LinearGradient
-          start={{ x: 0.0, y: 0.0 }}
-          end={{ x: 0.8, y: 0.8 }}
-          locations={[0, 1.0]}
-          colors={["#E82F73", "#F49658"]}
-          style={{
-            marginTop: 20,
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 60
-          }}
-        >
-          <SlideButton
-            onSlideSuccess={() => this.onRightSlide()}
-            slideDirection={SlideDirection.RIGHT}
-            width={SCREEN_WIDTH - 40}
-            height={65}
+        ) : (
+          <View
+            style={{
+              flexDirection: "row"
+            }}
           >
-            <View style={slide_btn_styles.buttonInner}>
+            <View
+              style={{
+                flexDirection: "row"
+              }}
+            >
+              <Text style={styles.countdownTxt}>
+                {strings("id_3_22") + " "}
+                <Text style={styles.countdownBoldTxtWhite}>
+                  {this.state.hour_until_end_date
+                    ? this.state.hour_until_end_date +
+                      " " +
+                      hours_txt +
+                      " " +
+                      strings("id_4_09") +
+                      " "
+                    : ""}
+                  {this.state.minute_until_end_date}
+                  {" " + min_txt}
+                </Text>
+              </Text>
               <View
                 style={{
-                  height: 55,
-                  width: 55,
-                  backgroundColor: "#ffffff70",
-                  marginHorizontal: 7,
-                  borderRadius: 100,
-                  justifyContent: "center",
-                  alignItems: "center"
+                  borderBottomColor: "#FAB21E",
+                  borderBottomWidth: 1
                 }}
-              >
-                <OwnIcon name="arrow-slide" size={25} color="#3D3D3D" />
-              </View>
-              <Text style={slide_btn_styles.button}>
-                {strings("slide_to_redeem")}
-              </Text>
+              />
             </View>
-          </SlideButton>
-        </LinearGradient>
-        <View
-          style={{
-            height: 50,
-            justifyContent: "center",
-            alignItems: "center"
-          }}
-        >
-          <Text
-            style={[
-              slide_btn_styles.button,
-              { fontSize: 13, color: "#3d3d3d" }
-            ]}
-          >
-            {strings("redeemable_unti") + " "}
-            {new Date(this.end_st_date)
-              .toLocaleDateString(locale, localeDateOpt)
-              .replace("-", "/")}
-          </Text>
-        </View>
-        <View
-          style={{
-            height: 150
-          }}
-        />
+            <Text style={styles.countdownTxt}>
+              {/* {" " + strings("id_4_08")} */}
+              {" " + strings("id_3_23")}
+            </Text>
+          </View>
+        )}
       </View>
     );
+  };
 
-    const OkButtonView = (
+  redeemedState = () => {
+    this.setState(
+      {
+        reward_is_redeemed: true
+      },
+      () => {
+        Alert.alert("", strings("id_10_10"));
+      }
+    );
+  };
+
+  renderSlideBtn() {
+    const SureButtonView = (
       <View style={slide_btn_styles.container}>
         <TouchableWithoutFeedback
           onPress={() => {
-            Tracker.trackEvent(
-              "Special training rewards",
-              "Special training rewards redeem"
-            );
-            this.props.dispatch(
-              redeemSpecialTrainingSessions(
-                {},
-                this.props.navigation.state.params.id,
-                () => {}
-              )
-            );
+            let { reward } = this.state.reward;
+            this.props.dispatch(patchReward(reward.id, this.redeemedState));
+
+            setTimeout(() => {
+              this.setState({ are_you_sure_btn: false });
+            }, 600);
           }}
         >
-          <View
+          <LinearGradient
+            start={{ x: 1.0, y: 0.0 }}
+            end={{ x: 1.0, y: 0.0 }}
+            locations={[0, 1.0]}
+            colors={["#E83475", "#E83475"]}
             style={{
               marginTop: 20,
               alignItems: "center",
               justifyContent: "center",
-              borderRadius: 35,
-              backgroundColor: "#E82F73"
+              borderRadius: 35
             }}
           >
             <View
@@ -902,21 +367,51 @@ class RewardDetailScreen extends React.Component {
                 }
               ]}
             >
-              <Text style={slide_btn_styles.button}>
-                {strings("ok").toLocaleUpperCase()}
-              </Text>
+              <Text style={slide_btn_styles.button}>{strings("id_10_04")}</Text>
             </View>
-          </View>
+          </LinearGradient>
         </TouchableWithoutFeedback>
-        <View
-          style={{
-            height: 200
-          }}
-        />
       </View>
     );
 
-    const UAreInButtonView = (
+    const SlideButtonView = (
+      <View style={slide_btn_styles.container}>
+        <TouchableWithoutFeedback
+          onPress={() => {
+            this.setState({ are_you_sure_btn: true });
+          }}
+        >
+          <LinearGradient
+            start={{ x: 1.0, y: 0.0 }}
+            end={{ x: 1.0, y: 0.0 }}
+            locations={[0, 1.0]}
+            colors={["#7D4D99", "#6497CC"]}
+            style={{
+              marginTop: 20,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 35
+            }}
+          >
+            <View
+              style={[
+                slide_btn_styles.buttonInner,
+                {
+                  justifyContent: "center",
+                  alignItems: "center",
+                  alignSelf: "center"
+                }
+              ]}
+            >
+              {/* <Text style={slide_btn_styles.button}>{strings("id_3_10")}</Text> */}
+              <Text style={slide_btn_styles.button}>{strings("id_10_05")}</Text>
+            </View>
+          </LinearGradient>
+        </TouchableWithoutFeedback>
+      </View>
+    );
+
+    const RedemeedButtonView = (
       <View style={slide_btn_styles.container}>
         <TouchableWithoutFeedback onPress={() => {}}>
           <View
@@ -925,9 +420,7 @@ class RewardDetailScreen extends React.Component {
               alignItems: "center",
               justifyContent: "center",
               borderRadius: 35,
-              backgroundColor: "#6CBA7E",
-              borderColor: "#95989A",
-              borderWidth: 1
+              backgroundColor: "#6BBA7E"
             }}
           >
             <View
@@ -940,41 +433,60 @@ class RewardDetailScreen extends React.Component {
                 }
               ]}
             >
-              <Text style={slide_btn_styles.button}>
-                {strings("you_re_in_")}
-              </Text>
+              <Text style={slide_btn_styles.button}>{strings("id_10_06")}</Text>
             </View>
           </View>
         </TouchableWithoutFeedback>
-        <View
-          style={{
-            height: 200
-          }}
-        />
       </View>
     );
 
-    if (new Date() < this.end_st_date)
-      if (this.state.reward_is_redeemed) return UAreInButtonView;
-      else {
-        if (!this.state.rightSwiped) return SlideButtonView;
-        else return OkButtonView;
-      }
-    else
-      return (
-        <View style={{ justifyContent: "center", alignItems: "center" }}>
-          <Image
-            style={styles.userAvatarImage}
-            // source={
-            //   images[this.loaded ? this.props.loginState.infoProfile.avatar : 1]
-            // }
-            source={require("../../assets/images/expired_award.png")}
-          />
-          <Text style={[styles.txtSTInfo, { fontSize: 14 }]}>
-            {strings("sorry__reward_s")}
-          </Text>
-        </View>
-      );
+    let t = new Date(),
+      end_time = new Date(this.state.reward.challenge.end_time);
+
+    let e_msec = end_time - t;
+    let e_mins = Math.floor(e_msec / 60000);
+    let e_hrs = Math.floor(e_mins / 60);
+    let e_days = Math.floor(e_hrs / 24);
+    let e_a_hrs = e_hrs - e_days * 24;
+    let e_a_mins = Math.floor(e_msec / 60000) - e_hrs * 60;
+
+    if (this.state.are_you_sure_btn) return SureButtonView;
+    else if (
+      end_time > t &&
+      !this.state.reward_is_redeemed &&
+      this.state.reward.reward.status != 2
+    ) {
+      let days_txt = e_days > 1 ? strings("id_4_03") : strings("id_4_02"),
+        hours_txt = e_hrs > 1 ? strings("id_4_05") : strings("id_4_04"),
+        min_txt = e_mins > 1 ? strings("id_4_07") : strings("id_4_06"),
+        checkDay = e_days > 0;
+
+      // return this.getCountdownTxt(days_txt, hours_txt, min_txt, checkDay);
+      // return <View />;
+      return SlideButtonView;
+    } else if (this.state.reward.reward.status == 2) {
+      return RedemeedButtonView;
+    } else {
+      return <View />;
+    }
+  }
+
+  renderRewardDescription() {
+    return (
+      <View
+        style={{
+          width: Dimensions.get("window").width * 0.9,
+          height: 50,
+          justifyContent: "center",
+          alignItems: "center",
+          alignSelf: "center"
+        }}
+      >
+        <Text style={styles.txtRewardInfo}>
+          {this.state.reward.reward.description}
+        </Text>
+      </View>
+    );
   }
 
   render() {
@@ -1000,10 +512,8 @@ class RewardDetailScreen extends React.Component {
             }}
           >
             {this.renderGradient()}
-            {this.renderPartnerInfoBox()}
-            {this.renderSTInfo()}
-            {this.renderEndCounter()}
-            {this.renderTxt()}
+            {this.renderRewardDescription()}
+            {this.renderSlideBtn()}
           </View>
         </ImageBackground>
       </ScrollView>
@@ -1067,6 +577,12 @@ const styles = StyleSheet.create({
     color: "#3d3d3d",
     fontSize: 11
   },
+  txtRewardInfo: {
+    fontFamily: "OpenSans-Regular",
+    fontWeight: "bold",
+    color: "#3d3d3d",
+    fontSize: 15
+  },
   endCounterContainer: {
     width: Dimensions.get("window").width * 0.8,
     alignSelf: "center",
@@ -1088,6 +604,19 @@ const styles = StyleSheet.create({
   userAvatarImage: {
     width: 65,
     height: 65
+  },
+  countdownTxt: {
+    fontFamily: "OpenSans-Regular",
+    textAlign: "center",
+    color: "#3D3D3D",
+    fontSize: 10
+  },
+  countdownBoldTxt: {
+    fontFamily: "OpenSans-Bold",
+    textAlign: "center",
+    fontWeight: "bold",
+    color: "#FC6754",
+    fontSize: 10
   }
 });
 
@@ -1115,10 +644,20 @@ const slide_btn_styles = StyleSheet.create({
   }
 });
 
+const getRewardsCategories = state =>
+  state.challenges.reward_categories ? state.challenges.reward_categories : [];
+const getRewardsCategoriesState = createSelector(
+  [getRewardsCategories],
+  categories => {
+    return [...categories];
+  }
+);
+
 const withData = connect(state => {
   return {
     trainingsState: state.trainings,
-    loginState: state.login
+    loginState: state.login,
+    categoriesState: getRewardsCategoriesState(state)
   };
 });
 

@@ -25,7 +25,6 @@ import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import Icon from "react-native-vector-icons/Ionicons";
 import Modal from "react-native-modal";
 import Aux from "./../../helpers/Aux";
-
 import { UpdateProfile } from "./../../domains/login/ActionCreators";
 import {
   subscribeSpecialTrainingSessions,
@@ -37,23 +36,17 @@ import { strings } from "../../config/i18n";
 import { translateEvent } from "./../../helpers/translateEvent";
 import { translateSpecialEvent } from "./../../helpers/translateSpecialEvent";
 import { infoEvents } from "./../../helpers/dataEvents";
-
 import {
   SlideButton,
   SlideDirection
 } from "./../../components/SlideButton/SlideButton";
-
 import { getSponsor } from "./../../helpers/specialTrainingSponsors";
 import moment from "moment";
 import { getLanguageI18n } from "../../config/i18n";
-
 const SCREEN_WIDTH = Dimensions.get("window").width;
-
 const NORMAL_COLOR = "#0FACF3";
 const SUCCESS_COLOR = "#39ca74";
-
 let locale = undefined;
-
 import Settings from "./../../config/Settings";
 
 import {
@@ -68,13 +61,12 @@ if (Platform.OS == "ios") {
   locale = NativeModules.SettingsManager.settings.AppleLocale;
   if (locale === undefined) {
     // iOS 13 workaround, take first of AppleLanguages array  ["en", "en-NZ"]
-    locale = NativeModules.SettingsManager.settings.AppleLanguages[0]
+    locale = NativeModules.SettingsManager.settings.AppleLanguages[0];
     if (locale == undefined) {
-          locale = "en" // default language
+      locale = "en"; // default language
     }
-}
-}
-else
+  }
+} else
   locale =
     NativeModules.I18nManager.localeIdentifier == ""
       ? "it"
@@ -89,6 +81,10 @@ const localeDateOpt = {
 };
 
 import analytics from "@react-native-firebase/analytics";
+async function trackEvent(event, data) {
+  await analytics().logEvent(event, { data });
+}
+
 async function trackScreenView(screen) {
   // Set & override the MainActivity screen name
   await analytics().setCurrentScreen(screen, screen);
@@ -112,7 +108,8 @@ class DetailSpecialTrainingScreen extends React.Component {
       minute_until_end_date: false,
       hour_until_start_date: false,
       days_until_start_date: false,
-      progress: false
+      progress: false,
+      scrollEnabled: true
     };
 
     this.reward_id = null;
@@ -204,6 +201,12 @@ class DetailSpecialTrainingScreen extends React.Component {
         this.props.navigation.state.params.sessionName
     );
   }
+
+  changeScrollEnabled = bool => {
+    this.setState({
+      scrollEnabled: bool
+    });
+  };
 
   componentWillMount() {
     const language = getLanguageI18n();
@@ -505,6 +508,33 @@ class DetailSpecialTrainingScreen extends React.Component {
                 3);
             this.setState({ progress });
           }
+          if (session_name == "Il MUVimento ti fa bello!") {
+            let progress =
+              100 *
+              (this.props.trainingsState.statusCheckEvents[
+                "MuvimentoInST_" + reward_id
+              ].counter /
+                5);
+            this.setState({ progress });
+          }
+          if (session_name == "5000 pts = 1 tree for Gardunha forest") {
+            let progress =
+              100 *
+              (this.props.trainingsState.statusCheckEvents[
+                "ForestInST_" + reward_id
+              ].counter /
+                5000);
+            this.setState({ progress });
+          }
+          if (session_name == "Il movimento è cultura") {
+            let progress =
+              100 *
+              (this.props.trainingsState.statusCheckEvents[
+                "GlifoInST_" + reward_id
+              ].counter /
+                2000);
+            this.setState({ progress });
+          }
         }
       }
     } catch (error) {
@@ -655,7 +685,6 @@ class DetailSpecialTrainingScreen extends React.Component {
             width: Dimensions.get("window").width * 0.9,
             flexDirection: "row",
             justifyContent: "center",
-
             alignItems: "center"
             // height: 60,
             // minHeight: 60,
@@ -679,7 +708,6 @@ class DetailSpecialTrainingScreen extends React.Component {
             style={{
               width: 40,
               height: 40,
-
               alignItems: "flex-end",
               transform: [{ rotate: "-90deg" }],
               opacity: 0
@@ -1049,12 +1077,12 @@ class DetailSpecialTrainingScreen extends React.Component {
     ) {
       let days_string =
         Number.parseInt(this.state.days_until_start_date) == 1
-          ? strings("day")
-          : strings("days");
+          ? strings("id_4_03")
+          : strings("id_4_02");
       let hours_string =
         Number.parseInt(this.state.hour_until_start_date) > 1
-          ? strings("hours")
-          : strings("hour");
+          ? strings("id_4_04")
+          : strings("id_4_05");
       return (
         <LinearGradient
           start={{ x: 0.0, y: 0.0 }}
@@ -1077,7 +1105,7 @@ class DetailSpecialTrainingScreen extends React.Component {
           <OwnIcon name="timer_icn" size={18} color="#FFF" />
           <Text style={styles.startCounterText}>
             - {this.state.days_until_start_date}
-            {" " + days_string + " " + strings("and") + " "}
+            {" " + days_string + " " + strings("id_4_09") + " "}
             {this.state.hour_until_start_date}
             {" " + hours_string}
           </Text>
@@ -1094,12 +1122,12 @@ class DetailSpecialTrainingScreen extends React.Component {
       let hours_string =
         Number.parseInt(this.state.hour_until_start_date) > 1
           ? strings("hours")
-          : strings("hour");
+          : strings("id_4_05");
 
       let mins_string =
         Number.parseInt(this.state.minute_until_end_date) > 1
-          ? strings("_453_minutes")
-          : strings("minute");
+          ? strings("406")
+          : strings("id_4_07");
       return (
         <LinearGradient
           start={{ x: 0.0, y: 0.0 }}
@@ -1122,7 +1150,7 @@ class DetailSpecialTrainingScreen extends React.Component {
           <OwnIcon name="timer_icn" size={18} color="#FFF" />
           <Text style={styles.startCounterText}>
             - {this.state.hour_until_end_date}
-            {" " + hours_string + " " + strings("and") + " "}
+            {" " + hours_string + " " + strings("id_4_09") + " "}
             {this.state.minute_until_end_date}
             {" " + mins_string}
           </Text>
@@ -2341,6 +2369,7 @@ class DetailSpecialTrainingScreen extends React.Component {
             slideDirection={SlideDirection.RIGHT}
             width={SCREEN_WIDTH - 40}
             height={65}
+            changeScrollEnabled={this.changeScrollEnabled}
           >
             <View style={slide_btn_styles.buttonInner}>
               <View
@@ -2375,16 +2404,73 @@ class DetailSpecialTrainingScreen extends React.Component {
         <TouchableWithoutFeedback
           onPress={() => {
             Tracker.trackEvent("Special training", "Special training accepted");
-            this.props.dispatch(
-              subscribeSpecialTrainingSessions({}, special_training_id, () => {
-                this.props.dispatch(getSpecialTrainingSessionSubscribed());
-              })
-            );
+            trackEvent("special_training_enrolled", "Special training");
+            // this.props.dispatch(
+            //   subscribeSpecialTrainingSessions({}, special_training_id, () => {
+            //     this.props.dispatch(getSpecialTrainingSessionSubscribed());
+            //   })
+            // );
+            // console.log("OkButtonView");
+            // console.log(this.props.navigation.state.params.sessionName);
             let session_name = this.props.navigation.state.params.sessionName;
             if (session_name == "Giretto d'Italia 2019")
               setTimeout(() => {
                 this.props.navigation.navigate("ChangeFrequentTripScreen");
               }, 500);
+            if (
+              session_name == "Love is in the not polluted air" ||
+              session_name == "MUV & MUSIC"
+            ) {
+              console.log(this.props.mfrState);
+              let flag = false;
+              for (let index = 0; index < this.props.mfrState.length; index++) {
+                const element = this.props.mfrState[index];
+                if (
+                  element.start_type == 1 &&
+                  (element.end_type == 2 || element.end_type == 4)
+                )
+                  flag = true;
+              }
+
+              if (!flag) {
+                // this.props.dispatch(
+                //   subscribeSpecialTrainingSessions(
+                //     {},
+                //     special_training_id,
+                //     () => {
+                //       this.props.dispatch(
+                //         getSpecialTrainingSessionSubscribed()
+                //       );
+                //     }
+                //   )
+                // );
+                this.props.navigation.navigate("ChangeFrequentTripScreen", {
+                  special_training_id
+                });
+              } else {
+                this.props.dispatch(
+                  subscribeSpecialTrainingSessions(
+                    {},
+                    special_training_id,
+                    () => {
+                      this.props.dispatch(
+                        getSpecialTrainingSessionSubscribed()
+                      );
+                    }
+                  )
+                );
+              }
+            } else {
+              this.props.dispatch(
+                subscribeSpecialTrainingSessions(
+                  {},
+                  special_training_id,
+                  () => {
+                    this.props.dispatch(getSpecialTrainingSessionSubscribed());
+                  }
+                )
+              );
+            }
           }}
         >
           <LinearGradient
@@ -2410,7 +2496,7 @@ class DetailSpecialTrainingScreen extends React.Component {
               ]}
             >
               <Text style={slide_btn_styles.button}>
-                {strings("ok").toLocaleUpperCase()}
+                {strings("id_0_12").toLocaleUpperCase()}
               </Text>
             </View>
           </LinearGradient>
@@ -2609,6 +2695,7 @@ class DetailSpecialTrainingScreen extends React.Component {
             { nativeEvent: { contentOffset: { y: this.state.scroll } } }
           ])}
           scrollEventThrottle={16}
+          scrollEnabled={this.state.scrollEnabled}
         >
           <View
             style={{
@@ -2703,7 +2790,6 @@ class DetailSpecialTrainingScreen extends React.Component {
             colors={[color, color1]}
             style={{
               width: Dimensions.get("window").width,
-
               overflow: "hidden",
               height: Platform.OS === "android" ? 150 : 200
             }}
@@ -2717,7 +2803,6 @@ class DetailSpecialTrainingScreen extends React.Component {
                 justifyContent: "flex-end",
                 flexDirection: "column",
                 alignItems: "center",
-
                 height: Platform.OS === "android" ? 90 : 140
               }}
             >
@@ -3081,7 +3166,8 @@ const slide_btn_styles = StyleSheet.create({
 
 const withData = connect(state => {
   return {
-    trainingsState: state.trainings
+    trainingsState: state.trainings,
+    mfrState: state.login.mostFrequentRoute
   };
 });
 

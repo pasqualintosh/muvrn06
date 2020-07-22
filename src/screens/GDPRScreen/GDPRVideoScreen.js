@@ -4,7 +4,7 @@ import { View, Dimensions, WebView, Platform } from "react-native";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 import Settings from "./../../config/Settings";
-import DeviceInfo from "react-native-device-info";
+
 import { SafeAreaView } from "react-navigation";
 
 class GDPRVideoScreen extends React.Component {
@@ -60,20 +60,7 @@ class GDPRVideoScreen extends React.Component {
   }
 
   sendEventYoutube = () => {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // let event = "open GDPRVideoScreen";
-    // let gaEvent = new GAHits.Event(
-    //   "user interaction", // category
-    //   "click MUV feed", // action
-    //   "click MUV feed", // label
-    //   event // value
-    // );
-    // ga.send(gaEvent);
+  
   };
 
   /* video verticale  */

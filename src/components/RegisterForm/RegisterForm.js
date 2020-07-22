@@ -26,7 +26,7 @@ import {
 } from "./../../domains/register/ActionCreators";
 import GoOnButton from "../GoOnButton/GoOnButton";
 import { prefixes, prefixesList } from "./../../assets/ListPrefixes";
-// import ModalDropdown from "react-native-modal-dropdown";
+import ModalDropdown from "react-native-modal-dropdown";
 import { connect } from "react-redux";
 import ModalNative from "react-native-modal";
 import PickerAndroid from "./../PickerAndroid/PickerAndroid";
@@ -52,11 +52,13 @@ class RegisterForm extends React.Component {
       validationEmail: false,
       validationPassword: true,
       checkEmail: false,
+      username: "",
       name: "",
       surname: "",
       email: "",
       phone: "",
       password: "",
+      social_backend: null, // so se sto facendo una registrazione social o no cosi so se devo togliere il campo password
       showPassword: false,
       loggedInFromFb: false,
       showTips: false,
@@ -165,6 +167,20 @@ class RegisterForm extends React.Component {
     return 0;
   };
 
+  componentWillMount() {
+    console.log(this.props.registerState);
+    // se ho preso i dati dai social li metto nei rispettivi campi
+    if (this.props.registerState.social_backend) {
+      this.setState({
+        username: this.props.registerState.username,
+        name: this.props.registerState.name,
+        surname: this.props.registerState.surname,
+        email: this.props.registerState.email,
+        social_backend: this.props.registerState.social_backend
+      });
+    }
+  }
+
   componentDidMount() {
     // this.setupGoogleSignin();
 
@@ -215,11 +231,11 @@ class RegisterForm extends React.Component {
             phone,
             password,
             username,
-            email,
-            customisation_gdpr: this.state.checkboxes[0].checked,
-            sponsorships_gdpr: this.state.checkboxes[1].checked,
-            commercialisation_gdpr: this.state.checkboxes[2].checked,
-            mailinglist_gdpr: this.state.checkboxes[3].checked
+            email
+            // customisation_gdpr: this.state.checkboxes[0].checked,
+            // sponsorships_gdpr: this.state.checkboxes[1].checked,
+            // commercialisation_gdpr: this.state.checkboxes[2].checked,
+            // mailinglist_gdpr: this.state.checkboxes[3].checked
           })
         );
         this.props.handleNextTap();
@@ -323,7 +339,7 @@ class RegisterForm extends React.Component {
         >
           <View style={styles.nativeButtonContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -334,7 +350,7 @@ class RegisterForm extends React.Component {
         >
           <View style={styles.nativeButtonContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -597,6 +613,24 @@ class RegisterForm extends React.Component {
         {this.renderModal()}
         {this.renderNativeModal()}
         <Input
+          value={this.state.username}
+          placeholder={"username" + "*"}
+          leftIcon={<OwnIcon name="name_icn" size={40} color="#E82F73" />}
+          containerStyle={styles.input}
+          onChangeText={text => {
+            this.setState({ username: text });
+          }}
+          blurOnSubmit={false}
+          onSubmitEditing={text => {
+            this.focusNextField("Name");
+          }}
+          onEndEditing={text => {
+            this.props.dispatch(updateState({ username: this.state.username }));
+          }}
+          returnKeyType={"next"}
+        />
+        <Input
+          value={this.state.name}
           placeholder={strings("name") + "*"}
           leftIcon={<OwnIcon name="name_icn" size={40} color="#E82F73" />}
           containerStyle={styles.input}
@@ -610,9 +644,11 @@ class RegisterForm extends React.Component {
           onEndEditing={text => {
             this.props.dispatch(updateState({ name: this.state.name }));
           }}
+          ref={input => this.refInput(input, "Name")}
           returnKeyType={"next"}
         />
         <Input
+          value={this.state.surname}
           placeholder={strings("surname") + "*"}
           leftIcon={<OwnIcon name="name_icn" size={40} color="#E82F73" />}
           containerStyle={styles.input}
@@ -630,6 +666,7 @@ class RegisterForm extends React.Component {
           returnKeyType={"next"}
         />
         <Input
+          value={this.state.email}
           autoCapitalize="none"
           placeholder={strings("email") + "*"}
           leftIcon={<OwnIcon name="mail_icn" size={40} color="#E82F73" />}
@@ -655,6 +692,7 @@ class RegisterForm extends React.Component {
           ref={input => this.refInput(input, "Email")}
           returnKeyType={"next"}
         />
+
         {/* <Input
           placeholder={strings("phone_number")}
           leftIcon={
@@ -747,47 +785,53 @@ class RegisterForm extends React.Component {
           ref={input => this.refInput(input, "Phone number")}
           returnKeyType={"next"}
         /> */}
-        <Input
-          autoCapitalize="none"
-          placeholder={strings("password__9_cha") + "*"}
-          leftIcon={<OwnIcon name="password_icn" size={40} color="#E82F73" />}
-          containerStyle={styles.input}
-          onFocus={() => {
-            this.scrollView.scrollTo({
-              y: 80,
-              animated: true
-            });
-          }}
-          // inputStyle={{ marginRight: -48 }}
-          rightIcon={
-            <TouchableWithoutFeedback
-              onPress={this.props.handleShowPasswordTap}
-            >
-              <View style={{ right: 60 }}>
-                <Icon
-                  name={this.props.hidePasswordIcon}
-                  size={18}
-                  color="#60368C"
-                />
-              </View>
-            </TouchableWithoutFeedback>
-          }
-          secureTextEntry={this.props.hidePassword}
-          onChangeText={text => {
-            this.setState({ password: text });
-            this.props.dispatch(updateState({ password: text }));
-          }}
-          blurOnSubmit={true}
-          onEndEditing={text => {
-            this.scrollView.scrollTo({
-              y: 0,
-              animated: true
-            });
-            this.props.dispatch(updateState({ password: this.state.password }));
-          }}
-          ref={input => this.refInput(input, "Password")}
-          returnKeyType={"done"}
-        />
+        {this.state.social_backend ? (
+          <View />
+        ) : (
+          <Input
+            autoCapitalize="none"
+            placeholder={strings("password__9_cha") + "*"}
+            leftIcon={<OwnIcon name="password_icn" size={40} color="#E82F73" />}
+            containerStyle={styles.input}
+            onFocus={() => {
+              this.scrollView.scrollTo({
+                y: 80,
+                animated: true
+              });
+            }}
+            // inputStyle={{ marginRight: -48 }}
+            rightIcon={
+              <TouchableWithoutFeedback
+                onPress={this.props.handleShowPasswordTap}
+              >
+                <View style={{ right: 60 }}>
+                  <Icon
+                    name={this.props.hidePasswordIcon}
+                    size={18}
+                    color="#60368C"
+                  />
+                </View>
+              </TouchableWithoutFeedback>
+            }
+            secureTextEntry={this.props.hidePassword}
+            onChangeText={text => {
+              this.setState({ password: text });
+              this.props.dispatch(updateState({ password: text }));
+            }}
+            blurOnSubmit={true}
+            onEndEditing={text => {
+              this.scrollView.scrollTo({
+                y: 0,
+                animated: true
+              });
+              this.props.dispatch(
+                updateState({ password: this.state.password })
+              );
+            }}
+            ref={input => this.refInput(input, "Password")}
+            returnKeyType={"done"}
+          />
+        )}
         {/* 
         <View style={{ marginTop: 15 }}>
           <Text

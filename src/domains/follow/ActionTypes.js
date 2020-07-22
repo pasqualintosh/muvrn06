@@ -3,4 +3,6 @@ export const FETCHING_DATA_FOLLOW_COMPLETE = "FETCHING_DATA_FOLLOW_COMPLETE";
 export const GET_FOLLOWING = "GET_FOLLOWING";
 export const GET_FOLLOWER = "GET_FOLLOWER";
 export const SET_SELECTION_FOLLOW = "SET_SELECTION_FOLLOW";
+// aggiorno un generico data specificato in info
+export const UPDATE_SPECIFIC_DATA = "UPDATE_SPECIFIC_DATA";
 

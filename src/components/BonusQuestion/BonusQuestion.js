@@ -339,7 +339,7 @@ export function traslateTextQuiz(text) {
       return strings("_405_which_of_these_");
     }
 
-    // fare associazione di tutte le domande e risposte del pro 
+    // fare associazione di tutte le domande e risposte del pro
 
     default: {
       return text;
@@ -372,8 +372,8 @@ class BonusQuestion extends React.Component {
         Platform.OS === "ios" &&
         (Dimensions.get("window").height === 812 ||
           Dimensions.get("window").width === 812 ||
-          (Dimensions.get("window").height === 896 ||
-            Dimensions.get("window").width === 896))
+          Dimensions.get("window").height === 896 ||
+            Dimensions.get("window").width === 896)
           ? 20
           : 0
     };
@@ -870,8 +870,8 @@ class BonusQuestion extends React.Component {
                 Platform.OS === "ios" &&
                 (Dimensions.get("window").height === 812 ||
                   Dimensions.get("window").width === 812 ||
-                  (Dimensions.get("window").height === 896 ||
-                    Dimensions.get("window").width === 896))
+                  Dimensions.get("window").height === 896 ||
+                    Dimensions.get("window").width === 896)
                   ? 35
                   : 0,
               height: 40
@@ -936,8 +936,8 @@ class BonusQuestion extends React.Component {
                 Platform.OS === "ios" &&
                 (Dimensions.get("window").height === 812 ||
                   Dimensions.get("window").width === 812 ||
-                  (Dimensions.get("window").height === 896 ||
-                    Dimensions.get("window").width === 896))
+                  Dimensions.get("window").height === 896 ||
+                    Dimensions.get("window").width === 896)
                   ? 35
                   : 0,
               height: 40

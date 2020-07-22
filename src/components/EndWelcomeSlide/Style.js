@@ -5,6 +5,10 @@ const isX =
   Platform.OS === "ios" && (d.height > 800 || d.width > 800) ? true : false;
 
 export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F7F8F9",
+  },
   mainContainer: {
     flex: 1,
     // backgroundColor: "#3d3d3d",
@@ -60,7 +64,7 @@ export const styles = StyleSheet.create({
     height: 160,
     backgroundColor: "transparent",
     position: "absolute",
-    top: Dimensions.get("window").height * 0.65 - 20,
+    top: Dimensions.get("window").height * 0.65 - 90,
     // top: Dimensions.get("window").height * 0.55,
     flexDirection: "column",
     justifyContent: "center",
@@ -84,6 +88,10 @@ export const styles = StyleSheet.create({
     // shadowColor: "#000",
     // shadowOffset: { width: 0, height: 2 },
     // shadowOpacity: 0.5
+  },
+  SocialbuttonContainer: {
+    position: "absolute",
+    top: Dimensions.get("window").height * 0.75 + 40 - 90,
   },
   buttonBox: {
     width: Dimensions.get("window").width * 0.68,

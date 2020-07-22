@@ -23,10 +23,15 @@ import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import Svg, { Circle } from "react-native-svg";
 
 import Settings from "../../config/Settings";
-import DeviceInfo from "react-native-device-info";
+
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
 import { strings } from "../../config/i18n";
+
+import analytics from "@react-native-firebase/analytics";
+async function trackEvent(event, data) {
+  await analytics().logEvent(event, { data });
+}
 
 class InviteScreen extends React.Component {
   constructor() {
@@ -37,23 +42,11 @@ class InviteScreen extends React.Component {
   }
 
   sendEventShared = () => {
-    // const ga = new Analytics(
-    //   Settings.analyticsCode,
-    //   DeviceInfo.getUniqueID(),
-    //   1,
-    //   DeviceInfo.getUserAgent()
-    // );
-    // let event = this.state.events["shared-clicked"];
-    // let gaEvent = new GAHits.Event(
-    //   "user interaction", // category
-    //   "shared clicked", // action
-    //   "sharing", // label
-    //   event // value
-    // );
-    // ga.send(gaEvent);
+
   };
 
   inviteWhatsApp = url => {
+    trackEvent("invite_friends", "Whatsapp");
     this.sendEventShared();
     const link = `whatsapp://send?text=${url}`;
 
@@ -90,6 +83,8 @@ class InviteScreen extends React.Component {
     //   alert(JSON.stringify(error));
     // }
 
+    trackEvent("invite_friends", "Gmail");
+
     try {
       this.sendEventShared();
       Linking.openURL("googlegmail://?subject=MUV&body={" + url + "}");
@@ -100,6 +95,7 @@ class InviteScreen extends React.Component {
   };
 
   inviteEmail = url => {
+    trackEvent("invite_friends", "Email");
     this.sendEventShared();
     const urlEmail = "mailto:?subject=MUV&body={" + url + "}";
 
@@ -125,6 +121,7 @@ class InviteScreen extends React.Component {
   };
 
   inviteTelegram = url => {
+    trackEvent("invite_friends", "Telegram");
     this.sendEventShared();
     // controllo se ho telegram, in caso lo scarico dallo store
     const link = `tg://msg?text=${url}`;
@@ -149,6 +146,7 @@ class InviteScreen extends React.Component {
   };
 
   inviteOther = url => {
+    trackEvent("invite_friends", "Other source");
     this.sendEventShared();
     Share.share(
       {
@@ -164,6 +162,7 @@ class InviteScreen extends React.Component {
   };
 
   writeToClipboard = async url => {
+    trackEvent("invite_friends", "Copied to clipboard");
     this.sendEventShared();
     await Clipboard.setString(url);
   };

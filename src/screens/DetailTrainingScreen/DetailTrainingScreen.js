@@ -27,8 +27,9 @@ import { UpdateProfile } from "./../../domains/login/ActionCreators";
 import { strings } from "../../config/i18n";
 import { translateEvent } from "./../../helpers/translateEvent";
 import { infoEvents } from "./../../helpers/dataEvents";
+import WebService from "../../config/WebService";
 import { Client } from "bugsnag-react-native";
-const bugsnag = new Client("58b3b39beb78eba9efdc2d08aeb15d84");
+const bugsnag = new Client(WebService.BugsnagAppId);
 
 class DetailTrainingScreen extends React.Component {
   constructor(props) {
@@ -103,11 +104,13 @@ class DetailTrainingScreen extends React.Component {
         break;
       case "row":
         dateCounter = dataRedux ? dataRedux.date : 0;
+        // oggi come inizio giorno 
         dateNow = new Date(new Date().toDateString()).getTime();
         console.log(dateNow);
 
+        // giorno tratta fatta piu un giorno 
         dateSave = new Date(
-          new Date(1561531227180 + 86400000).toDateString()
+          new Date(dateCounter + 86400000).toDateString()
         ).getTime();
         console.log(dateSave);
 
@@ -240,7 +243,10 @@ class DetailTrainingScreen extends React.Component {
               console.log(numberCounter);
             } catch (error) {
               // Error saving data
-              bugsnag.notify(error);
+             
+              bugsnag.notify(error, function (report) {
+                report.metadata = { error: error };
+              });
             }
           }
         }

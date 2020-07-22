@@ -37,6 +37,11 @@ import { images } from "./../../components/InfoUserHome/InfoUserHome";
 import { Tester } from "./../../config/Tester";
 import { pushNotifications } from "./../../services/";
 import LogOut from "../../components/LogOut/LogOut";
+import {
+  frequentTripsState,
+  frequentTripsNotSaveState
+} from "./../../domains/login/Selectors.js";
+import { data } from "./../../assets/ListCities";
 
 // <View style={{ paddingBottom: Dimensions.get("window").height / 10 }} />
 // aggiungere un po di padding alla fine cosi è possibile vedere tutti gli elementti
@@ -44,7 +49,7 @@ import LogOut from "../../components/LogOut/LogOut";
 
 import {
   postMostFrequentRouteNotSave,
-  UpdateProfile,
+  updateProfileNew,
   setNotificationTime,
   setNotificationBoolean,
   setWeekDaysNotification,
@@ -74,13 +79,13 @@ const type = [
 
 // tipi di scelte
 const select = {
-  BikeSharingChoose: [strings("no"), strings("yes")],
-  CarSharingChoose: [strings("no"), strings("yes")],
+  BikeSharingChoose: [strings("id_14_04"), strings("id_14_03")],
+  CarSharingChoose: [strings("id_14_04"), strings("id_14_03")],
   localTransportSubscriberChoose: ["No", "Monthly", "Annual"],
   trainTransportSubscriberChoose: ["No", "Monthly", "Annual"],
-  poolingPilotChoose: [strings("no"), strings("yes")],
-  poolingPassengerChoose: [strings("no"), strings("yes")],
-  occupation: [
+  poolingPilotChoose: [strings("id_14_04"), strings("id_14_03")],
+  poolingPassengerChoose: [strings("id_14_04"), strings("id_14_03")],
+  employment: [
     strings("to_fill"),
     strings("unemployed"),
     strings("student"),
@@ -93,7 +98,7 @@ const select = {
     .fill(0)
     .map((e, i) => i + 40)
     .map(elem => elem.toString()),
-  gender: [strings("prefer_not_to_s"), strings("male"), strings("female")],
+  gender: [strings("id_13_22"), strings("id_13_20"), strings("id_13_21")],
   height: Array(121)
     .fill(0)
     .map((e, i) => i + 100)
@@ -108,9 +113,9 @@ class PersonalAnagraficDataScreen extends React.Component {
       BusPass: false,
       CarSharing: false,
       Bikesharing: false,
-      BikeSharingService: [strings("no"), strings("yes")],
+      BikeSharingService: [strings("id_14_04"), strings("id_14_03")],
       BikeSharingChoose: "No",
-      CarSharingService: [strings("no"), strings("yes")],
+      CarSharingService: [strings("id_14_04"), strings("id_14_03")],
       CarSharingChoose: "No",
       trainTransportSubscriberChoose: "No",
       localTransportSubscriberChoose: "No",
@@ -122,9 +127,9 @@ class PersonalAnagraficDataScreen extends React.Component {
       isModalVisibleWeight: false,
       load: true,
       weight: "0",
-      birthdate: "",
+      date_of_birth: "",
       data: {},
-      gender: strings("prefer_not_to_s"),
+      gender: strings("id_13_22"),
       height: "0",
       first_name: strings("to_fill"),
       last_name: strings("to_fill"),
@@ -154,7 +159,7 @@ class PersonalAnagraficDataScreen extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("personal_data")}
+          {strings("id_13_03")}
         </Text>
       )
       // headerRight: <LogOut />
@@ -162,6 +167,8 @@ class PersonalAnagraficDataScreen extends React.Component {
   };
 
   componentDidMount() {
+    console.log(this.state.date_of_birth);
+
     // chiedo i dati delle routine al db
     // this.props.dispatch(getMostFrequentRoute());
     // carico eventuali routine ancora non salvate nel db
@@ -170,21 +177,18 @@ class PersonalAnagraficDataScreen extends React.Component {
 
     const info = { ...infoProfile, ...infoProfileNotSave };
 
-    console.log(infoProfile);
-    console.log(this.props.infoProfile);
-
     // se non ho info non salvate nel db, le metto in data
 
     this.setState(
       {
-        weight: info.weight ? info.weight.toString() : strings("to_fill"),
-        birthdate: info.birthdate
-          ? info.birthdate.length
-            ? info.birthdate
+        weight: info.weight ? info.weight.toString() : "-",
+        date_of_birth: info.date_of_birth
+          ? info.date_of_birth.length
+            ? info.date_of_birth
             : strings("to_fill")
           : strings("to_fill"),
-        gender: info.gender ? info.gender : strings("prefer_not_to_s"),
-        height: info.height ? info.height.toString() : strings("to_fill"),
+        gender: info.gender ? info.gender : "-",
+        height: info.height ? info.height.toString() : "-",
         first_name: info.first_name ? info.first_name : strings("to_fill"),
         last_name: info.last_name ? info.last_name : strings("to_fill"),
         avatar: info.avatar <= 48 && info.avatar > 0 ? info.avatar : 1,
@@ -205,16 +209,13 @@ class PersonalAnagraficDataScreen extends React.Component {
               6: false
             },
         data: { ...infoProfileNotSave },
+        // prendo il nome della città dal file json
         cityName: infoProfile.city
-          ? infoProfile.city.city_name
-            ? infoProfile.city.city_name
-            : ""
-          : "",
-        city: infoProfile.city
-          ? infoProfile.city.id
-            ? infoProfile.city.id
-            : 0
-          : 0,
+          ? data.cities[infoProfile.city - 1]
+            ? data.cities[infoProfile.city - 1].name
+            : strings("id_13_67")
+          : strings("id_13_67"),
+        city: infoProfile.city ? infoProfile.city : 0,
         trainTransportSubscriberChoose: this.getLocalTransportChoose(
           infoProfile.public_local_transport_subscriber
         ),
@@ -235,7 +236,7 @@ class PersonalAnagraficDataScreen extends React.Component {
             ? infoProfile.community.name
             : null
           : null,
-        occupation: info.occupation ? info.occupation : strings("to_fill")
+        employment: info.employment ? info.employment : strings("to_fill")
       },
       () => {
         console.log(this.state);
@@ -247,20 +248,6 @@ class PersonalAnagraficDataScreen extends React.Component {
     console.log("aggiornamento dati ");
     this.sendNewChange();
   }
-
-  ConfermNewAvatar = avatar => {
-    // this.unsetBackgroundGeolocation();
-    console.log(avatar);
-    this.setState(prevState => {
-      return {
-        avatar,
-        data: {
-          ...prevState.data,
-          avatar
-        }
-      };
-    });
-  };
 
   getLocalTransportValue = v => {
     switch (v) {
@@ -323,50 +310,41 @@ class PersonalAnagraficDataScreen extends React.Component {
     });
   };
 
-  changeNotificationScheduleTime = (h, m, notification_set, type, callback) => {
-    const value = `${h}:${m}`;
+  // da string a   03/02/2020
+  conversDate = string => {
+    console.log(string);
+    // const date = moment(string).format('L')
+    // const date = new Date(string).toISOString().substring(0, 10)
 
-    this.props.dispatch(
-      setNotificationTime(value, this.state.choosed_week_days)
-    );
+    date = new Date(string);
+    year = date.getFullYear();
+    month = date.getMonth() + 1;
+    dt = date.getDate();
 
-    this.props.dispatch(setWeekDaysNotification(this.state.choosed_week_days));
+    if (dt < 10) {
+      dt = "0" + dt;
+    }
+    if (month < 10) {
+      month = "0" + month;
+    }
 
-    this.props.dispatch(
-      UpdateProfile({
-        data: {
-          public_profile: {
-            notification_schedule: this.state.notification_schedule
-          }
-        }
-      })
-    );
+    dateTot = year + "-" + month + "-" + dt;
 
-    this.setState(prevState => {
-      return {
-        [type]: value,
-        notification_set,
-        data: {
-          ...prevState.data,
-          [type]:
-            callback && typeof callback === "function" ? callback(value) : value
-        }
-      };
-    });
-    this.sendNewChange();
+    console.log(dateTot);
+    return dateTot;
   };
 
   ConvertId = value => {
-    if (value === strings("male")) {
+    if (value === strings("id_13_20")) {
       return 1;
-    } else if (value === strings("female")) {
+    } else if (value === strings("id_13_21")) {
       return 2;
     } else {
       return 0;
     }
   };
 
-  ConvertOccupation = value => {
+  Convertemployment = value => {
     if (value === strings("to_fill")) {
       return 0;
     } else if (value === strings("unemployed")) {
@@ -399,45 +377,20 @@ class PersonalAnagraficDataScreen extends React.Component {
         // );
 
         this.props.dispatch(
-          UpdateProfile({
-            data: {
-              // ...this.state.data,
-              private_profile: {
-                weight: this.state.weight,
-                birthdate: this.state.birthdate,
-                // gender: this.state.gender,
-                height: this.state.height,
-                first_name: this.state.first_name,
-                last_name: this.state.last_name,
-                ...this.state.data
-              },
-              public_profile: {
-                bike_sharing_user:
-                  this.state.BikeSharingChoose == "Yes" ? true : false,
-                car_sharing_user:
-                  this.state.CarSharingChoose == "Yes" ? true : false,
-                pooling_pilot:
-                  this.state.poolingPilotChoose == "Yes" ? true : false,
-                pooling_passenger:
-                  this.state.poolingPassengerChoose == "Yes" ? true : false,
-                public_local_transport_subscriber: this.getLocalTransportValue(
-                  this.state.localTransportSubscriberChoose
-                ),
-                public_train_transport_subscriber: this.getLocalTransportValue(
-                  this.state.trainTransportSubscriberChoose
-                )
-              }
-            }
+          updateProfileNew({
+            data: this.state.data
+            // {
+            //   first_name: this.state.first_name,
+            //   last_name: this.state.last_name,
+            //   date_of_birth: this.state.date_of_birth,
+            //   gender: this.state.gender,
+            //   employment: this.state.employment,
+            //   weight: this.state.weight,
+            //   height: this.state.height
+            // }
           })
         );
-        // this.props.dispatch(
-        //   UpdateProfile({
-        //     data: {
-        //       bike_sharing_user:
-        //         this.state.BikeSharingChoose == "yes" ? true : false
-        //     }
-        //   })
-        // );
+
         // inviati cancello i dati
         this.setState({
           data: {}
@@ -461,208 +414,6 @@ class PersonalAnagraficDataScreen extends React.Component {
     });
   };
 
-  getNotificationHour = () => {
-    if (this.state.notification_schedule != null) {
-      const stringH = this.state.notification_schedule.substr(0, 2);
-      return Number.parseInt(stringH);
-    } else {
-      return new Date().getHours();
-      // return new Date().getHours() > 12
-      //   ? new Date().getHours() - 12
-      //   : new Date().getHours();
-    }
-  };
-
-  getNotificationMinute = () => {
-    if (this.state.notification_schedule != null) {
-      let stringM = "";
-
-      if (this.getNotificationHour() < 10)
-        stringM = this.state.notification_schedule.substr(2, 2);
-      else stringM = this.state.notification_schedule.substr(3, 2);
-
-      return Number.parseInt(stringM);
-    } else {
-      return new Date().getMinutes();
-    }
-  };
-
-  renderDeleteBtn(index, id) {
-    const numFrequentTrips = this.props.routine.length;
-    // al momento il tasto x non c'e
-    if (numFrequentTrips > 1)
-      return (
-        <View
-          style={{
-            width: 18,
-            height: 18
-          }}
-        >
-          <TouchableWithoutFeedback
-            onPress={() => {
-              Alert.alert(
-                strings("frequent_trip"),
-                strings("delete_this_fre"),
-                [
-                  {
-                    text: "Cancel",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
-                  },
-                  {
-                    text: strings("ok").toLocaleUpperCase(),
-                    onPress: () =>
-                      this.props.dispatch(deleteMostFrequentRoute({}, id))
-                  }
-                ],
-                { cancelable: false }
-              );
-            }}
-          >
-            <View
-              style={{
-                width: 18,
-                height: 18,
-                backgroundColor: "#FC6754",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: 1,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 0.01 },
-                shadowOpacity: 0.2
-              }}
-            >
-              <Text style={styles.iconText}>x</Text>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      );
-    else
-      return (
-        <View
-          style={{
-            width: 18,
-            height: 18,
-            backgroundColor: "transparent",
-            justifyContent: "center",
-            alignItems: "center",
-            right: -5,
-            borderRadius: 1,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 0.01 },
-            shadowOpacity: 0.2
-          }}
-        />
-      );
-  }
-
-  renderNotificationSchedulePointer() {
-    return (
-      <View
-        style={{
-          width: 8,
-          height: 8,
-          alignSelf: "center",
-          position: "absolute",
-          left: -60
-        }}
-      >
-        <TouchableWithoutFeedback
-          onPress={() => {
-            if (this.state.notification_set) {
-              Alert.alert(
-                "Cancel all the notification schedule",
-                "Are you sure? :/",
-                [
-                  {
-                    text: "Yes",
-                    onPress: () => {
-                      pushNotifications.cancelAllLocalNotifications();
-                      // this.props.dispatch(
-                      //   setNotificationTime(
-                      //     "--:--",
-                      //     this.state.choosed_week_days
-                      //   )
-                      // );
-                      this.setState({
-                        notification_set: false,
-                        notification_schedule: null
-                      });
-                      this.changeState(false, "notification_set", null);
-                      // this.changeNotificationScheduleTime(
-                      //   "--",
-                      //   "--",
-                      //   false,
-                      //   "notification_schedule",
-                      //   null
-                      // );
-                      this.props.dispatch(
-                        UpdateProfile({
-                          data: {
-                            public_profile: { notification_schedule: null }
-                          }
-                        })
-                      );
-                    }
-                  },
-                  { text: "No" }
-                ],
-                { cancelable: false }
-              );
-            }
-          }}
-        >
-          <View
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 5,
-              backgroundColor: this.state.notification_set
-                ? "#87D99A"
-                : "#FC6754"
-            }}
-          />
-        </TouchableWithoutFeedback>
-      </View>
-    );
-  }
-
-  renderNotificationScheduleSettings() {
-    // if (Tester.includes(this.props.user.username)) {
-    return (
-      <View style={styles.other}>
-        <Text style={styles.Left}>Schedule notification</Text>
-        <View
-          style={{
-            justifyContent: "center",
-            alignItems: "center"
-          }}
-        >
-          {this.renderNotificationSchedulePointer()}
-          <TimePicker
-            value={
-              this.state.notification_schedule
-                ? this.state.notification_schedule
-                : strings("to_fill")
-            }
-            mode="time"
-            type="notification_schedule"
-            changeState={this.changeNotificationScheduleTime}
-            hour={this.getNotificationHour()}
-            minute={this.getNotificationMinute()}
-            choosedWeekDays={this.state.choosed_week_days}
-          />
-        </View>
-      </View>
-    );
-    // }
-  }
-  goToDetailFrequentRoutine = elem => {
-    this.props.navigation.navigate("FrequentRoutineMapDetail", {
-      routine: elem
-    });
-  };
-
   render() {
     return (
       <View
@@ -679,15 +430,11 @@ class PersonalAnagraficDataScreen extends React.Component {
         >
           <View style={styles.other}>
             <View style={styles.session}>
-              <Text style={styles.Left}>{strings("first_name")}</Text>
+              <Text style={styles.Left}>{strings("id_0_14")}</Text>
               <ChangeNameModalContent
-                title={"Insert your first name"}
-                placeholder={strings("first_name")}
-                value={
-                  this.state.first_name
-                    ? this.state.first_name
-                    : strings("to_fill")
-                }
+                title={strings("id_0_14")}
+                placeholder={strings("id_0_14")}
+                value={this.state.first_name ? this.state.first_name : "-"}
                 type={"first_name"}
                 changeState={this.changeState}
               />
@@ -695,10 +442,10 @@ class PersonalAnagraficDataScreen extends React.Component {
           </View>
           <View style={styles.other}>
             <View style={styles.session}>
-              <Text style={styles.Left}>{strings("last_name")}</Text>
+              <Text style={styles.Left}>{strings("id_0_16")}</Text>
               <ChangeNameModalContent
-                title={"Insert your last name"}
-                placeholder={strings("last_name")}
+                title={strings("id_0_16")}
+                placeholder={strings("id_0_16")}
                 value={
                   this.state.last_name
                     ? this.state.last_name
@@ -709,13 +456,13 @@ class PersonalAnagraficDataScreen extends React.Component {
               />
             </View>
           </View>
-          {/*
+
           <View style={styles.other}>
             <View style={styles.session}>
               <View style={styles.halfSession}>
-                <Text style={styles.LeftTitle}>{strings("city")}</Text>
+                <Text style={styles.LeftTitle}>{strings("id_13_65")}</Text>
                 <Text style={styles.LeftDescr}>
-                  {strings("select_the_city")}
+                  {strings("id_13_66")}
                 </Text>
               </View>
               <View
@@ -731,7 +478,13 @@ class PersonalAnagraficDataScreen extends React.Component {
                     });
                   }}
                   style={{
-                    flexDirection: "row"
+                    alignSelf: "center",
+                    flexDirection: "row",
+                    justifyContent: "flex-end",
+                    alignContent: "center",
+                    alignItems: "center",
+                    height: Dimensions.get("window").height * 0.1,
+                    width: Dimensions.get("window").width * 0.45
                   }}
                 >
                   <Text
@@ -746,24 +499,13 @@ class PersonalAnagraficDataScreen extends React.Component {
                   >
                     {this.state.cityName
                       ? this.state.cityName
-                      : strings("to_fill")}
+                      : strings("id_13_67")}
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
-           
-            <ChangeCityModalContent
-              title={strings("select_your_cit")}
-              placeholder="City"
-              value={
-                this.state.cityName ? this.state.cityName : strings("to_fill")
-              }
-              type={"cityName"}
-              changeState={this.changeState}
-              cityId={this.state.city}
-            /> 
-            
-          </View> 
+          </View>
+          {/* 
 
           <View style={styles.other}>
             <View style={styles.session}>
@@ -792,29 +534,26 @@ class PersonalAnagraficDataScreen extends React.Component {
           <View style={styles.other}>
             <View style={styles.session}>
               <View style={styles.halfSession}>
-                <Text style={styles.LeftTitle}>{strings("date_of_birth")}</Text>
-                <Text style={styles.LeftDescr}>
-                  {strings("we_d_like_to_kn")}
-                </Text>
+                <Text style={styles.LeftTitle}>{strings("id_13_14")}</Text>
+                <Text style={styles.LeftDescr}>{strings("id_13_15")}</Text>
               </View>
               <DatePicker
                 value={
-                  this.state.birthdate
-                    ? this.state.birthdate
+                  this.state.date_of_birth
+                    ? this.state.date_of_birth
                     : strings("to_fill")
                 }
-                type={"birthdate"}
+                type={"date_of_birth"}
                 changeState={this.changeState}
+                function={this.conversDate}
               />
             </View>
           </View>
           <View style={styles.other}>
             <View style={[styles.session]}>
               <View style={styles.halfSession}>
-                <Text style={styles.LeftTitle}>{strings("gender")}</Text>
-                <Text style={styles.LeftDescr}>
-                  {strings("this_will_make_")}
-                </Text>
+                <Text style={styles.LeftTitle}>{strings("id_13_16")}</Text>
+                <Text style={styles.LeftDescr}>{strings("id_13_17")}</Text>
               </View>
               <PickerModalContent
                 value={
@@ -822,21 +561,21 @@ class PersonalAnagraficDataScreen extends React.Component {
                     ? typeof this.state.gender === "number"
                       ? select.gender[this.state.gender]
                       : this.state.gender
-                    : strings("prefer_not_to_s")
+                    : "-"
                 }
                 type={"gender"}
                 changeState={this.changeState}
                 listValue={[
-                  strings("prefer_not_to_s"),
-                  strings("male"),
-                  strings("female")
+                  strings("id_13_22"),
+                  strings("id_13_20"),
+                  strings("id_13_21")
                 ]}
                 extraValue={""}
                 function={this.ConvertId}
               />
             </View>
           </View>
-          <View style={styles.other}>
+          {/* <View style={styles.other}>
             <View style={[styles.session]}>
               <View style={styles.halfSession}>
                 <Text style={styles.LeftTitle}>{strings("occupation")}</Text>
@@ -846,17 +585,17 @@ class PersonalAnagraficDataScreen extends React.Component {
               </View>
               <PickerModalContent
                 value={
-                  this.state.occupation
-                    ? typeof this.state.occupation === "number"
-                      ? select.occupation[this.state.occupation]
-                      : this.state.occupation
+                  this.state.employment
+                    ? typeof this.state.employment === "number"
+                      ? select.employment[this.state.employment]
+                      : this.state.employment
                     : strings("to_fill")
                 }
-                type={"occupation"}
+                type={"employment"}
                 changeState={this.changeState}
                 listValue={[
                   strings("to_fill"),
-                  // strings("prefer_not_to_s"),
+                  // strings("id_13_22"),
                   strings("unemployed"),
                   strings("student"),
                   strings("employee"),
@@ -865,24 +604,18 @@ class PersonalAnagraficDataScreen extends React.Component {
                   strings("homemaker")
                 ]}
                 extraValue={""}
-                function={this.ConvertOccupation}
+                function={this.Convertemployment}
               />
             </View>
-          </View>
+          </View> */}
           <View style={styles.other}>
             <View style={styles.session}>
               <View style={styles.halfSession}>
-                <Text style={styles.LeftTitle}>{strings("height")}</Text>
-                <Text style={styles.LeftDescr}>
-                  {strings("this_will_make_")}
-                </Text>
+                <Text style={styles.LeftTitle}>{strings("id_13_18")}</Text>
+                <Text style={styles.LeftDescr}>{strings("id_13_17")}</Text>
               </View>
               <PickerModalContent
-                value={
-                  this.state.height !== "0"
-                    ? this.state.height
-                    : strings("to_fill")
-                }
+                value={this.state.height !== "0" ? this.state.height : "-"}
                 type={"height"}
                 changeState={this.changeState}
                 listValue={select.height}
@@ -894,17 +627,11 @@ class PersonalAnagraficDataScreen extends React.Component {
           <View style={styles.other}>
             <View style={styles.session}>
               <View style={styles.halfSession}>
-                <Text style={styles.LeftTitle}>{strings("weight")}</Text>
-                <Text style={styles.LeftDescr}>
-                  {strings("this_will_make_")}
-                </Text>
+                <Text style={styles.LeftTitle}>{strings("id_13_19")}</Text>
+                <Text style={styles.LeftDescr}>{strings("id_13_17")}</Text>
               </View>
               <PickerModalContent
-                value={
-                  this.state.weight !== "0"
-                    ? this.state.weight
-                    : strings("to_fill")
-                }
+                value={this.state.weight !== "0" ? this.state.weight : "-"}
                 type={"weight"}
                 changeState={this.changeState}
                 listValue={select.weight}
@@ -923,18 +650,10 @@ class PersonalAnagraficDataScreen extends React.Component {
 const withData = connect(state => {
   // prendo solo le routine
   return {
-    routine: state.login.mostFrequentRoute ? state.login.mostFrequentRoute : [],
-    routineNotSave: state.login.mfr_modal_split_NotSave
-      ? state.login.mfr_modal_split_NotSave
-      : [],
+    routine: frequentTripsState(state),
+    routineNotSave: frequentTripsNotSaveState(state),
     user: state.login,
-    infoProfile: state.login.infoProfile,
-    points:
-      state.statistics.statistics === []
-        ? 0
-        : state.statistics.statistics.reduce((total, elem, index, array) => {
-            return total + elem.points;
-          }, 0)
+    infoProfile: state.login.infoProfile
   };
 });
 

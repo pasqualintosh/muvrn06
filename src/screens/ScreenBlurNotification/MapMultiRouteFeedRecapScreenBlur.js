@@ -12,6 +12,7 @@ import Aux from "../../helpers/Aux";
 import Blur from "../../components/Blur/Blur";
 import NotificationPoint from "./../../components/NotificationPoint/NotificationPoint";
 import MapMultiRouteFeedRecapScreen from "../MapMultiRouteFeedRecapScreen/MapMultiRouteFeedRecapScreen";
+import { strings } from "../../config/i18n";
 
 class MapMultiRouteFeedRecapScreenBlur extends React.Component {
   constructor(props) {
@@ -26,7 +27,7 @@ class MapMultiRouteFeedRecapScreenBlur extends React.Component {
           left: Platform.OS == "android" ? 20 : 0
         }}
       >
-        Map trip recap
+        {strings("id_1_23")}
       </Text>
     )
   };

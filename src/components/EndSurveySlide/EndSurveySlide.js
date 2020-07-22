@@ -7,6 +7,11 @@ import GoOnButton from "./../GoOnButton/GoOnButton";
 import { connect } from "react-redux";
 import { createAccount } from "./../../domains/register/ActionCreators";
 
+import analytics from "@react-native-firebase/analytics";
+async function trackEvent(event, data) {
+  await analytics().logEvent(event, { data });
+}
+
 class EndSurveySlide extends React.Component {
   getOverallModalSplit = modal_splits => {
     const overall_modal_split = {
@@ -96,6 +101,8 @@ class EndSurveySlide extends React.Component {
             this.props.dispatch(
               createAccount(account, this.props.handleNextTap)
             );
+
+            trackEvent("end_registration", "User interactions");
             // this.props.handleNextTap();
           }}
         />

@@ -32,11 +32,12 @@ import GameReverseUserItem from "./../../components/GameReverseUserItem/GameReve
 import { medalSmallGlobalView } from "./../TrophiesRanking/TrophiesRanking";
 import pointsDecimal from "../../helpers/pointsDecimal";
 import { limitAvatar } from "./../../components/UserItem/UserItem";
-import { getWeeklySingleMatch } from "./../../domains/screen/ActionCreators";
+import { getWeeklySingleMatch, getSchedulePlayoff } from "./../../domains/screen/ActionCreators";
 import { getCurrentMatchState } from "./../../domains/screen/Selectors";
 import ArrowGame from "./../../components/ArrowGame/ArrowGame";
 import ArrowGif from "./../../components/ArrowGif/ArrowGif";
 import DescriptionIcon from "../../components/DescriptionIcon/DescriptionIcon";
+import { playoffPhrase, playoffStart } from "../ScheduleGameScreen/ScheduleGameScreen"
 //
 import { data, currentSingleMatch } from "../../helpers/tournament";
 
@@ -112,55 +113,55 @@ class GameWeekTournamentScreen extends React.Component {
     // console.log(this.props.match.weekly_user_standing_home); // first_pos, second_pos, third_pos
     // console.log(this.props.match.weekly_user_standing_away); // first_pos, second_pos, third_pos
 
-    
-    
-    if (this.props.match) {
-    if (this.props.standingsState.length > 0) {
-      let user_id_array = new Array();
-    if (this.props.match.weekly_user_standing_home) {
-      if (this.props.match.weekly_user_standing_home.first_pos) {
-        user_id_array.push(
-          this.props.match.weekly_user_standing_home.first_pos.user_id.user_id
-        );
-        }
-        if (this.props.match.weekly_user_standing_home.second_pos) {
-        user_id_array.push(
-          this.props.match.weekly_user_standing_home.second_pos.user_id.user_id
-        );
-        }
-        if (this.props.match.weekly_user_standing_home.third_pos) {
-        user_id_array.push(
-          this.props.match.weekly_user_standing_home.third_pos.user_id.user_id
-        );
-    }
-    
-    }
-    if (this.props.match.weekly_user_standing_away) {
-      if (this.props.match.weekly_user_standing_away.first_pos) {
-        user_id_array.push(
-          this.props.match.weekly_user_standing_away.first_pos.user_id.user_id
-        );
-      }
-      if (this.props.match.weekly_user_standing_away.second_pos) {
-      user_id_array.push(
-        this.props.match.weekly_user_standing_away.second_pos.user_id.user_id
-      );
-      }
-      if (this.props.match.weekly_user_standing_away.third_pos) {
-      user_id_array.push(
-        this.props.match.weekly_user_standing_away.third_pos.user_id.user_id
-      );
-      }
-    }
-      let user_sponsor_array = this.props.standingsState.filter(e => {
-        if (user_id_array.includes(e.referred_route__user_id)) return e;
-      });
-      // console.log(user_id_array);
-      // console.log(user_sponsor_array);
 
-      this.setState({ user_sponsor_array });
+
+    if (this.props.match) {
+      if (this.props.standingsState.length > 0) {
+        let user_id_array = new Array();
+        if (this.props.match.weekly_user_standing_home) {
+          if (this.props.match.weekly_user_standing_home.first_pos) {
+            user_id_array.push(
+              this.props.match.weekly_user_standing_home.first_pos.user_id.user_id
+            );
+          }
+          if (this.props.match.weekly_user_standing_home.second_pos) {
+            user_id_array.push(
+              this.props.match.weekly_user_standing_home.second_pos.user_id.user_id
+            );
+          }
+          if (this.props.match.weekly_user_standing_home.third_pos) {
+            user_id_array.push(
+              this.props.match.weekly_user_standing_home.third_pos.user_id.user_id
+            );
+          }
+
+        }
+        if (this.props.match.weekly_user_standing_away) {
+          if (this.props.match.weekly_user_standing_away.first_pos) {
+            user_id_array.push(
+              this.props.match.weekly_user_standing_away.first_pos.user_id.user_id
+            );
+          }
+          if (this.props.match.weekly_user_standing_away.second_pos) {
+            user_id_array.push(
+              this.props.match.weekly_user_standing_away.second_pos.user_id.user_id
+            );
+          }
+          if (this.props.match.weekly_user_standing_away.third_pos) {
+            user_id_array.push(
+              this.props.match.weekly_user_standing_away.third_pos.user_id.user_id
+            );
+          }
+        }
+        let user_sponsor_array = this.props.standingsState.filter(e => {
+          if (user_id_array.includes(e.referred_route__user_id)) return e;
+        });
+        // console.log(user_id_array);
+        // console.log(user_sponsor_array);
+
+        this.setState({ user_sponsor_array });
+      }
     }
-  }
   }
 
   componentWillUnmount() {
@@ -196,13 +197,61 @@ class GameWeekTournamentScreen extends React.Component {
       });
   };
 
+  // salvo le partite correnti
+  saveWeek = (data, index) => {
+
+    let start_match = 0
+    if (data.length) {
+      end_match = data[0].season_match.end_match;
+      start_match = data[0].season_match.start_match;
+
+      this.timerTournament(end_match);
+      this.timer = setInterval(() => this.timerTournament(end_match), 60000);
+    }
+
+
+
+    // nome della mia citta
+    // this.props.city
+    // trovo il match che mi interessa
+
+    let match_id = 0;
+
+    data.forEach(element => {
+      if (element.season_match.city_away.city_name === this.props.city) {
+        match_id = element.season_match.season_match_id;
+        this.setState({
+          recapMatch: element,
+          match_id
+        });
+      } else if (element.season_match.city_home.city_name === this.props.city) {
+        match_id = element.season_match.season_match_id;
+        this.setState({
+          recapMatch: element,
+          match_id
+        });
+      }
+    });
+
+    if (match_id) {
+      this.props.dispatch(
+        getWeeklySingleMatch({
+          match_id,
+          start_match: start_match,
+          saveData: this.saveMatch,
+          currentMatch: true
+        })
+      );
+    }
+  };
+
   componentWillMount() {
     const height =
       Dimensions.get("window").height * 0.12 > 120
         ? 120
         : Dimensions.get("window").height * 0.12 < 60
-        ? 60
-        : Dimensions.get("window").height * 0.12;
+          ? 60
+          : Dimensions.get("window").height * 0.12;
     // const match = this.props.navigation.getParam("match", {});
     const infoProfile = this.props.navigation.getParam("infoProfile", {
       first_name: "",
@@ -229,21 +278,36 @@ class GameWeekTournamentScreen extends React.Component {
         })
       );
     } else {
-      const { indexMatch, end_match, start_match } = currentSingleMatch(
-        data,
-        infoProfile.city.city_name
-      );
+      const Now = new Date().getTime()
+      const playoff = playoffStart(Now)
+      console.log(playoff)
+      let phrase = 0
+      if (playoff) {
+        // devo vedere in che settimana del playoff sono
+        const playoffState = playoffPhrase(Now)
+        phrase = playoffState.phrase
+        console.log(phrase)
+        this.props.dispatch(
+          getSchedulePlayoff({ season_playoff: this.state.phrase }, this.saveWeek)
+        );
+      } else {
+        const { indexMatch, end_match, start_match } = currentSingleMatch(
+          data,
+          infoProfile.city.city_name
+        );
 
-      this.timerTournament(end_match);
-      this.timer = setInterval(() => this.timerTournament(end_match), 60000);
-      this.props.dispatch(
-        getWeeklySingleMatch({
-          match_id: indexMatch,
-          start_match: start_match,
-          saveData: this.saveMatch,
-          currentMatch: true
-        })
-      );
+        this.timerTournament(end_match);
+        this.timer = setInterval(() => this.timerTournament(end_match), 60000);
+        this.props.dispatch(
+          getWeeklySingleMatch({
+            match_id: indexMatch,
+            start_match: start_match,
+            saveData: this.saveMatch,
+            currentMatch: true
+          })
+        );
+      }
+
     }
 
     // controllo se infoprofile ha dei dati 
@@ -255,13 +319,15 @@ class GameWeekTournamentScreen extends React.Component {
         avatar: 1,
         city: {
           city_name: ""
-        }} : {
+        }
+      } : {
           first_name: "",
           last_name: "",
           avatar: 1,
           city: {
             city_name: ""
-          }},
+          }
+        },
       height
     });
   }
@@ -543,7 +609,7 @@ class GameWeekTournamentScreen extends React.Component {
                   this.props.match.season_match.city_home.id
                 )
               }
-              // disabled={true}
+            // disabled={true}
             >
               <View
                 style={{
@@ -614,42 +680,42 @@ class GameWeekTournamentScreen extends React.Component {
               />
             </View>
           ) : (
-            <TouchableWithoutFeedback
-              onPress={() => this.DescriptionIconModal("tournamentInfo")}
-            >
-              <View
-                style={{
-                  width: Dimensions.get("window").width / 3,
-                  height: 170,
-                  alignItems: "center",
-                  justifyContent: "space-around",
-                  flexDirection: "column"
-                }}
+              <TouchableWithoutFeedback
+                onPress={() => this.DescriptionIconModal("tournamentInfo")}
               >
                 <View
-                  style={{ alignItems: "center", justifyContent: "center" }}
+                  style={{
+                    width: Dimensions.get("window").width / 3,
+                    height: 170,
+                    alignItems: "center",
+                    justifyContent: "space-around",
+                    flexDirection: "column"
+                  }}
                 >
-                  <OwnIcon
-                    name="timer_icn"
-                    size={35}
-                    color={"#FFFFFF"}
-                    click={() => this.DescriptionIconModal("tournamentInfo")}
-                  />
-                  <Text style={styles.timerText}>
-                    {this.state.day}d {this.state.hour}h {this.state.minutes}min{" "}
-                  </Text>
+                  <View
+                    style={{ alignItems: "center", justifyContent: "center" }}
+                  >
+                    <OwnIcon
+                      name="timer_icn"
+                      size={35}
+                      color={"#FFFFFF"}
+                      click={() => this.DescriptionIconModal("tournamentInfo")}
+                    />
+                    <Text style={styles.timerText}>
+                      {this.state.day}d {this.state.hour}h {this.state.minutes}min{" "}
+                    </Text>
+                  </View>
+                  <View
+                    style={{ alignItems: "center", justifyContent: "center" }}
+                  >
+                    <ArrowGif
+                      total_point_home={this.props.match.total_point_home}
+                      total_point_away={this.props.match.total_point_away}
+                    ></ArrowGif>
+                  </View>
                 </View>
-                <View
-                  style={{ alignItems: "center", justifyContent: "center" }}
-                >
-                  <ArrowGif
-                    total_point_home={this.props.match.total_point_home}
-                    total_point_away={this.props.match.total_point_away}
-                  ></ArrowGif>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          )}
+              </TouchableWithoutFeedback>
+            )}
           <View
             style={{
               width: Dimensions.get("window").width / 3,
@@ -691,7 +757,7 @@ class GameWeekTournamentScreen extends React.Component {
                   this.props.match.season_match.city_away.id
                 )
               }
-              // disabled={true}
+            // disabled={true}
             >
               <View
                 style={{
@@ -829,11 +895,11 @@ class GameWeekTournamentScreen extends React.Component {
                 )}
               />
             ) : (
-              this.NoUser("#FFFFFF")
-            )
+                this.NoUser("#FFFFFF")
+              )
           ) : (
-            this.NoUser("#FFFFFF")
-          )}
+              this.NoUser("#FFFFFF")
+            )}
           {this.props.match.weekly_user_standing_away ? (
             this.props.match.weekly_user_standing_away.first_pos ? (
               <GameReverseUserItem
@@ -850,11 +916,11 @@ class GameWeekTournamentScreen extends React.Component {
                 )}
               />
             ) : (
-              this.NoUser("#FFFFFF")
-            )
+                this.NoUser("#FFFFFF")
+              )
           ) : (
-            this.NoUser("#FFFFFF")
-          )}
+              this.NoUser("#FFFFFF")
+            )}
           <View
             style={{
               width: 25,
@@ -898,11 +964,11 @@ class GameWeekTournamentScreen extends React.Component {
                 )}
               />
             ) : (
-              this.NoUser("#F7F8F9")
-            )
+                this.NoUser("#F7F8F9")
+              )
           ) : (
-            this.NoUser("#F7F8F9")
-          )}
+              this.NoUser("#F7F8F9")
+            )}
           {this.props.match.weekly_user_standing_away ? (
             this.props.match.weekly_user_standing_away.second_pos ? (
               <GameReverseUserItem
@@ -921,11 +987,11 @@ class GameWeekTournamentScreen extends React.Component {
                 )}
               />
             ) : (
-              this.NoUser("#F7F8F9")
-            )
+                this.NoUser("#F7F8F9")
+              )
           ) : (
-            this.NoUser("#F7F8F9")
-          )}
+              this.NoUser("#F7F8F9")
+            )}
           <View
             style={{
               width: 25,
@@ -967,11 +1033,11 @@ class GameWeekTournamentScreen extends React.Component {
                 )}
               />
             ) : (
-              this.NoUser("#FFFFFF")
-            )
+                this.NoUser("#FFFFFF")
+              )
           ) : (
-            this.NoUser("#FFFFFF")
-          )}
+              this.NoUser("#FFFFFF")
+            )}
           {this.props.match.weekly_user_standing_away ? (
             this.props.match.weekly_user_standing_away.third_pos ? (
               <GameReverseUserItem
@@ -988,11 +1054,11 @@ class GameWeekTournamentScreen extends React.Component {
                 )}
               />
             ) : (
-              this.NoUser("#FFFFFF")
-            )
+                this.NoUser("#FFFFFF")
+              )
           ) : (
-            this.NoUser("#FFFFFF")
-          )}
+              this.NoUser("#FFFFFF")
+            )}
           <View
             style={{
               width: 25,

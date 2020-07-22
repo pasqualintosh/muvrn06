@@ -18,8 +18,9 @@ const state = {
   car_year: "aaaa",
   car_segment_answer: "",
   car_fuel: "",
-  car: null,
-  moto: null,
+  car: 0, 
+  moto: 0,
+  bike: 0,
   moto_owning_answer: 0,
   moto_year: "aaaa",
   moto_engine_answer: "",
@@ -31,6 +32,12 @@ const state = {
   phone: "",
   password: "",
   email: "",
+  social_backend: null, // identifica il tipo di registrazione che sto svolgendo tipo null, google-oauth2, facebook
+  access_token_social: null, // accessToken ottenuto dal social 
+  location:{
+    "latitude": 0, //  posizione salvata in fase di registrazione  
+    "longitude": 0
+},
   followed_user_id: null,
   referral_url: null,
   link_status: null,
@@ -50,7 +57,16 @@ const state = {
     4: true,
     5: true,
     6: false
-  }
+  },
+  // dati relativi agli slider per il proprio stile di mobilità, utile per calcolare la co2
+  // distance: 0, al momento viene calcolata da una stima con duration e dai vari slider
+   duration : 0,
+   walk_slider : 0,
+   bike_slider : 0,
+   bus_slider : 0,
+   train_slider : 0,
+   car_slider : 0,
+   motorbike_slider : 0,
 };
 
 export default state;

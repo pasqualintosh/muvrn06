@@ -187,30 +187,33 @@ class SurveySelectAvatarRegister extends React.Component {
             />
           </View>
         </TouchableWithoutFeedback>
-        {listName[item.index + 1].length ?
-        <View
-          style={{
-            paddingTop: 3,
-            paddingBottom: 5,
-            width: 80,
-            justifyContent: "center",
-            alignContent: "center",
-            flexDirection: "row",
-            alignItems: "center",
-            alignSelf: "center"
-          }}
-        >
-          <Text
+        {listName[item.index + 1].length ? (
+          <View
             style={{
-              color: "#3D3D3D",
-              fontSize: 10,
-              textAlign: "center",
-              fontFamily: "OpenSans-Regular"
+              paddingTop: 3,
+              paddingBottom: 5,
+              width: 80,
+              justifyContent: "center",
+              alignContent: "center",
+              flexDirection: "row",
+              alignItems: "center",
+              alignSelf: "center"
             }}
           >
-            {listName[item.index + 1]}
-          </Text>
-        </View> : <View/>}
+            <Text
+              style={{
+                color: "#3D3D3D",
+                fontSize: 10,
+                textAlign: "center",
+                fontFamily: "OpenSans-Regular"
+              }}
+            >
+              {listName[item.index + 1]}
+            </Text>
+          </View>
+        ) : (
+          <View />
+        )}
       </View>
     ));
   };

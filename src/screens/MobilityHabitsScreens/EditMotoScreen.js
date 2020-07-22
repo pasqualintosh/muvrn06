@@ -271,8 +271,8 @@ class EditMotoScreen extends React.Component {
           alignItems: "center"
         }}
       >
-        {this.renderMotoOwningCheckbox(0, strings("no"))}
-        {this.renderMotoOwningCheckbox(1, strings("yes"))}
+        {this.renderMotoOwningCheckbox(0, strings("id_0_54"))}
+        {this.renderMotoOwningCheckbox(1, strings("id_0_55"))}
         {this.renderMotoOwningCheckbox(2, strings("yes__it_is_at_m"))}
       </View>
     );
@@ -288,7 +288,7 @@ class EditMotoScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -299,7 +299,7 @@ class EditMotoScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>

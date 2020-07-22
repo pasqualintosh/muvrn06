@@ -17,7 +17,7 @@ import { BoxShadow } from "react-native-shadow";
 
 import { images } from "../../components/InfoUserHome/InfoUserHome";
 import { data } from "./../../assets/ListCities";
-import DeviceInfo from "react-native-device-info";
+import { getDevice } from "../../helpers/deviceInfo"
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
 import { addOpenPeriodicFeed } from "../../domains/login/ActionCreators";
@@ -96,7 +96,7 @@ class InviteFriendFeed extends React.PureComponent {
         first_name: this.props.infoProfile.first_name,
         last_name: this.props.infoProfile.last_name,
         avatar: this.props.infoProfile.avatar,
-        points: this.props.Points,
+        points: 0,
         role: this.props.infoProfile.role,
         coins: this.props.infoProfile.coins,
         level: JSON.stringify(this.props.infoProfile.level),
@@ -349,7 +349,7 @@ class InviteFriendFeed extends React.PureComponent {
     }
   };
 
-  sendFeedBack = () => {
+  sendFeedBack = async () => {
     /* 
     try {
         Linking.openURL(
@@ -369,22 +369,9 @@ class InviteFriendFeed extends React.PureComponent {
       } 
     */
 
-    const systemName = DeviceInfo.getSystemName();
-    const systemVersion = DeviceInfo.getSystemVersion();
-    const model = DeviceInfo.getModel();
-    const manufacturer = DeviceInfo.getManufacturer();
-    const deviceId = DeviceInfo.getDeviceId();
+   const device = await getDevice()
 
-    const device =
-      manufacturer +
-      " " +
-      deviceId +
-      " " +
-      model +
-      " " +
-      systemVersion +
-      " " +
-      systemName;
+   
 
     const url =
       "mailto:developers@wepush.org?subject=Hey buddies, I’ve a feedback about MUV 🤓 📬&body=Ciao,\nit’s [your name]\nand since I don’t have much time, here is my very brief feedback about MUV:\n- 🤬 this didn’t work --> ...\n- 🤯 I didn’t get this --> ...\n- 🤔 you should work better on this --> ...\n- 🤩 this is pretty neat! --> ...\n\nI'm sure you'll apreciate this and I hope my feedback will improve my beloved app.\nLove you all,\n[your name] 💞\n" +
@@ -604,7 +591,6 @@ class InviteFriendFeed extends React.PureComponent {
     } else if (this.props.modal_type === "Trophies") {
       this.props.navigation.navigate("Trophies");
     } else if (this.props.modal_type === "Level") {
-      
       this.props.navigation.navigate("ProfileStack");
     } else if (this.props.modal_type === "addFrequentTrips") {
       // con addOpenPeriodicFeed dico quale feed ho aperto cosi poi lo posso togliere
@@ -642,7 +628,6 @@ class InviteFriendFeed extends React.PureComponent {
       this.props.modal_type === "InviteConfirmed"
     ) {
       // this.props.dispatch(addOpenPeriodicFeed(4));
-     
 
       this.props.navigation.navigate("FriendStack");
     } else if (this.props.modal_type == "newST") {
@@ -1338,22 +1323,22 @@ export function timeAgo(DataNow, Data) {
 
     // minuti
     let time = TimeAgo / 60000;
-    let text = strings("mins");
+    let text = strings("id_4_06");
     let minute = true;
     let intTime = parseInt(time);
 
     if (intTime !== 0) {
       if (intTime === 1) {
-        text = strings("minute");
+        text = strings("id_4_07");
       }
       // ore
       let timeNew = time / 60;
       intTime = parseInt(timeNew);
       if (intTime !== 0) {
         if (intTime === 1) {
-          text = strings("hour");
+          text = strings("id_4_05");
         } else {
-          text = strings("hours");
+          text = strings("id_4_04");
         }
         time = timeNew;
 
@@ -1364,9 +1349,9 @@ export function timeAgo(DataNow, Data) {
         intTime = parseInt(timeNew);
         if (intTime !== 0) {
           if (intTime === 1) {
-            text = strings("day");
+            text = strings("id_4_03");
           } else {
-            text = strings("days");
+            text = strings("id_4_02");
           }
           time = timeNew;
 
@@ -1375,9 +1360,9 @@ export function timeAgo(DataNow, Data) {
           intTime = parseInt(timeNew);
           if (intTime !== 0) {
             if (intTime === 1) {
-              text = strings("month");
+              text = strings("id_18_19");
             } else {
-              text = strings("months");
+              text = strings("id_18_18");
             }
             time = timeNew;
           }
@@ -1386,8 +1371,8 @@ export function timeAgo(DataNow, Data) {
     }
     time = parseInt(time);
 
-    if (time === 0 && minute) label = " | " + strings("now");
-    else label = " | " + time + " " + text + " " + strings("ago");
+    if (time === 0 && minute) label = " | " + strings("id_1_22");
+    else label = " | " + time + " " + text + " " + strings("id_1_21");
   }
   return label;
 }
@@ -1463,14 +1448,7 @@ const styles = {
 
 const withConnect = connect(state => {
   return {
-    roleAll: state.login.role,
-
-    Points:
-      state.statistics.statistics === []
-        ? 0
-        : state.statistics.statistics.reduce((total, elem, index, array) => {
-            return total + elem.points;
-          }, 0)
+    roleAll: state.login.role
   };
 });
 

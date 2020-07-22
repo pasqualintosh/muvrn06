@@ -30,7 +30,6 @@ import {
 
 import { strings } from "../../config/i18n";
 
-
 class SelectTeamScrollScreen extends React.Component {
   constructor(props) {
     super(props);
@@ -59,105 +58,15 @@ class SelectTeamScrollScreen extends React.Component {
           console.log(position.coords);
           // BackgroundGeolocation.stop();
           this.unsetBackgroundGeolocation();
-          if (this.props.registerState.cityId == undefined) {
-            this.setState(
-              {
-                user_lat: position.coords.latitude,
-                user_lon: position.coords.longitude
-              },
-              () => {
-                this.props.dispatch(
-                  getCity({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude
-                  })
-                );
 
-                if (this.mapRef) {
-                  this.mapRef.animateToCoordinate(position.coords, 1000);
-                }
-
-                Geocoder.init("AIzaSyC3cg3CWrVwdNa1ULzzlxZ-gy-4gCp080M");
-                Geocoder.from({
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude
-                })
-                  .then(json => {
-                    street = json.results[0].address_components;
-
-                    let country_name = street[6].long_name;
-                    let country_code = street[6].short_name;
-
-                    let prefix = prefixesList.find(p => p.name === country_name)
-                      .code;
-
-                    let prefixIndex = prefixesList.findIndex(el => {
-                      return el.name === country_name;
-                    });
-
-                    // setTimeout(() => {
-                    //   console.log(this.props.navigation)
-                    //   if (
-                    //     this.props.navigation.state.params.start_point
-                    //   ) {
-                    //     if (this.props.registerState.frequent_trip_start) {
-                    //       this.setState({
-                    //         points: [
-                    //           {
-                    //             latitude: this.props.registerState
-                    //               .frequent_trip_start.latitude,
-                    //             longitude: this.props.registerState
-                    //               .frequent_trip_start.longitude,
-                    //             key: +new Date()
-                    //           }
-                    //         ]
-                    //       });
-                    //       if (this.mapRef) {
-                    //         this.mapRef.animateToCoordinate(
-                    //           this.props.registerState.frequent_trip_start,
-                    //           1000
-                    //         );
-                    //       }
-                    //     }
-                    //   }
-                    //   if (this.props.navigation.state.params.end_point) {
-                    //     if (this.props.registerState.frequent_trip_end) {
-                    //       this.setState({
-                    //         points: [
-                    //           {
-                    //             latitude: this.props.registerState
-                    //               .frequent_trip_end.latitude,
-                    //             longitude: this.props.registerState
-                    //               .frequent_trip_end.longitude,
-                    //             key: +new Date()
-                    //           }
-                    //         ]
-                    //       });
-                    //       if (this.mapRef) {
-                    //         this.mapRef.animateToCoordinate(
-                    //           this.props.registerState.frequent_trip_end,
-                    //           1000
-                    //         );
-                    //       }
-                    //     }
-                    //   }
-                    // }, 500);
-
-                    this.props.dispatch(
-                      updateState({
-                        country_name,
-                        prefix,
-                        prefixIndex,
-                        country_code,
-                        map_position: position.coords
-                      })
-                    );
-                    this.props.dispatch(getCity(position.coords));
-                  })
-                  .catch(error => console.warn(error));
+          this.props.dispatch(
+            updateState({
+              location: {
+                latitude: position.coords.latitude, //  posizione per la regitrazione
+                longitude: position.coords.latitude
               }
-            );
-          }
+            })
+          );
         },
         error => alert(error.message),
         { enableHighAccuracy: false, timeout: 20000, maximumAge: 1000 }
@@ -197,58 +106,16 @@ class SelectTeamScrollScreen extends React.Component {
 
     BackgroundGeolocation.on("location", location => {
       BackgroundGeolocation.startTask(taskKey => {
-        if (this.props.registerState.cityId == undefined) {
-          this.setState(
-            {
-              user_lat: location.latitude,
-              user_lon: location.longitude
-            },
-            () => {
-              if (this.mapRef) {
-                this.mapRef.animateToCoordinate(location, 1000);
-              }
-
-              Geocoder.init("AIzaSyC3cg3CWrVwdNa1ULzzlxZ-gy-4gCp080M");
-              Geocoder.from({
-                latitude: location.latitude,
-                longitude: location.longitude
-              })
-                .then(json => {
-                  street = json.results[0].address_components;
-                  let country_name = street[6].long_name;
-                  let country_code = street[6].short_name;
-
-                  let prefix = prefixesList.find(p => p.name === country_name)
-                    .code;
-
-                  let prefixIndex = prefixesList.findIndex(el => {
-                    return el.name === country_name;
-                  });
-
-                  this.props.dispatch(
-                    updateState({
-                      country_name,
-                      prefix,
-                      prefixIndex,
-                      country_code
-                    })
-                  );
-                  this.props.dispatch(getCity(location));
-                })
-                .catch(error => console.warn(error));
-
-              BackgroundGeolocation.stop();
+        this.props.dispatch(
+          updateState({
+            location: {
+              latitude: location.latitude, //  posizione per la regitrazione
+              longitude: location.latitude
             }
-          );
+          })
+        );
 
-          this.props.dispatch(getCity(location));
-
-          if (this.mapRef) {
-            this.mapRef.animateToCoordinate(location, 1000);
-          }
-
-          BackgroundGeolocation.endTask(taskKey);
-        }
+        BackgroundGeolocation.endTask(taskKey);
       });
     });
 
@@ -277,11 +144,11 @@ class SelectTeamScrollScreen extends React.Component {
               "MUV wants to access your position. To save your battery we reccomend you to select 'Allow only while...'",
               [
                 {
-                  text: strings("yes"),
+                  text: strings("id_14_03"),
                   onPress: () => BackgroundGeolocation.showAppSettings()
                 },
                 {
-                  text: strings("no"),
+                  text: strings("id_14_04"),
                   onPress: () => console.log("No Pressed"),
                   style: "cancel"
                 }
@@ -491,15 +358,23 @@ class SelectTeamScrollScreen extends React.Component {
                     onPress={() => {
                       // this.props.navigation.navigate("SurveyEnd");
                       // this.props.navigation.navigate("GDPRScreen");
-                      if (this.props.registerState.cityId != undefined) {
+                      // if (
+                      //   this.props.registerState.location &&
+                      //   this.props.registerState.location.latitude != 0
+                      // ) {
+                      if (true) {
                         this.unsetBackgroundGeolocation();
-                        this.props.navigation.navigate("SurveyModal");
-                      } else Alert.alert("Oops", strings("seems_like_you_"));
+                        this.props.navigation.navigate("SurveyAvatar");
+                      } else
+                        Alert.alert(
+                          strings("id_0_10"),
+                          strings("seems_like_you_")
+                        );
                     }}
                   >
                     <View style={[styles.buttonBox]}>
                       <Text style={styles.buttonGoOnText}>
-                        {strings("go_on")}
+                        {strings("id_0_15")}
                       </Text>
                     </View>
                   </TouchableWithoutFeedback>

@@ -257,8 +257,8 @@ class EditCarScreen extends React.Component {
           alignItems: "center"
         }}
       >
-        {this.renderCarOwningCheckbox(0, strings("no"))}
-        {this.renderCarOwningCheckbox(1, strings("yes"))}
+        {this.renderCarOwningCheckbox(0, strings("id_0_54"))}
+        {this.renderCarOwningCheckbox(1, strings("id_0_55"))}
         {this.renderCarOwningCheckbox(2, strings("yes__it_is_at_m"))}
       </View>
     );
@@ -311,7 +311,7 @@ class EditCarScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("undo").toLocaleUpperCase()}
+              {strings("id_0_68").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>
@@ -322,7 +322,7 @@ class EditCarScreen extends React.Component {
         >
           <View style={styles.buttonModalContainer}>
             <Text style={styles.textButton}>
-              {strings("ok").toLocaleUpperCase()}
+              {strings("id_0_12").toLocaleUpperCase()}
             </Text>
           </View>
         </TouchableWithoutFeedback>

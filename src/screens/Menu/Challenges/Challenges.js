@@ -32,7 +32,7 @@ const Challenge = createStackNavigator(
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("challenges")}
+          {strings(strings("id_3_01"))}
         </Text>
       ),
       headerLeft: null

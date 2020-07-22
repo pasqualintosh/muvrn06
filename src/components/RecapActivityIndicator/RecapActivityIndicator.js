@@ -14,6 +14,7 @@ import {
 import ProgressBar from "react-native-progress/Bar";
 
 import { timeAgo } from "../RecapTraining/RecapTraining";
+import { strings } from "../../config/i18n";
 
 // componente per visualizzare i punti che ho guadagnato in questo preciso momento
 
@@ -148,7 +149,7 @@ class RecapActivityIndicator extends React.Component {
             flexDirection: "row",
             justifyContent: "center",
             alignItems: "center",
-            width: Dimensions.get("window").width * 0.05,
+            width: Dimensions.get("window").width * 0.05
             // height: 55
           }}
         >
@@ -190,6 +191,12 @@ class RecapActivityIndicator extends React.Component {
           color = "#60368C";
         }
         break;
+        case "Carpooling":
+          {
+            color = "#3363AD";
+           
+          
+          }
       default:
         {
           color = "rgba(108, 186, 126, 1)";
@@ -206,7 +213,7 @@ class RecapActivityIndicator extends React.Component {
             flexDirection: "row",
             justifyContent: "center",
             alignItems: "center",
-            width: Dimensions.get("window").width * 0.15,
+            width: Dimensions.get("window").width * 0.15
             // height: 55
             // backgroundColor: "#ffa",
             // borderLeftColor: "#9D9B9C80",
@@ -226,16 +233,15 @@ class RecapActivityIndicator extends React.Component {
           }}
         >
           <Text style={styles.textTitle}>
-            <Text style={styles.textModalSplit}>Trip loading...</Text>
+            <Text style={styles.textModalSplit}>{strings("id_18_26")}</Text>
             {label}
           </Text>
 
-          <View style={{ marginVertical: 6,  marginBottom: 25 }}>
+          <View style={{ marginVertical: 6, marginBottom: 25 }}>
             <ProgressBar
               borderRadius={2}
               progress={
-                this.props.NumRouteAnalyzed /
-                (this.props.NumRoute + this.props.NumRouteAnalyzed)
+                1 / (this.props.NumRoute + this.props.NumRouteAnalyzed + 1)
               }
               width={Dimensions.get("window").width * 0.5}
               color={color}
@@ -247,10 +253,10 @@ class RecapActivityIndicator extends React.Component {
           <View
             style={{
               flexDirection: "row",
-                justifyContent: "center",
-                alignItems: "center",
-                alignContent: 'center',
-                width: Dimensions.get("window").width * 0.05,
+              justifyContent: "center",
+              alignItems: "center",
+              alignContent: "center",
+              width: Dimensions.get("window").width * 0.05
               // height: 55
             }}
           >

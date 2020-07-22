@@ -1,4 +1,4 @@
-import { Alert, Platform } from "react-native";
+import { Alert, Platform, Geolocation } from "react-native";
 import {
   START_LOGIN,
   FAIL_LOGIN,
@@ -35,18 +35,28 @@ import {
   SET_SESSION_TOKEN,
   ADD_PAGE_COUNTED,
   RESET_PAGE_COUNTED,
-  SET_SODDFRUST_FLAG
+  SET_SODDFRUST_FLAG,
+  REFRESHING_TOKEN,
+  DONE_REFRESHING_TOKEN,
+  SAVE_TRIPS,
+  EDIT_MFR,
 } from "./ActionTypes";
+import { UPDATE_TRIP_DATA } from "./../tracking/ActionTypes";
 import { UPDATE_STATE } from "./../register/ActionTypes";
+
 import {
   UpdateStatus,
   ResetPreviousRoute,
-  resumeRoute
+  resumeRoute,
+  UpdatePreviousRoute,
+  UpdateIdSameRoute,
 } from "./../tracking/ActionCreators";
 import {
   getStats,
   getWeeklyActivities,
-  updateActivities
+  updateActivities,
+  getWeeklyActivitiesNew,
+  updateActivitiesStep,
 } from "./../statistics/ActionCreators";
 
 import axios from "axios";
@@ -57,7 +67,9 @@ import {
   getWeeklyFriendLeaderboard,
   getTrophies,
   getWeeklyLeaderboardByCommunity,
-  getSpecificPosition
+  getSpecificPosition,
+  getSpecificPositionNew,
+  getTrophiesNew,
 } from "./../../domains/standings/ActionCreators";
 
 import {
@@ -67,14 +79,31 @@ import {
   putEvent,
   putEventOfflineFor,
   getSpecialTrainingSessions,
-  getSpecialTrainingSessionSubscribed
+  getSpecialTrainingSessionSubscribed,
 } from "./../../domains/trainings/ActionCreators";
 
 import {
   postRegisterFollower,
-  getFollowersUser
+  getFollowersUser,
+  getListFriend,
+  getListRequestFriend,
 } from "./../../domains/follow/ActionCreators";
 import { getWeeklySingleMatch } from "./../../domains/screen/ActionCreators";
+import {
+  getChallenges,
+  getChallengesRewards,
+  getChallengesRewardsByUser,
+  getChallengeRankingByUser,
+  getRewardsCategory,
+  getChallengesAllowed,
+} from "./../../domains/challenges/ActionCreators";
+
+import {
+  getTournamentsQualification,
+  getTeamsByTournament,
+  getTournaments,
+  getTeams,
+} from "./../tournaments/ActionCreators";
 
 import qs from "qs";
 
@@ -82,94 +111,274 @@ import { pushNotifications } from "./../../services";
 import WebService from "./../../config/WebService";
 import { LOGIN } from "../user/ActionTypes";
 import { emailPresentTypeformUserList } from "./../../config/Tester";
-// import * as Keychain from "react-native-keychain";
+import * as Keychain from "react-native-keychain";
 
 import { strings } from "../../config/i18n";
 
 import { Client } from "bugsnag-react-native";
-const bugsnag = new Client("58b3b39beb78eba9efdc2d08aeb15d84");
+const bugsnag = new Client(WebService.BugsnagAppId);
+
+import DeviceInfo from "react-native-device-info";
+import { getDevice } from "../../helpers/deviceInfo";
+import moment from "moment";
+
+import { getIdModalTypeNew } from "../tracking/Support";
+import { store } from "./../../store";
+
+import BackgroundGeolocation from "./../../helpers/geolocation";
 
 // cambio status al tasto play
 export function changeStatusButton(StatusButton) {
-  return async function(dispatch) {
-    dispatch({
-      type: CHANGE_STATUS_BUTTON,
-      StatusButton
+  return {
+    type: CHANGE_STATUS_BUTTON,
+    StatusButton,
+  };
+}
+
+// salvo sul db la versione dell'app usata
+export function saveAppVersionUsage() {
+  const versionNow = DeviceInfo.getVersion();
+  if (store.getState().login.infoProfile.app_version != versionNow) {
+    store.dispatch(updateProfileNew({ data: { app_version: versionNow } }));
+  }
+}
+
+export function setBackgroundGeolocation() {
+  try {
+    navigator.geolocation.getCurrentPosition((position) => {
+      console.log(position);
+      store.dispatch(
+        getCityInfoForUser({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+      );
     });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// posizione dell'utente (città se non è stata ancora settata)
+export function savePositionUsage() {
+  if (!store.getState().login.infoProfile.gmaps_location) {
+    setBackgroundGeolocation();
+  }
+}
+
+export function getCityInfoForUser(position = { latitude: 40, longitude: 40 }) {
+  return async function (dispatch) {
+    try {
+      const response = await axios({
+        method: "get",
+        url: `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=${WebService.API_KEY_Google}&language=it`,
+      });
+      console.log(response);
+
+      if (response.status === 200) {
+        // metto un valore di default per sapere che almeno ho cercato ma non ho trovato nulla
+        let localityName = "";
+        let administrativeName = "";
+        let countryName = "";
+
+        let administrative_area_level_3_city_name = "";
+        let administrative_area_level_2_city_name = "";
+        let administrative_area_level_1_city_name = "";
+        let country_city_name = "";
+
+        if (response.data.results) {
+          // se ho dei risultati
+          // prendo quelle liste che hanno come granualità piu grande la citta locale
+          const cityLisy = response.data.results.filter(
+            (elem) =>
+              elem.address_components &&
+              elem.address_components.length &&
+              elem.address_components[0].types[0] == "locality"
+          );
+          console.log(cityLisy);
+
+          if (cityLisy.length) {
+            // prendo l'ultima città
+            const cityFind = cityLisy[cityLisy.length - 1];
+            for (i = 0; i < cityFind.address_components.length; i++) {
+              // cerco le info che mi interessano
+              const address_component = cityFind.address_components[i];
+              if (address_component.types && address_component.types.length) {
+                if (address_component.types[0] == "locality") {
+                  localityName = address_component.long_name;
+                } else if (
+                  address_component.types[0] == "administrative_area_level_3"
+                ) {
+                  administrative_area_level_3_city_name =
+                    address_component.long_name;
+                } else if (
+                  address_component.types[0] == "administrative_area_level_2"
+                ) {
+                  administrative_area_level_2_city_name =
+                    address_component.long_name;
+                  administrativeName = address_component.long_name;
+                } else if (
+                  address_component.types[0] == "administrative_area_level_1"
+                ) {
+                  administrative_area_level_1_city_name =
+                    address_component.long_name;
+                } else if (address_component.types[0] == "country") {
+                  countryName = address_component.long_name;
+                  country_city_name = address_component.long_name;
+                }
+              }
+            }
+          }
+        }
+
+        const cityRoute = {
+          administrative_area_level_3_city_name,
+          administrative_area_level_2_city_name,
+          administrative_area_level_1_city_name,
+          country_city_name,
+        };
+        dispatch(createInfoCityIdForUser(cityRoute));
+      } else {
+        // se non risponde correttamente setto i valore a ""
+
+        const msg = new Error("getCityInfoForUser fail");
+        bugsnag.notify(msg, function (report) {
+          report.metadata = { problem: response };
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+}
+
+export function createInfoCityIdForUser(infoCity) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    console.log("createInfoCityIdForUser");
+    console.log(infoCity);
+    let { access_token } = getState().login;
+
+    try {
+      const response = await requestNewBackend(
+        "post",
+        "/api/v1/tools/gmaps/",
+        access_token,
+        infoCity,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 201 || response.status === 200) {
+        // mi salvo l'id della città che devo usare poi nella post
+
+        dispatch(updateProfileNew({ data: { gmaps_location: response.data } }));
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(
+          forceRefreshTokenWithCallback(createInfoCityIdForUser(infoCity))
+        );
+      } else {
+        const msg = new Error("createInfoCityIdForUser fail");
+        bugsnag.notify(msg, function (report) {
+          report.metadata = { problem: response };
+        });
+        // dispatch({
+        //   type: FAIL_LOGIN,
+        //   payload: { error_description: "error" },
+        // });
+      }
+
+      // in caso di errore, mando anche l'errore utile per sapere cosa sbaglio tipo email
+      /* dispatch({
+          type: FAIL_LOGIN,
+          payload: error.response.data
+        }); */
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        // dispatch({
+        //   type: START_LOGIN,
+        //   payload: {
+        //     status: "",
+        //   },
+        // });
+      } else {
+        console.log(error.message);
+      }
+      // dispatch({
+      //   type: FAIL_LOGIN,
+      //   payload: { error_description: "error catch createInfoCityIdForTrip" },
+      // });
+      console.log(error.config);
+    }
   };
 }
 
 // Ho completato uno specifico tutorial
 export function completeTutorial(tutorial) {
-  return async function(dispatch) {
-    dispatch({
-      type: COMPLETE_TUTORIAL,
-      payload: tutorial
-    });
+  return {
+    type: COMPLETE_TUTORIAL,
+    payload: tutorial,
   };
 }
 
 // Resetto uno specifico tutorial, cosi lo posso rivedere
 export function resetTutorial(tutorial) {
-  return async function(dispatch) {
-    dispatch({
-      type: RESET_TUTORIAL,
-      payload: tutorial
-    });
+  return {
+    type: RESET_TUTORIAL,
+    payload: tutorial,
   };
 }
 
 export function setLanguage(language) {
-  return async function(dispatch) {
-    dispatch({
-      type: SET_LANGUAGE,
-      payload: language
-    });
+  return {
+    type: SET_LANGUAGE,
+    payload: language,
   };
 }
 
 export function addFrequentRouteFromRecap(payload) {
-  return async function(dispatch) {
-    console.log(payload);
+  return async function (dispatch) {
     dispatch({
       type: ADD_FREQUENT_ROUTE_FROM_RECAP,
-      payload
+      payload,
     });
   };
 }
 
 export function newBestScore(payload) {
-  return async function(dispatch) {
-    console.log(payload);
-    dispatch({
-      type: NEW_BEST_SCORE,
-      payload
-    });
+  return {
+    type: NEW_BEST_SCORE,
+    payload,
   };
 }
 
 // quando devo salvare che ho completato un feed di aggiornamento che spunta random nel feed
 export function addCompleteUpdateFeed(num) {
-  return async function(dispatch) {
-    console.log("quale feed ho completato ");
-    console.log(num);
-    dispatch({
-      type: SET_COMPLETE_UPDATE_FEED,
-      payload: num
-    });
+  return {
+    type: SET_COMPLETE_UPDATE_FEED,
+    payload: num,
   };
 }
 
 // nuova versione che salva su un oggetto e non su un array
 // quando devo salvare che ho completato un feed di aggiornamento che spunta random nel feed
 export function addCompletePeriodicFeed(num) {
-  return async function(dispatch) {
-    console.log("quale feed ho completato ");
-    console.log(num);
+  return async function (dispatch) {
     const Now = new Date().toDateString();
     dispatch({
       type: UPDATE_COMPLETE_UPDATE_FEED,
-      payload: { Now, num }
+      payload: { Now, num },
     });
   };
 }
@@ -177,38 +386,46 @@ export function addCompletePeriodicFeed(num) {
 // quando apro un feed lo salvo
 
 export function addOpenPeriodicFeed(num) {
-  return async function(dispatch) {
-    console.log("quale feed ho aperto ");
-    console.log(num);
+  return async function (dispatch) {
     const Now = new Date().toDateString();
     dispatch({
       type: UPDATE_OPEN_UPDATE_FEED,
-      payload: { Now, num }
+      payload: { Now, num },
     });
   };
 }
 
-// export async function saveIcloud(username, password) {
-//   // Store the credentials
-//   // await Keychain.setGenericPassword(username, password);
+export async function saveIcloud(username, password) {
+  const perm = await Keychain.getSupportedBiometryType();
+  const security = await Keychain.getSecurityLevel();
+  // Alert.alert("perm: " + perm , "security: " + security);
 
-//   console.log("stored");
-//   // try {
-//   //   // Retreive the credentials
-//   //   const credentials = await Keychain.getGenericPassword();
-//   //   if (credentials) {
-//   //     console.log('Credentials successfully loaded for user ' + credentials.username);
-//   //   } else {
-//   //     console.log('No credentials stored')
-//   //   }
-//   // } catch (error) {
-//   //   console.log('Keychain couldn\'t be accessed!', error);
-//   // }
-//   // await Keychain.resetGenericPassword()
-// }
+  if (perm || security == "SECURE_HARDWARE") {
+    const AUTH_OPTIONS = {
+      accessControl: Keychain.ACCESS_CONTROL.BIOMETRY_ANY,
+      accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED,
+      authenticationPrompt: strings("id_0_133"),
+      authenticateType: Keychain.AUTHENTICATION_TYPE.BIOMETRICS,
+    };
+    // Store the credentials
+    await Keychain.setGenericPassword(username, password, AUTH_OPTIONS);
+  }
+  // try {
+  //   // Retreive the credentials
+  //   const credentials = await Keychain.getGenericPassword();
+  //   if (credentials) {
+  //     console.log('Credentials successfully loaded for user ' + credentials.username);
+  //   } else {
+  //     console.log('No credentials stored')
+  //   }
+  // } catch (error) {
+  //   console.log('Keychain couldn\'t be accessed!', error);
+  // }
+  // await Keychain.resetGenericPassword()
+}
 
 export function startLogin(dataLogin = {}, callAfterLoginOrRegister = false) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
     let { username, password } = getState().login;
     // se ho appena effettuato il login, uso il token nuovo che ho inserito
@@ -216,22 +433,27 @@ export function startLogin(dataLogin = {}, callAfterLoginOrRegister = false) {
       username = dataLogin.username;
       password = dataLogin.password;
     }
+    // se ho fatto il login usando il portachiave
+    let keychain = false;
+    if (dataLogin.keychain) {
+      keychain = dataLogin.keychain;
+    }
+
     // preparo la richiesta legata al login con username e password
     // dico che mi sto loggando cosi spunta il caricamento
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "In connect"
-      }
+        status: "In connect",
+      },
     });
 
     const data = {
       grant_type: "password",
       username,
       password,
-      client_id: WebService.client_id
+      client_id: WebService.client_id,
     };
-    console.log(data);
     // data per sapere poi quando scade il token
     let date = +new Date();
 
@@ -254,13 +476,25 @@ export function startLogin(dataLogin = {}, callAfterLoginOrRegister = false) {
 
         date = date + 1000 * expires_in;
 
-        // try {
-        //   saveIcloud(username, password)
-        //     .then()
-        //     .catch();
-        // } catch (error) {
-        //   console.log(error);
-        // }
+        if (!keychain) {
+          // non ho usato il portachiave, ma mi sono connesso, salvo le credenziali
+          try {
+            saveIcloud(username, password).then().catch();
+          } catch (error) {
+            if (typeof error !== "Error") {
+              console.log(error);
+              msg = new Error(error);
+
+              bugsnag.notify(msg, function (report) {
+                report.metadata = { error: error };
+              });
+            } else {
+              bugsnag.notify(error, function (report) {
+                report.metadata = { error: error };
+              });
+            }
+          }
+        }
 
         dispatch({
           type: START_LOGIN,
@@ -270,8 +504,8 @@ export function startLogin(dataLogin = {}, callAfterLoginOrRegister = false) {
             access_token,
             refresh_token,
             date,
-            status: ""
-          }
+            status: "",
+          },
         });
         /* requestCallback(
           {
@@ -290,7 +524,7 @@ export function startLogin(dataLogin = {}, callAfterLoginOrRegister = false) {
         // errore dati inseriti
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: response.data.error }
+          payload: { error_description: response.data.error },
         });
         if (response.data.error_description) {
           Alert.alert("Oops", response.data.error_description);
@@ -299,12 +533,12 @@ export function startLogin(dataLogin = {}, callAfterLoginOrRegister = false) {
         // server non funziona bene
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: response.data.error }
+          payload: { error_description: response.data.error },
         });
       } else {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error" }
+          payload: { error_description: "error" },
         });
       }
 
@@ -325,15 +559,718 @@ export function startLogin(dataLogin = {}, callAfterLoginOrRegister = false) {
         dispatch({
           type: START_LOGIN,
           payload: {
-            status: ""
-          }
+            status: "",
+          },
         });
       } else {
         console.log(error.message);
       }
       dispatch({
         type: FAIL_LOGIN,
-        payload: { error_description: "error catch startLogin" }
+        payload: { error_description: "error catch startLogin" },
+      });
+      console.log(error.config);
+    }
+  };
+}
+
+export function deleteToken() {
+  return {
+    type: START_LOGIN,
+    payload: {
+      access_token: 0,
+      refresh_token: 0,
+      status: "",
+    },
+  };
+}
+
+export function startLoginNewSocial(
+  dataLogin = {},
+  callAfterLoginOrRegister = true
+) {
+  return async function (dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    let { social_backend, access_token_social, email } = getState().register;
+
+    // preparo la richiesta legata al login con username e password
+    // dico che mi sto loggando cosi spunta il caricamento
+    dispatch({
+      type: START_LOGIN,
+      payload: {
+        status: "In connect",
+      },
+    });
+
+    const data = {
+      client_id: WebService.client_id,
+      client_secret: WebService.client_secret,
+      grant_type: "convert_token",
+      backend: social_backend,
+      token: access_token_social,
+      email,
+    };
+
+    console.log(data);
+    // data per sapere poi quando scade il token
+    let date = +new Date();
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestBackend(
+        "post",
+        "/api/v1/auth/convert-token",
+        null,
+        data,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // è stato trovato l'utente
+        const { access_token, refresh_token, expires_in } = response.data;
+
+        // per 1000 perche expires_in è in secondi
+
+        date = date + 1000 * expires_in;
+
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            username: email,
+            email,
+            access_token,
+            refresh_token,
+            date,
+            status: "",
+          },
+        });
+
+        dispatch(postFrequentTrip());
+
+        if (callAfterLoginOrRegister) {
+          dispatch(startApp());
+        }
+      } else if (response.status === 401 || response.status === 400) {
+        // errore dati inseriti
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: response.data.error },
+        });
+        if (response.data.error_description) {
+          Alert.alert("Oops", response.data.error_description);
+        }
+      } else if (response.status === 500) {
+        // server non funziona bene
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: response.data.error },
+        });
+      } else {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+
+      // in caso di errore, mando anche l'errore utile per sapere cosa sbaglio tipo email
+      /* dispatch({
+        type: FAIL_LOGIN,
+        payload: error.response.data
+      }); */
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch startLogin" },
+      });
+      console.log(error.config);
+    }
+  };
+}
+
+export function changePasswordNew(dataLogin = {}) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    console.log("nuovi dati da inviare per il profilo");
+
+    // richiesta di accesso mandando i dati con axios
+    let { access_token, password, email } = getState().login;
+
+    // const dataNewUser = dataLogin.data;
+    const oldPassword = dataLogin.oldPassword ? dataLogin.oldPassword : "";
+    const newPassword = dataLogin.newPassword ? dataLogin.newPassword : "";
+    const callback = dataLogin.callback ? dataLogin.callback : () => {};
+
+    if (oldPassword == password) {
+      try {
+        const response = await requestNewBackend(
+          "patch",
+          "/api/v1/account/" + email,
+          access_token,
+          { password: newPassword },
+          "application/json",
+          "Bearer"
+        );
+        console.log(response);
+        // Alert.alert(response.status.toString())
+
+        if (response.status === 200) {
+          // salvo la nuova password come password nello stato
+          dispatch({
+            type: START_LOGIN,
+            payload: {
+              password: newPassword,
+              infoProfile: response.data,
+            },
+          });
+          Alert.alert("Great", "Password changed");
+          try {
+            saveIcloud(email, newPassword).then().catch();
+          } catch (error) {}
+          callback();
+        } else if (response.status == 401) {
+          // se il token è scaduto
+          // lo rinnovo e poi ricarico le richieste dall'app
+
+          console.log("token scaduto");
+          dispatch(forceRefreshTokenWithCallback(changePasswordNew(dataUser)));
+        }
+      } catch (error) {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error catch changePasswordNew" },
+        });
+      }
+    } else {
+      Alert.alert("Oops", strings("id_13_58"));
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error" },
+      });
+    }
+  };
+}
+
+export function postUserForm(dataLogin = {}, callbackResponse, callbackError) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+
+    let { access_token } = getState().login;
+
+    try {
+      const response = await requestNewBackend(
+        "post",
+        "/api/v1/forms/",
+        access_token,
+        { dataLogin },
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+
+      if (response.status === 200) {
+        if (callbackResponse) {
+          callbackResponse();
+        }
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(
+          forceRefreshTokenWithCallback(
+            postUserForm(dataUser, callbackResponse, callbackErro)
+          )
+        );
+      } else {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error status postUserForm" },
+        });
+        if (callbackError) {
+          callbackError();
+        }
+      }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch postUserForm" },
+      });
+    }
+  };
+}
+
+export function deleteProfileNew(dataLogin = {}) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    console.log("nuovi dati da inviare per il profilo");
+
+    // richiesta di accesso mandando i dati con axios
+    let { access_token, email } = getState().login;
+
+    try {
+      const response = await requestNewBackend(
+        "patch",
+        "/api/v1/account/" + email,
+        access_token,
+        { is_active: false },
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      // Alert.alert(response.status.toString())
+
+      if (response.status === 200) {
+        dispatch({
+          type: LOG_OUT,
+          payload: {},
+        });
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(deleteProfileNew(dataUser)));
+      }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: {
+          error_description: "error catch deleteProfileNew",
+        },
+      });
+    }
+  };
+}
+
+export function updateProfileNew(dataLogin = {}) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    console.log("nuovi dati da inviare per il profilo");
+
+    // richiesta di accesso mandando i dati con axios
+    let { access_token, email } = getState().login;
+
+    const dataNewUser = dataLogin.data;
+    // se non viene salvata nel db, almeno le salvo a parte cosi poi le rinvio
+
+    dispatch({
+      type: UPDATE_LOGIN,
+      type_payload: "infoProfileNotSave",
+      payload: dataNewUser,
+    });
+    try {
+      const response = await requestNewBackend(
+        "patch",
+        "/api/v1/account/" + email,
+        access_token,
+        dataNewUser,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      // Alert.alert(response.status.toString())
+
+      if (response.status === 200) {
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            infoProfile: response.data,
+          },
+        });
+        // se ha salvato le ultime modifiche posso cancellare quelle non salvate
+        dispatch({
+          type: DELETE_DATA_PROFILE_OFFLINE,
+        });
+        // if (!dataUser.test) {
+        //   dispatch(forceRefreshTokenWithCallback(getProfileNew({...dataUser, test: true})))
+        // }
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(updateProfileNew(dataUser)));
+      }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch updateProfileNew" },
+      });
+    }
+  };
+}
+
+// trasferimento dal vecchio muv al nuovo
+export function transfertToMUV(dataLogin = { password: "" }) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    console.log("nuovi dati per il nuovo muv");
+
+    let { email, username } = getState().login;
+    const password = dataLogin.password;
+
+    const user_agent = await getDevice();
+
+    const dataNewUser = {
+      username: username.toLowerCase(),
+      password,
+      user_agent,
+      is_active: true,
+    };
+    console.log(dataNewUser);
+    try {
+      const response = await requestNewBackend(
+        "patch",
+        "/api/v1/account/check_old_user/" +
+          email +
+          "?token=" +
+          WebService.tokenServer,
+        null,
+        dataNewUser,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+
+      if (response.status == 200) {
+        // cancello tutto
+        dispatch({
+          type: LOG_OUT,
+        });
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            email,
+            password,
+          },
+        });
+
+        // mi loggo
+        dispatch(startLoginNew({ email, password }, true));
+      }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch updateProfileNew" },
+      });
+    }
+  };
+}
+
+export function forceLogin() {
+  return async function (dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    let { username, password, email } = getState().login;
+
+    dispatch({
+      type: START_LOGIN,
+      payload: {
+        status: "In connect",
+      },
+    });
+
+    const data = {
+      grant_type: "password",
+      username: email,
+      password,
+      client_id: WebService.client_id,
+      client_secret: WebService.client_secret,
+    };
+
+    console.log(data);
+    // data per sapere poi quando scade il token
+    let date = +new Date();
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestNewBackend(
+        "post",
+        "/api/v1/auth/token/",
+        null,
+        data,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // è stato trovato l'utente
+        const { access_token, refresh_token, expires_in } = response.data;
+
+        // per 1000 perche expires_in è in secondi
+
+        date = date + 1000 * expires_in;
+
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            username,
+            email,
+            password,
+            access_token,
+            refresh_token,
+            date,
+            status: "",
+          },
+        });
+      } else if (response.status === 401 || response.status === 400) {
+        // errore dati inseriti
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: response.data.error },
+        });
+        if (response.data.error_description) {
+          // Alert.alert(strings("id_0_10"), response.data.error_description);
+          Alert.alert(strings("id_0_10"), strings("id_0_11"));
+        }
+      } else if (response.status === 500) {
+        // server non funziona bene
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: response.data.error },
+        });
+      } else {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+
+      // in caso di errore, mando anche l'errore utile per sapere cosa sbaglio tipo email
+      /* dispatch({
+        type: FAIL_LOGIN,
+        payload: error.response.data
+      }); */
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch startLogin" },
+      });
+      console.log(error.config);
+    }
+  };
+}
+
+// riattivo l'account rimando l'utente nella schermata per cambio password
+ReactiveAccount = (data) => {
+  if (data.is_active) {
+    // account attivo
+  } else {
+    if (data.is_not_present) {
+      // non c'e nel db
+      console.log("non trovato utente nel db");
+    } else {
+      // c'e ma è d'attivare
+      console.log(" trovato utente nel db, da attivare");
+      console.log(data);
+
+      store.dispatch({
+        type: START_LOGIN,
+        payload: {
+          status: "",
+          access_token: "",
+          refresh_token: "",
+          date: 0,
+          email: data.email,
+        },
+      });
+      store.dispatch({
+        type: START_LOGIN,
+        payload: {
+          infoProfile: {
+            user_id: 1,
+            id: 0, // per il nuovo muv
+            username: "", // per il nuovo muv
+            first_name: "",
+            customisation_gdpr: false,
+            sponsorships_gdpr: false,
+          },
+        },
+      });
+    }
+  }
+};
+
+export function startLoginNew(
+  dataLogin = {},
+  callAfterLoginOrRegister = false
+) {
+  return async function (dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    let { username, password, email } = getState().login;
+    // se ho appena effettuato il login, uso il token nuovo che ho inserito
+    if (dataLogin.email) {
+      username = dataLogin.username;
+      email = dataLogin.email;
+      password = dataLogin.password;
+    }
+    // se ho fatto il login usando il portachiave
+    let keychain = false;
+    if (dataLogin.keychain) {
+      keychain = dataLogin.keychain;
+    }
+
+    // preparo la richiesta legata al login con username e password
+    // dico che mi sto loggando cosi spunta il caricamento
+    dispatch({
+      type: START_LOGIN,
+      payload: {
+        status: "In connect",
+      },
+    });
+
+    const data = {
+      grant_type: "password",
+      username: email,
+      password,
+      client_id: WebService.client_id,
+      client_secret: WebService.client_secret,
+    };
+
+    console.log(data);
+    // data per sapere poi quando scade il token
+    let date = +new Date();
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestBackend(
+        "post",
+        "/api/v1/auth/token/",
+        null,
+        data,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // è stato trovato l'utente
+        const { access_token, refresh_token, expires_in } = response.data;
+
+        // per 1000 perche expires_in è in secondi
+
+        date = date + 1000 * expires_in;
+
+        if (!keychain) {
+          // non ho usato il portachiave, ma mi sono connesso, salvo le credenziali
+          try {
+            saveIcloud(email, password).then().catch();
+          } catch (error) {}
+        }
+
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            username,
+            email,
+            password,
+            access_token,
+            refresh_token,
+            date,
+            status: "",
+          },
+        });
+
+        dispatch(postFrequentTrip());
+        dispatch(postBaseTrip());
+
+        /* requestCallback(
+          {
+            ...dataLogin,
+            access_token,
+            refresh_token,
+            date
+          },
+          dispatch
+        ); */
+        // se è true allora devo caricare i dati iniziali dell'app
+        if (callAfterLoginOrRegister) {
+          dispatch(startApp());
+        }
+      } else if (response.status === 401 || response.status === 400) {
+        // errore dati inseriti
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: response.data.error },
+        });
+        // getActiveStatusProfile(ReactiveAccount, { email });
+
+        if (response.data.error_description) {
+          // Alert.alert(strings("id_0_10"), response.data.error_description);
+          Alert.alert(strings("id_0_10"), strings("id_0_11"));
+        }
+      } else if (response.status === 500) {
+        // server non funziona bene
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: response.data.error },
+        });
+      } else {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+
+      // in caso di errore, mando anche l'errore utile per sapere cosa sbaglio tipo email
+      /* dispatch({
+        type: FAIL_LOGIN,
+        payload: error.response.data
+      }); */
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch startLogin" },
       });
       console.log(error.config);
     }
@@ -341,7 +1278,7 @@ export function startLogin(dataLogin = {}, callAfterLoginOrRegister = false) {
 }
 
 export function forgetPassword(email) {
-  return function(dispatch) {
+  return function (dispatch) {
     // richiesta di recupero con la mia email
     // in caso fare domanda di sicurezza sia nella registrazione sia adesso
     // poi rifare registrazione
@@ -349,48 +1286,44 @@ export function forgetPassword(email) {
 }
 
 export function startLoginWithFacebook() {
-  return function(dispatch) {
+  return function (dispatch) {
     // richiesta di accesso con popup o apertura app facebook
     // se da autorizzazione avviare il login, salvando alcuni dati
     dispatch({
-      type: START_LOGIN
+      type: START_LOGIN,
     });
     // in caso di errore , mando anche l'errore utile per sapere cosa sbaglio tipo ho negato autorizzazione
     dispatch({
-      type: FAIL_LOGIN
+      type: FAIL_LOGIN,
     });
   };
 }
 
 export function startLoginWithGoogle() {
-  return function(dispatch) {
+  return function (dispatch) {
     // richiesta di accesso con popup o apertura app google
 
     // se da autorizzazione avviare il login, salvando alcuni dati
     dispatch({
-      type: START_LOGIN
+      type: START_LOGIN,
     });
     // in caso di errore , mando anche l'errore utile per sapere cosa sbaglio tipo ho negato autorizzazione
     dispatch({
-      type: FAIL_LOGIN
+      type: FAIL_LOGIN,
     });
   };
 }
 
 export function startAppAfterRefresh(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // prima refresh e profilo
-
     // chiedo i dati della home al db
     // dati per i quiz
-
     // test per i trofei
     // let { training_events } = getState().trainings;
-
     //   for (i = 0; i < training_events.length; i++) {
     //     const evento = training_events[i];
     //     console.log(evento);
-
     //     if (
     //       evento.status === 0 &&
     //       !evento.event.quiz &&
@@ -404,26 +1337,24 @@ export function startAppAfterRefresh(dataUser = {}) {
     //     console.log(newLevelComplete);
     //     dispatch(putEvent(newLevelComplete));
     //   }}
-
-    setTimeout(
-      () => {
-        // se ho nome e cognome allora recupero soltanto i dati pubblici
-        let { first_name } = getState().login.infoProfile;
-
-        if (first_name) {
-          dispatch(getProfilePublic(dataUser, true));
-        } else {
-          dispatch(getProfile(dataUser, true));
-        }
-      },
-      Platform.OS === "android" ? 750 : 750
-    );
+    // setTimeout(
+    //   () => {
+    //     // se ho nome e cognome allora recupero soltanto i dati pubblici
+    //     let { first_name } = getState().login.infoProfile;
+    //     if (first_name) {
+    //       dispatch(getProfilePublic(dataUser, true));
+    //     } else {
+    //       dispatch(getProfile(dataUser, true));
+    //     }
+    //   },
+    //   Platform.OS === "android" ? 750 : 750
+    // );
   };
 }
 
 // se la getProfile ha fallito, rinnovo il token e riprendo le info iniziali dell'app
 export function startAppWithProfile(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // prima refresh e profilo
 
     // chiedo i dati della home al db
@@ -449,7 +1380,7 @@ export function startAppWithProfile(dataUser = {}) {
 
 // richieste iniziali senza il profile dato che è gia stato richiesto
 export function startAppWithinProfile(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     setTimeout(
       () => {
         dispatch(getRole());
@@ -504,13 +1435,13 @@ export function startAppWithinProfile(dataUser = {}) {
     // dispatch(stop());
     // poi route
 
-    // AfterRefresh = setTimeout(
-    //   () => {
-    //     console.log("2 secondi ");
-    //     dispatch(getMostFrequentRoute());
-    //   },
-    //   Platform.OS === "android" ? 10000 : 3500
-    // );
+    AfterRefresh = setTimeout(
+      () => {
+        console.log("2 secondi ");
+        dispatch(getMostFrequentRoute());
+      },
+      Platform.OS === "android" ? 3500 : 3500
+    );
 
     // poi classifica
 
@@ -581,19 +1512,176 @@ export function startAppWithinProfile(dataUser = {}) {
   };
 }
 
-export function startApp(dataUser = {}) {
-  return async function(dispatch, getState) {
-    // dispatch({
-    //   type: START_LOGIN,
-    //   payload: {
-    //     access_token: '834953y59435854'
-    //   }
+// info essenziali all'avvio dell'app o dopo il login o registrazione
+export function startApp() {
+  return async function (dispatch) {
+    setTimeout(
+      () => {
+        dispatch(resumeRoute());
+      },
+      Platform.OS === "android" ? 10 : 0
+    );
 
-    // })
-    // prima refresh e profilo
-    dispatch(RefreshToken(dataUser, startAppAfterRefresh, false));
+    //  getActiveStatusProfile();
+
+    setTimeout(
+      () => {
+        dispatch(getProfileNew());
+      },
+      Platform.OS === "android" ? 200 : 0
+    );
+
+    setTimeout(
+      () => {
+        dispatch(getMultipliers());
+      },
+      Platform.OS === "android" ? 400 : 0
+    );
+
+    setTimeout(
+      () => {
+        dispatch(getAllTrip());
+      },
+      Platform.OS === "android" ? 600 : 400
+    );
+
+    setTimeout(
+      () => {
+        getSpecificPositionNew();
+      },
+      Platform.OS === "android" ? 800 : 0
+    );
+
+    dispatch(getMostFrequentRoute());
+    dispatch(getChallenges());
+    dispatch(getChallengesRewards());
+    dispatch(getChallengesRewardsByUser());
+    dispatch(getChallengeRankingByUser());
+    dispatch(getRewardsCategory());
+    dispatch(getChallengesAllowed());
+    dispatch(getTournaments());
+    dispatch(getTeams());
+
+    dispatch(getListFriend());
+    dispatch(getListRequestFriend());
+
+    dispatch(getTrophiesNew());
+
+    setTimeout(
+      () => {
+        const perm = store.getState().statistics.permActivities;
+        if (perm) {
+          // dispatch(getWeeklyActivitiesNew());
+          dispatch(updateActivitiesStep());
+        }
+      },
+      Platform.OS === "android" ? 1000 : 500
+    );
+
+    // dispatch(getTournamentsQualification());
+    // dispatch(getTeamsByTournament(1));
   };
 }
+
+function isExpired(date) {
+  let currentTime = new Date();
+  let expires_date = new Date(date);
+  // let currentTime = new Date(new Date().getTime() + 32400000 + 3480000);
+
+  // console.log(currentTime.toString())
+
+  // console.log(expires_date.toString())
+  // console.log(test_date.toString())
+  // console.log(test_date >= expires_date)
+  return currentTime >= expires_date;
+}
+
+function isAsync(func) {
+  const string = func.toString().trim();
+  console.log(string);
+
+  return !!(
+    // native
+    (
+      string.match(/access_token /) ||
+      // babel (this may change, but hey...)
+      string.match(/return _ref[^\.]*\.apply/)
+    )
+    // insert your other dirty transpiler check
+
+    // there are other more complex situations that maybe require you to check the return line for a *promise*
+  );
+}
+
+export default function authMiddleware({ dispatch, getState }) {
+  return (next) => (action) => {
+    // console.log(action)
+    // console.log(next)
+    // console.log(typeof action)
+    // console.log(action.name)
+    // console.log(action.name == "forceRefreshToken")
+    // provo a rinnovare il token soltanto devo fare un azione async che riguarda il backend (basta che il nome della funzione sia backendRequest)
+    // console.log(isAsync(action))
+    if (typeof action === "function") {
+      let { date, refreshTokenPromise, refresh_token } = getState().login;
+
+      // console.log("funzione");
+      // console.log(date);
+      if (refresh_token && isExpired(date)) {
+        console.log("refresh token");
+        console.log(refreshTokenPromise);
+        // make sure we are not already refreshing the token
+        if (!refreshTokenPromise) {
+          return refreshTokenNew(dispatch, getState)
+            .then(() => next(action))
+            .catch(() => {
+              console.log("fail refresh and login");
+            });
+        } else {
+          try {
+            return refreshTokenPromise.then((response) => {
+              next(action);
+            });
+          } catch (error) {
+            console.log(error);
+            return refreshTokenNew(dispatch, getState)
+              .then(() => next(action))
+              .catch(() => {
+                console.log("fail refresh and login");
+              });
+          }
+        }
+
+        //     if (action.name == "backendRequest") {
+        //     let { date, refreshTokenPromise, refresh_token } = getState().login;
+
+        //     console.log('funzione')
+        //     if ( refresh_token && isExpired(date)) {
+        //       // make sure we are not already refreshing the token
+        //       if (!refreshTokenPromise) {
+
+        //         return refreshTokenNew(dispatch, getState).then(() => next(action));
+        //       } else {
+        //         return refreshTokenPromise.then(() => next(action));
+        //       }
+        //     }
+        //  } else if (action.name == "forceRefreshToken") {
+
+        //   let { refreshTokenPromise } = getState().login;
+        //   if (!refreshTokenPromise) {
+
+        //     return refreshTokenNew(dispatch, getState).then(() => next(action));
+        //   } else {
+        //     return refreshTokenPromise.then(() => next(action));
+        //   }
+
+        //   }
+      }
+    }
+    return next(action);
+  };
+}
+
 // per ripristinare il token dell'utente usando il refresh token prima del date
 // callback, funzione che viene chiamata quando refresh ha avuto successo
 
@@ -601,20 +1689,215 @@ export function startApp(dataUser = {}) {
 // @dataUser dati utili per la richiesta, eventuali chiamate dopo il refresh
 // @afterRefresh, utile per il refresh dopo l'avvio dell'app
 // @repeatRefresh, se sto riprovando con il refresh token prima di fare il logout
+
+function refreshTokenNew(dispatch, getState) {
+  console.log("function refresh new");
+  let { refresh_token } = getState().login;
+
+  const data = {
+    grant_type: "refresh_token",
+    refresh_token,
+    client_id: WebService.client_id,
+    client_secret: WebService.client_secret,
+  };
+
+  const refreshTokenPromise = axios({
+    method: "post",
+    url: WebService.url + "/api/v1/auth/token/",
+    headers: {
+      "content-type": "application/json",
+      // "Authorization": `Bearer ${access_token}`,
+      "Cache-Control": "no-cache",
+    },
+    data,
+  })
+    .then((resp) => {
+      console.log(resp);
+
+      if (resp.status == 200) {
+        // è stato trovato l'utente
+        const { access_token, refresh_token, expires_in } = resp.data;
+
+        // per 1000 perche expires_in è in secondi
+        let dateExpires = +new Date();
+        dateExpires = dateExpires + 1000 * expires_in;
+
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            access_token,
+            refresh_token,
+            date: dateExpires,
+          },
+        });
+        dispatch({
+          type: DONE_REFRESHING_TOKEN,
+        });
+        return Promise.resolve(resp);
+      } else {
+        const msg = new Error("refresh token fail");
+        bugsnag.notify(msg, function (report) {
+          report.metadata = { problem: resp };
+        });
+        dispatch({
+          type: DONE_REFRESHING_TOKEN,
+        });
+
+        return Promise.reject({
+          message: "could not refresh token",
+        });
+      }
+    })
+    .catch((ex) => {
+      console.log("exception refresh_token", ex);
+      // Alert.alert('problemi con il token ');
+      // faccio il login
+
+      let { username, password, email } = getState().login;
+
+      const data = {
+        grant_type: "password",
+        username: email,
+        password,
+        client_id: WebService.client_id,
+        client_secret: WebService.client_secret,
+      };
+
+      const loginPromise = axios({
+        method: "post",
+        url: WebService.url + "/api/v1/auth/token/",
+        headers: {
+          "content-type": "application/json",
+          // "Authorization": `Bearer ${access_token}`,
+          "Cache-Control": "no-cache",
+        },
+        data,
+      })
+        .then((resp) => {
+          console.log(resp);
+
+          if (resp.status == 200) {
+            // è stato trovato l'utente
+            // è stato trovato l'utente
+            const { access_token, refresh_token, expires_in } = resp.data;
+
+            // per 1000 perche expires_in è in secondi
+            let date = +new Date();
+            date = date + 1000 * expires_in;
+
+            dispatch({
+              type: START_LOGIN,
+              payload: {
+                username,
+                email,
+                password,
+                access_token,
+                refresh_token,
+                date,
+                status: "",
+              },
+            });
+            dispatch({
+              type: DONE_REFRESHING_TOKEN,
+            });
+            return Promise.resolve(resp);
+          } else {
+            const msg = new Error("login fail");
+            bugsnag.notify(msg, function (report) {
+              report.metadata = { problem: resp };
+            });
+            dispatch({
+              type: DONE_REFRESHING_TOKEN,
+            });
+            dispatch({
+              type: LOG_OUT,
+            });
+
+            Alert.alert(strings("id_99_13"), strings("id_99_14"));
+
+            return Promise.reject({
+              message: "could not login",
+            });
+          }
+        })
+        .catch((ex) => {
+          console.log("exception login", ex);
+          // Alert.alert('problemi con il token ');
+
+          if (ex.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            dispatch({
+              type: DONE_REFRESHING_TOKEN,
+            });
+            dispatch({
+              type: LOG_OUT,
+            });
+
+            Alert.alert(strings("id_99_13"), strings("id_99_14"));
+            return Promise.reject({
+              message: "could not login",
+            });
+          } else if (ex.request) {
+            // The request was made but no response was received
+            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+            // http.ClientRequest in node.js
+
+            dispatch({
+              type: DONE_REFRESHING_TOKEN,
+            });
+
+            return Promise.reject({
+              message: "could not login",
+            });
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            console.log("Error", ex.message);
+            dispatch({
+              type: DONE_REFRESHING_TOKEN,
+            });
+            dispatch({
+              type: LOG_OUT,
+            });
+
+            Alert.alert(strings("id_99_13"), strings("id_99_14"));
+            return Promise.reject({
+              message: "could not login",
+            });
+          }
+        });
+      dispatch({
+        type: REFRESHING_TOKEN,
+        // we want to keep track of token promise in the state so that we don't     try to refresh the token again while refreshing is in process
+        refreshTokenPromise: loginPromise,
+      });
+
+      return loginPromise;
+    });
+
+  dispatch({
+    type: REFRESHING_TOKEN,
+    // we want to keep track of token promise in the state so that we don't     try to refresh the token again while refreshing is in process
+    refreshTokenPromise,
+  });
+
+  return refreshTokenPromise;
+}
+
 export function RefreshToken(
   dataUser = {},
   afterRefresh = null,
   repeatRefresh = false
 ) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     let { refresh_token, date } = getState().login;
     let dateExpires = +new Date();
     // se non sono connesso, ovvero non c'e il token, allora mi devo disconnettere
     // è una stringa quindi controllo la lunghezza
     /* if (!refresh_token.length) {
-      Alert.alert("Session expired", " Please login ");
-      dispatch(logOut());
-    } */
+        Alert.alert("Session expired", " Please login ");
+        dispatch(logOut());
+      } */
     console.log("controllo la scadenza token, scadenza e adesso ");
     console.log(date);
     console.log(dateExpires);
@@ -633,7 +1916,7 @@ export function RefreshToken(
       const data = {
         grant_type: "refresh_token",
         refresh_token,
-        client_id: WebService.client_id
+        client_id: WebService.client_id,
       };
       try {
         const response = await requestBackend(
@@ -658,8 +1941,8 @@ export function RefreshToken(
             payload: {
               access_token,
               refresh_token,
-              date: dateExpires
-            }
+              date: dateExpires,
+            },
           });
           // callback di un eventuale chimata che non è andata a buon fine, dato che il token era scaduto
           requestCallback(
@@ -676,13 +1959,17 @@ export function RefreshToken(
           // mancano i dati per fare la richiesta
           dispatch({
             type: FAIL_REFRESH,
-            payload: { error_description: response.data.error }
+            payload: { error_description: response.data.error },
           });
           // riprovo dopo un po a richiedere il token cosi se in quel lasso di tempo il token non si aggiornato nello stato e quindi per due volte non è andato bene
           if (repeatRefresh) {
             // faccio il logout dato che il token del login non è piu valido per due volte di fila
             Alert.alert("Session expired", " Please login again");
-            dispatch(logOut());
+            dispatch(logOutNew());
+            const msg = new Error("forced logout");
+            bugsnag.notify(msg, function (report) {
+              report.metadata = { input: getState().login, response };
+            });
           } else {
             setTimeout(() => {
               dispatch(RefreshToken(dataUser, afterRefresh, true));
@@ -704,19 +1991,19 @@ export function RefreshToken(
           console.log(error.response.headers);
           dispatch({
             type: FAIL_REFRESH,
-            payload: { error_description: "error catch RefreshToken" }
+            payload: { error_description: "error catch RefreshToken" },
           });
         } else if (error.request) {
           console.log(error.request);
           dispatch({
             type: FAIL_REFRESH,
-            payload: { error_description: "error catch RefreshToken" }
+            payload: { error_description: "error catch RefreshToken" },
           });
         } else {
           console.log("Error", error.message);
           dispatch({
             type: FAIL_REFRESH,
-            payload: { error_description: "error catch RefreshToken" }
+            payload: { error_description: "error catch RefreshToken" },
           });
         }
         console.log(error.config);
@@ -736,14 +2023,14 @@ export function RefreshTokenObligatory(
   afterRefresh = null,
   repeatRefresh = false
 ) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     let dateExpires = +new Date();
     let { refresh_token } = getState().login;
 
     const data = {
       grant_type: "refresh_token",
       refresh_token,
-      client_id: WebService.client_id
+      client_id: WebService.client_id,
     };
     try {
       const response = await requestBackend(
@@ -767,8 +2054,8 @@ export function RefreshTokenObligatory(
           payload: {
             access_token,
             refresh_token,
-            date: dateExpires
-          }
+            date: dateExpires,
+          },
         });
         // callback di un eventuale chimata che non è andata a buon fine, dato che il token era scaduto
         requestCallback(
@@ -785,13 +2072,17 @@ export function RefreshTokenObligatory(
         // mancano i dati per fare la richiesta
         dispatch({
           type: FAIL_REFRESH,
-          payload: { error_description: response.data.error }
+          payload: { error_description: response.data.error },
         });
         // riprovo dopo un po a richiedere il token cosi se in quel lasso di tempo il token non si aggiornato nello stato e quindi per due volte non è andato bene
         if (repeatRefresh) {
           // faccio il logout dato che il token del login non è piu valido per due volte di fila
           Alert.alert("Session expired", " Please login again");
-          dispatch(logOut());
+          dispatch(logOutNew());
+          const msg = new Error("forced logout");
+          bugsnag.notify(msg, function (report) {
+            report.metadata = { input: getState().login, response };
+          });
         } else {
           setTimeout(() => {
             dispatch(RefreshToken(dataUser, afterRefresh, true));
@@ -801,7 +2092,7 @@ export function RefreshTokenObligatory(
         // unsupported_grant_type
         dispatch({
           type: FAIL_REFRESH,
-          payload: { error_description: response.data.error }
+          payload: { error_description: response.data.error },
         });
 
         dispatch(startLogin({}, true));
@@ -813,22 +2104,212 @@ export function RefreshTokenObligatory(
         console.log(error.response.headers);
         dispatch({
           type: FAIL_REFRESH,
-          payload: { error_description: "error catch RefreshToken" }
+          payload: { error_description: "error catch RefreshToken" },
         });
       } else if (error.request) {
         console.log(error.request);
         dispatch({
           type: FAIL_REFRESH,
-          payload: { error_description: "error catch RefreshToken" }
+          payload: { error_description: "error catch RefreshToken" },
         });
       } else {
         console.log("Error", error.message);
         dispatch({
           type: FAIL_REFRESH,
-          payload: { error_description: "error catch RefreshToken" }
+          payload: { error_description: "error catch RefreshToken" },
         });
       }
       console.log(error.config);
+    }
+  };
+}
+
+export function forceRefreshTokenWithCallback(callback = () => {}) {
+  return function forceRefreshToken(dispatch) {
+    // setto la data di scadenza a 1 cosi forzo il forzetoken nel middleware
+    dispatch({
+      type: START_LOGIN,
+      payload: {
+        date: 1,
+      },
+    });
+    dispatch(callback);
+  };
+}
+
+export function getActiveStatusProfile2(
+  account,
+  existParams = () => {},
+  notParams = () => {},
+  error = () => {}
+) {
+  return async function (dispatch, getState) {
+    let { email } = store.getState().login;
+    try {
+      const account = { email };
+      console.log(account);
+
+      // converto l'oggetto in una stringa pe la get con params &
+
+      const getParams = Object.keys(account).reduce((total, item, index) => {
+        // if (
+        //   index
+        // ) {
+        if (account.hasOwnProperty(item)) {
+          return total + "&" + item + "=" + account[item].toLowerCase();
+        }
+        return total;
+        // } else {
+        //   if (account.hasOwnProperty(item)) {
+        //     return "" + item + "=" + account[item];
+        //   }
+        //   return "";
+
+        // }
+      }, "");
+
+      console.log(getParams);
+
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/account/check_old_user/?token=" +
+          WebService.tokenServer +
+          getParams,
+        null,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // se esiste
+        if (response.data.length) {
+          // trovato, vedo cosa ho trovato
+          existParams(response.data);
+        } else {
+          // se non esiste vado avanti
+          notParams();
+        }
+      } else {
+        error();
+        // tolgo l'errore cosi so che ho ricevuto risposte e il caricamneto del crea utente ha concluso
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch({
+        type: START_LOGIN,
+        payload: {
+          status: "",
+        },
+      });
+      Alert.alert("Oops", strings("something_went_"));
+      // dispatch({
+      //   type: FAIL_LOGIN,
+      //   payload: { error_description: "error" }
+      // });
+    }
+  };
+}
+
+// controllo se l'utente chiesto ha lo status attivo o no
+export async function getActiveStatusProfile(
+  callback = () => {},
+  dataLogin = {}
+) {
+  // richiesta di accesso mandando i dati con axios
+
+  // preparo la richiesta legata al login con username e password
+
+  let { email } = store.getState().login;
+  if (!email) {
+    email = store.getState().login.username;
+  }
+
+  if (dataLogin.email) {
+    email = dataLogin.email;
+  }
+
+  // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+  try {
+    const response = await requestNewBackend(
+      "get",
+      "/api/v1/account/check_old_user/" +
+        email +
+        "?token=" +
+        WebService.tokenServer,
+      // "/api/v1/tracking/trip_type/",
+      null,
+      null,
+      "application/json",
+      "Bearer"
+    );
+    console.log(response);
+    // Alert.alert(response.status.toString())
+
+    if (response.status === 200) {
+      console.log(response.data);
+      if (response.data) {
+        callback(response.data);
+      } else {
+        callback({ is_active: false, is_not_present: true });
+      }
+    } else {
+      callback({ is_active: false, is_not_present: true });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// prendo le info dell'utente
+export function getProfileNew(dataUser = {}) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+
+    // preparo la richiesta legata al login con username e password
+
+    let { access_token, email } = getState().login;
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/account/" + email,
+        // "/api/v1/tracking/trip_type/",
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      // Alert.alert(response.status.toString())
+
+      if (response.status === 200) {
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            infoProfile: response.data,
+          },
+        });
+        // if (!dataUser.test) {
+        //   dispatch(forceRefreshTokenWithCallback(getProfileNew({...dataUser, test: true})))
+        // }
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(getProfileNew(dataUser)));
+      }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch" },
+      });
     }
   };
 }
@@ -838,7 +2319,7 @@ export function RefreshTokenObligatory(
 // newDate, scadenza di questo token
 
 export function getProfile(dataUser = {}, checkProfileFail = false) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // preparo la richiesta legata al login con username e password
@@ -880,9 +2361,9 @@ export function getProfile(dataUser = {}, checkProfileFail = false) {
               infoProfile: {
                 ...response.data.public_profile,
                 ...response.data.private_profile,
-                ...response.data
-              }
-            }
+                ...response.data,
+              },
+            },
           });
           if (checkProfileFail) {
             // c'e il check se in caso fallisce la getProfile, se non fallisce come in questa condizione
@@ -905,7 +2386,7 @@ export function getProfile(dataUser = {}, checkProfileFail = false) {
             dispatch(
               RefreshTokenObligatory({
                 ...dataLogin,
-                callback: getProfile
+                callback: getProfile,
               })
             );
           }
@@ -913,7 +2394,7 @@ export function getProfile(dataUser = {}, checkProfileFail = false) {
       } catch (error) {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          payload: { error_description: "error catch" },
         });
       }
     }
@@ -922,7 +2403,7 @@ export function getProfile(dataUser = {}, checkProfileFail = false) {
 
 // funzione per recuperare soltanto i dati pubblici dell'utente
 export function getProfilePublic(dataUser = {}, checkProfileFail = false) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // preparo la richiesta legata al login con username e password
@@ -964,9 +2445,9 @@ export function getProfilePublic(dataUser = {}, checkProfileFail = false) {
             payload: {
               infoProfile: {
                 ...response.data.public_profile,
-                ...response.data
-              }
-            }
+                ...response.data,
+              },
+            },
           });
           if (checkProfileFail) {
             // c'e il check se in caso fallisce la getProfile, se non fallisce come in questa condizione
@@ -989,7 +2470,7 @@ export function getProfilePublic(dataUser = {}, checkProfileFail = false) {
             dispatch(
               RefreshTokenObligatory({
                 ...dataLogin,
-                callback: getProfilePublic
+                callback: getProfilePublic,
               })
             );
           }
@@ -997,7 +2478,7 @@ export function getProfilePublic(dataUser = {}, checkProfileFail = false) {
       } catch (error) {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          payload: { error_description: "error catch" },
         });
       }
     }
@@ -1006,7 +2487,7 @@ export function getProfilePublic(dataUser = {}, checkProfileFail = false) {
 
 // per incrementare i coins
 export function postIncreaseCoins(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // preparo la richiesta legata al login con username e password
@@ -1031,7 +2512,7 @@ export function postIncreaseCoins(dataUser = {}) {
       const coins = dataUser.coins ? dataUser.coins : 0;
 
       const data = {
-        coins
+        coins,
       };
 
       // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
@@ -1049,8 +2530,8 @@ export function postIncreaseCoins(dataUser = {}) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              status: ""
-            }
+              status: "",
+            },
           });
         }
         dispatch(getProfile());
@@ -1058,7 +2539,7 @@ export function postIncreaseCoins(dataUser = {}) {
       } catch (error) {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch increase coins" }
+          payload: { error_description: "error catch increase coins" },
         });
       }
     }
@@ -1082,14 +2563,14 @@ export function reformRole(array) {
   }
   const role = {
     roleUser,
-    indexRole: array.filter(elem => elem.n_players)
+    indexRole: array.filter((elem) => elem.n_players),
   };
   return role;
 }
 
 // prendere il ruolo dell'utente
 export function getRole(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // preparo la richiesta legata al login con username e password
@@ -1127,121 +2608,198 @@ export function getRole(dataUser = {}) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              role
-            }
+              role,
+            },
           });
         }
         requestCallback({ ...dataUser, access_token, date }, dispatch);
       } catch (error) {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          payload: { error_description: "error catch" },
         });
       }
     }
   };
 }
-
-// prendere le frequent route dell'utente cosi si posso visualizzare o usare per sapere se una route è un frequent route
 
 export function getMostFrequentRoute(dataUser = {}) {
-  return async function(dispatch, getState) {
-    // richiesta di accesso mandando i dati con axios
+  return async function (dispatch, getState) {
+    let { access_token } = getState().login;
 
-    // preparo la richiesta legata al login con username e password
-    let { access_token, date } = getState().login;
-    // se ho appena effettuato il login, uso il token nuovo che ho inserito
-    if (dataUser.access_token) {
-      access_token = dataUser.access_token;
-      date = dataUser.date;
-    }
-
-    // data per sapere poi quando scade il token
-    let dateExpires = +new Date();
-    // se è scaduto o l'utente non è ancora connesso, si connette
-    if (dateExpires >= date || !access_token) {
-      dispatch(RefreshToken({ ...dataUser, callback: getMostFrequentRoute }));
-    } else {
-      // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
-      try {
-        const response = await requestBackend(
-          "get",
-          "/api/v1/most_frequent_route/",
-          access_token,
-          null,
-          null,
-          "Bearer"
-        );
-        console.log(response);
-        if (response.status === 200) {
-          // salvo le frequent route in login
-          // ricevo i dati come un oggetto con un id e lo converto in un array per usare poi un map
-          dispatch({
-            type: START_LOGIN,
-            payload: {
-              mostFrequentRoute: Object.keys(response.data).map(function(key) {
-                return response.data[key];
-              })
-            }
-          });
-          // callback di un eventuale chimata che non è andata a buon fine, dato che il token era scaduto
-          requestCallback(dataUser, dispatch);
-        }
-      } catch (error) {
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/tracking/frequent_trip/",
+        access_token,
+        null,
+        null,
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
         dispatch({
-          type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          type: START_LOGIN,
+          payload: {
+            mostFrequentRoute: Object.keys(response.data).map(function (key) {
+              return response.data[key];
+            }),
+          },
         });
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(getMostFrequentRoute(dataUser)));
       }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch" },
+      });
     }
   };
 }
 
-export function deleteMostFrequentRoute(dataUser = {}, id) {
-  return async function(dispatch, getState) {
+export function deleteMostFrequentRoute(
+  dataUser = {},
+  id,
+  callback = () => {}
+) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // preparo la richiesta legata al login con username e password
-    let { access_token, date } = getState().login;
-    // se ho appena effettuato il login, uso il token nuovo che ho inserito
-    if (dataUser.access_token) {
-      access_token = dataUser.access_token;
-      date = dataUser.date;
-    }
+    let { access_token } = getState().login;
 
-    // data per sapere poi quando scade il token
-    let dateExpires = +new Date();
-    // se è scaduto o l'utente non è ancora connesso, si connette
-    if (dateExpires >= date || !access_token) {
-      dispatch(RefreshToken({ ...dataUser, callback: getMostFrequentRoute }));
-    } else {
-      // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
-      try {
-        const response = await requestBackend(
-          "delete",
-          "/api/v1/most_frequent_route/?pk=" + id,
-          access_token,
-          null, // { pk: Number.parseInt(id) },
-          null,
-          "Bearer"
-        );
-        console.log(response);
-        if (response.status === 200 || response.status === 204) {
-          dispatch({
-            type: DELETE_MFR,
-            payload: {
-              mostFrequentRouteId: id
-            }
-          });
-          // callback di un eventuale chimata che non è andata a buon fine, dato che il token era scaduto
-          requestCallback(dataUser, dispatch);
-        }
-      } catch (error) {
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      console.log("deleteMostFrequentRoute");
+      const response = await requestNewBackend(
+        "patch",
+        "/api/v1/tracking/frequent_trip/" + id,
+        access_token,
+        { is_active: false }, // { pk: Number.parseInt(id) },
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200 || response.status === 204) {
         dispatch({
-          type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          type: DELETE_MFR,
+          payload: {
+            mostFrequentRouteId: id,
+          },
         });
+        dispatch(getMostFrequentRoute());
+        // callback di un eventuale chimata che non è andata a buon fine, dato che il token era scaduto
+        callback();
       }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch" },
+      });
+    }
+  };
+}
+
+export function editMostFrequentRoute(dataUser = {}, id, callback = () => {}) {
+  return async function (dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+
+    // preparo la richiesta legata al login con username e password
+    let { access_token } = getState().login;
+
+    console.log("editMostFrequentRoute");
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      let {
+        frequent_trip_start,
+        frequent_trip_end,
+        frequent_trip_type_start,
+        frequent_trip_type_end,
+        frequent_trip_start_time,
+        frequent_trip_choosed_weekdays,
+        frequent_trip_end_time,
+        mostFrequentRaceModalSplit,
+      } = getState().register;
+
+      let frequency = 0;
+      for (let i in frequent_trip_choosed_weekdays) {
+        if (frequent_trip_choosed_weekdays[i]) frequency++;
+      }
+
+      let data = {
+        start_point: {
+          latitude: frequent_trip_start.latitude,
+          longitude: frequent_trip_start.longitude,
+        },
+        end_point: {
+          latitude: frequent_trip_end.latitude,
+          longitude: frequent_trip_end.longitude,
+        },
+        frequency,
+        start_time: frequent_trip_start_time,
+        end_time: frequent_trip_end_time,
+        monday: frequent_trip_choosed_weekdays[1],
+        tuesday: frequent_trip_choosed_weekdays[2],
+        wednesday: frequent_trip_choosed_weekdays[3],
+        thursday: frequent_trip_choosed_weekdays[4],
+        friday: frequent_trip_choosed_weekdays[5],
+        saturday: frequent_trip_choosed_weekdays[6],
+        sunday: frequent_trip_choosed_weekdays[0],
+        walk_slider: mostFrequentRaceModalSplit[0].value,
+        bike_slider: mostFrequentRaceModalSplit[1].value,
+        bus_slider: mostFrequentRaceModalSplit[2].value,
+        car_slider: mostFrequentRaceModalSplit[3].value,
+        motorbike_slider: mostFrequentRaceModalSplit[4].value,
+        train_slider: mostFrequentRaceModalSplit[5].value,
+        // is_active,
+        start_type: frequent_trip_type_start,
+        end_type: frequent_trip_type_end,
+      };
+
+      console.log("editMostFrequentRoute");
+      const response = await requestNewBackend(
+        "patch",
+        "/api/v1/tracking/frequent_trip/" + id,
+        access_token,
+        data, // { is_active: false }, // { pk: Number.parseInt(id) },
+        "application/json",
+        "Bearer"
+      );
+      console.log(response.data);
+      if (response.status === 200) {
+        dispatch({
+          type: EDIT_MFR,
+          payload: {
+            mostFrequentRouteId: id,
+            frequent_trip: { ...response.data },
+          },
+        });
+        // callback di un eventuale chimata che non è andata a buon fine, dato che il token era scaduto
+
+        dispatch(getMostFrequentRoute());
+        callback();
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(
+          forceRefreshTokenWithCallback(
+            editMostFrequentRoute(dataUser, id, callback)
+          )
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      // dispatch({
+      //   type: FAIL_LOGIN,
+      //   payload: { error_description: "error catch" }
+      // });
     }
   };
 }
@@ -1252,7 +2810,7 @@ export function deleteMostFrequentRoute(dataUser = {}, id) {
 
 // addRoutinePlus se la sto aggiungendo dal recap con il tasto +
 export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
     // preparo la richiesta legata al login con username e password
     try {
@@ -1261,7 +2819,7 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
         date,
         mfr_modal_split_NotSave,
         username,
-        password
+        password,
       } = getState().login;
 
       if (dataUser.access_token) {
@@ -1275,7 +2833,7 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
         mostFrequentRaceFrequencyPosition,
         frequent_trip_start_time,
         frequent_trip_end_time,
-        frequent_trip_choosed_weekdays
+        frequent_trip_choosed_weekdays,
       } = getState().register;
 
       let mfr_modal_split = mostFrequentRaceModalSplit.reduce(
@@ -1290,7 +2848,7 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
         end_type,
         start_type,
         end_point,
-        start_point
+        start_point,
       } = mostFrequentRaceFrequencyPosition;
 
       mfr_modal_split = {
@@ -1300,7 +2858,7 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
         end_type,
         start_type,
         end_point: [end_point.longitude, end_point.latitude],
-        start_point: [start_point.longitude, start_point.latitude]
+        start_point: [start_point.longitude, start_point.latitude],
       };
 
       let frequent_weekly_route = {
@@ -1312,7 +2870,7 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
         saturday: frequent_trip_choosed_weekdays[6],
         sunday: frequent_trip_choosed_weekdays[0],
         start_time: frequent_trip_start_time,
-        end_time: frequent_trip_end_time
+        end_time: frequent_trip_end_time,
       };
 
       // salvo la routine anche come aggiunta dal + dal recap
@@ -1320,7 +2878,7 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
         dispatch(
           addFrequentRouteFromRecap({
             end_point: [end_point.longitude, end_point.latitude],
-            start_point: [start_point.longitude, start_point.latitude]
+            start_point: [start_point.longitude, start_point.latitude],
           })
         );
       }
@@ -1350,8 +2908,8 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
           let body = {
             frequent_weekly_route: {
               ...frequent_weekly_route,
-              mfr: response.data.id
-            }
+              mfr: response.data.id,
+            },
           };
           console.log(body);
 
@@ -1365,9 +2923,9 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
               error_description: "error",
               mfr_modal_split_NotSave: [
                 ...mfr_modal_split_NotSave,
-                { ...mfr_modal_split, frequent_weekly_route }
-              ]
-            }
+                { ...mfr_modal_split, frequent_weekly_route },
+              ],
+            },
           });
           // cancello i dati della routine appena creata
           dispatch({
@@ -1375,13 +2933,13 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
             payload: {
               mostFrequentRaceFrequency: null,
               mostFrequentRaceModalSplit: null,
-              mostFrequentRaceFrequencyPosition: null
-            }
+              mostFrequentRaceFrequencyPosition: null,
+            },
           });
         }
       }
     } catch (error) {
-      bugsnag.notify(error, function(report) {
+      bugsnag.notify(error, function (report) {
         report.metadata = { input: getState().register };
       });
       // da sistemare la mostFrequentRaceFrequencyPosition con end_type
@@ -1401,8 +2959,8 @@ export function postMostFrequentRoute(dataUser = {}, addRoutinePlus = false) {
         payload: {
           mostFrequentRaceFrequency: null,
           mostFrequentRaceModalSplit: null,
-          mostFrequentRaceFrequencyPosition: null
-        }
+          mostFrequentRaceFrequencyPosition: null,
+        },
       });
     }
   };
@@ -1425,7 +2983,7 @@ function equals(obj1, obj2) {
 // nuova versione che tiene contonto degli orari e del nuovo formato delle frequent trips
 // caricare una frequent route dell'utente non caricata ancora nel server
 export function postMostFrequentRouteNotSave(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
     // preparo la richiesta
     let {
@@ -1434,7 +2992,7 @@ export function postMostFrequentRouteNotSave(dataUser = {}) {
       mfr_modal_split_NotSave,
       mostFrequentRoute,
       username,
-      password
+      password,
     } = getState().login;
 
     // se ho appena effettuato il login, uso il token nuovo che ho inserito
@@ -1452,7 +3010,7 @@ export function postMostFrequentRouteNotSave(dataUser = {}) {
       );
     } else if (mfr_modal_split_NotSave.length) {
       // tolgo eventuali routine gia salvate anche se sono salvate come salvate
-      const mfr_modal_split_DoSave = mfr_modal_split_NotSave.filter(elem => {
+      const mfr_modal_split_DoSave = mfr_modal_split_NotSave.filter((elem) => {
         for (routine = 0; routine < mostFrequentRoute.length; routine++) {
           console.log(elem);
           console.log(mostFrequentRoute[routine]);
@@ -1490,8 +3048,8 @@ export function postMostFrequentRouteNotSave(dataUser = {}) {
             let body = {
               frequent_weekly_route: {
                 ...mfr_modal_split_DoSave[routine].frequent_weekly_route,
-                mfr: response.data.id
-              }
+                mfr: response.data.id,
+              },
             };
             console.log(response);
 
@@ -1510,8 +3068,8 @@ export function postMostFrequentRouteNotSave(dataUser = {}) {
             dispatch({
               type: FAIL_LOGIN,
               payload: {
-                error_description: "error"
-              }
+                error_description: "error",
+              },
             });
           }
         } catch (error) {
@@ -1519,8 +3077,8 @@ export function postMostFrequentRouteNotSave(dataUser = {}) {
           dispatch({
             type: FAIL_LOGIN,
             payload: {
-              payload: { error_description: "error catch" }
-            }
+              payload: { error_description: "error catch" },
+            },
           });
         }
       }
@@ -1529,7 +3087,7 @@ export function postMostFrequentRouteNotSave(dataUser = {}) {
 }
 
 export function putUpdateProfileMfr(body, access_token, response) {
-  return async function(dispatch) {
+  return async function (dispatch) {
     try {
       const res = await requestBackend(
         "put",
@@ -1546,7 +3104,7 @@ export function putUpdateProfileMfr(body, access_token, response) {
 
         dispatch({
           type: ADD_FREQUENT_ROUTE,
-          payload: response.data
+          payload: response.data,
         });
         // cancello i dati della routine appena creata
         dispatch({
@@ -1554,8 +3112,8 @@ export function putUpdateProfileMfr(body, access_token, response) {
           payload: {
             mostFrequentRaceFrequency: null,
             mostFrequentRaceModalSplit: null,
-            mostFrequentRaceFrequencyPosition: null
-          }
+            mostFrequentRaceFrequencyPosition: null,
+          },
         });
       } else {
       }
@@ -1572,7 +3130,7 @@ export function putUpdateProfileMfrFromLocalStorage(
   mfr_modal_split_DoSave,
   routine
 ) {
-  return async function(dispatch) {
+  return async function (dispatch) {
     try {
       const res = await requestBackend(
         "put",
@@ -1590,13 +3148,13 @@ export function putUpdateProfileMfrFromLocalStorage(
         // salvo le frequent route in login
         dispatch({
           type: ADD_FREQUENT_ROUTE,
-          payload: response.data
+          payload: response.data,
         });
         // cancello i dati della routine appena caricata da quelle salvate
         // ovviamente devo cancellare la stessa routine della memoria
         dispatch({
           type: DELETE_FREQUENT_ROUTE_NOT_SAVE,
-          payload: mfr_modal_split_DoSave[routine]
+          payload: mfr_modal_split_DoSave[routine],
         });
       } else {
       }
@@ -1607,17 +3165,17 @@ export function putUpdateProfileMfrFromLocalStorage(
 }
 
 /* 
-// uscire dall'account
-export function logOut() {
-  return {
-    type: LOG_OUT
-  };
-} 
-*/
+  // uscire dall'account
+  export function logOut() {
+    return {
+      type: LOG_OUT
+    };
+  } 
+  */
 
 // uscire dall'account
 export function logOut(dataUser = {}, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // preparo la richiesta
     let { access_token, date, username, password } = getState().login;
     if (dataUser.access_token) {
@@ -1631,13 +3189,13 @@ export function logOut(dataUser = {}, callback) {
     if (dateExpires >= date || !access_token) {
       // non fare nulla poiche il token non è piu valido
       dispatch({
-        type: LOG_OUT
+        type: LOG_OUT,
       });
     } else {
       console.log("logout");
       data = {
         client_id: WebService.client_id,
-        token: access_token
+        token: access_token,
       };
       try {
         const response = await requestBackend(
@@ -1654,7 +3212,7 @@ export function logOut(dataUser = {}, callback) {
           // non c'e bisogno essendo che lo faccio comunque
 
           dispatch({
-            type: LOG_OUT
+            type: LOG_OUT,
           });
           if (callback && typeof callback === "function") {
             callback();
@@ -1663,15 +3221,560 @@ export function logOut(dataUser = {}, callback) {
       } catch (error) {}
       // comunque deve cancellare tutto
       dispatch({
-        type: LOG_OUT
+        type: LOG_OUT,
       });
+    }
+  };
+}
+
+export function logOutNew(dataUser = {}, callback) {
+  return {
+    type: LOG_OUT,
+  };
+  // return async function(dispatch, getState) {
+  //   // preparo la richiesta
+  //   let { access_token } = getState().login;
+  //   // se è scaduto o l'utente non è ancora connesso
+  //   console.log("logout");
+  //   data = {
+  //     client_id: WebService.client_id,
+  //     client_secret: WebService.client_secret,
+  //     token: access_token
+  //   };
+  //   try {
+  //     const response = await requestNewBackend(
+  //       "post",
+  //       "/api/v1/auth/revoke-token/",
+  //       null,
+  //       data,
+  //       "application/json",
+  //       "Bearer"
+  //     );
+  //     console.log(response);
+  //     // logout effettuato
+  //     if (response.status === 204) {
+  //       // non c'e bisogno essendo che lo faccio comunque
+
+  //       dispatch({
+  //         type: LOG_OUT
+  //       });
+  //       if (callback && typeof callback === "function") {
+  //         callback();
+  //       }
+  //     }
+  //   } catch (error) {}
+  //   // comunque deve cancellare tutto
+  //   dispatch({
+  //     type: LOG_OUT
+  //   });
+  // };
+}
+
+// dati sulla tratta che sto creando
+// quale tratta sto creando, rispetto alle tratte create
+export function createTrip(
+  trip,
+  LastRoute = 0,
+  callback = () => {},
+  resume = 0
+) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    console.log("creotrip");
+    console.log(trip);
+    let { access_token } = getState().login;
+
+    const typology = getIdModalTypeNew(trip.type, trip.coef);
+    const location = trip.location;
+    const car_pool = trip.car_pool;
+    // car_pool, groupPooling
+
+    const user_agent = await getDevice();
+
+    // se è una tratta con il pooling attivo, mando anche il pooling in corso
+    const data = car_pool
+      ? {
+          // client_id: WebService.client_id,
+          // client_secret: WebService.client_secret,
+          device: user_agent,
+          typology,
+          start_time: trip.start_time_subTrip,
+          car_pool,
+          location,
+        }
+      : {
+          device: user_agent,
+          typology,
+          start_time: trip.start_time_subTrip,
+          location,
+        };
+
+    console.log(data);
+
+    try {
+      const response = await requestNewBackend(
+        "post",
+        "/api/v1/tracking/trip/",
+        access_token,
+        data,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 201) {
+        // mi salvo l'id della tratta che devo esaminare
+
+        dispatch(UpdateIdSameRoute(response.data, LastRoute));
+
+        if (resume) {
+          dispatch(resumeRoute(resume));
+        }
+        callback();
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(
+          forceRefreshTokenWithCallback(
+            createTrip(trip, LastRoute, callback, resume)
+          )
+        );
+      } else {
+        const msg = new Error("create trip fail");
+        bugsnag.notify(msg, function (report) {
+          report.metadata = { problem: response };
+        });
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+
+      // in caso di errore, mando anche l'errore utile per sapere cosa sbaglio tipo email
+      /* dispatch({
+          type: FAIL_LOGIN,
+          payload: error.response.data
+        }); */
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch CreateTrip" },
+      });
+      console.log(error.config);
+    }
+  };
+}
+
+export function createSubTrip(trip, LastRoute = 0, resume = 0) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    let { access_token } = getState().login;
+    console.log(trip);
+
+    const typology = getIdModalTypeNew(trip.type, trip.coef);
+    const id = trip.id;
+    const previous_sub_trip_id = trip.sub_trip.id;
+    const end_time = trip.end_time_subTrip;
+    const car_pool = trip.car_pool;
+
+    const data = car_pool
+      ? {
+          car_pool,
+          typology,
+          trip: id,
+          previous_sub_trip_id,
+          end_time,
+          start_time: end_time,
+        }
+      : {
+          typology,
+          trip: id,
+          previous_sub_trip_id,
+          end_time,
+          start_time: end_time,
+        };
+
+    try {
+      const response = await requestNewBackend(
+        "post",
+        "/api/v1/tracking/sub_trip/",
+        access_token,
+        data,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 201) {
+        // mi salvo l'id della tratta che devo esaminare
+        dispatch(UpdatePreviousRoute({ sub_trip: response.data }, LastRoute));
+        if (resume) {
+          dispatch(resumeRoute(resume));
+        }
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(
+          forceRefreshTokenWithCallback(createSubTrip(trip, LastRoute, resume))
+        );
+      } else {
+        const msg = new Error("create sub trip fail");
+        bugsnag.notify(msg, function (report) {
+          report.metadata = { problem: response };
+        });
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch createSubTrip" },
+      });
+      console.log(error.config);
+    }
+  };
+}
+
+// recupero le info su una specifica trip tipo per sapere se è stata analizzata
+export function getTrip(trip) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    let { access_token } = getState().login;
+    console.log(trip);
+
+    const id = trip.id;
+
+    // const data = {
+    //   client_id: WebService.client_id,
+    //   client_secret: WebService.client_secret
+    // };
+
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/tracking/trip/" + id,
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // mi salvo l'id della tratta che devo esaminare
+        const trip = response.data.id
+          ? response.data.id
+          : response.data.trip_id
+          ? response.data.trip_id
+          : 0;
+        if (trip) {
+          dispatch({
+            type: UPDATE_TRIP_DATA,
+            trip,
+            payload: response.data,
+          });
+        }
+      } else {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch getTrip" },
+      });
+      console.log(error.config);
+    }
+  };
+}
+
+// recupero le info su tutte le trip
+export function getAllTrip(
+  dataUser = { limit: 20, offset: 0, afterRequest: () => {} }
+) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    let { access_token } = getState().login;
+    let { id } = getState().login.infoProfile;
+    console.log("getAllTrip");
+    const { limit, offset } = dataUser;
+    // const data = {
+    //   client_id: WebService.client_id,
+    //   client_secret: WebService.client_secret
+    // };
+
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/tracking/trip_by_user/" +
+          id +
+          "?limit=" +
+          limit +
+          "&offset=" +
+          offset,
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // mi salvo l'id della tratta che devo esaminare
+
+        dispatch({
+          type: SAVE_TRIPS,
+          payload: response.data.results,
+        });
+      } else {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch getTrip" },
+      });
+      console.log(error.config);
+    }
+  };
+}
+
+// dati sulla tratta che sto creando
+// quale tratta sto creando, rispetto alle tratte create
+export function stopTrip(
+  tripObject,
+  LastRoute = 0,
+  numsegment = 0,
+  resume = 0
+) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    try {
+      let { access_token } = getState().login;
+      let trip = 0;
+      if (LastRoute) {
+        const PreviousRoute = getState().tracking.PreviousRoute;
+        console.log(PreviousRoute);
+        if (LastRoute - 1 < PreviousRoute.length) {
+          trip = PreviousRoute[LastRoute - 1].id;
+        }
+      } else {
+        trip = getState().tracking.id;
+      }
+      console.log(trip);
+
+      let { end_time_subTrip, subTripId, idTrip } = tripObject;
+      console.log(end_time_subTrip);
+      console.log(moment(end_time_subTrip).format());
+
+      const data = {
+        // client_id: WebService.client_id,
+        // client_secret: WebService.client_secret,
+        end_time: moment(end_time_subTrip).format(),
+        sub_trip_id: subTripId,
+      };
+
+      const response = await requestNewBackend(
+        "patch",
+        "/api/v1/tracking/trip/" + idTrip,
+        access_token,
+        data,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // mi salvo l'id della tratta che devo esaminare
+
+        // aggiorno che ho concluso oppure cancello i dati
+        // dispatch(UpdatePreviousRoute({sub_trip: response.data}, LastRoute));
+
+        dispatch({
+          type: DELETE_ROUTE,
+          payload: {
+            start: LastRoute,
+            size: numsegment,
+          },
+        });
+
+        if (resume) {
+          dispatch(resumeRoute(resume));
+        }
+        // ha concluso di inviare e ha salvato
+        Alert.alert("Ha inviato tutti i dati della tratta");
+      } else {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch stopTrip" },
+      });
+      console.log(error.config);
+    }
+  };
+}
+
+export function getMultipliers() {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+    let { access_token } = getState().login;
+
+    // const data = {
+    //   client_id: WebService.client_id,
+    //   client_secret: WebService.client_secret
+    // };
+
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/tracking/multipliers/",
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        // mi salvo l'id della tratta che devo esaminare
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            multipliers: response.data,
+            status: "",
+          },
+        });
+      } else {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+    } catch (error) {
+      if (error.response) {
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+
+        // if (error.response.status === 403) {
+      } else if (error.request) {
+        console.log(error.request);
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        console.log(error.message);
+      }
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch getMultipliers" },
+      });
+      console.log(error.config);
     }
   };
 }
 
 // per salvare la route con i vari segment
 export function saveRouteBackend(dataLogin, test = true) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     console.log("manda");
     console.log(data);
     console.log(start);
@@ -1703,7 +3806,7 @@ export function saveRouteBackend(dataLogin, test = true) {
       dispatch(
         RefreshToken({
           ...dataLogin,
-          callback: saveRouteBackend
+          callback: saveRouteBackend,
         })
       );
     } else {
@@ -1745,8 +3848,8 @@ export function saveRouteBackend(dataLogin, test = true) {
                 type: DELETE_ROUTE,
                 payload: {
                   start: start,
-                  size: numsegment
-                }
+                  size: numsegment,
+                },
               });
               // prendo la nuova tratta caricata e le nuove statistiche
               setTimeout(
@@ -1784,7 +3887,7 @@ export function saveRouteBackend(dataLogin, test = true) {
                         match_id: tournament.season_match.season_match_id,
                         start_match: tournament.season_match.start_match,
                         saveData: null,
-                        currentMatch: true
+                        currentMatch: true,
                       })
                     );
                   }
@@ -1799,7 +3902,7 @@ export function saveRouteBackend(dataLogin, test = true) {
               dispatch(
                 RefreshTokenObligatory({
                   ...dataLogin,
-                  callback: saveRouteBackend
+                  callback: saveRouteBackend,
                 })
               );
             } else if (response.status === 400) {
@@ -1816,8 +3919,8 @@ export function saveRouteBackend(dataLogin, test = true) {
                 type: DELETE_ROUTE,
                 payload: {
                   start: start,
-                  size: numsegment
-                }
+                  size: numsegment,
+                },
               });
               // prendo le tratte caricata e le nuove statistiche
               setTimeout(
@@ -1855,7 +3958,7 @@ export function saveRouteBackend(dataLogin, test = true) {
                         match_id: tournament.season_match.season_match_id,
                         start_match: tournament.season_match.start_match,
                         saveData: null,
-                        currentMatch: true
+                        currentMatch: true,
                       })
                     );
                   }
@@ -1866,8 +3969,8 @@ export function saveRouteBackend(dataLogin, test = true) {
               dispatch({
                 type: FAIL_LOGIN,
                 payload: {
-                  error_description: "error"
-                }
+                  error_description: "error",
+                },
               });
               dispatch(UpdateStatus("", start));
             }
@@ -1899,8 +4002,8 @@ export function saveRouteBackend(dataLogin, test = true) {
             type: DELETE_ROUTE,
             payload: {
               start: start,
-              size: numsegment
-            }
+              size: numsegment,
+            },
           });
         } else if (status === "send route") {
           // se sto inviando e ancora non ho ricevuto risposta, quindi provo a rimandarla, setto un timer per provare a rimandare dopo due secondi
@@ -1918,15 +4021,15 @@ export function saveRouteBackend(dataLogin, test = true) {
 // callback , funzione chiamata se ha successo
 
 export function GetRoute(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // dico che mi sto prendnendo cosi spunta il caricamento
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "Get route"
-      }
+        status: "Get route",
+      },
     });
 
     // preparo la richiesta legata al login con username e password
@@ -1944,9 +4047,9 @@ export function GetRoute(dataUser = {}) {
       numberRoute = dataUser.numberRoute;
     }
     /*  else {
-      numberRoute =
-        Route.length < 10 ? 10 : Route.length > 25 ? 25 : Route.length;
-    } */
+        numberRoute =
+          Route.length < 10 ? 10 : Route.length > 25 ? 25 : Route.length;
+      } */
 
     // data per sapere poi quando scade il token
     let dateExpires = +new Date();
@@ -1971,20 +4074,20 @@ export function GetRoute(dataUser = {}) {
           const newRoute = response.data;
 
           /*  // se ricevo le stesse route, non le salvo
-          // controlla la prima se è la stessa, e se ricevo meno route,
-          // altrimenti aggiorno
-
-          if (
-            Route !== [] &&
-            (Route[0].id === newRoute[0].id && Route.length > newRoute.length)
-          )  */
+            // controlla la prima se è la stessa, e se ricevo meno route,
+            // altrimenti aggiorno
+  
+            if (
+              Route !== [] &&
+              (Route[0].id === newRoute[0].id && Route.length > newRoute.length)
+            )  */
 
           dispatch({
             type: START_LOGIN,
             payload: {
               Route: newRoute,
-              status: ""
-            }
+              status: "",
+            },
           });
 
           requestCallback(dataUser, dispatch);
@@ -1992,8 +4095,8 @@ export function GetRoute(dataUser = {}) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              status: ""
-            }
+              status: "",
+            },
           });
           // error: “limit is not valid” or error: “routes not found”
         } else if (response.status === 403) {
@@ -2003,19 +4106,19 @@ export function GetRoute(dataUser = {}) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              status: ""
-            }
+              status: "",
+            },
           });
         } else {
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         }
       } catch (error) {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          payload: { error_description: "error catch" },
         });
       }
     }
@@ -2027,15 +4130,15 @@ export function GetRoute(dataUser = {}) {
 // ritorna soltanto la lista delle route e non i punti gps
 
 export function GetListRoute(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // dico che mi sto prendnendo cosi spunta il caricamento
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "Get route"
-      }
+        status: "Get route",
+      },
     });
 
     // preparo la richiesta legata al login con username e password
@@ -2053,9 +4156,9 @@ export function GetListRoute(dataUser = {}) {
       numberRoute = dataUser.numberRoute;
     }
     /*  else {
-      numberRoute =
-        Route.length < 10 ? 10 : Route.length > 25 ? 25 : Route.length;
-    } */
+        numberRoute =
+          Route.length < 10 ? 10 : Route.length > 25 ? 25 : Route.length;
+      } */
 
     // data per sapere poi quando scade il token
     let dateExpires = +new Date();
@@ -2079,20 +4182,20 @@ export function GetListRoute(dataUser = {}) {
           // ricevo i dati come un oggetto con un id e lo converto in un array per usare poi un map
           const newRoute = response.data;
           /*  // se ricevo le stesse route, non le salvo
-          // controlla la prima se è la stessa, e se ricevo meno route,
-          // altrimenti aggiorno
-
-          if (
-            Route !== [] &&
-            (Route[0].id === newRoute[0].id && Route.length > newRoute.length)
-          )  */
+            // controlla la prima se è la stessa, e se ricevo meno route,
+            // altrimenti aggiorno
+  
+            if (
+              Route !== [] &&
+              (Route[0].id === newRoute[0].id && Route.length > newRoute.length)
+            )  */
 
           dispatch({
             type: START_LOGIN,
             payload: {
               Route: newRoute,
-              status: ""
-            }
+              status: "",
+            },
           });
 
           requestCallback(dataUser, dispatch);
@@ -2100,8 +4203,8 @@ export function GetListRoute(dataUser = {}) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              status: ""
-            }
+              status: "",
+            },
           });
           // error: “limit is not valid” or error: “routes not found”
         } else if (response.status === 403) {
@@ -2111,13 +4214,13 @@ export function GetListRoute(dataUser = {}) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              status: ""
-            }
+              status: "",
+            },
           });
         } else {
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         }
         if (dataUser.afterRequest) {
@@ -2129,7 +4232,7 @@ export function GetListRoute(dataUser = {}) {
         }
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          payload: { error_description: "error catch" },
         });
       }
     }
@@ -2139,7 +4242,7 @@ export function GetListRoute(dataUser = {}) {
 // getList utile per sapere quante route ho fatto in seguenza che ne ho bisogno di piu
 
 export function GetListRouteForCheckSeries(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     console.log(dataUser);
     // richiesta di accesso mandando i dati con axios
 
@@ -2218,14 +4321,14 @@ export function GetListRouteForCheckSeries(dataUser = {}) {
 
 // prendo le community a seconda lo status
 export function getCommunity(dataUser = {}, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "Get community"
-      }
+        status: "Get community",
+      },
     });
 
     // status del tipo di community che mi interessa
@@ -2242,7 +4345,7 @@ export function getCommunity(dataUser = {}, callback) {
       dispatch(
         RefreshToken({
           ...dataUser,
-          callback: getCommunity
+          callback: getCommunity,
         })
       );
     } else {
@@ -2264,8 +4367,8 @@ export function getCommunity(dataUser = {}, callback) {
             dispatch({
               type: START_LOGIN,
               payload: {
-                status: ""
-              }
+                status: "",
+              },
             });
             // ritorno i dettagli che salvo nello stato
             if (typeof callback == "function") callback(community);
@@ -2275,8 +4378,8 @@ export function getCommunity(dataUser = {}, callback) {
             dispatch({
               type: START_LOGIN,
               payload: {
-                status: ""
-              }
+                status: "",
+              },
             });
           } else if (response.status === 403) {
             // riprovo a fare la richiesta
@@ -2285,19 +4388,19 @@ export function getCommunity(dataUser = {}, callback) {
             dispatch({
               type: START_LOGIN,
               payload: {
-                status: ""
-              }
+                status: "",
+              },
             });
           } else {
             dispatch({
               type: FAIL_LOGIN,
-              payload: { error_description: "error" }
+              payload: { error_description: "error" },
             });
           }
         } catch (error) {
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error catch" }
+            payload: { error_description: "error catch" },
           });
         }
       } else {
@@ -2317,8 +4420,8 @@ export function getCommunity(dataUser = {}, callback) {
             dispatch({
               type: START_LOGIN,
               payload: {
-                status: ""
-              }
+                status: "",
+              },
             });
             // ritorno i dettagli che salvo nello stato
             if (typeof callback == "function") callback(community);
@@ -2328,8 +4431,8 @@ export function getCommunity(dataUser = {}, callback) {
             dispatch({
               type: START_LOGIN,
               payload: {
-                status: ""
-              }
+                status: "",
+              },
             });
           } else if (response.status === 403) {
             // riprovo a fare la richiesta
@@ -2338,19 +4441,19 @@ export function getCommunity(dataUser = {}, callback) {
             dispatch({
               type: START_LOGIN,
               payload: {
-                status: ""
-              }
+                status: "",
+              },
             });
           } else {
             dispatch({
               type: FAIL_LOGIN,
-              payload: { error_description: "error" }
+              payload: { error_description: "error" },
             });
           }
         } catch (error) {
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error catch" }
+            payload: { error_description: "error catch" },
           });
         }
       }
@@ -2358,16 +4461,193 @@ export function getCommunity(dataUser = {}, callback) {
   };
 }
 
+export function getDetailRouteNew(dataUser = {}) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+
+    // prendo l'id per prendere la tratta di quel trip
+    const { referred_route_id, callback } = dataUser;
+    let { access_token } = getState().login;
+
+    // dico che mi sto prendnendo cosi spunta il caricamento
+    dispatch({
+      type: START_LOGIN,
+      payload: {
+        status: "Get Detail route",
+      },
+    });
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/tracking/sub_trip_by_trip/" + referred_route_id,
+        // "/api/v1/tracking/trip_type/",
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      // Alert.alert(response.status.toString())
+
+      if (response.status === 200) {
+        const DetailRoute = response.data;
+
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+        if (callback) {
+          // ritorno i dettagli che salvo nello stato
+          callback(DetailRoute);
+        }
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(getDetailRouteNew(dataUser)));
+      }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch GetDetailRouteNew" },
+      });
+    }
+  };
+}
+
+export function getFeedbackForRoute(dataUser = {}) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+
+    // prendo l'id per prendere la tratta di quel trip
+    const { trip_id, trip_type_id, language, validated, callback } = dataUser;
+    let { access_token } = getState().login;
+
+    const valid = validated ? "True" : "False";
+    // /tracking/feedback/questions/{trip_id}/{trip_type_id}/{language}/{valid}
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestNewBackend(
+        "get",
+        "/api/v1/tracking/feedback/questions/" + trip_id + "/1/1/False",
+        // "/api/v1/tracking/feedback/questions/" + trip_id + "/" + trip_type_id + "/" + language + "/" + valid,
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      // Alert.alert(response.status.toString())
+
+      if (response.status === 200) {
+        const feedback = response.data;
+
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+        if (callback) {
+          // ritorno i dettagli che salvo nello stato
+          callback(feedback);
+        }
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(getFeedbackForRoute(dataUser)));
+      }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch getFeedbackForRoute" },
+      });
+    }
+  };
+}
+
+export function postFeedbackForRoute(dataUser = {}) {
+  return async function backendRequest(dispatch, getState) {
+    // richiesta di accesso mandando i dati con axios
+
+    // prendo l'id per prendere la tratta di quel trip
+    const { question, answer, trip, answer_text, file, callback } = dataUser;
+    let { access_token } = getState().login;
+
+    // {
+    //   "answer_text": "string",
+    //   "answer": 0,
+    //   "question": 0,
+    //   "trip": 0,
+    //   "file":null
+    // }
+
+    try {
+      const data = {
+        answer_text: answer_text ? answer_text : null,
+        answer: answer ? answer : null,
+        question,
+        trip,
+        file: file ? file : null,
+      };
+      const response = await requestNewBackend(
+        "post",
+        "/api/v1/tracking/feedback/my_answer",
+        access_token,
+        data,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      // Alert.alert(response.status.toString())
+
+      if (response.status === 201) {
+        const feedbackResponse = response.data;
+
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+        if (callback) {
+          // ritorno i dettagli che salvo nello stato
+          callback(feedbackResponse);
+        }
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        dispatch(forceRefreshTokenWithCallback(postFeedbackForRoute(dataUser)));
+      }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch postFeedbackForRoute" },
+      });
+    }
+  };
+}
+
 export function GetDetailRoute(dataUser = {}, callback, dataCallback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // dico che mi sto prendnendo cosi spunta il caricamento
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "Get Detail route"
-      }
+        status: "Get Detail route",
+      },
     });
 
     // prendo l'id per prendere la tratta di quel trip
@@ -2384,7 +4664,7 @@ export function GetDetailRoute(dataUser = {}, callback, dataCallback) {
       dispatch(
         RefreshToken({
           ...dataUser,
-          callback: GetDetailRoute
+          callback: GetDetailRoute,
         })
       );
     } else {
@@ -2405,8 +4685,8 @@ export function GetDetailRoute(dataUser = {}, callback, dataCallback) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              status: ""
-            }
+              status: "",
+            },
           });
           // ritorno i dettagli che salvo nello stato
           callback(DetailRoute, dataCallback);
@@ -2416,8 +4696,8 @@ export function GetDetailRoute(dataUser = {}, callback, dataCallback) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              status: ""
-            }
+              status: "",
+            },
           });
           // error: “limit is not valid” or error: “routes not found”
         } else if (response.status === 403) {
@@ -2427,19 +4707,19 @@ export function GetDetailRoute(dataUser = {}, callback, dataCallback) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              status: ""
-            }
+              status: "",
+            },
           });
         } else {
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         }
       } catch (error) {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          payload: { error_description: "error catch" },
         });
       }
     }
@@ -2450,7 +4730,7 @@ export function GetDetailRoute(dataUser = {}, callback, dataCallback) {
 // callback , funzione chiamata se ha successo o altro
 
 export function UpdateProfile(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // preparo la richiesta legata al login con username e password
     let { access_token, username, password, date } = getState().login;
 
@@ -2479,7 +4759,7 @@ export function UpdateProfile(dataUser = {}) {
     dispatch({
       type: UPDATE_LOGIN,
       type_payload: "infoProfileNotSave",
-      payload: dataNewUser
+      payload: dataNewUser,
     });
     if (dateExpires >= date || !access_token) {
       console.log("riconnetto");
@@ -2487,7 +4767,7 @@ export function UpdateProfile(dataUser = {}) {
         RefreshToken({
           ...dataUser,
           data: dataNewUser,
-          callback: UpdateProfile
+          callback: UpdateProfile,
         })
       );
     } else {
@@ -2511,24 +4791,24 @@ export function UpdateProfile(dataUser = {}) {
             payload: {
               ...response.data.public_profile,
               ...response.data.private_profile,
-              ...response.data
-            }
+              ...response.data,
+            },
           });
           // se ha salvato le ultime modifiche posso cancellare quelle non salvate
           dispatch({
-            type: DELETE_DATA_PROFILE_OFFLINE
+            type: DELETE_DATA_PROFILE_OFFLINE,
           });
           requestCallback(dataUser, dispatch);
         } else {
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         }
       } catch (error) {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          payload: { error_description: "error catch" },
         });
       }
     }
@@ -2539,7 +4819,7 @@ export function UpdateProfile(dataUser = {}) {
 // callback , funzione chiamata se ha successo o altro
 
 export function UpdateEmail(email, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // preparo la richiesta legata al login con username e password
     let { access_token, username, password, date } = getState().login;
 
@@ -2565,19 +4845,19 @@ export function UpdateEmail(email, callback) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              username: response.data.email
-            }
+              username: response.data.email,
+            },
           });
         } else {
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         }
       } catch (error) {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          payload: { error_description: "error catch" },
         });
       }
     }
@@ -2589,15 +4869,15 @@ export function UpdateEmail(email, callback) {
 // callback , funzione chiamata se ha successo o altro
 
 export function ChangePassword(oldPassword, newPassword, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // preparo la richiesta legata al login con username e password
     let { access_token, username, password, date } = getState().login;
 
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "Reset Password"
-      }
+        status: "Reset Password",
+      },
     });
     // data per sapere poi quando scade il token
     let dateExpires = +new Date();
@@ -2620,7 +4900,7 @@ export function ChangePassword(oldPassword, newPassword, callback) {
           {
             old_password: oldPassword,
             new_password1: newPassword,
-            new_password2: newPassword
+            new_password2: newPassword,
           },
           "application/json",
           "Bearer"
@@ -2631,29 +4911,29 @@ export function ChangePassword(oldPassword, newPassword, callback) {
           dispatch({
             type: START_LOGIN,
             payload: {
-              password: newPassword
-            }
+              password: newPassword,
+            },
           });
           // ritorno indietro se c'e stato un cambio valido
           if (callback && typeof callback === "function") {
             callback();
           }
         } else if (response.status === 400) {
-          Alert.alert("Oops", "Invalid password");
+          Alert.alert("Oops", strings("id_13_58"));
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         } else {
           dispatch({
             type: FAIL_LOGIN,
-            payload: { error_description: "error" }
+            payload: { error_description: "error" },
           });
         }
       } catch (error) {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error catch" }
+          payload: { error_description: "error catch" },
         });
       }
     }
@@ -2665,12 +4945,12 @@ export function ChangePassword(oldPassword, newPassword, callback) {
 // callback , funzione chiamata se ha successo o altro
 
 export function ResetPasswordWithEmail(email, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     dispatch({
       type: START_LOGIN,
       payload: {
-        status: "Reset Password"
-      }
+        status: "Reset Password",
+      },
     });
 
     // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
@@ -2680,7 +4960,7 @@ export function ResetPasswordWithEmail(email, callback) {
         "/account_ra/password/reset/",
         null,
         {
-          email
+          email,
         },
         "application/json",
         null
@@ -2695,19 +4975,70 @@ export function ResetPasswordWithEmail(email, callback) {
         dispatch({
           type: START_LOGIN,
           payload: {
-            status: ""
-          }
+            status: "",
+          },
         });
       } else {
         dispatch({
           type: FAIL_LOGIN,
-          payload: { error_description: "error" }
+          payload: { error_description: "error" },
         });
       }
     } catch (error) {
       dispatch({
         type: FAIL_LOGIN,
-        payload: { error_description: "error catch" }
+        payload: { error_description: "error catch" },
+      });
+    }
+  };
+}
+
+// cambiare la password mediante l'email
+// email, email dove ricevere il link per rinnovare la password
+// callback , funzione chiamata se ha successo o altro
+
+export function ResetPasswordWithEmailNew(email, callback) {
+  return async function (dispatch, getState) {
+    dispatch({
+      type: START_LOGIN,
+      payload: {
+        status: "Reset Password",
+      },
+    });
+
+    // se ha successo aggiorno lo stato redux, altrimenti mando un azione con fail
+    try {
+      const response = await requestNewBackend(
+        "POST",
+        "/api/v1/password_reset/",
+        null,
+        { email },
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+      if (response.status === 200) {
+        //email inviata
+        // tipo ritornare alla home
+        if (callback && typeof callback === "function") {
+          callback();
+        }
+        dispatch({
+          type: START_LOGIN,
+          payload: {
+            status: "",
+          },
+        });
+      } else {
+        dispatch({
+          type: FAIL_LOGIN,
+          payload: { error_description: "error" },
+        });
+      }
+    } catch (error) {
+      dispatch({
+        type: FAIL_LOGIN,
+        payload: { error_description: "error catch" },
       });
     }
   };
@@ -2715,7 +5046,7 @@ export function ResetPasswordWithEmail(email, callback) {
 
 // aggiorno solo se il dato non è stato precedentemente aggiornato
 export function checkTypeformStateForPeriodicFeed(index) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     const feedUpdate = getState().login.periodicFeed[index]
       ? getState().login.periodicFeed[index].completed
       : "";
@@ -2726,7 +5057,7 @@ export function checkTypeformStateForPeriodicFeed(index) {
 }
 
 export function checkTypeformFeed(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // preparo la richiesta legata al login con username e password
     let { access_token, date, username } = getState().login;
 
@@ -2756,14 +5087,14 @@ export function checkTypeformFeed(dataUser = {}) {
         if (response.status == 200) {
           dispatch({
             type: CHANGE_TYPEFORM_USER_VALUE,
-            payload: { typeform_user: true }
+            payload: { typeform_user: true },
           });
           // il feed periodico 8 l'avevo gia completato
           dispatch(checkTypeformStateForPeriodicFeed(8));
         } else if (response.status == 404) {
           dispatch({
             type: CHANGE_TYPEFORM_USER_VALUE,
-            payload: { typeform_user: false }
+            payload: { typeform_user: false },
           });
         }
 
@@ -2780,7 +5111,7 @@ export function checkTypeformFeed(dataUser = {}) {
 }
 
 export function postTypeform(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // preparo la richiesta legata al login con username e password
     let { access_token, date, username } = getState().login;
     const url = dataUser.url ? dataUser.url : "";
@@ -2811,19 +5142,19 @@ export function postTypeform(dataUser = {}) {
         if (response.status == 200) {
           dispatch({
             type: CHANGE_TYPEFORM_USER_VALUE,
-            payload: { typeform_user: true }
+            payload: { typeform_user: true },
           });
           // completato il feed periodico numero 8
           dispatch(checkTypeformStateForPeriodicFeed(8));
         } else if (response.status == 404) {
           dispatch({
             type: CHANGE_TYPEFORM_USER_VALUE,
-            payload: { typeform_user: false }
+            payload: { typeform_user: false },
           });
         } else {
           dispatch({
             type: CHANGE_TYPEFORM_USER_VALUE,
-            payload: { typeform_user: false }
+            payload: { typeform_user: false },
           });
         }
       } catch (error) {
@@ -2835,16 +5166,16 @@ export function postTypeform(dataUser = {}) {
 }
 
 export function setTypeformUser(bool) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     dispatch({
       type: CHANGE_TYPEFORM_USER_VALUE,
-      payload: { typeform_user: bool }
+      payload: { typeform_user: bool },
     });
   };
 }
 
 export function deleteProfile(dataUser = {}, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // preparo la richiesta legata al login con username e password
@@ -2879,7 +5210,7 @@ export function deleteProfile(dataUser = {}, callback) {
         if (response.status === 204) {
           dispatch({
             type: LOG_OUT,
-            payload: {}
+            payload: {},
           });
         }
 
@@ -2924,11 +5255,11 @@ export async function requestBackend(
     ? {
         data: ContentType ? data : qs.stringify(data),
         async: true,
-        crossDomain: true
+        crossDomain: true,
       }
     : {
         async: true,
-        crossDomain: true
+        crossDomain: true,
       };
 
   // header contiene Authorization solo quando c'e una chiamata con l'utente connesso
@@ -2938,13 +5269,13 @@ export async function requestBackend(
           ? ContentType
           : "application/x-www-form-urlencoded",
         Authorization: `${header} ${access_token}`,
-        "Cache-Control": "no-cache"
+        "Cache-Control": "no-cache",
       }
     : {
         "content-type": ContentType
           ? ContentType
           : "application/x-www-form-urlencoded",
-        "Cache-Control": "no-cache"
+        "Cache-Control": "no-cache",
       };
 
   try {
@@ -2952,7 +5283,7 @@ export async function requestBackend(
       method,
       url: WebService.url + api,
       headers,
-      ...anotherData
+      ...anotherData,
     });
     console.log(response.request.responseURL);
     console.log(response);
@@ -2976,8 +5307,66 @@ export async function requestBackend(
   }
 }
 
+// ritorna un oggetto con status e data
+export async function requestNewBackend(
+  method,
+  api,
+  access_token = null,
+  data = {},
+  ContentType,
+  header
+) {
+  // header contiene Authorization solo quando c'e una chiamata con l'utente connesso
+
+  const headers = access_token
+    ? {
+        "content-type": ContentType
+          ? ContentType
+          : "application/x-www-form-urlencoded",
+        Authorization: `${header} ${access_token}`,
+        "Cache-Control": "no-cache",
+      }
+    : {
+        "content-type": ContentType
+          ? ContentType
+          : "application/x-www-form-urlencoded",
+        "Cache-Control": "no-cache",
+      };
+
+  try {
+    const response = await axios({
+      method,
+      url: WebService.url + api,
+      headers,
+      data,
+    });
+    console.log(response.request.responseURL);
+    console.log(response);
+    return response;
+  } catch (error) {
+    if (error.response) {
+      console.log(error.response.data);
+      console.log(error.response.status);
+      console.log(error.response.headers);
+      //return error.response;
+      return error.response;
+      // if (error.response.status === 403) {
+    } else if (error.request) {
+      console.log(error.request);
+      return error.request;
+      // return error.request;
+    } else {
+      console.log(error.message);
+
+      // return error.message;
+    }
+    return error;
+    console.log(error.config);
+  }
+}
+
 export function setNotificationTime(time, weekDays) {
-  return function(dispatch) {
+  return function (dispatch) {
     // pushNotifications.configure();
     // pushNotifications.cancelAllLocalNotifications();
     // if (Platform.OS == "ios") {
@@ -2990,128 +5379,128 @@ export function setNotificationTime(time, weekDays) {
     dispatch({
       type: SET_NOTIFICATION_TIME,
       type_payload: "notification_schedule",
-      payload: time
+      payload: time,
     });
   };
 }
 
 export function setSundayNotificationIds(ids) {
   console.log(ids);
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_NOTIFICATION_SUNDAY_IDS,
       type_payload: "notification_sunday_ids",
-      payload: ids
+      payload: ids,
     });
   };
 }
 
 export function deleteSundayNotificationIds() {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: DELETE_NOTIFICATION_SUNDAY_IDS,
       type_payload: "notification_sunday_ids",
-      payload: false
+      payload: false,
     });
   };
 }
 
 export function setScheduledNotificationIds(ids) {
   console.log(ids);
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_NOTIFICATION_SCHEDULED_IDS,
       type_payload: "notification_scheduled_ids",
-      payload: ids
+      payload: ids,
     });
   };
 }
 
 export function deleteScheduledNotificationIds(ids) {
   console.log(ids);
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: DELETE_NOTIFICATION_SCHEDULED_IDS,
       type_payload: "notification_scheduled_ids",
-      payload: null
+      payload: null,
     });
   };
 }
 
 export function setNotificationBoolean(bool) {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_NOTIFICATION_TIME,
       type_payload: "notification_set",
-      payload: bool
+      payload: bool,
     });
   };
 }
 
 export function setWeekDaysNotification(objWeek) {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_CHOOSED_WEEKDAYS,
       type_payload: "choosed_week_days",
-      payload: objWeek
+      payload: objWeek,
     });
   };
 }
 
 export function setStillNotification(bool) {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_CHOOSED_WEEKDAYS,
       type_payload: "notification_still",
-      payload: bool
+      payload: bool,
     });
   };
 }
 
 export function setCarProperties(data) {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_CAR_PROPERTIES,
       type_payload: "car_properties",
-      payload: data
+      payload: data,
     });
   };
 }
 
 export function setMotoProperties(data) {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_MOTO_PROPERTIES,
       type_payload: "moto_properties",
-      payload: data
+      payload: data,
     });
   };
 }
 
 export function setRemoteNotificationId(token) {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_REMOTE_NOTIFICATION_ID,
       type_payload: "remote_notification_token",
-      payload: token
+      payload: token,
     });
   };
 }
 
 export function setFirstConfiguration() {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_FIRST_CONFIGURATION,
-      payload: true
+      payload: true,
     });
   };
 }
 
 export function setRightMenuState(bool) {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_RIGHT_MENU_STATE,
-      payload: bool
+      payload: bool,
     });
   };
 }
@@ -3137,7 +5526,7 @@ export function requestCallback(dataLogin, dispatch) {
 
 // ritorna tutti i dettagli di una città
 export function getCityInfo(dataUser = {}, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
 
     // preparo la richiesta legata al login con username e password
@@ -3190,13 +5579,13 @@ export function getCityInfo(dataUser = {}, callback) {
         }
         dispatch({
           type: "nulla",
-          payload: {}
+          payload: {},
         });
       } catch (error) {
         console.log(error);
         dispatch({
           type: "nulla",
-          payload: {}
+          payload: {},
         });
       }
     }
@@ -3204,14 +5593,12 @@ export function getCityInfo(dataUser = {}, callback) {
 }
 
 export function setSessionToken() {
-  return function(dispatch) {
-    let rand = function() {
-      return Math.random()
-        .toString(36)
-        .substr(2); // remove `0.`
+  return function (dispatch) {
+    let rand = function () {
+      return Math.random().toString(36).substr(2); // remove `0.`
     };
 
-    let token = function() {
+    let token = function () {
       return rand() + rand(); // to make it longer
     };
 
@@ -3233,24 +5620,24 @@ export function setSessionToken() {
         sessionToken: {
           token: token(),
           expired_date: +expired_date,
-          pages: null
-        }
-      }
+          pages: null,
+        },
+      },
     });
   };
 }
 
 export function addPageCounted(page) {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: ADD_PAGE_COUNTED,
-      payload: page
+      payload: page,
     });
   };
 }
 
 export function getMaintenance(dataUser = {}) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     try {
       // "http://23.97.216.36" + "/api/v2/extra/maintenance"
       const response = await axios.get(
@@ -3275,13 +5662,13 @@ export function getMaintenance(dataUser = {}) {
 }
 
 export function getTypeformSoddFrust(url, dataUser = {}, callback) {
-  return async function(dispatch, getState) {
+  return async function (dispatch, getState) {
     let {
       access_token,
       username,
       password,
       date,
-      typeform_soddfrust_2
+      typeform_soddfrust_3,
     } = getState().login;
     if (dataUser.access_token) {
       access_token = dataUser.access_token;
@@ -3310,13 +5697,13 @@ export function getTypeformSoddFrust(url, dataUser = {}, callback) {
         ) {
           dispatch({
             type: SET_SODDFRUST_FLAG,
-            payload: 1
+            payload: 1,
           });
         } else {
-          if (typeform_soddfrust_2 != 2)
+          if (typeform_soddfrust_3 != 2)
             dispatch({
               type: SET_SODDFRUST_FLAG,
-              payload: 0
+              payload: 0,
             });
         }
       } catch (error) {
@@ -3327,10 +5714,314 @@ export function getTypeformSoddFrust(url, dataUser = {}, callback) {
 }
 
 export function setSoddfrustValue(page) {
-  return function(dispatch) {
+  return function (dispatch) {
     dispatch({
       type: SET_SODDFRUST_FLAG,
-      payload: 2
+      payload: 2,
     });
+  };
+}
+
+// register: {
+//   frequent_trip_start: {
+//     latitude: 37.33233141,
+//     longitude: -122.0312186,
+//     street: 'Santa Clara County, California'
+//   },
+//   frequent_trip_end: {
+//     latitude: 37.33233141,
+//     longitude: -122.0312186,
+//     street: 'Santa Clara County, California'
+//   },
+//   frequent_trip_type_start: 1,
+//   frequent_trip_type_end: 2,
+//   frequent_trip_start_time: '9:00',
+//   frequent_trip_choosed_weekdays: {
+//     '0': false,
+//     '1': true,
+//     '2': true,
+//     '3': true,
+//     '4': true,
+//     '5': true,
+//     '6': false
+//   },
+//   frequent_trip_end_time: '17:00',
+// mostFrequentRaceModalSplit: [
+//   {
+//     label: 'walk',
+//     value: 30
+//   },
+//   {
+//     label: 'bike',
+//     value: 0
+//   },
+//   {
+//     label: 'bus',
+//     value: 0
+//   },
+//   {
+//     label: 'car',
+//     value: 0
+//   },
+//   {
+//     label: 'motorbike',
+//     value: 0
+//   },
+//   {
+//     label: 'train',
+//     value: 0
+//   }
+// ],
+// },
+
+// https://muvprod.tk
+
+export function postBaseTrip(dataUser = {}) {
+  return async function (dispatch, getState) {
+    console.log("postBaseTrip");
+
+    let { access_token } = getState().login;
+    let { duration, mostFrequentRaceModalSplit } = getState().register;
+
+    try {
+      if (mostFrequentRaceModalSplit && mostFrequentRaceModalSplit.length) {
+        let walk_slider = 0;
+        let bike_slider = 0;
+        let bus_slider = 0;
+        let train_slider = 0;
+        let car_slider = 0;
+        let motorbike_slider = 0;
+        let electric_scooter_slider = 0;
+
+        walk_slider = mostFrequentRaceModalSplit[0].value;
+        bike_slider = mostFrequentRaceModalSplit[1].value;
+        bus_slider = mostFrequentRaceModalSplit[2].value;
+        train_slider = mostFrequentRaceModalSplit[3].value;
+        car_slider = mostFrequentRaceModalSplit[4].value;
+        electric_scooter_slider = mostFrequentRaceModalSplit[5].value;
+        motorbike_slider = mostFrequentRaceModalSplit[6].value;
+
+        const data = {
+          walk_slider,
+          bike_slider,
+          bus_slider,
+          train_slider,
+          car_slider,
+          motorbike_slider,
+          electric_scooter_slider,
+          duration,
+        };
+
+        const response = await requestNewBackend(
+          "post",
+          "/api/v1/tracking/base_trip/",
+          access_token,
+          data,
+          "application/json",
+          "Bearer"
+        );
+        console.log(response);
+
+        if (response.status === 201) {
+          // dispatch(getMostFrequentRoute());
+        }
+        if (response.status === 401) {
+          dispatch(forceRefreshTokenWithCallback(postBaseTrip(dataUser)));
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      // dispatch({
+      //   type: FAIL_LOGIN,
+      //   payload: { error_description: "error catch" }
+      // });
+    }
+  };
+}
+
+export function postFrequentTrip(dataUser = {}) {
+  return async function (dispatch, getState) {
+    console.log("postFrequentTrip");
+
+    let { access_token } = getState().login;
+    let {
+      frequent_trip_start,
+      frequent_trip_end,
+      frequent_trip_type_start,
+      frequent_trip_type_end,
+      frequent_trip_start_time,
+      frequent_trip_choosed_weekdays,
+      frequent_trip_end_time,
+      mostFrequentRaceModalSplit,
+    } = getState().register;
+
+    try {
+      console.log("postFrequentTrip");
+
+      let frequency = 0;
+      for (let i in frequent_trip_choosed_weekdays) {
+        if (frequent_trip_choosed_weekdays[i]) frequency++;
+      }
+
+      let data = {
+        start_point: {
+          latitude: frequent_trip_start.latitude,
+          longitude: frequent_trip_start.longitude,
+        },
+        end_point: {
+          latitude: frequent_trip_end.latitude,
+          longitude: frequent_trip_end.longitude,
+        },
+        frequency,
+        start_time: frequent_trip_start_time,
+        end_time: frequent_trip_end_time,
+        monday: frequent_trip_choosed_weekdays[1],
+        tuesday: frequent_trip_choosed_weekdays[2],
+        wednesday: frequent_trip_choosed_weekdays[3],
+        thursday: frequent_trip_choosed_weekdays[4],
+        friday: frequent_trip_choosed_weekdays[5],
+        saturday: frequent_trip_choosed_weekdays[6],
+        sunday: frequent_trip_choosed_weekdays[0],
+        walk_slider: mostFrequentRaceModalSplit[0].value,
+        bike_slider: mostFrequentRaceModalSplit[1].value,
+        bus_slider: mostFrequentRaceModalSplit[2].value,
+        car_slider: mostFrequentRaceModalSplit[3].value,
+        motorbike_slider: mostFrequentRaceModalSplit[4].value,
+        train_slider: mostFrequentRaceModalSplit[5].value,
+        // is_active,
+        start_type: frequent_trip_type_start,
+        end_type: frequent_trip_type_end,
+      };
+
+      console.log(frequent_trip_start);
+      console.log(frequent_trip_end);
+      console.log(data);
+
+      const response = await requestNewBackend(
+        "post",
+        "/api/v1/tracking/frequent_trip/",
+        access_token,
+        data,
+        "application/json",
+        "Bearer"
+      );
+      console.log(response);
+
+      if (response.status === 201) {
+        dispatch(getMostFrequentRoute());
+      }
+      if (response.status === 403) {
+        console.log("token scaduto");
+      }
+    } catch (error) {
+      console.log(error);
+      // dispatch({
+      //   type: FAIL_LOGIN,
+      //   payload: { error_description: "error catch" }
+      // });
+    }
+  };
+}
+
+export function postFrequentTripFromLateralMenu(dataUser = {}) {
+  return async function (dispatch, getState) {
+    console.log("postFrequentTrip");
+
+    let { access_token, date } = getState().login;
+    let {
+      // frequent_trip_start,
+      // frequent_trip_end,
+      // frequent_trip_type_start,
+      // frequent_trip_type_end,
+      frequent_trip_start_time,
+      frequent_trip_end_time,
+      mostFrequentRaceFrequencyPosition,
+      frequent_trip_choosed_weekdays,
+      mostFrequentRaceModalSplit,
+    } = getState().register;
+
+    if (dataUser.access_token) {
+      access_token = dataUser.access_token;
+      date = dataUser.date;
+    }
+
+    let dateExpires = +new Date();
+    if (dateExpires >= date) {
+      console.log(
+        "chiamata non possibile, richiamo login e poi questa richiesta"
+      );
+      dispatch(
+        refreshTokenNew({
+          ...dataUser,
+          callback: postFrequentTripFromLateralMenu,
+        })
+      );
+    } else {
+      console.log("postFrequentTrip");
+
+      try {
+        console.log("postFrequentTrip");
+
+        let frequency = 0;
+        for (let i in frequent_trip_choosed_weekdays) {
+          if (frequent_trip_choosed_weekdays[i]) frequency++;
+        }
+
+        let data = {
+          start_point: {
+            latitude: mostFrequentRaceFrequencyPosition.start_point.latitude,
+            longitude: mostFrequentRaceFrequencyPosition.start_point.longitude,
+          },
+          end_point: {
+            latitude: mostFrequentRaceFrequencyPosition.end_point.latitude,
+            longitude: mostFrequentRaceFrequencyPosition.end_point.longitude,
+          },
+          frequency,
+          start_time: frequent_trip_start_time,
+          end_time: frequent_trip_end_time,
+          monday: frequent_trip_choosed_weekdays[1],
+          tuesday: frequent_trip_choosed_weekdays[2],
+          wednesday: frequent_trip_choosed_weekdays[3],
+          thursday: frequent_trip_choosed_weekdays[4],
+          friday: frequent_trip_choosed_weekdays[5],
+          saturday: frequent_trip_choosed_weekdays[6],
+          sunday: frequent_trip_choosed_weekdays[0],
+          walk_slider: mostFrequentRaceModalSplit[0].value,
+          bike_slider: mostFrequentRaceModalSplit[1].value,
+          bus_slider: mostFrequentRaceModalSplit[2].value,
+          car_slider: mostFrequentRaceModalSplit[3].value,
+          motorbike_slider: mostFrequentRaceModalSplit[4].value,
+          train_slider: mostFrequentRaceModalSplit[5].value,
+          // is_active,
+          start_type: mostFrequentRaceFrequencyPosition.start_type,
+          end_type: mostFrequentRaceFrequencyPosition.end_type,
+        };
+
+        console.log(data);
+
+        const response = await requestBackend(
+          "post",
+          "/api/v1/tracking/frequent_trip/",
+          access_token,
+          data,
+          "application/json",
+          "Bearer"
+        );
+        console.log(response);
+
+        if (response.status === 201) {
+          dispatch(getMostFrequentRoute());
+        }
+        if (response.status === 403) {
+          console.log("token scaduto");
+        }
+      } catch (error) {
+        console.log(error);
+        // dispatch({
+        //   type: FAIL_LOGIN,
+        //   payload: { error_description: "error catch" }
+        // });
+      }
+    }
   };
 }

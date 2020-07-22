@@ -7,8 +7,8 @@
  */
 
 import React from "react";
-import { View, Text, Alert, Platform, Dimensions, NetInfo } from "react-native";
-
+import { View, Text, Alert, Platform, Dimensions } from "react-native";
+import { NetInfo } from "@react-native-community/netinfo";
 
 import { connect } from "react-redux";
 import ResumeMap from "./../../components/ResumeMap/ResumeMap";
@@ -20,8 +20,14 @@ import Icon from "react-native-vector-icons/Ionicons";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import Aux from "../../helpers/Aux";
 
+import {
+
+  getNumSubTripState
+} from "./../../domains/tracking/Selectors";
+
 // metodo per sapere quante sotto trace compongono la route corrente
 import { sumRoute } from "./../../domains/tracking/ActionCreators";
+import { strings } from "../../config/i18n";
 
 class MapScreen extends React.Component {
   constructor(props) {
@@ -40,8 +46,7 @@ class MapScreen extends React.Component {
           left: Platform.OS == "android" ? 20 : 0
         }}
       >
-        {" "}
-        Map{" "}
+        {strings("id_1_06")}
       </Text>
     )
   };
@@ -81,7 +86,7 @@ class MapScreen extends React.Component {
     if (route.length) {
       // console.log("sumsegment ");
       const routeControl = [...PreviousRoute, { route, routeAnalyzed }];
-      NumSegment = sumRoute(routeControl, routeControl.length, true, false);
+      NumSegment = props.numSubTrip
       // console.log("sumsegment calcolato " + NumSegment);
     }
     // se ci sono segmenti recupera questi dati
@@ -217,7 +222,8 @@ class MapScreen extends React.Component {
 const withTracking = connect(state => {
   return {
     trackingState: state.tracking,
-    connectionState: state.connection
+    connectionState: state.connection,
+    numSubTrip: getNumSubTripState(state),
   };
 });
 

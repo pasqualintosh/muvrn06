@@ -1,35 +1,29 @@
 import { createSelector } from 'reselect'
 
-const getFollow = state => state.follow.follow;
-
-const getFollowed = state => state.follow.followed;
-
-const getStatus = state => state.follow.fetchingData;
-
-const getTab = state => state.follow.selectedFriend;
 
 
+const getCars = state => state.register.get_mobility_car_values;
 
 
-// prendo chi seguo
-export const getFollowedState = createSelector(
-  [getFollowed],
-  followed => (followed ? followed : [])
+const getall = state => state;
+
+
+// opzioni di auto
+export const getallState = createSelector(
+  [getall],
+  cars =>  {
+    console.log(cars)
+    return(cars ? cars : [])
+  }
+  
 );
 
-// prendo chi mi segue
-export const getFollowState = createSelector(
-  [getFollow],
-  follow => (follow ? follow : [])
+// opzioni di auto
+export const getCarsState = createSelector(
+  [getCars],
+  cars =>  {
+    console.log(cars)
+    return(cars ? cars : [])
+  }
+  
 );
-
-export const getStatusState = createSelector(
-  [getStatus],
-  status => (status ? status : false)
-);
-
-export const getTabState = createSelector(
-  [getTab],
-  tab => (tab ? tab : "FOLLOWING")
-);
-

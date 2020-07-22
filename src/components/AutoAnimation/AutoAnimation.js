@@ -12,13 +12,12 @@ class AutoAnimation extends React.Component {
     this.mode = true;
     // se è stata stoppata l'animazione
     this.activeWave = true;
+    this.state = { activeAnimate: true };
   }
 
   componentDidMount() {
     this.playAnimation();
   }
-
- 
 
   playAnimation() {
     Animated.timing(this.animationWrapperProgress, {
@@ -27,7 +26,8 @@ class AutoAnimation extends React.Component {
       easing: Easing.linear
     }).start(() => {
       this.mode = false;
-      this.playBackAnimation();
+      this.setState({ activeAnimate: false });
+      // this.playBackAnimation();
 
       // console.log("==> Animation loop time: " + new Date());
     });
@@ -36,7 +36,7 @@ class AutoAnimation extends React.Component {
   playBackAnimation() {
     Animated.timing(this.animationWrapperProgress, {
       toValue: 0.01,
-      duration: 5000,    
+      duration: 5000,
       easing: Easing.linear
     }).start(() => {
       this.mode = true;
@@ -45,8 +45,6 @@ class AutoAnimation extends React.Component {
       // console.log("==> Animation loop time: " + new Date());
     });
   }
-
-  
 
   /* resumeAnimation() {
     console.log(this.animationWrapperProgress._value);
@@ -100,33 +98,34 @@ class AutoAnimation extends React.Component {
   componentWillUnmount() {
     this.animationWrapperProgress.stopAnimation();
   }
-  
 
-  
   render() {
     return (
       <View
         style={{
           top: 0,
-          position: 'absolute'
+          position: "absolute"
         }}
       >
-        <LottieView
-          progress={this.animationWrapperProgress}
-          hardwareAccelerationAndroid={true}
-          renderToHardwareTextureAndroid={true}
-          imageAssetsFolder={"lottie/animation_wave"}
-          source={require("./../../assets/auto.json")}
-          style={{
-            height: 90,
-            width: Dimensions.get("window").width
-          }}
-          enableMergePathsAndroidForKitKatAndAbove
-        />
+        {this.state.activeAnimate ? (
+          <LottieView
+            progress={this.animationWrapperProgress}
+            hardwareAccelerationAndroid={true}
+            renderToHardwareTextureAndroid={true}
+            imageAssetsFolder={"lottie/animation_wave"}
+            source={require("./../../assets/auto.json")}
+            style={{
+              height: 90,
+              width: Dimensions.get("window").width
+            }}
+            enableMergePathsAndroidForKitKatAndAbove
+          />
+        ) : (
+          <View />
+        )}
       </View>
     );
   }
 }
-
 
 export default AutoAnimation;

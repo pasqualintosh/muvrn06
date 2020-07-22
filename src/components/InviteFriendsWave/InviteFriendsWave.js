@@ -23,9 +23,7 @@ import branch, { RegisterViewEvent, BranchEvent } from "react-native-branch";
 
 import LinearGradient from "react-native-linear-gradient";
 import Aux from "./../../helpers/Aux";
-import {
-  getProfile
-} from "./../../domains/login/Selectors";
+import { getProfile } from "./../../domains/login/Selectors";
 
 const defaultBUO = {
   title: "MUV"
@@ -88,7 +86,7 @@ class InviteFriendsWave extends React.PureComponent {
         first_name: this.props.infoProfile.first_name,
         last_name: this.props.infoProfile.last_name,
         avatar: this.props.infoProfile.avatar,
-        points: this.props.Points,
+        points: 0,
         role: this.props.infoProfile.role,
         coins: this.props.infoProfile.coins,
         level: JSON.stringify(this.props.infoProfile.level),
@@ -143,7 +141,7 @@ class InviteFriendsWave extends React.PureComponent {
     };
   }
 
- //  {/* +"!\n" */}
+  //  {/* +"!\n" */}
   render() {
     if (this.props.typeInvite === "Friend") {
       return (
@@ -240,7 +238,7 @@ class InviteFriendsWave extends React.PureComponent {
                                 fontSize: 14
                               }}
                             >
-                               {strings('invite')}
+                              {strings("invite")}
                             </Text>
                           ) : (
                             <ActivityIndicator size="small" color="white" />
@@ -255,14 +253,15 @@ class InviteFriendsWave extends React.PureComponent {
           </View>
         </Aux>
       );
-    } else if  (this.props.typeInvite === 'City') {
-      return(<Aux>
+    } else if (this.props.typeInvite === "City") {
+      return (
+        <Aux>
           <ImageBackground
             source={require("../../assets/images/invite_friend_banner.png")}
             style={styles.backgroundImage}
           />
           <View style={styles.backgroundImageClassic}>
-          <View style={[styles.userContainer, styles.firstUser]}>
+            <View style={[styles.userContainer, styles.firstUser]}>
               <View style={{ flexDirection: "column", alignContent: "center" }}>
                 <View
                   style={{
@@ -299,12 +298,13 @@ class InviteFriendsWave extends React.PureComponent {
                         textAlign: "left"
                       }}
                     >
-                     {"Launch the Weekly Challenge in " + (this.props.infoProfile.city
-          ? this.props.infoProfile.city.city_name
-            ? this.props.infoProfile.city.city_name
-            : "City"
-          : "City") +
-                     ". Invite at least 3 friends to activate the challenge and being awarded every week with MUV Trophies."}
+                      {"Launch the Weekly Challenge in " +
+                        (this.props.infoProfile.city
+                          ? this.props.infoProfile.city.city_name
+                            ? this.props.infoProfile.city.city_name
+                            : "City"
+                          : "City") +
+                        ". Invite at least 3 friends to activate the challenge and being awarded every week with MUV Trophies."}
                     </Text>
                   </View>
                   <View style={{ width: 10 }} />
@@ -354,7 +354,7 @@ class InviteFriendsWave extends React.PureComponent {
                                 fontSize: 14
                               }}
                             >
-                               {strings('invite')}
+                              {strings("invite")}
                             </Text>
                           ) : (
                             <ActivityIndicator size="small" color="white" />
@@ -366,10 +366,10 @@ class InviteFriendsWave extends React.PureComponent {
                 </View>
               </View>
             </View>
-            </View>
-          </Aux>
-      )
-      }else {
+          </View>
+        </Aux>
+      );
+    } else {
       return (
         <View>
           <ImageBackground
@@ -466,7 +466,7 @@ class InviteFriendsWave extends React.PureComponent {
                                 fontSize: 14
                               }}
                             >
-                               {strings('invite')}
+                              {strings("invite")}
                             </Text>
                           ) : (
                             <ActivityIndicator size="small" color="white" />
@@ -485,18 +485,10 @@ class InviteFriendsWave extends React.PureComponent {
   }
 }
 
-
-
 const withConnect = connect(state => {
   return {
     roleAll: state.login.role,
-    infoProfile: getProfile(state),
-    Points:
-      state.statistics.statistics === []
-        ? 0
-        : state.statistics.statistics.reduce((total, elem, index, array) => {
-            return total + elem.points;
-          }, 0)
+    infoProfile: getProfile(state)
   };
 });
 

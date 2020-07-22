@@ -19,7 +19,7 @@ import OwnIcon from "../../components/OwnIcon/OwnIcon";
 import InputPassword from "../../components/InputLogin/InputPassword";
 import { connect } from "react-redux";
 import {
-  ChangePassword,
+  changePasswordNew,
   deleteProfile
 } from "./../../domains/login/ActionCreators";
 import { START_LOGIN } from "../../domains/login/ActionTypes";
@@ -74,7 +74,7 @@ class ChangePasswordScreen extends React.Component {
             left: Platform.OS == "android" ? 20 : 0
           }}
         >
-          {strings("change_password")}
+          {strings("id_13_24")}
         </Text>
       )
     };
@@ -94,13 +94,13 @@ class ChangePasswordScreen extends React.Component {
   };
 
   showAlert = msg => {
-    Alert.alert("Oops", msg);
+    Alert.alert(strings("id_0_10"), msg);
   };
   handleResetPassword = () => {
     const { oldPassword, newPassword, newPasswordCheck } = this.state;
 
     if (newPassword !== newPasswordCheck) {
-      this.showAlert("Passwords don't match");
+      this.showAlert(strings("id_13_57"));
     } else {
       const ExpRegPassword = /^([a-zA-Z0-9_.,\-+*!#@?]{6,25})$/;
       const validOld = ExpRegPassword.test(String(oldPassword).toLowerCase());
@@ -109,17 +109,17 @@ class ChangePasswordScreen extends React.Component {
         if (validNew) {
           // recupero password
           this.props.dispatch(
-            ChangePassword(
+            changePasswordNew({
               oldPassword,
               newPassword,
-              this.props.navigation.goBack()
-            )
+              callback: this.props.navigation.goBack()
+            })
           );
         } else {
-          this.showAlert("New Password is not valid");
+          this.showAlert(strings("id_13_57"));
         }
       } else {
-        this.showAlert("Current Password is not valid");
+        this.showAlert(strings("id_13_58"));
       }
     }
   };
@@ -298,7 +298,7 @@ class ChangePasswordScreen extends React.Component {
             <InputPassword
               name={"oldPassword"}
               returnKeyType={"done"}
-              placeholder={strings("current_passwor")}
+              placeholder={strings("id_13_30")}
               password={this.state.oldPassword}
               ValidationPassword={true}
               showPassword={this.state.showPassword}
@@ -334,7 +334,7 @@ class ChangePasswordScreen extends React.Component {
             <InputPassword
               name={"newPassword"}
               returnKeyType={"next"}
-              placeholder={strings("new_password")}
+              placeholder={strings("id_13_31")}
               password={this.state.newPassword}
               ValidationPassword={true}
               showPassword={this.state.showPassword}
@@ -356,7 +356,7 @@ class ChangePasswordScreen extends React.Component {
             <InputPassword
               name={"newPasswordCheck"}
               returnKeyType={"done"}
-              placeholder={strings("confirm_new_pas")}
+              placeholder={strings("id_13_32")}
               password={this.state.newPasswordCheck}
               ValidationPassword={true}
               showPassword={this.state.showPassword}
@@ -401,7 +401,9 @@ class ChangePasswordScreen extends React.Component {
                 }}
               >
                 {this.props.status !== "Reset Password" ? (
-                  <Text style={{ color: "#FFFFFF" }}>Change</Text>
+                  <Text style={{ color: "#FFFFFF" }}>
+                    {strings("id_13_23")}
+                  </Text>
                 ) : (
                   <ActivityIndicator size="small" color="white" />
                 )}
