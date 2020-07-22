@@ -11,6 +11,8 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.m */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		1740190924C892B40028ABB0 /* MoonFlower.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1740190724C892B40028ABB0 /* MoonFlower.ttf */; };
+		1740190A24C892B40028ABB0 /* MoonFlower-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1740190824C892B40028ABB0 /* MoonFlower-Bold.ttf */; };
 		17BC7D3A24C72B150018A449 /* img_5.png in Resources */ = {isa = PBXBuildFile; fileRef = 17BC7D3024C72B140018A449 /* img_5.png */; };
 		17BC7D3B24C72B150018A449 /* Splash screen.png in Resources */ = {isa = PBXBuildFile; fileRef = 17BC7D3124C72B140018A449 /* Splash screen.png */; };
 		17BC7D3C24C72B150018A449 /* Assents in Resources */ = {isa = PBXBuildFile; fileRef = 17BC7D3224C72B140018A449 /* Assents */; };
@@ -90,6 +92,8 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = muvrn06/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = muvrn06/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = muvrn06/main.m; sourceTree = "<group>"; };
+		1740190724C892B40028ABB0 /* MoonFlower.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MoonFlower.ttf; path = Assents/Font/MoonFlower/MoonFlower.ttf; sourceTree = "<group>"; };
+		1740190824C892B40028ABB0 /* MoonFlower-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "MoonFlower-Bold.ttf"; path = "Assents/Font/MoonFlower/MoonFlower-Bold.ttf"; sourceTree = "<group>"; };
 		17BC7D3024C72B140018A449 /* img_5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = img_5.png; sourceTree = "<group>"; };
 		17BC7D3124C72B140018A449 /* Splash screen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Splash screen.png"; sourceTree = "<group>"; };
 		17BC7D3224C72B140018A449 /* Assents */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Assents; sourceTree = "<group>"; };
@@ -250,6 +254,8 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				1740190824C892B40028ABB0 /* MoonFlower-Bold.ttf */,
+				1740190724C892B40028ABB0 /* MoonFlower.ttf */,
 				17BC7D7124C72B4F0018A449 /* OpenSans-Bold.ttf */,
 				17BC7D6A24C72B4C0018A449 /* OpenSans-BoldItalic.ttf */,
 				17BC7D6F24C72B4E0018A449 /* OpenSans-ExtraBold.ttf */,
@@ -466,6 +472,7 @@
 				17BC7D6224C72B390018A449 /* Montserrat-Thin.ttf in Resources */,
 				17BC7D4224C72B150018A449 /* img_2.png in Resources */,
 				17BC7D3F24C72B150018A449 /* img_0.png in Resources */,
+				1740190A24C892B40028ABB0 /* MoonFlower-Bold.ttf in Resources */,
 				17BC7D7424C72B4F0018A449 /* OpenSans-BoldItalic.ttf in Resources */,
 				17BC7D5624C72B390018A449 /* Montserrat-LightItalic.ttf in Resources */,
 				17BC7D5A24C72B390018A449 /* Montserrat-BlackItalic.ttf in Resources */,
@@ -478,6 +485,7 @@
 				17BC7D3C24C72B150018A449 /* Assents in Resources */,
 				17BC7D6424C72B390018A449 /* Montserrat-BoldItalic.ttf in Resources */,
 				17BC7D5824C72B390018A449 /* Montserrat-Bold.ttf in Resources */,
+				1740190924C892B40028ABB0 /* MoonFlower.ttf in Resources */,
 				17BC7D4024C72B150018A449 /* icomoon.ttf in Resources */,
 				17BC7D7524C72B4F0018A449 /* OpenSans-Regular.ttf in Resources */,
 				17BC7D5C24C72B390018A449 /* Montserrat-Medium.ttf in Resources */,
