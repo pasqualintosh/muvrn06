@@ -1,0 +1,55 @@
+id;created_at;updated_at;quiz_id;survey_id;training_session_id;acronym;check_in;day;frequency;is_mfr;is_shared_trip;lat;lon;modal_type;period;points;text_description;time_slot;typology;weather
+17;2018-09-11 10:01:46.285351;2018-09-11 10:01:46.285372;;;2;;;7;0;false;false;;;01-feb;0;0;Move once by walking or biking;;MOD;0
+18;2018-09-11 10:02:44.031533;2018-09-11 10:02:44.031555;;;2;;;7;0;false;false;;;;0;400;Do a trip of at least 400 points;;PTS;0
+19;2018-09-11 10:17:15.478877;2018-09-11 10:17:15.478904;;;2;;;7;0;false;false;;;;3;0;Do a trip during the weekend (Saturday or Sunday);;STS;0
+20;2018-09-11 10:18:36.349442;2018-09-11 10:18:36.349471;;;3;;;7;0;true;false;;;;0;0;Do a routinary trip;;ROT;0
+21;2018-09-11 10:19:39.178216;2018-09-11 10:19:39.178238;;;3;;;7;2;false;false;;;;1;0;Do at least two trips in a single day;;FQY;0
+22;2018-09-11 10:20:09.448375;2018-09-11 10:20:09.448396;;;3;;;7;3;false;false;;;;2;0;Do at least three trips in a week;;FQY;0
+23;2018-09-11 13:28:42.467963;2018-09-11 13:28:42.468003;;;4;;;7;2;true;false;;;;1;0;Do a routinary trip twice in a day;;ROT+FQY;0
+25;2018-09-11 13:31:12.184070;2018-09-11 13:31:12.184094;;;4;;;7;0;false;false;;;;0;0;Do a trip by night (after 21:00);21:00-05:00;STS;0
+26;2018-09-11 13:33:44.007134;2018-09-11 13:33:44.007156;;;4;;;7;0;false;false;;;;1;1000;Score at least 1.000 points in a single day;;PTS+STS;0
+27;2018-09-11 13:35:14.658851;2018-09-11 13:35:14.658895;;;5;;;7;3;true;false;;;;4;0;Do a routinary trip three days in a row;;ROT+FQY;0
+28;2018-09-11 13:36:34.606231;2018-09-11 13:36:34.606252;;;5;;;7;0;false;false;;;;2;4000;Score at least 4.000 points per week;;PTS+STS;0
+29;2018-09-11 13:37:52.643630;2018-09-11 13:37:52.643649;;;5;;;7;0;false;false;;;;0;0;Do a trip in bad weather conditions;;WEA;1
+30;2018-09-11 13:39:11.575140;2018-09-11 13:39:11.575178;;;5;;;7;5;false;false;;;;4;0;MUV five days in a row;;FQY;0
+31;2018-09-14 10:15:44.520224;2018-09-14 10:15:44.520251;;;6;;;7;1;false;false;;;03-apr;0;0;Move once by public transport or carpooling;;MOD;0
+36;2018-09-14 12:09:22.658746;2018-09-14 12:09:22.658769;;;7;;;7;10;false;false;;;;2;0;Do at least ten trips in a week;;FQY;0
+37;2018-09-14 12:10:47.685887;2018-09-14 12:10:47.685911;;;8;;;7;3;false;false;;;;0;0;Complete three trips in bad weather conditions;;WEA;1
+38;2018-09-14 12:12:00.992414;2018-09-14 12:12:00.992449;;;8;;;7;7;false;false;;;;4;0;MUV seven days in a row;;FQY;0
+39;2018-09-14 12:14:56.726942;2018-09-14 12:14:56.726966;;;8;;;7;0;false;false;;;;0;0;Do a trip in the early morning (from 06:00 to 07:30);06:00-07:30;STS;0
+40;2018-09-14 12:21:17.921327;2018-09-14 12:21:17.921349;;;8;;;7;2;false;false;;;;0;0;Do two trips during peak hours;peak;STS;0
+41;2018-09-14 12:24:52.921155;2018-09-14 12:24:52.921178;;;9;;;7;10;false;false;;;1;2;0;Do at least 10 walking trips in one week;;MOB+FQY;0
+42;2018-09-14 12:26:10.199463;2018-09-14 12:26:10.199488;;;9;;;7;0;false;false;;;;5;12000;Score at least 12.000 points in one month;;PTS+STS;0
+43;2018-09-14 12:27:05.159997;2018-09-14 12:27:05.160019;;;9;;;7;100;false;false;;;;0;0;Do 100 trips;;FQY;0
+44;2018-09-14 12:28:49.511762;2018-09-14 12:28:49.511784;;;9;;;7;10;false;false;;;;4;0;MUV ten days in a row;;FQY;0
+33;2018-09-14 10:20:27.256689;2018-09-14 10:20:27.256712;;;6;;;7;2;false;false;;;;3;0;Do two trips during the weekend (one on Saturday and one on Sunday);;STS+DWD;0
+35;2018-09-14 12:08:39.792995;2018-09-14 12:08:39.793022;;;7;;;7;2;true;false;;;;1;0;Do two different routinary trips in a single day;;ROT+STS+DFR;0
+24;2018-09-11 13:30:01.033608;2018-09-11 13:30:01.033629;;;4;;;7;3;false;false;;;;4;0;MUV three days in a row;;FQY;0
+32;2018-09-14 10:19:21.817917;2018-09-14 10:19:21.817942;;;6;;;7;0;false;false;;;;0;2000;Score at least 2000 points in a 48-hour timeframe;48H;PTS;0
+47;2018-11-07 15:28:06.130192;2018-11-07 15:28:06.130218;3;;7;;;7;0;false;false;;;;0;0;2.2.4 Bonus #2;;;0
+34;2018-09-14 12:03:06.170037;2018-09-14 12:03:06.170062;;;7;;;7;5;true;false;;;;4;0;Do a routinary trip five days in a row;;ROT+FQY;0
+49;2018-11-07 15:28:16.416022;2018-11-07 15:32:29.180329;;1;2;;;7;0;false;false;;;;0;0;1.1.4 Bonus #1;;;0
+50;2018-11-07 15:28:21.268922;2018-11-07 15:33:11.361466;;2;4;;;7;0;false;false;;;;0;0;1.3.5 Bonus #3;;;0
+51;2018-11-07 15:28:26.153883;2018-11-07 15:33:33.589037;;3;6;;;7;0;false;false;;;;0;0;2.1.4 Bonus #1;;;0
+52;2018-11-07 15:28:30.372384;2018-11-07 15:33:59.525815;;4;8;;;7;0;false;false;;;;0;0;2.3.5 Bonus #3;;;0
+45;2018-11-07 15:27:42.136836;2018-11-07 15:27:42.136870;1;;3;;;7;0;false;false;;;;0;0;1.2.4 Bonus #2;;;0
+46;2018-11-07 15:28:01.046976;2018-11-07 15:28:01.046999;2;;5;;;7;0;false;false;;;;0;0;1.4.5 Bonus #4;;;0
+48;2018-11-07 15:28:09.953168;2018-11-07 15:28:09.953195;4;;9;;;7;0;false;false;;;;0;0;2.4.5 Bonus #4;;;0
+49;;;;;10;;;7;0;true;false;;;;0;0;Do at least two routinary trips each day for five days in a row;;ROT + FQY;0
+50;;;;;10;;;7;0;false;false;;;;0;5000;Score at least 5000 points in a week;;PTS;0
+51;;;;;10;;;7;0;false;false;;;;0;0;Do at least one trip during the weekend for four weeks in a row;;STS + FQY;0
+52;;;;5;10;;;7;0;false;false;;;;0;0;3.1.4 Bonus #1;;MOB;0
+53;;;;;11;;;7;0;true;false;;;01-feb;0;0;Do twenty routinary trip by walking or biking;;ROT + FQY + MOD;0
+54;;;;;11;;;7;0;false;false;;;;0;0;MUV at least two days a week for four weeks in row;;FQY;0
+55;;;;;11;;;7;0;false;false;;;;0;0;Do 300 trips;;FQY;0
+56;;;5;;11;;;7;0;false;false;;;;0;0;3.2.4 Bonus #2;;QUZ;0
+57;;;;;12;;;7;0;false;false;;;;0;0;Complete twenty trips during peak hours;peak;WEA;0
+58;;;;;12;;;7;0;false;false;;;;0;0;Do ten trips during the weekend;;FQY + STS;0
+59;;;;;12;;;7;0;false;false;;;;0;4000;Score at least 4000 points for three weeks in a row;;PTS + FQY;0
+60;;;;;12;;;7;0;false;false;;;03-apr;0;0;Do twenty trips by public transport;;MOD + FQY;0
+61;;;;6;12;;;7;0;false;false;;;;0;0;3.3.5 Bonus #3;;MOB;0
+62;;;;;13;;;7;0;false;false;;;1;0;0;Do at least twenty walking trips in one week;;MOB + FQY;0
+63;;;;;13;;;7;0;false;false;;;;0;25000;Score at least 25000 points in one month;;PTS + STS;0
+64;;;;;13;;;7;0;false;false;;;;0;0;Do 500 trips;;FQY;0
+65;;;;;13;;;7;0;false;false;;;;0;0;MUV thirty days in a row;;FQY;0
+66;;;6;;13;;;7;0;false;false;;;;0;0;3.4.5 Bonus #4;;QUZ;0
