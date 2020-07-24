@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Dimensions,
@@ -11,20 +11,21 @@ import {
   Image,
   TouchableHighlight,
   ScrollView,
-  ListView,
   TouchableOpacity,
   TextInput,
   Keyboard,
-} from "react-native";
+} from 'react-native';
 
-import { styles, negativeData } from "./Style";
-import WavyArea from "./../../components/WavyArea/WavyArea";
-import FriendItem from "./../../components/FriendItem/FriendItem";
+import ListView from 'deprecated-react-native-listview';
 
-import FriendsThreesome from "./../../components/FriendsThreesome/FriendsThreesome";
-import FriendSingleReceiveInvite from "./../../components/FriendSingleReceiveInvite/FriendSingleReceiveInvite";
+import {styles, negativeData} from './Style';
+import WavyArea from './../../components/WavyArea/WavyArea';
+import FriendItem from './../../components/FriendItem/FriendItem';
 
-import Aux from "./../../helpers/Aux";
+import FriendsThreesome from './../../components/FriendsThreesome/FriendsThreesome';
+import FriendSingleReceiveInvite from './../../components/FriendSingleReceiveInvite/FriendSingleReceiveInvite';
+
+import Aux from './../../helpers/Aux';
 import {
   getFollowingUser,
   getFollowersUser,
@@ -36,7 +37,7 @@ import {
   getListSendRequestFriend,
   searchUsers,
   sendRequestFriend,
-} from "./../../domains/follow/ActionCreators";
+} from './../../domains/follow/ActionCreators';
 import {
   getFollowedState,
   getFollowState,
@@ -45,28 +46,24 @@ import {
   getlistFriendWithSendRequestState,
   getAllTypeFriendState,
   getNumFriendsState,
-} from "./../../domains/follow/Selectors";
-import { getProfile } from "./../../domains/login/Selectors";
-import { connect } from "react-redux";
+} from './../../domains/follow/Selectors';
+import {getProfile} from './../../domains/login/Selectors';
+import {connect} from 'react-redux';
 
-import AlertCarPooling from "../../components/AlertCarPooling/AlertCarPooling";
+import AlertCarPooling from '../../components/AlertCarPooling/AlertCarPooling';
 
-import {
-  createSelector,
-  createSelectorCreator,
-  defaultMemoize,
-} from "reselect";
+import {createSelector, createSelectorCreator, defaultMemoize} from 'reselect';
 
-import JsonQuery from "json-query";
-import { data } from "./../../assets/ListCities";
+import JsonQuery from 'json-query';
+import {data} from './../../assets/ListCities';
 
-import { strings } from "../../config/i18n";
+import {strings} from '../../config/i18n';
 
-import branch, { RegisterViewEvent, BranchEvent } from "react-native-branch";
+import branch, {RegisterViewEvent, BranchEvent} from 'react-native-branch';
 
-import { store } from "./../../store";
+import {store} from './../../store';
 const defaultBUO = {
-  title: "MUV",
+  title: 'MUV',
 };
 
 class SearchFriendsScreen extends React.Component {
@@ -76,12 +73,12 @@ class SearchFriendsScreen extends React.Component {
     this.state = {
       showLoading: true,
       refreshing: false,
-      nickname: "",
+      nickname: '',
       resultsFriends: [],
-      url: "",
+      url: '',
       loadingUrl: false,
       AlertCarPooling: false,
-      userInvite: { username: "pippo", id: 0, avatar: 1 },
+      userInvite: {username: 'pippo', id: 0, avatar: 1},
     };
     this.buo = null;
 
@@ -96,14 +93,14 @@ class SearchFriendsScreen extends React.Component {
   }
 
   onRefresh() {
-    this.setState({ refreshing: true });
+    this.setState({refreshing: true});
     this.props.dispatch(getListFriend());
     this.props.dispatch(getListRequestFriend());
     this.props.dispatch(getListSendRequestFriend());
 
     const loading = setInterval(() => {
       {
-        this.setState({ refreshing: false });
+        this.setState({refreshing: false});
         clearTimeout(loading);
       }
     }, 1000);
@@ -128,32 +125,32 @@ class SearchFriendsScreen extends React.Component {
       if (listFriend.findIndex((friend) => friend.id == elem.id) != -1) {
         return {
           ...elem,
-          type: "friend",
+          type: 'friend',
         };
       } else if (
         listSendRequestFriend.findIndex(
-          (friend) => friend.to_user.id == elem.id
+          (friend) => friend.to_user.id == elem.id,
         ) != -1
       ) {
         return {
           ...elem,
-          type: "sendFriend",
+          type: 'sendFriend',
         };
       } else {
         return {
           ...elem,
-          type: "inviteFriend",
+          type: 'inviteFriend',
         };
       }
     });
     console.log(arrayWithMyFriends);
 
     // prima di divedere controllo se ci sono gia miei amici o se ho invitato qualcuno
-    this.setState({ resultsFriends: arrayWithMyFriends.chunk(3) });
+    this.setState({resultsFriends: arrayWithMyFriends.chunk(3)});
   };
 
   handleNickname = (text) => {
-    this.setState({ nickname: text });
+    this.setState({nickname: text});
 
     searchUsers(text, this.saveSearch);
   };
@@ -168,14 +165,13 @@ class SearchFriendsScreen extends React.Component {
     return (
       <View
         style={{
-          flexDirection: "row",
-          alignContent: "center",
-          alignSelf: "center",
-          width: Dimensions.get("window").width * 0.9,
+          flexDirection: 'row',
+          alignContent: 'center',
+          alignSelf: 'center',
+          width: Dimensions.get('window').width * 0.9,
           height: 70,
-          justifyContent: "space-around",
-        }}
-      >
+          justifyContent: 'space-around',
+        }}>
         <View style={styles.input}>
           <TextInput
             value={this.state.nickname}
@@ -194,8 +190,8 @@ class SearchFriendsScreen extends React.Component {
             // keyboardType="email-address"
             autoCorrect={false}
             // onFocus={this.onFocus}
-            returnKeyType={"search"}
-            selectionColor={"#707070"}
+            returnKeyType={'search'}
+            selectionColor={'#707070'}
             onSubmitEditing={this.closeKeyboard}
             // onBlur={() => {
             //   this.setState({ placeholderEmail: strings("id_06") });
@@ -210,47 +206,43 @@ class SearchFriendsScreen extends React.Component {
     return (
       <View
         style={{
-          flexDirection: "row",
-          alignContent: "center",
-          alignSelf: "center",
-          width: Dimensions.get("window").width * 0.9,
+          flexDirection: 'row',
+          alignContent: 'center',
+          alignSelf: 'center',
+          width: Dimensions.get('window').width * 0.9,
           height: 110,
-          justifyContent: "space-around",
-        }}
-      >
+          justifyContent: 'space-around',
+        }}>
         <View
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <Text
             style={{
-              fontFamily: "Montserrat-ExtraBold",
-              color: "#000000",
+              fontFamily: 'Montserrat-ExtraBold',
+              color: '#000000',
               fontSize: 18,
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
-          >
+              fontWeight: 'bold',
+              textAlign: 'center',
+            }}>
             {strings('id_20_19')}
           </Text>
         </View>
 
         <View
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <Image
             style={{
               width: 70,
               height: 70,
             }}
-            source={require("../../assets/images/friends_banner_icn.png")}
+            source={require('../../assets/images/friends_banner_icn.png')}
           />
         </View>
       </View>
@@ -275,19 +267,18 @@ class SearchFriendsScreen extends React.Component {
               onRefresh={this.onRefresh.bind(this)}
             />
           }
-          contentContainerStyle={{ paddingBottom: 300 }}
+          contentContainerStyle={{paddingBottom: 300}}
           style={styles.challengesList}
           dataSource={ds.cloneWithRows(this.state.resultsFriends)}
           renderHeader={() => (
             <View
               style={{
-                flexDirection: "column",
-                alignContent: "center",
-                justifyContent: "center",
-                alignItems: "center",
-                width: Dimensions.get("window").width,
-              }}
-            >
+                flexDirection: 'column',
+                alignContent: 'center',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: Dimensions.get('window').width,
+              }}>
               <View
                 style={{
                   height: 40,
@@ -295,32 +286,30 @@ class SearchFriendsScreen extends React.Component {
               />
               <View
                 style={{
-                  flexDirection: "column",
-                  alignContent: "center",
-                  justifyContent: "center",
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
                   paddingTop: 25,
                   paddingBottom: 25,
-                  width: Dimensions.get("window").width * 0.9,
-                }}
-              >
+                  width: Dimensions.get('window').width * 0.9,
+                }}>
                 <Text
                   style={{
-                    fontFamily: "OpenSans-Regular",
-                    color: "#3D3D3D",
+                    fontFamily: 'OpenSans-Regular',
+                    color: '#3D3D3D',
                     fontSize: 15,
 
-                    textAlign: "center",
-                  }}
-                >
-                 {strings('id_20_22')}
+                    textAlign: 'center',
+                  }}>
+                  {strings('id_20_22')}
                 </Text>
               </View>
               {this.headerSearch()}
               <View
                 style={{
-                  width: Dimensions.get("window").width * 0.9,
+                  width: Dimensions.get('window').width * 0.9,
                   height: 30,
-                  borderBottomColor: "#FAB21E",
+                  borderBottomColor: '#FAB21E',
                   borderBottomWidth: 4,
                   borderRadius: 2,
                 }}
@@ -353,7 +342,7 @@ class SearchFriendsScreen extends React.Component {
                   />
                   {
                     // aggiungo delo spazio in piu cosi posso scrollare tutta la lista anche se c'e l'onda e la notifica
-                    <View style={{ width: 400, height: 800 }}></View>
+                    <View style={{width: 400, height: 800}}></View>
                   }
                 </Aux>
               );
@@ -409,26 +398,24 @@ class SearchFriendsScreen extends React.Component {
           />
         }
         style={{
-          backgroundColor: "white",
-          width: Dimensions.get("window").width,
-          height: Dimensions.get("window").height,
-          backgroundColor: "#FFFFFF",
-        }}
-      >
+          backgroundColor: 'white',
+          width: Dimensions.get('window').width,
+          height: Dimensions.get('window').height,
+          backgroundColor: '#FFFFFF',
+        }}>
         <AlertCarPooling
           isModalVisible={this.state.AlertCarPooling}
           closeModal={this.closeTutorialCarPooling}
           confermModal={this.sendRequest}
-          type={"SearchFriend"}
+          type={'SearchFriend'}
           infoAlert={this.state.userInvite}
-          infoSend={{ message: "", to_user: this.state.userInvite.id }}
+          infoSend={{message: '', to_user: this.state.userInvite.id}}
         />
         {this.renderFriend()}
 
         <ImageBackground
-          source={require("../../assets/images/friend/friends_page_wave.png")}
-          style={styles.backgroundImageAbsolute}
-        >
+          source={require('../../assets/images/friend/friends_page_wave.png')}
+          style={styles.backgroundImageAbsolute}>
           {this.headerCounter()}
         </ImageBackground>
       </View>

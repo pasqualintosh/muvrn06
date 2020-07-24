@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Dimensions,
@@ -9,26 +9,28 @@ import {
   TouchableWithoutFeedback,
   Platform,
   ImageBackground,
-  ListView
-} from "react-native";
-import Svg, { Circle, Line } from "react-native-svg";
+} from 'react-native';
 
-import { styles, negativeData } from "./Style";
-import WavyArea from "./../../components/WavyArea/WavyArea";
-import UserItem from "./../../components/UserItem/UserItem";
-import UserItemDetailTournament from "./../../components/UserItemDetailTournament/UserItemDetailTournament";
+import ListView from 'deprecated-react-native-listview';
 
-import Aux from "./../../helpers/Aux";
-import { connect } from "react-redux";
-import pointsDecimal from "../../helpers/pointsDecimal";
-import OwnIcon from "../../components/OwnIcon/OwnIcon";
-import LinearGradient from "react-native-linear-gradient";
-import { getProfile, getRoleState } from "./../../domains/login/Selectors";
-import { getLevelState } from "./../../domains/trainings/Selectors";
+import Svg, {Circle, Line} from 'react-native-svg';
 
-import { getWeeklyStandingsComplete } from "./../../domains/screen/ActionCreators";
-import { strings } from "../../config/i18n";
-import InviteItem from "./../../components/InviteItem/InviteItem";
+import {styles, negativeData} from './Style';
+import WavyArea from './../../components/WavyArea/WavyArea';
+import UserItem from './../../components/UserItem/UserItem';
+import UserItemDetailTournament from './../../components/UserItemDetailTournament/UserItemDetailTournament';
+
+import Aux from './../../helpers/Aux';
+import {connect} from 'react-redux';
+import pointsDecimal from '../../helpers/pointsDecimal';
+import OwnIcon from '../../components/OwnIcon/OwnIcon';
+import LinearGradient from 'react-native-linear-gradient';
+import {getProfile, getRoleState} from './../../domains/login/Selectors';
+import {getLevelState} from './../../domains/trainings/Selectors';
+
+import {getWeeklyStandingsComplete} from './../../domains/screen/ActionCreators';
+import {strings} from '../../config/i18n';
+import InviteItem from './../../components/InviteItem/InviteItem';
 
 // import { pushNotifications } from "./../../services";
 
@@ -37,81 +39,81 @@ class TeamTournamentStanding extends React.Component {
     super(props);
 
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2
+      rowHasChanged: (r1, r2) => r1 !== r2,
     });
 
     this.state = {
-      activeSelectable: "global",
+      activeSelectable: 'global',
       loadData: false,
       dataSource: null,
       number: 0,
       showLoading: true,
       refreshing: false,
-      position: "-",
+      position: '-',
       totPoints: 0,
       infoProfile: null,
       city_id: 0,
       lock: [
         {
-          image: require("../../assets/images/wave/5percent.png"),
+          image: require('../../assets/images/wave/5percent.png'),
           number: 8,
-          colorStart: "#FFCB03",
-          colorEnd: "#F8B126"
+          colorStart: '#FFCB03',
+          colorEnd: '#F8B126',
         },
         {
-          image: require("../../assets/images/wave/10percent.png"),
+          image: require('../../assets/images/wave/10percent.png'),
           number: 13,
-          colorStart: "#FAB21E",
-          colorEnd: "#FA941E"
+          colorStart: '#FAB21E',
+          colorEnd: '#FA941E',
         },
         {
-          image: require("../../assets/images/wave/15percent.png"),
+          image: require('../../assets/images/wave/15percent.png'),
           number: 28,
-          colorStart: "#FA941E",
-          colorEnd: "#EA7D00"
+          colorStart: '#FA941E',
+          colorEnd: '#EA7D00',
         },
         {
-          image: require("../../assets/images/wave/20percent.png"),
+          image: require('../../assets/images/wave/20percent.png'),
           number: 53,
-          colorStart: "#EA7D00",
-          colorEnd: "#EA3600"
-        }
+          colorStart: '#EA7D00',
+          colorEnd: '#EA3600',
+        },
       ],
       unlock: [
         {
-          image: require("../../assets/images/wave/5percent_bar.png"),
-          number: 8
+          image: require('../../assets/images/wave/5percent_bar.png'),
+          number: 8,
         },
         {
-          image: require("../../assets/images/wave/10percent_bar.png"),
-          number: 13
+          image: require('../../assets/images/wave/10percent_bar.png'),
+          number: 13,
         },
         {
-          image: require("../../assets/images/wave/15percent_bar.png"),
-          number: 28
+          image: require('../../assets/images/wave/15percent_bar.png'),
+          number: 28,
         },
         {
-          image: require("../../assets/images/wave/20percent_bar.png"),
-          number: 53
-        }
-      ]
+          image: require('../../assets/images/wave/20percent_bar.png'),
+          number: 53,
+        },
+      ],
     };
 
     this.displayStandings = false;
   }
 
   myProfile = () => {
-    this.props.navigation.navigate("Info");
+    this.props.navigation.navigate('Info');
   };
 
-  savePlayers = data => {
+  savePlayers = (data) => {
     // savePlayers
     // const data = [...data2, ...data2];
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2
+      rowHasChanged: (r1, r2) => r1 !== r2,
     });
 
-    let infoUserGlobalClassification = { index: "-", points: 0 };
+    let infoUserGlobalClassification = {index: '-', points: 0};
 
     if (this.state.infoProfile) {
       for (index = 0; index < data.length; index++) {
@@ -122,7 +124,7 @@ class TeamTournamentStanding extends React.Component {
         if (condition) {
           infoUserGlobalClassification = {
             ...data[index],
-            index
+            index,
           };
           break;
         }
@@ -133,76 +135,76 @@ class TeamTournamentStanding extends React.Component {
     // a seconda di quanti utenti ho cancello i bonus futuri
     let lock = [
       {
-        image: require("../../assets/images/wave/5percent.png"),
+        image: require('../../assets/images/wave/5percent.png'),
         number: 8,
-        colorStart: "#FFCB03",
-        colorEnd: "#F8B126"
+        colorStart: '#FFCB03',
+        colorEnd: '#F8B126',
       },
       {
-        image: require("../../assets/images/wave/10percent.png"),
+        image: require('../../assets/images/wave/10percent.png'),
         number: 13,
-        colorStart: "#FAB21E",
-        colorEnd: "#FA941E"
+        colorStart: '#FAB21E',
+        colorEnd: '#FA941E',
       },
       {
-        image: require("../../assets/images/wave/15percent.png"),
+        image: require('../../assets/images/wave/15percent.png'),
         number: 28,
-        colorStart: "#FA941E",
-        colorEnd: "#EA7D00"
+        colorStart: '#FA941E',
+        colorEnd: '#EA7D00',
       },
       {
-        image: require("../../assets/images/wave/20percent.png"),
+        image: require('../../assets/images/wave/20percent.png'),
         number: 53,
-        colorStart: "#EA7D00",
-        colorEnd: "#EA3600"
-      }
+        colorStart: '#EA7D00',
+        colorEnd: '#EA3600',
+      },
     ];
     if (number > 52) {
       lock = [];
     } else if (number > 27) {
       lock = [
         {
-          image: require("../../assets/images/wave/20percent.png"),
+          image: require('../../assets/images/wave/20percent.png'),
           number: 53,
-          colorStart: "#EA7D00",
-          colorEnd: "#EA3600"
-        }
+          colorStart: '#EA7D00',
+          colorEnd: '#EA3600',
+        },
       ];
     } else if (number > 12) {
       lock = [
         {
-          image: require("../../assets/images/wave/15percent.png"),
+          image: require('../../assets/images/wave/15percent.png'),
           number: 28,
-          colorStart: "#FA941E",
-          colorEnd: "#EA7D00"
+          colorStart: '#FA941E',
+          colorEnd: '#EA7D00',
         },
         {
-          image: require("../../assets/images/wave/20percent.png"),
+          image: require('../../assets/images/wave/20percent.png'),
           number: 53,
-          colorStart: "#EA7D00",
-          colorEnd: "#EA3600"
-        }
+          colorStart: '#EA7D00',
+          colorEnd: '#EA3600',
+        },
       ];
     } else if (number > 7) {
       lock = [
         {
-          image: require("../../assets/images/wave/10percent.png"),
+          image: require('../../assets/images/wave/10percent.png'),
           number: 13,
-          colorStart: "#FAB21E",
-          colorEnd: "#FA941E"
+          colorStart: '#FAB21E',
+          colorEnd: '#FA941E',
         },
         {
-          image: require("../../assets/images/wave/15percent.png"),
+          image: require('../../assets/images/wave/15percent.png'),
           number: 28,
-          colorStart: "#FA941E",
-          colorEnd: "#EA7D00"
+          colorStart: '#FA941E',
+          colorEnd: '#EA7D00',
         },
         {
-          image: require("../../assets/images/wave/20percent.png"),
+          image: require('../../assets/images/wave/20percent.png'),
           number: 53,
-          colorStart: "#EA7D00",
-          colorEnd: "#EA3600"
-        }
+          colorStart: '#EA7D00',
+          colorEnd: '#EA3600',
+        },
       ];
     }
 
@@ -213,41 +215,41 @@ class TeamTournamentStanding extends React.Component {
       number,
       lock,
       position: infoUserGlobalClassification.index,
-      totPoints: infoUserGlobalClassification.points
+      totPoints: infoUserGlobalClassification.points,
     });
   };
 
   componentWillMount() {
     // const match = this.props.navigation.getParam("match", {});
-    const infoProfile = this.props.navigation.getParam("infoProfile", null);
-    const city_id = this.props.navigation.getParam("city_id", 0);
-    const totPoints = this.props.navigation.getParam("me", 0);
+    const infoProfile = this.props.navigation.getParam('infoProfile', null);
+    const city_id = this.props.navigation.getParam('city_id', 0);
+    const totPoints = this.props.navigation.getParam('me', 0);
 
     this.setState({
       // match,
       infoProfile,
       city_id,
-      totPoints
+      totPoints,
     });
     if (infoProfile && infoProfile.city.id) {
       this.props.dispatch(
         getWeeklyStandingsComplete({
           city_id: infoProfile.city.id,
-          saveData: this.savePlayers
-        })
+          saveData: this.savePlayers,
+        }),
       );
     } else if (city_id) {
       this.props.dispatch(
         getWeeklyStandingsComplete({
           city_id: city_id,
-          saveData: this.savePlayers
-        })
+          saveData: this.savePlayers,
+        }),
       );
     }
   }
 
   onRefresh() {
-    this.setState({ refreshing: true });
+    this.setState({refreshing: true});
     // this.props.dispatch(getLeaderboard());
     // this.props.dispatch(getLeaderboardByCity());
 
@@ -255,15 +257,15 @@ class TeamTournamentStanding extends React.Component {
       this.props.dispatch(
         getWeeklyStandingsComplete({
           city_id: this.state.infoProfile.city.id,
-          saveData: this.savePlayers
-        })
+          saveData: this.savePlayers,
+        }),
       );
     } else if (this.state.city_id) {
       this.props.dispatch(
         getWeeklyStandingsComplete({
           city_id: this.state.city_id,
-          saveData: this.savePlayers
-        })
+          saveData: this.savePlayers,
+        }),
       );
     }
   }
@@ -273,7 +275,7 @@ class TeamTournamentStanding extends React.Component {
       return (
         <WavyArea
           data={negativeData}
-          color={"#3D3D3D"}
+          color={'#3D3D3D'}
           style={styles.overlayWave}
         />
       );
@@ -281,29 +283,28 @@ class TeamTournamentStanding extends React.Component {
 
   //
   bonusLock = (
-    image = require("../../assets/images/wave/5percent.png"),
+    image = require('../../assets/images/wave/5percent.png'),
     number = 8,
-    colorStart = "#FFCB03",
-    colorEnd = "#F8B126"
+    colorStart = '#FFCB03',
+    colorEnd = '#F8B126',
   ) => {
-    console.log("prova");
+    console.log('prova');
     return (
       <View>
         <LinearGradient
-          start={{ x: 0.0, y: 0.0 }}
-          end={{ x: 0.0, y: 1.0 }}
+          start={{x: 0.0, y: 0.0}}
+          end={{x: 0.0, y: 1.0}}
           locations={[0, 1.0]}
           colors={[colorStart, colorEnd]}
           style={{
-            width: Dimensions.get("window").width,
+            width: Dimensions.get('window').width,
             height: 100,
-            justifyContent: "center",
-            flexDirection: "row",
-            alignContent: "center",
-            alignItems: "center",
-            alignSelf: "center"
-          }}
-        >
+            justifyContent: 'center',
+            flexDirection: 'row',
+            alignContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'center',
+          }}>
           <ImageBackground
             // start={{ x: 0.0, y: 0.0 }}
             // end={{ x: 0.0, y: 1.0 }}
@@ -311,46 +312,43 @@ class TeamTournamentStanding extends React.Component {
             // colors={["#FAB21E", "#FA941E"]}
             source={image}
             style={{
-              width: Dimensions.get("window").width,
+              width: Dimensions.get('window').width,
               height: 100,
-              flexDirection: "row",
-              alignContent: "center",
-              alignItems: "center",
-              alignSelf: "center",
-              justifyContent: "space-between"
-            }}
-          >
+              flexDirection: 'row',
+              alignContent: 'center',
+              alignItems: 'center',
+              alignSelf: 'center',
+              justifyContent: 'space-between',
+            }}>
             <View style={styles.userPositionContainer}>
               <Text style={[styles.userPosition]}>{number}</Text>
             </View>
 
             <View
               style={{
-                flexDirection: "row"
-              }}
-            >
+                flexDirection: 'row',
+              }}>
               <View
                 style={{
                   width: 27,
                   height: 100,
-                  flexDirection: "row",
-                  alignContent: "center",
-                  alignItems: "center",
-                  alignSelf: "center",
-                  justifyContent: "space-between"
-                }}
-              >
-                <Text style={{ fontSize: 17 }}>🔥</Text>
+                  flexDirection: 'row',
+                  alignContent: 'center',
+                  alignItems: 'center',
+                  alignSelf: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                <Text style={{fontSize: 17}}>🔥</Text>
               </View>
               <View
                 style={{
-                  width: Dimensions.get("window").width * 0.05,
+                  width: Dimensions.get('window').width * 0.05,
                   height: 100,
-                  flexDirection: "row",
-                  alignContent: "center",
-                  alignItems: "center",
-                  alignSelf: "center",
-                  justifyContent: "space-between"
+                  flexDirection: 'row',
+                  alignContent: 'center',
+                  alignItems: 'center',
+                  alignSelf: 'center',
+                  justifyContent: 'space-between',
                 }}
               />
             </View>
@@ -361,16 +359,15 @@ class TeamTournamentStanding extends React.Component {
         ) : (
           <View
             style={{
-              width: Dimensions.get("window").width,
+              width: Dimensions.get('window').width,
               height: 2,
-              backgroundColor: "#F7F8F9",
-              flexDirection: "row",
-              alignContent: "center",
-              alignItems: "center",
-              alignSelf: "center",
-              justifyContent: "space-between"
-            }}
-          ></View>
+              backgroundColor: '#F7F8F9',
+              flexDirection: 'row',
+              alignContent: 'center',
+              alignItems: 'center',
+              alignSelf: 'center',
+              justifyContent: 'space-between',
+            }}></View>
         )}
       </View>
     );
@@ -384,48 +381,46 @@ class TeamTournamentStanding extends React.Component {
           // end={{ x: 0.0, y: 1.0 }}
           // locations={[0, 1.0]}
           // colors={["#FAB21E", "#FA941E"]}
-          source={require("../../assets/images/wave/5percent_bar.png")}
+          source={require('../../assets/images/wave/5percent_bar.png')}
           style={{
-            width: Dimensions.get("window").width,
+            width: Dimensions.get('window').width,
             height: 100,
-            justifyContent: "center",
-            flexDirection: "row",
-            alignContent: "center",
-            alignItems: "center",
-            alignSelf: "center"
-          }}
-        >
+            justifyContent: 'center',
+            flexDirection: 'row',
+            alignContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'center',
+          }}>
           <View
             style={{
-              width: Dimensions.get("window").width * 0.9,
+              width: Dimensions.get('window').width * 0.9,
               height: 100,
 
-              flexDirection: "row",
-              alignContent: "center",
-              alignItems: "center",
-              alignSelf: "center",
-              justifyContent: "space-between"
-            }}
-          >
-            <Text style={{ fontSize: 30 }}>🔥</Text>
-            <OwnIcon name="rank_arrow_down_icn" size={30} color={"#FFFFFF"} />
+              flexDirection: 'row',
+              alignContent: 'center',
+              alignItems: 'center',
+              alignSelf: 'center',
+              justifyContent: 'space-between',
+            }}>
+            <Text style={{fontSize: 30}}>🔥</Text>
+            <OwnIcon name="rank_arrow_down_icn" size={30} color={'#FFFFFF'} />
             <View />
-            <OwnIcon name="rank_arrow_down_icn" size={30} color={"#FFFFFF"} />
-            <Text style={{ fontSize: 30 }}>🔥</Text>
+            <OwnIcon name="rank_arrow_down_icn" size={30} color={'#FFFFFF'} />
+            <Text style={{fontSize: 30}}>🔥</Text>
           </View>
         </ImageBackground>
       </View>
     );
   };
 
-  bonusView = rowID => {
-    let image = require("../../assets/images/wave/5percent_bar.png");
+  bonusView = (rowID) => {
+    let image = require('../../assets/images/wave/5percent_bar.png');
     if (rowID == 12) {
-      image = require("../../assets/images/wave/10percent_bar.png");
+      image = require('../../assets/images/wave/10percent_bar.png');
     } else if (rowID == 27) {
-      image = require("../../assets/images/wave/15percent_bar.png");
+      image = require('../../assets/images/wave/15percent_bar.png');
     } else if (rowID == 52) {
-      image = require("../../assets/images/wave/20percent_bar.png");
+      image = require('../../assets/images/wave/20percent_bar.png');
     }
     return (
       <ImageBackground
@@ -436,32 +431,30 @@ class TeamTournamentStanding extends React.Component {
         key={rowID}
         source={image}
         style={{
-          width: Dimensions.get("window").width,
+          width: Dimensions.get('window').width,
           height: 100,
-          justifyContent: "center",
-          flexDirection: "row",
-          alignContent: "center",
-          alignItems: "center",
-          alignSelf: "center"
-        }}
-      >
+          justifyContent: 'center',
+          flexDirection: 'row',
+          alignContent: 'center',
+          alignItems: 'center',
+          alignSelf: 'center',
+        }}>
         <View
           style={{
-            width: Dimensions.get("window").width * 0.9,
+            width: Dimensions.get('window').width * 0.9,
             height: 100,
 
-            flexDirection: "row",
-            alignContent: "center",
-            alignItems: "center",
-            alignSelf: "center",
-            justifyContent: "space-between"
-          }}
-        >
-          <Text style={{ fontSize: 30 }}>🔥</Text>
+            flexDirection: 'row',
+            alignContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'center',
+            justifyContent: 'space-between',
+          }}>
+          <Text style={{fontSize: 30}}>🔥</Text>
 
           <View />
 
-          <Text style={{ fontSize: 30 }}>🔥</Text>
+          <Text style={{fontSize: 30}}>🔥</Text>
         </View>
       </ImageBackground>
     );
@@ -484,11 +477,11 @@ class TeamTournamentStanding extends React.Component {
           }
           style={{
             top: this.state.infoProfile
-              ? Dimensions.get("window").height * 0.04 + 85 - 30
+              ? Dimensions.get('window').height * 0.04 + 85 - 30
               : 0,
             height: this.state.infoProfile
-              ? Dimensions.get("window").height - 230 + 90
-              : Dimensions.get("window").height
+              ? Dimensions.get('window').height - 230 + 90
+              : Dimensions.get('window').height,
           }}
           dataSource={this.state.dataSource}
           renderRow={(item, sectionID, rowID) => {
@@ -508,7 +501,7 @@ class TeamTournamentStanding extends React.Component {
                       key={0}
                       style={{
                         height: 30,
-                        backgroundColor: "#F7F8F9"
+                        backgroundColor: '#F7F8F9',
                       }}
                     />
                   }
@@ -526,18 +519,18 @@ class TeamTournamentStanding extends React.Component {
 
                       id: user_id,
                       referred_route__user_id: item.user.user_id,
-                      position: row
+                      position: row,
                     }}
                     rowID={rowID}
                     level={
                       item.user.level
                         ? item.user.level.name.charAt(0).toUpperCase()
-                        : "N"
+                        : 'N'
                     }
                     modalType={
                       item.user.role
-                        ? item.user.role === "none" ||
-                          item.user.role === "muver"
+                        ? item.user.role === 'none' ||
+                          item.user.role === 'muver'
                           ? 0
                           : parseInt(item.user.role)
                         : 0
@@ -572,18 +565,18 @@ class TeamTournamentStanding extends React.Component {
 
                       id: user_id,
                       referred_route__user_id: item.user.user_id,
-                      position: row
+                      position: row,
                     }}
                     rowID={rowID}
                     level={
                       item.user.level
                         ? item.user.level.name.charAt(0).toUpperCase()
-                        : "N"
+                        : 'N'
                     }
                     modalType={
                       item.user.role
-                        ? item.user.role === "none" ||
-                          item.user.role === "muver"
+                        ? item.user.role === 'none' ||
+                          item.user.role === 'muver'
                           ? 0
                           : parseInt(item.user.role)
                         : 0
@@ -595,13 +588,13 @@ class TeamTournamentStanding extends React.Component {
                     community={item.referred_route__user__community__name}
                     city={item.referred_route__user__city__city_name}
                   />
-                  {this.state.lock.map(elem =>
+                  {this.state.lock.map((elem) =>
                     this.bonusLock(
                       elem.image,
                       elem.number,
                       elem.colorStart,
-                      elem.colorEnd
-                    )
+                      elem.colorEnd,
+                    ),
                   )}
                   {
                     // aggiungo delo spazio in piu cosi posso scrollare tutta la lista anche se c'e l'onda e la notifica
@@ -610,8 +603,8 @@ class TeamTournamentStanding extends React.Component {
                       key={0}
                       style={{
                         paddingTop: this.props.blockRanking
-                          ? Dimensions.get("window").height * 0.23 + 50
-                          : Dimensions.get("window").height * 0.23
+                          ? Dimensions.get('window').height * 0.23 + 50
+                          : Dimensions.get('window').height * 0.23,
                       }}
                     />
                   }
@@ -634,18 +627,18 @@ class TeamTournamentStanding extends React.Component {
 
                       id: user_id,
                       referred_route__user_id: item.user.user_id,
-                      position: row
+                      position: row,
                     }}
                     rowID={rowID}
                     level={
                       item.user.level
                         ? item.user.level.name.charAt(0).toUpperCase()
-                        : "N"
+                        : 'N'
                     }
                     modalType={
                       item.user.role
-                        ? item.user.role === "none" ||
-                          item.user.role === "muver"
+                        ? item.user.role === 'none' ||
+                          item.user.role === 'muver'
                           ? 0
                           : parseInt(item.user.role)
                         : 0
@@ -657,23 +650,23 @@ class TeamTournamentStanding extends React.Component {
                     community={item.referred_route__user__community__name}
                     city={item.referred_route__user__city__city_name}
                   />
-                  {this.state.lock.map(elem =>
+                  {this.state.lock.map((elem) =>
                     this.bonusLock(
                       elem.image,
                       elem.number,
                       elem.colorStart,
-                      elem.colorEnd
-                    )
+                      elem.colorEnd,
+                    ),
                   )}
                   <InviteItem
                     infoProfile={this.props.infoProfile}
                     navigation={this.props.navigation}
                     Points={0}
-                    description={strings("invite_your_fri")}
-                    colorInvite={["#F8B126", "#FFCB03"]}
-                    wave={require("../../assets/images/invite_friend_wave_list_purple.png")}
-                    textColor={"#FFFFFF"}
-                    textColorInvite={"#3D3D3D"}
+                    description={strings('invite_your_fri')}
+                    colorInvite={['#F8B126', '#FFCB03']}
+                    wave={require('../../assets/images/invite_friend_wave_list_purple.png')}
+                    textColor={'#FFFFFF'}
+                    textColorInvite={'#3D3D3D'}
                   />
                   {
                     // aggiungo delo spazio in piu cosi posso scrollare tutta la lista anche se c'e l'onda e la notifica
@@ -682,15 +675,15 @@ class TeamTournamentStanding extends React.Component {
                       key={0}
                       style={{
                         paddingTop: this.props.blockRanking
-                          ? Dimensions.get("window").height * 0.23 + 50
-                          : Dimensions.get("window").height * 0.23
+                          ? Dimensions.get('window').height * 0.23 + 50
+                          : Dimensions.get('window').height * 0.23,
                       }}
                     />
                   }
                 </Aux>
               );
             } else {
-              console.log("prova");
+              console.log('prova');
               if (rowID == 7 || rowID == 12 || rowID == 27 || rowID == 52) {
                 return (
                   <View key={rowID}>
@@ -709,18 +702,18 @@ class TeamTournamentStanding extends React.Component {
 
                         id: user_id,
                         referred_route__user_id: item.user.user_id,
-                        position: row
+                        position: row,
                       }}
                       rowID={rowID}
                       level={
                         item.user.level
                           ? item.user.level.name.charAt(0).toUpperCase()
-                          : "N"
+                          : 'N'
                       }
                       modalType={
                         item.user.role
-                          ? item.user.role === "none" ||
-                            item.user.role === "muver"
+                          ? item.user.role === 'none' ||
+                            item.user.role === 'muver'
                             ? 0
                             : parseInt(item.user.role)
                           : 0
@@ -751,7 +744,7 @@ class TeamTournamentStanding extends React.Component {
 
                     id: user_id,
                     referred_route__user_id: item.user.user_id,
-                    position: row
+                    position: row,
                   }}
                   rowID={rowID}
                   level={
@@ -759,12 +752,12 @@ class TeamTournamentStanding extends React.Component {
                       ? item.referred_route__user__level__name
                           .charAt(0)
                           .toUpperCase()
-                      : "N"
+                      : 'N'
                   }
                   modalType={
                     item.referred_route__user__role
-                      ? item.referred_route__user__role === "none" ||
-                        item.referred_route__user__role === "muver"
+                      ? item.referred_route__user__role === 'none' ||
+                        item.referred_route__user__role === 'muver'
                         ? 0
                         : parseInt(item.referred_route__user__role)
                       : 0
@@ -786,7 +779,7 @@ class TeamTournamentStanding extends React.Component {
   renderBody() {
     if (!this.state.loadData) {
       return (
-        <View style={{ top: 150 }}>
+        <View style={{top: 150}}>
           <ActivityIndicator size="large" color="#3D3D3D" />
           <View style={styles.challengesList} />
         </View>
@@ -805,24 +798,22 @@ class TeamTournamentStanding extends React.Component {
             refreshing={this.state.refreshing}
             onRefresh={this.onRefresh.bind(this)}
           />
-        }
-      >
+        }>
         {this.renderBody()}
 
         {this.state.infoProfile ? (
           <Aux>
             <WavyArea
               data={negativeData}
-              color={"#3D3D3D"}
+              color={'#3D3D3D'}
               style={styles.overlayWave}
             />
             <View style={[styles.userContainer, styles.firstUser]}>
               <View
                 style={{
-                  flexDirection: "column",
-                  alignContent: "center"
-                }}
-              >
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                }}>
                 <View>
                   {this.state.totPoints < 100 ? (
                     <UserItemDetailTournament
@@ -839,11 +830,11 @@ class TeamTournamentStanding extends React.Component {
 
                         points: this.state.totPoints,
                         position:
-                          this.state.position !== "-" &&
-                          typeof this.state.position !== "object"
+                          this.state.position !== '-' &&
+                          typeof this.state.position !== 'object'
                             ? this.state.position + 1
-                            : "-",
-                        id: 0
+                            : '-',
+                        id: 0,
                         // referred_route__user__city_id: this.state.infoProfile.city
                         //   ? this.state.infoProfile.city.id
                         //     ? this.state.infoProfile.city.id
@@ -851,18 +842,18 @@ class TeamTournamentStanding extends React.Component {
                         //   : 0
                       }}
                       // lo faccio piu piccolo dato che sopra metto il selettore per il periodo
-                      style={{ height: 75 }}
+                      style={{height: 75}}
                       level={
                         this.props.level
                           ? this.props.level.charAt(0).toUpperCase()
-                          : "N"
+                          : 'N'
                       }
-                      fontColor={"#fff"}
+                      fontColor={'#fff'}
                       modalType={this.props.role}
                       blockRanking={false}
                       activeSelectable={null}
                       community={null}
-                      city={""}
+                      city={''}
                     />
                   ) : (
                     <UserItem
@@ -879,11 +870,11 @@ class TeamTournamentStanding extends React.Component {
 
                         points: this.state.totPoints,
                         position:
-                          this.state.position !== "-" &&
-                          typeof this.state.position !== "object"
+                          this.state.position !== '-' &&
+                          typeof this.state.position !== 'object'
                             ? this.state.position + 1
-                            : "-",
-                        id: this.state.infoProfile.user_id
+                            : '-',
+                        id: this.state.infoProfile.user_id,
                         // referred_route__user__city_id: this.state.infoProfile.city
                         //   ? this.state.infoProfile.city.id
                         //     ? this.state.infoProfile.city.id
@@ -891,18 +882,18 @@ class TeamTournamentStanding extends React.Component {
                         //   : 0
                       }}
                       // lo faccio piu piccolo dato che sopra metto il selettore per il periodo
-                      style={{ height: 75 }}
+                      style={{height: 75}}
                       level={
                         this.props.level
                           ? this.props.level.charAt(0).toUpperCase()
-                          : "N"
+                          : 'N'
                       }
-                      fontColor={"#fff"}
+                      fontColor={'#fff'}
                       modalType={this.props.role}
                       blockRanking={false}
                       activeSelectable={null}
                       community={null}
-                      city={""}
+                      city={''}
                     />
                   )}
                 </View>
@@ -922,11 +913,11 @@ state.statistics.reduce(
   (acc, item) => (acc > item.points ? acc : item.points),
   0 ) */
 // modal_type
-const withConnect = connect(state => {
+const withConnect = connect((state) => {
   return {
     infoProfile: getProfile(state),
     level: getLevelState(state),
-    role: getRoleState(state)
+    role: getRoleState(state),
   };
 });
 

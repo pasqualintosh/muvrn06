@@ -1,39 +1,40 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Dimensions,
   ActivityIndicator,
   RefreshControl,
   ImageBackground,
-  ListView
-} from "react-native";
+} from 'react-native';
 
-import { styles, negativeData } from "./Style";
-import UserItem from "./../../components/UserItem/UserItem";
-import Aux from "./../../helpers/Aux";
-import WebService from "../../config/WebService";
+import ListView from 'deprecated-react-native-listview';
+
+import {styles, negativeData} from './Style';
+import UserItem from './../../components/UserItem/UserItem';
+import Aux from './../../helpers/Aux';
+import WebService from '../../config/WebService';
 
 class TrophiesRanking extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      refreshing: false
+      refreshing: false,
     };
   }
 
   onRefresh() {
-    this.setState({ refreshing: true });
+    this.setState({refreshing: true});
     this.props.refreshTrophies();
 
     setTimeout(() => {
-      this.setState({ refreshing: false });
+      this.setState({refreshing: false});
     }, 1500);
   }
 
   renderPage() {
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2
+      rowHasChanged: (r1, r2) => r1 !== r2,
     });
     const dataListTrophies = ds.cloneWithRows(this.props.trophies);
 
@@ -59,7 +60,7 @@ class TrophiesRanking extends React.Component {
                     key={0}
                     style={{
                       height: 30,
-                      backgroundColor: "#F7F8F9"
+                      backgroundColor: '#F7F8F9',
                     }}
                   />
                   <UserItem
@@ -71,12 +72,12 @@ class TrophiesRanking extends React.Component {
 
                       points: item.points,
                       position: item.position,
-                      referred_route__user__city_id: item.user.city
+                      referred_route__user__city_id: item.user.city,
                     }}
                     rowID={rowID}
-                    level={"N"}
+                    level={'N'}
                     modalType={0}
-                    activeSelectable={"global"}
+                    activeSelectable={'global'}
                     blockRanking={true}
                     imageEnd={WebService.url + item.trophy.img_small}
                   />
@@ -97,12 +98,12 @@ class TrophiesRanking extends React.Component {
 
                       points: item.points,
                       position: item.position,
-                      referred_route__user__city_id: item.user.city
+                      referred_route__user__city_id: item.user.city,
                     }}
                     rowID={rowID}
-                    level={"N"}
+                    level={'N'}
                     modalType={0}
-                    activeSelectable={"global"}
+                    activeSelectable={'global'}
                     blockRanking={true}
                     imageEnd={WebService.url + item.trophy.img_small}
                   />
@@ -111,7 +112,7 @@ class TrophiesRanking extends React.Component {
                     <View
                       key={0}
                       style={{
-                        paddingTop: Dimensions.get("window").height * 0.23
+                        paddingTop: Dimensions.get('window').height * 0.23,
                       }}
                     />
                   }
@@ -129,12 +130,12 @@ class TrophiesRanking extends React.Component {
 
                     points: item.points,
                     position: item.position,
-                    referred_route__user__city_id: item.user.city
+                    referred_route__user__city_id: item.user.city,
                   }}
                   rowID={rowID}
-                  level={"N"}
+                  level={'N'}
                   modalType={0}
-                  activeSelectable={"global"}
+                  activeSelectable={'global'}
                   blockRanking={true}
                   imageEnd={WebService.url + item.trophy.img_small}
                 />
@@ -148,7 +149,7 @@ class TrophiesRanking extends React.Component {
   renderBody() {
     if (!this.props.trophies.length) {
       return (
-        <View style={{ top: 150 }}>
+        <View style={{top: 150}}>
           <ActivityIndicator size="large" color="#3D3D3D" />
           <View style={styles.challengesList} />
         </View>
@@ -168,16 +169,14 @@ class TrophiesRanking extends React.Component {
             refreshing={this.state.refreshing}
             onRefresh={this.onRefresh.bind(this)}
           />
-        }
-      >
+        }>
         {this.renderBody()}
 
         <ImageBackground
           source={trophiesView[this.props.trophy.position]}
-          style={styles.backgroundImage}
-        >
+          style={styles.backgroundImage}>
           <View style={[styles.userContainer, styles.firstUser]}>
-            <View style={{ flexDirection: "column", alignContent: "center" }}>
+            <View style={{flexDirection: 'column', alignContent: 'center'}}>
               <View>
                 <UserItem
                   user={{
@@ -188,7 +187,7 @@ class TrophiesRanking extends React.Component {
 
                     points: this.props.trophy.points,
                     position: this.props.trophy.position,
-                    referred_route__user__city_id: this.props.trophy.user.city
+                    referred_route__user__city_id: this.props.trophy.user.city,
                   }}
                   // lo faccio piu piccolo dato che sopra metto il selettore per il periodo
                   fontColor={
@@ -197,14 +196,14 @@ class TrophiesRanking extends React.Component {
                       ? true
                       : false
                   }
-                  style={{ height: 75 }}
+                  style={{height: 75}}
                   modalType={
                     //  this.props.trophy.user.role
                     0
                   }
                   level={
                     //  this.props.trophy.user.level_of_experience
-                    "N"
+                    'N'
                   }
                 />
               </View>
@@ -218,26 +217,26 @@ class TrophiesRanking extends React.Component {
 
 // togliere dal 3 in poi
 const trophiesView = {
-  1: require("../../assets/images/bg-rank_gold.png"),
-  2: require("../../assets/images/bg-rank_silver.png"),
-  3: require("../../assets/images/bg-rank_bronze.png"),
-  4: require("../../assets/images/bg-rank_gold.png"),
-  5: require("../../assets/images/bg-rank_silver.png"),
-  6: require("../../assets/images/bg-rank_bronze.png")
+  1: require('../../assets/images/bg-rank_gold.png'),
+  2: require('../../assets/images/bg-rank_silver.png'),
+  3: require('../../assets/images/bg-rank_bronze.png'),
+  4: require('../../assets/images/bg-rank_gold.png'),
+  5: require('../../assets/images/bg-rank_silver.png'),
+  6: require('../../assets/images/bg-rank_bronze.png'),
 };
 
 // mediaglie piccole per il torneo
 
 export const medalSmallGlobalView = {
-  1: require("../../assets/images/trophies/gold_medal_icn.png"),
-  2: require("../../assets/images/trophies/silver_medal_icn.png"),
-  3: require("../../assets/images/trophies/bronze_medal_icn.png")
+  1: require('../../assets/images/trophies/gold_medal_icn.png'),
+  2: require('../../assets/images/trophies/silver_medal_icn.png'),
+  3: require('../../assets/images/trophies/bronze_medal_icn.png'),
 };
 
 export const medalGlobalView = {
-  1: require("../../assets/images/trophies/global_medal_first.png"),
-  2: require("../../assets/images/trophies/global_medal_second.png"),
-  3: require("../../assets/images/trophies/global_medal_third.png")
+  1: require('../../assets/images/trophies/global_medal_first.png'),
+  2: require('../../assets/images/trophies/global_medal_second.png'),
+  3: require('../../assets/images/trophies/global_medal_third.png'),
 };
 
 export default TrophiesRanking;

@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Dimensions,
@@ -10,20 +10,21 @@ import {
   ScrollView,
   Image,
   TouchableHighlight,
-  ListView
-} from "react-native";
+} from 'react-native';
 
-import Svg, { Circle, Line } from "react-native-svg";
+import ListView from 'deprecated-react-native-listview';
 
-import { styles, negativeData } from "./Style";
-import WavyArea from "./../../components/WavyArea/WavyArea";
-import UserItem from "./../../components/UserItem/UserItem";
+import Svg, {Circle, Line} from 'react-native-svg';
 
-import InviteItem from "./../../components/InviteItem/InviteItem";
-import InviteNoFriendScreen from "./../../components/InviteNoFriendScreen/InviteNoFriendScreen";
-import InviteFriendsWave from "./../../components/InviteFriendsWave/InviteFriendsWave";
-import Aux from "./../../helpers/Aux";
-import { getSponsor } from "./../../helpers/Sponsors.js";
+import {styles, negativeData} from './Style';
+import WavyArea from './../../components/WavyArea/WavyArea';
+import UserItem from './../../components/UserItem/UserItem';
+
+import InviteItem from './../../components/InviteItem/InviteItem';
+import InviteNoFriendScreen from './../../components/InviteNoFriendScreen/InviteNoFriendScreen';
+import InviteFriendsWave from './../../components/InviteFriendsWave/InviteFriendsWave';
+import Aux from './../../helpers/Aux';
+import {getSponsor} from './../../helpers/Sponsors.js';
 
 import {
   getLeaderboard,
@@ -34,18 +35,18 @@ import {
   getWeeklyLeaderboardByCity,
   getWeeklyFriendLeaderboard,
   getWeeklyLeaderboardNew,
-  getSpecificPositionNew
-} from "./../../domains/standings/ActionCreators";
-import { connect } from "react-redux";
-import pointsDecimal from "../../helpers/pointsDecimal";
-import OwnIcon from "../../components/OwnIcon/OwnIcon";
-import { createSelector } from "reselect";
-import { getFollowedState } from "./../../domains/follow/Selectors";
-import { getFollowingUser } from "./../../domains/follow/ActionCreators";
-import { strings } from "../../config/i18n";
+  getSpecificPositionNew,
+} from './../../domains/standings/ActionCreators';
+import {connect} from 'react-redux';
+import pointsDecimal from '../../helpers/pointsDecimal';
+import OwnIcon from '../../components/OwnIcon/OwnIcon';
+import {createSelector} from 'reselect';
+import {getFollowedState} from './../../domains/follow/Selectors';
+import {getFollowingUser} from './../../domains/follow/ActionCreators';
+import {strings} from '../../config/i18n';
 
-import LinearGradient from "react-native-linear-gradient";
-import { changeScreenProfile } from "./../../domains/trainings/ActionCreators";
+import LinearGradient from 'react-native-linear-gradient';
+import {changeScreenProfile} from './../../domains/trainings/ActionCreators';
 
 // import { pushNotifications } from "./../../services";
 
@@ -54,14 +55,14 @@ class StandingsScreen extends React.Component {
     super(props);
 
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2
+      rowHasChanged: (r1, r2) => r1 !== r2,
     });
 
     this.state = {
       showLoading: true,
       refreshing: false,
       refreshingFriend: false,
-      endScrollRefresh: false
+      endScrollRefresh: false,
     };
 
     this.displayStandings = false;
@@ -77,11 +78,11 @@ class StandingsScreen extends React.Component {
 
   myProfile = () => {
     // this.props.dispatch(changeScreenProfile("myself"));
-    this.props.navigation.navigate("Info");
+    this.props.navigation.navigate('Info');
   };
 
   onRefresh() {
-    this.setState({ refreshing: true });
+    this.setState({refreshing: true});
     // this.props.dispatch(getLeaderboard());
     // this.props.dispatch(getLeaderboardByCity());
 
@@ -98,9 +99,9 @@ class StandingsScreen extends React.Component {
     //     this.props.dispatch(getWeeklyLeaderboardByCity());
     //   else this.props.dispatch(getLeaderboardByCity());
     getSpecificPositionNew();
-    if (this.props.activeSelectable == "global") {
+    if (this.props.activeSelectable == 'global') {
       this.props.dispatch(getWeeklyLeaderboardNew());
-    } else if (this.props.activeSelectable == "city") {
+    } else if (this.props.activeSelectable == 'city') {
       this.props.dispatch(getWeeklyLeaderboardByCity());
     } else {
       this.props.dispatch(getWeeklyFriendLeaderboard());
@@ -112,11 +113,11 @@ class StandingsScreen extends React.Component {
       this.props.checkBlock();
     }
     if (this.props.standingsState.error) {
-      Alert.alert("Oops", "Seems like an error occured, pull to refresh");
+      Alert.alert('Oops', 'Seems like an error occured, pull to refresh');
     }
     const loading = setInterval(() => {
       if (this.props.standingsState.standing.length > 0) {
-        this.setState({ refreshing: false });
+        this.setState({refreshing: false});
         clearTimeout(loading);
       }
     }, 1000);
@@ -152,17 +153,17 @@ class StandingsScreen extends React.Component {
   // }
 
   onRefreshFriend() {
-    this.setState({ refreshingFriend: true });
+    this.setState({refreshingFriend: true});
     this.props.dispatch(getWeeklyFriendLeaderboard());
     this.props.dispatch(getFollowingUser());
 
     const loading = setInterval(() => {
-      this.setState({ refreshingFriend: false });
+      this.setState({refreshingFriend: false});
       clearTimeout(loading);
     }, 1000);
   }
 
-  isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }) => {
+  isCloseToBottom = ({layoutMeasurement, contentOffset, contentSize}) => {
     const paddingToBottom = 25;
     return (
       layoutMeasurement.height + contentOffset.y >=
@@ -171,11 +172,11 @@ class StandingsScreen extends React.Component {
   };
 
   endRequestInEndDrag = () => {
-    this.setState({ endScrollRefresh: false });
+    this.setState({endScrollRefresh: false});
   };
 
   // quando scendo tutti gli utenti, ne carico altri
-  onScrollEndDrag = event => {
+  onScrollEndDrag = (event) => {
     // console.log("scroll");
     // // console.log(this.props.allFeedOrder.length);
 
@@ -183,11 +184,11 @@ class StandingsScreen extends React.Component {
       const activeSelectable = this.props.activeSelectable;
 
       let number = 0;
-      if (activeSelectable == "global") {
+      if (activeSelectable == 'global') {
         number = this.props.standingsState.standing.length;
-      } else if (activeSelectable == "city") {
+      } else if (activeSelectable == 'city') {
         number = this.props.standingsState.cityStanding.length;
-      } else if (activeSelectable == "friend") {
+      } else if (activeSelectable == 'friend') {
         number = this.props.standingsState.infoUserFriendsClassification
           .numFriend;
       } else {
@@ -196,16 +197,16 @@ class StandingsScreen extends React.Component {
         number = this.props.standingsState.infoUserCommunityClassification
           .numFriend;
       }
-      this.setState({ endScrollRefresh: true });
-      if (this.props.activeSelectable == "global") {
+      this.setState({endScrollRefresh: true});
+      if (this.props.activeSelectable == 'global') {
         this.props.dispatch(
           getWeeklyLeaderboardNew({
             limit: 100,
             offset: parseInt(number / 100) * 100,
-            afterRequest: this.endRequestInEndDrag
-          })
+            afterRequest: this.endRequestInEndDrag,
+          }),
         );
-      } else if (this.props.activeSelectable == "city") {
+      } else if (this.props.activeSelectable == 'city') {
         this.props.dispatch(getWeeklyLeaderboardByCity());
       } else {
         this.props.dispatch(getWeeklyFriendLeaderboard());
@@ -219,7 +220,7 @@ class StandingsScreen extends React.Component {
       return (
         <WavyArea
           data={negativeData}
-          color={"#3D3D3D"}
+          color={'#3D3D3D'}
           style={styles.overlayWave}
         />
       );
@@ -231,7 +232,7 @@ class StandingsScreen extends React.Component {
     position,
     totPoints,
     activeSelectable,
-    colorStar
+    colorStar,
   ) {
     this.displayStandings = true;
 
@@ -260,7 +261,7 @@ class StandingsScreen extends React.Component {
                       key={0}
                       style={{
                         height: 30,
-                        backgroundColor: "#F7F8F9"
+                        backgroundColor: '#F7F8F9',
                       }}
                     />
                   }
@@ -270,14 +271,14 @@ class StandingsScreen extends React.Component {
                     user={{
                       ...item,
                       position: row,
-                      id: this.props.infoProfile.user_id
+                      id: this.props.infoProfile.user_id,
                     }}
                     rowID={rowID}
                     level={item.referred_route__user__level__name}
                     modalType={
                       item.referred_route__user__role
-                        ? item.referred_route__user__role === "none" ||
-                          item.referred_route__user__role === "muver"
+                        ? item.referred_route__user__role === 'none' ||
+                          item.referred_route__user__role === 'muver'
                           ? 0
                           : parseInt(item.referred_route__user__role)
                         : 0
@@ -286,9 +287,9 @@ class StandingsScreen extends React.Component {
                     blockRanking={number > 3 ? this.props.blockRanking : false}
                     community={item.referred_route__user__community__name}
                     city={
-                      activeSelectable != "city"
+                      activeSelectable != 'city'
                         ? item.referred_route__user__city__city_name
-                        : ""
+                        : ''
                     }
                     colorStar={colorStar}
                   />
@@ -304,14 +305,14 @@ class StandingsScreen extends React.Component {
                     user={{
                       ...item,
                       position: row,
-                      id: this.props.infoProfile.user_id
+                      id: this.props.infoProfile.user_id,
                     }}
                     rowID={rowID}
                     level={item.referred_route__user__level__name}
                     modalType={
                       item.referred_route__user__role
-                        ? item.referred_route__user__role === "none" ||
-                          item.referred_route__user__role === "muver"
+                        ? item.referred_route__user__role === 'none' ||
+                          item.referred_route__user__role === 'muver'
                           ? 0
                           : parseInt(item.referred_route__user__role)
                         : 0
@@ -320,9 +321,9 @@ class StandingsScreen extends React.Component {
                     blockRanking={number > 3 ? this.props.blockRanking : false}
                     community={item.referred_route__user__community__name}
                     city={
-                      activeSelectable != "city"
+                      activeSelectable != 'city'
                         ? item.referred_route__user__city__city_name
-                        : ""
+                        : ''
                     }
                     colorStar={colorStar}
                   />
@@ -338,14 +339,14 @@ class StandingsScreen extends React.Component {
                   user={{
                     ...item,
                     position: row,
-                    id: this.props.infoProfile.user_id
+                    id: this.props.infoProfile.user_id,
                   }}
                   rowID={rowID}
                   level={item.referred_route__user__level__name}
                   modalType={
                     item.referred_route__user__role
-                      ? item.referred_route__user__role === "none" ||
-                        item.referred_route__user__role === "muver"
+                      ? item.referred_route__user__role === 'none' ||
+                        item.referred_route__user__role === 'muver'
                         ? 0
                         : parseInt(item.referred_route__user__role)
                       : 0
@@ -354,9 +355,9 @@ class StandingsScreen extends React.Component {
                   blockRanking={number > 3 ? this.props.blockRanking : false}
                   community={item.referred_route__user__community__name}
                   city={
-                    activeSelectable != "city"
+                    activeSelectable != 'city'
                       ? item.referred_route__user__city__city_name
-                      : ""
+                      : ''
                   }
                   colorStar={colorStar}
                 />
@@ -378,19 +379,18 @@ class StandingsScreen extends React.Component {
           />
         }
         style={{
-          width: Dimensions.get("window").width,
-          height: Dimensions.get("window").height
-        }}
-      >
+          width: Dimensions.get('window').width,
+          height: Dimensions.get('window').height,
+        }}>
         <View
           style={{
-            width: Dimensions.get("window").width,
+            width: Dimensions.get('window').width,
             height: 150,
-            flexDirection: "column",
-            justifyContent: "center",
-            alignContent: "center",
-            alignSelf: "center",
-            alignItems: "center"
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignContent: 'center',
+            alignSelf: 'center',
+            alignItems: 'center',
           }}
         />
         <InviteNoFriendScreen
@@ -400,13 +400,13 @@ class StandingsScreen extends React.Component {
         />
         <View
           style={{
-            width: Dimensions.get("window").width,
+            width: Dimensions.get('window').width,
             height: 150,
-            flexDirection: "column",
-            justifyContent: "center",
-            alignContent: "center",
-            alignSelf: "center",
-            alignItems: "center"
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignContent: 'center',
+            alignSelf: 'center',
+            alignItems: 'center',
           }}
         />
       </ScrollView>
@@ -423,81 +423,78 @@ class StandingsScreen extends React.Component {
           />
         }
         style={{
-          width: Dimensions.get("window").width,
-          height: Dimensions.get("window").height
-        }}
-      >
+          width: Dimensions.get('window').width,
+          height: Dimensions.get('window').height,
+        }}>
         <View
           style={{
-            width: Dimensions.get("window").width,
+            width: Dimensions.get('window').width,
             height: 200,
-            flexDirection: "column",
-            justifyContent: "center",
-            alignContent: "center",
-            alignSelf: "center",
-            alignItems: "center"
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignContent: 'center',
+            alignSelf: 'center',
+            alignItems: 'center',
           }}
         />
         <View
           style={{
-            width: Dimensions.get("window").width * 0.6,
-            height: Dimensions.get("window").width * 0.6,
-            flexDirection: "row",
-            justifyContent: "center",
-            alignContent: "center",
-            alignSelf: "center"
-          }}
-        >
+            width: Dimensions.get('window').width * 0.6,
+            height: Dimensions.get('window').width * 0.6,
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignContent: 'center',
+            alignSelf: 'center',
+          }}>
           <Image
-            source={require("./../../assets/images/city_tournament_empty.png")}
+            source={require('./../../assets/images/city_tournament_empty.png')}
             style={{
-              width: Dimensions.get("window").width * 0.6,
-              height: Dimensions.get("window").width * 0.6
+              width: Dimensions.get('window').width * 0.6,
+              height: Dimensions.get('window').width * 0.6,
             }}
           />
         </View>
         <View
           style={{
-            width: Dimensions.get("window").width,
+            width: Dimensions.get('window').width,
             height: 50,
-            flexDirection: "column",
-            justifyContent: "center",
-            alignContent: "center",
-            alignSelf: "center",
-            alignItems: "center"
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignContent: 'center',
+            alignSelf: 'center',
+            alignItems: 'center',
           }}
         />
         <InviteFriendsWave
           navigation={this.props.navigation}
-          typeInvite="City"
-        ></InviteFriendsWave>
+          typeInvite="City"></InviteFriendsWave>
         <View
           style={{
-            width: Dimensions.get("window").width,
+            width: Dimensions.get('window').width,
             height: 200,
-            flexDirection: "column",
-            justifyContent: "center",
-            alignContent: "center",
-            alignSelf: "center",
-            alignItems: "center"
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignContent: 'center',
+            alignSelf: 'center',
+            alignItems: 'center',
           }}
         />
       </ScrollView>
     );
   }
 
-  endScroll = endScrollRefresh => {
+  endScroll = (endScrollRefresh) => {
     return (
       <View>
         {endScrollRefresh ? (
           <ActivityIndicator
             style={{
-              alignContent: "center",
+              alignContent: 'center',
               flex: 1,
               paddingTop: 10,
 
-              alignItems: "center",
-              alignSelf: "center"
+              alignItems: 'center',
+              alignSelf: 'center',
             }}
             size="large"
             color="#3D3D3D"
@@ -507,13 +504,13 @@ class StandingsScreen extends React.Component {
         )}
         <View
           style={{
-            height: Dimensions.get("window").height / 10
+            height: Dimensions.get('window').height / 10,
           }}
         />
         {
           // aggiungo delo spazio in meno dato che il padding lo aggiunto prima su android e quindi qua non lo aggiungo
         }
-        <View style={{ height: Dimensions.get("window").height * 0.23 }} />
+        <View style={{height: Dimensions.get('window').height * 0.23}} />
       </View>
     );
   };
@@ -522,7 +519,7 @@ class StandingsScreen extends React.Component {
   // aggiungo delo spazio in piu cosi posso scrollare tutta la lista anche se c'e l'onda e la notifica
   // se la classifica è bloccata, c'e uno spazio in piu dato header piu grande
   endList = (activeSelectable, number) => {
-    if (activeSelectable == "friend") {
+    if (activeSelectable == 'friend') {
       return (
         <Aux>
           <InviteItem
@@ -533,13 +530,13 @@ class StandingsScreen extends React.Component {
           <View
             style={{
               paddingTop: this.props.blockRanking
-                ? Dimensions.get("window").height * 0.23 + 80
-                : Dimensions.get("window").height * 0.23 + 80
+                ? Dimensions.get('window').height * 0.23 + 80
+                : Dimensions.get('window').height * 0.23 + 80,
             }}
           />
         </Aux>
       );
-    } else if (activeSelectable == "city") {
+    } else if (activeSelectable == 'city') {
       return (
         <Aux>
           <InviteItem
@@ -548,15 +545,15 @@ class StandingsScreen extends React.Component {
             Points={0}
             description={
               number > 3
-                ? strings("invite_your_fri")
-                : "Invite at least 3 friends to activate the Weekly Challenge"
+                ? strings('invite_your_fri')
+                : 'Invite at least 3 friends to activate the Weekly Challenge'
             }
           />
           <View
             style={{
               paddingTop: this.props.blockRanking
-                ? Dimensions.get("window").height * 0.23 + 80
-                : Dimensions.get("window").height * 0.23 + 80
+                ? Dimensions.get('window').height * 0.23 + 80
+                : Dimensions.get('window').height * 0.23 + 80,
             }}
           />
         </Aux>
@@ -566,8 +563,8 @@ class StandingsScreen extends React.Component {
         <View
           style={{
             paddingTop: this.props.blockRanking
-              ? Dimensions.get("window").height * 0.23 + 80
-              : Dimensions.get("window").height * 0.23 + 80
+              ? Dimensions.get('window').height * 0.23 + 80
+              : Dimensions.get('window').height * 0.23 + 80,
           }}
         />
       );
@@ -578,23 +575,23 @@ class StandingsScreen extends React.Component {
     position,
     totPoints,
     activeSelectable,
-    colorStar
+    colorStar,
   ) {
     console.log(activeSelectable);
     console.log(number);
     // se non ho utenti e ancora devo caricare la lista
     if (this.props.standingsState.fetchingData && number === 0) {
       return (
-        <View style={{ top: 160 }}>
+        <View style={{top: 160}}>
           <ActivityIndicator size="large" color="#3D3D3D" />
           <View style={styles.challengesList} />
         </View>
       );
-    } else if (activeSelectable === "friend" && number === "-") {
-      console.log("nessun amico");
+    } else if (activeSelectable === 'friend' && number === '-') {
+      console.log('nessun amico');
       return <View>{this.renderEmptyFriend()}</View>;
-    } else if (activeSelectable == "city" && number == 0) {
-      console.log("nessun utente in città");
+    } else if (activeSelectable == 'city' && number == 0) {
+      console.log('nessun utente in città');
       return <View>{this.renderEmptyCity()}</View>;
     } else {
       return this.renderPage(
@@ -603,59 +600,54 @@ class StandingsScreen extends React.Component {
         position,
         totPoints,
         activeSelectable,
-        colorStar
+        colorStar,
       );
     }
   }
 
-  selectType = selectedTime => {
+  selectType = (selectedTime) => {
     return (
       <View
         style={{
-          flexDirection: "row",
-          alignContent: "center",
-          justifyContent: "center",
-          alignItems: "center"
-        }}
-      >
+          flexDirection: 'row',
+          alignContent: 'center',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
         <View
           style={{
-            flexDirection: "row",
-            alignContent: "center",
-            justifyContent: "flex-end",
-            width: Dimensions.get("window").width / 2 - 15
-          }}
-        >
+            flexDirection: 'row',
+            alignContent: 'center',
+            justifyContent: 'flex-end',
+            width: Dimensions.get('window').width / 2 - 15,
+          }}>
           <TouchableWithoutFeedback
-            onPress={() => this.props.changeActiveSelectable("City")}
-          >
+            onPress={() => this.props.changeActiveSelectable('City')}>
             <View
               style={{
-                flexDirection: "column",
-                alignContent: "center",
-                justifyContent: "center",
-                height: 40
+                flexDirection: 'column',
+                alignContent: 'center',
+                justifyContent: 'center',
+                height: 40,
                 // right: 10
-              }}
-            >
+              }}>
               <Text
                 style={{
-                  color: selectedTime ? "#FFFFFF" : "#9D9B9C",
-                  fontFamily: "Montserrat-ExtraBold",
+                  color: selectedTime ? '#FFFFFF' : '#9D9B9C',
+                  fontFamily: 'Montserrat-ExtraBold',
 
                   fontSize: 10,
-                  fontWeight: "bold",
+                  fontWeight: 'bold',
                   // marginBottom: 4,
                   marginVertical: 0,
-                  textAlign: "center"
-                }}
-              >
+                  textAlign: 'center',
+                }}>
                 {this.props.city}
               </Text>
               <View
                 style={{
-                  borderBottomColor: "#FAB21E",
-                  borderBottomWidth: selectedTime ? 1 : 0
+                  borderBottomColor: '#FAB21E',
+                  borderBottomWidth: selectedTime ? 1 : 0,
                 }}
               />
             </View>
@@ -663,24 +655,23 @@ class StandingsScreen extends React.Component {
         </View>
         <View
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
             height: 30,
-            width: 30
+            width: 30,
           }}
         />
 
         <View
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
             height: 25,
             width: 25,
-            position: "absolute"
-          }}
-        >
+            position: 'absolute',
+          }}>
           {/* <Svg height={30} width={30} viewBox="0 0 100 100">
                   <Circle
                     cx="50"
@@ -711,42 +702,38 @@ class StandingsScreen extends React.Component {
         </View>
         <View
           style={{
-            flexDirection: "row",
-            alignContent: "center",
-            justifyContent: "flex-start",
-            width: Dimensions.get("window").width / 2 - 15
-          }}
-        >
+            flexDirection: 'row',
+            alignContent: 'center',
+            justifyContent: 'flex-start',
+            width: Dimensions.get('window').width / 2 - 15,
+          }}>
           <TouchableWithoutFeedback
-            onPress={() => this.props.changeActiveSelectable("Global")}
-            style={{ flex: 1 }}
-          >
+            onPress={() => this.props.changeActiveSelectable('Global')}
+            style={{flex: 1}}>
             <View
               style={{
-                flexDirection: "column",
-                alignContent: "center",
-                justifyContent: "center",
-                height: 40
-              }}
-            >
+                flexDirection: 'column',
+                alignContent: 'center',
+                justifyContent: 'center',
+                height: 40,
+              }}>
               <Text
                 style={{
-                  color: selectedTime ? "#9D9B9C" : "#FFFFFF",
-                  fontFamily: "Montserrat-ExtraBold",
+                  color: selectedTime ? '#9D9B9C' : '#FFFFFF',
+                  fontFamily: 'Montserrat-ExtraBold',
 
                   fontSize: 10,
-                  fontWeight: "bold",
+                  fontWeight: 'bold',
                   // marginBottom: 4,
                   marginVertical: 0,
-                  textAlign: "center"
-                }}
-              >
+                  textAlign: 'center',
+                }}>
                 WORLD
               </Text>
               <View
                 style={{
-                  borderBottomColor: "#FAB21E",
-                  borderBottomWidth: selectedTime ? 0 : 1
+                  borderBottomColor: '#FAB21E',
+                  borderBottomWidth: selectedTime ? 0 : 1,
                 }}
               />
             </View>
@@ -766,54 +753,49 @@ class StandingsScreen extends React.Component {
       return (
         <View
           style={{
-            flexDirection: "row",
-            alignContent: "center",
-            justifyContent: "center",
-            alignItems: "center"
-          }}
-        >
+            flexDirection: 'row',
+            alignContent: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
           <View
             style={{
-              flexDirection: "row",
-              alignContent: "center",
-              justifyContent: "flex-end",
-              width: Dimensions.get("window").width * 0.5 - 90
-            }}
-          >
+              flexDirection: 'row',
+              alignContent: 'center',
+              justifyContent: 'flex-end',
+              width: Dimensions.get('window').width * 0.5 - 90,
+            }}>
             <TouchableWithoutFeedback
-              onPress={() => this.props.changeActiveSelectable("City")}
-            >
+              onPress={() => this.props.changeActiveSelectable('City')}>
               <View
                 style={{
-                  flexDirection: "column",
-                  alignContent: "center",
-                  justifyContent: "center",
-                  height: 40
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
                   // right: 10
-                }}
-              >
+                }}>
                 <Text
                   style={{
                     color:
-                      this.props.activeSelectable == "city"
-                        ? "#FFFFFF"
-                        : "#9D9B9C",
-                    fontFamily: "Montserrat-ExtraBold",
+                      this.props.activeSelectable == 'city'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
 
                     fontSize: 10,
-                    fontWeight: "bold",
+                    fontWeight: 'bold',
                     // marginBottom: 4,
                     marginVertical: 0,
-                    textAlign: "center"
-                  }}
-                >
+                    textAlign: 'center',
+                  }}>
                   {this.props.city}
                 </Text>
                 <View
                   style={{
-                    borderBottomColor: "#FAB21E",
+                    borderBottomColor: '#FAB21E',
                     borderBottomWidth:
-                      this.props.activeSelectable == "city" ? 1 : 0
+                      this.props.activeSelectable == 'city' ? 1 : 0,
                   }}
                 />
               </View>
@@ -822,188 +804,174 @@ class StandingsScreen extends React.Component {
 
           <View
             style={{
-              flexDirection: "row",
-              alignContent: "center",
-              justifyContent: "center",
-              width: 180
-            }}
-          >
+              flexDirection: 'row',
+              alignContent: 'center',
+              justifyContent: 'center',
+              width: 180,
+            }}>
             <View
               style={{
-                flexDirection: "row",
-                alignContent: "center",
-                alignItems: "center",
-                alignSelf: "center",
-                width: 30
+                flexDirection: 'row',
+                alignContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+                width: 30,
 
                 // - 38
-              }}
-            >
-              <OwnIcon name="rank_arrow_up_icn" size={20} color={"#9D9B9C"} />
+              }}>
+              <OwnIcon name="rank_arrow_up_icn" size={20} color={'#9D9B9C'} />
               <OwnIcon
                 name="rank_arrow_down_icn"
                 size={20}
-                color={"#FFFFFF"}
-                style={{ right: 12 }}
+                color={'#FFFFFF'}
+                style={{right: 12}}
               />
             </View>
             <TouchableWithoutFeedback
-              onPress={() => this.props.changeActiveSelectable("Global")}
-              style={{ flex: 1 }}
-            >
+              onPress={() => this.props.changeActiveSelectable('Global')}
+              style={{flex: 1}}>
               <View
                 style={{
-                  flexDirection: "column",
-                  alignContent: "center",
-                  justifyContent: "center",
-                  height: 40
-                }}
-              >
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
+                }}>
                 <Text
                   style={{
                     color:
-                      this.props.activeSelectable == "global"
-                        ? "#FFFFFF"
-                        : "#9D9B9C",
-                    fontFamily: "Montserrat-ExtraBold",
+                      this.props.activeSelectable == 'global'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
 
                     fontSize: 10,
-                    fontWeight: "bold",
+                    fontWeight: 'bold',
                     // marginBottom: 4,
                     marginVertical: 0,
-                    textAlign: "center"
-                  }}
-                >
+                    textAlign: 'center',
+                  }}>
                   WORLD
                 </Text>
                 <View
                   style={{
-                    borderBottomColor: "#FAB21E",
+                    borderBottomColor: '#FAB21E',
                     borderBottomWidth:
-                      this.props.activeSelectable == "global" ? 1 : 0
+                      this.props.activeSelectable == 'global' ? 1 : 0,
                   }}
                 />
               </View>
             </TouchableWithoutFeedback>
             <View
               style={{
-                flexDirection: "row",
-                alignContent: "center",
-                alignItems: "center",
-                alignSelf: "center",
-                width: 30
+                flexDirection: 'row',
+                alignContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+                width: 30,
                 // - 38
-              }}
-            >
-              <OwnIcon name="rank_arrow_up_icn" size={20} color={"#9D9B9C"} />
+              }}>
+              <OwnIcon name="rank_arrow_up_icn" size={20} color={'#9D9B9C'} />
               <OwnIcon
                 name="rank_arrow_down_icn"
                 size={20}
-                color={"#FFFFFF"}
-                style={{ right: 12 }}
+                color={'#FFFFFF'}
+                style={{right: 12}}
               />
             </View>
 
             <TouchableWithoutFeedback
-              onPress={() => this.props.changeActiveSelectable("Friend")}
-              style={{ flex: 1 }}
-            >
+              onPress={() => this.props.changeActiveSelectable('Friend')}
+              style={{flex: 1}}>
               <View
                 style={{
-                  flexDirection: "column",
-                  alignContent: "center",
-                  justifyContent: "center",
-                  height: 40
-                }}
-              >
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
+                }}>
                 <Text
                   style={{
                     color:
-                      this.props.activeSelectable == "friend"
-                        ? "#FFFFFF"
-                        : "#9D9B9C",
-                    fontFamily: "Montserrat-ExtraBold",
+                      this.props.activeSelectable == 'friend'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
 
                     fontSize: 10,
-                    fontWeight: "bold",
+                    fontWeight: 'bold',
                     // marginBottom: 4,
                     marginVertical: 0,
-                    textAlign: "center"
-                  }}
-                >
+                    textAlign: 'center',
+                  }}>
                   FRIENDS
                 </Text>
                 <View
                   style={{
-                    borderBottomColor: "#FAB21E",
+                    borderBottomColor: '#FAB21E',
                     borderBottomWidth:
-                      this.props.activeSelectable == "friend" ? 1 : 0
+                      this.props.activeSelectable == 'friend' ? 1 : 0,
                   }}
                 />
               </View>
             </TouchableWithoutFeedback>
             <View
               style={{
-                flexDirection: "row",
-                alignContent: "center",
-                alignItems: "center",
-                alignSelf: "center",
-                width: 30
+                flexDirection: 'row',
+                alignContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+                width: 30,
                 // - 38
-              }}
-            >
-              <OwnIcon name="rank_arrow_up_icn" size={20} color={"#9D9B9C"} />
+              }}>
+              <OwnIcon name="rank_arrow_up_icn" size={20} color={'#9D9B9C'} />
               <OwnIcon
                 name="rank_arrow_down_icn"
                 size={20}
-                color={"#FFFFFF"}
-                style={{ right: 12 }}
+                color={'#FFFFFF'}
+                style={{right: 12}}
               />
             </View>
           </View>
 
           <View
             style={{
-              flexDirection: "row",
-              alignContent: "center",
-              justifyContent: "flex-start",
-              width: Dimensions.get("window").width * 0.5 - 90
-            }}
-          >
+              flexDirection: 'row',
+              alignContent: 'center',
+              justifyContent: 'flex-start',
+              width: Dimensions.get('window').width * 0.5 - 90,
+            }}>
             <TouchableWithoutFeedback
-              onPress={() => this.props.changeActiveSelectable("Community")}
-              style={{ flex: 1 }}
-            >
+              onPress={() => this.props.changeActiveSelectable('Community')}
+              style={{flex: 1}}>
               <View
                 style={{
-                  flexDirection: "column",
-                  alignContent: "center",
-                  justifyContent: "center",
-                  height: 40
-                }}
-              >
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
+                }}>
                 <Text
                   style={{
                     color:
-                      this.props.activeSelectable == "community"
-                        ? "#FFFFFF"
-                        : "#9D9B9C",
-                    fontFamily: "Montserrat-ExtraBold",
+                      this.props.activeSelectable == 'community'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
 
                     fontSize: 10,
-                    fontWeight: "bold",
+                    fontWeight: 'bold',
                     // marginBottom: 4,
                     marginVertical: 0,
-                    textAlign: "center"
-                  }}
-                >
+                    textAlign: 'center',
+                  }}>
                   COMMUNITY
                 </Text>
                 <View
                   style={{
-                    borderBottomColor: "#FFFFFF",
+                    borderBottomColor: '#FFFFFF',
                     borderBottomWidth:
-                      this.props.activeSelectable == "community" ? 1 : 0
+                      this.props.activeSelectable == 'community' ? 1 : 0,
                   }}
                 />
               </View>
@@ -1015,54 +983,49 @@ class StandingsScreen extends React.Component {
       return (
         <View
           style={{
-            flexDirection: "row",
-            alignContent: "center",
-            justifyContent: "center",
-            alignItems: "center"
-          }}
-        >
+            flexDirection: 'row',
+            alignContent: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
           <View
             style={{
-              flexDirection: "row",
-              alignContent: "center",
-              justifyContent: "flex-end",
-              width: Dimensions.get("window").width * 0.3
-            }}
-          >
+              flexDirection: 'row',
+              alignContent: 'center',
+              justifyContent: 'flex-end',
+              width: Dimensions.get('window').width * 0.3,
+            }}>
             <TouchableWithoutFeedback
-              onPress={() => this.props.changeActiveSelectable("City")}
-            >
+              onPress={() => this.props.changeActiveSelectable('City')}>
               <View
                 style={{
-                  flexDirection: "column",
-                  alignContent: "center",
-                  justifyContent: "center",
-                  height: 40
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
                   // right: 10
-                }}
-              >
+                }}>
                 <Text
                   style={{
                     color:
-                      this.props.activeSelectable == "city"
-                        ? "#FFFFFF"
-                        : "#9D9B9C",
-                    fontFamily: "Montserrat-ExtraBold",
+                      this.props.activeSelectable == 'city'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
 
                     fontSize: 10,
-                    fontWeight: "bold",
+                    fontWeight: 'bold',
                     // marginBottom: 4,
                     marginVertical: 0,
-                    textAlign: "center"
-                  }}
-                >
+                    textAlign: 'center',
+                  }}>
                   {this.props.city}
                 </Text>
                 <View
                   style={{
-                    borderBottomColor: "#FAB21E",
+                    borderBottomColor: '#FAB21E',
                     borderBottomWidth:
-                      this.props.activeSelectable == "city" ? 1 : 0
+                      this.props.activeSelectable == 'city' ? 1 : 0,
                   }}
                 />
               </View>
@@ -1071,131 +1034,121 @@ class StandingsScreen extends React.Component {
 
           <View
             style={{
-              flexDirection: "row",
-              alignContent: "center",
-              justifyContent: "center",
-              width: 120
-            }}
-          >
+              flexDirection: 'row',
+              alignContent: 'center',
+              justifyContent: 'center',
+              width: 120,
+            }}>
             <View
               style={{
-                flexDirection: "row",
-                alignContent: "center",
-                alignItems: "center",
-                alignSelf: "center",
-                width: 30
+                flexDirection: 'row',
+                alignContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+                width: 30,
 
                 // - 38
-              }}
-            >
-              <OwnIcon name="rank_arrow_up_icn" size={20} color={"#9D9B9C"} />
+              }}>
+              <OwnIcon name="rank_arrow_up_icn" size={20} color={'#9D9B9C'} />
               <OwnIcon
                 name="rank_arrow_down_icn"
                 size={20}
-                color={"#FFFFFF"}
-                style={{ right: 12 }}
+                color={'#FFFFFF'}
+                style={{right: 12}}
               />
             </View>
             <TouchableWithoutFeedback
-              onPress={() => this.props.changeActiveSelectable("Global")}
-              style={{ flex: 1 }}
-            >
+              onPress={() => this.props.changeActiveSelectable('Global')}
+              style={{flex: 1}}>
               <View
                 style={{
-                  flexDirection: "column",
-                  alignContent: "center",
-                  justifyContent: "center",
-                  height: 40
-                }}
-              >
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
+                }}>
                 <Text
                   style={{
                     color:
-                      this.props.activeSelectable == "global"
-                        ? "#FFFFFF"
-                        : "#9D9B9C",
-                    fontFamily: "Montserrat-ExtraBold",
+                      this.props.activeSelectable == 'global'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
 
                     fontSize: 10,
-                    fontWeight: "bold",
+                    fontWeight: 'bold',
                     // marginBottom: 4,
                     marginVertical: 0,
-                    textAlign: "center"
-                  }}
-                >
+                    textAlign: 'center',
+                  }}>
                   WORLD
                 </Text>
                 <View
                   style={{
-                    borderBottomColor: "#FAB21E",
+                    borderBottomColor: '#FAB21E',
                     borderBottomWidth:
-                      this.props.activeSelectable == "global" ? 1 : 0
+                      this.props.activeSelectable == 'global' ? 1 : 0,
                   }}
                 />
               </View>
             </TouchableWithoutFeedback>
             <View
               style={{
-                flexDirection: "row",
-                alignContent: "center",
-                alignItems: "center",
-                alignSelf: "center",
-                width: 30
+                flexDirection: 'row',
+                alignContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+                width: 30,
                 // - 38
-              }}
-            >
-              <OwnIcon name="rank_arrow_up_icn" size={20} color={"#9D9B9C"} />
+              }}>
+              <OwnIcon name="rank_arrow_up_icn" size={20} color={'#9D9B9C'} />
               <OwnIcon
                 name="rank_arrow_down_icn"
                 size={20}
-                color={"#FFFFFF"}
-                style={{ right: 12 }}
+                color={'#FFFFFF'}
+                style={{right: 12}}
               />
             </View>
           </View>
 
           <View
             style={{
-              flexDirection: "row",
-              alignContent: "center",
-              justifyContent: "flex-start",
-              width: Dimensions.get("window").width * 0.3
-            }}
-          >
+              flexDirection: 'row',
+              alignContent: 'center',
+              justifyContent: 'flex-start',
+              width: Dimensions.get('window').width * 0.3,
+            }}>
             <TouchableWithoutFeedback
-              onPress={() => this.props.changeActiveSelectable("Friend")}
-              style={{ flex: 1 }}
-            >
+              onPress={() => this.props.changeActiveSelectable('Friend')}
+              style={{flex: 1}}>
               <View
                 style={{
-                  flexDirection: "column",
-                  alignContent: "center",
-                  justifyContent: "center",
-                  height: 40
-                }}
-              >
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
+                }}>
                 <Text
                   style={{
                     color:
-                      this.props.activeSelectable == "friend"
-                        ? "#FFFFFF"
-                        : "#9D9B9C",
-                    fontFamily: "Montserrat-ExtraBold",
+                      this.props.activeSelectable == 'friend'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
 
                     fontSize: 10,
-                    fontWeight: "bold",
+                    fontWeight: 'bold',
                     // marginBottom: 4,
                     marginVertical: 0,
-                    textAlign: "center"
-                  }}
-                >
+                    textAlign: 'center',
+                  }}>
                   FRIENDS
                 </Text>
                 <View
                   style={{
-                    borderBottomColor: "#FAB21E",
+                    borderBottomColor: '#FAB21E',
                     borderBottomWidth:
-                      this.props.activeSelectable == "friend" ? 1 : 0
+                      this.props.activeSelectable == 'friend' ? 1 : 0,
                   }}
                 />
               </View>
@@ -1209,11 +1162,11 @@ class StandingsScreen extends React.Component {
   render() {
     let number = 0;
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2
+      rowHasChanged: (r1, r2) => r1 !== r2,
     });
 
     let dataSource = ds.cloneWithRows([]);
-    let position = "-";
+    let position = '-';
     let totPoints = 0;
 
     const community = this.props.community
@@ -1224,40 +1177,40 @@ class StandingsScreen extends React.Component {
 
     const communityInfo = community
       ? getSponsor(this.props.community.name)
-      : { community: 1 };
+      : {community: 1};
     const checkSponsor = communityInfo.sponsor;
     // const threeFields = community
     //   ? { width: Dimensions.get("window").width / 3 }
     //   : {};
 
     const activeSelectable = this.props.activeSelectable;
-    let colorWave = "#3D3D3D";
-    let colorStar = "#fab21e";
-    let colorStarFirst = "#fab21e";
+    let colorWave = '#3D3D3D';
+    let colorStar = '#fab21e';
+    let colorStarFirst = '#fab21e';
 
-    if (activeSelectable == "global") {
+    if (activeSelectable == 'global') {
       dataSource = ds.cloneWithRows(this.props.standingsState.standing);
       position = this.props.standingsState.infoUserGlobalClassification.index;
       totPoints = this.props.standingsState.infoUserGlobalClassification.points;
       number = this.props.standingsState.standing.length;
-    } else if (activeSelectable == "city") {
+    } else if (activeSelectable == 'city') {
       dataSource = ds.cloneWithRows(this.props.standingsState.cityStanding);
       position = this.props.standingsState.infoUserCityClassification.index;
       totPoints = this.props.standingsState.infoUserCityClassification.points;
       number = this.props.standingsState.cityStanding.length;
-    } else if (activeSelectable == "friend") {
+    } else if (activeSelectable == 'friend') {
       const userFollowed = this.props.followed.length
-        ? this.props.followed.map(friend => friend.user_followed.user_id)
+        ? this.props.followed.map((friend) => friend.user_followed.user_id)
         : [];
 
       let friendStandings = [];
 
       if (userFollowed.length) {
-        const { user_id } = this.props.infoProfile;
+        const {user_id} = this.props.infoProfile;
         friendStandings = this.props.standingsState.standing.filter(
-          user =>
+          (user) =>
             userFollowed.indexOf(user.referred_route__user_id) !== -1 ||
-            user.referred_route__user_id === user_id
+            user.referred_route__user_id === user_id,
         );
         console.log(friendStandings);
       }
@@ -1273,7 +1226,7 @@ class StandingsScreen extends React.Component {
     } else {
       // community
       dataSource = ds.cloneWithRows(
-        this.props.standingsState.communityStanding
+        this.props.standingsState.communityStanding,
       );
       position = this.props.standingsState.infoUserCommunityClassification
         .index;
@@ -1284,10 +1237,10 @@ class StandingsScreen extends React.Component {
       colorWave = this.props.community
         ? this.props.community.community_color
           ? this.props.community.community_color
-          : "#533DCE"
-        : "#533DCE";
+          : '#533DCE'
+        : '#533DCE';
       colorStar = colorWave;
-      colorStarFirst = "#ffffff";
+      colorStarFirst = '#ffffff';
     }
 
     return (
@@ -1298,15 +1251,14 @@ class StandingsScreen extends React.Component {
             refreshing={this.props.standingsState.fetchingData}
             onRefresh={this.onRefresh.bind(this)}
           />
-        }
-      >
+        }>
         {this.renderBody(
           number,
           dataSource,
           position,
           totPoints,
           activeSelectable,
-          colorStar
+          colorStar,
         )}
         <WavyArea
           data={negativeData}
@@ -1316,10 +1268,9 @@ class StandingsScreen extends React.Component {
         <View style={[styles.userContainer, styles.firstUser]}>
           <View
             style={{
-              flexDirection: "column",
-              alignContent: "center"
-            }}
-          >
+              flexDirection: 'column',
+              alignContent: 'center',
+            }}>
             {/* {this.selectTypeNew(community, checkSponsor)} */}
             <View>
               <UserItem
@@ -1334,19 +1285,19 @@ class StandingsScreen extends React.Component {
 
                   points: totPoints,
                   position:
-                    position !== "-" && typeof position !== "object"
+                    position !== '-' && typeof position !== 'object'
                       ? position + 1
-                      : "-",
+                      : '-',
                   referred_route__user__city_id: this.props.infoProfile.city
                     ? this.props.infoProfile.city.id
                       ? this.props.infoProfile.city.id
                       : 0
-                    : 0
+                    : 0,
                 }}
                 // lo faccio piu piccolo dato che sopra metto il selettore per il periodo
-                style={{ height: 85 }}
+                style={{height: 85}}
                 level={this.props.level}
-                fontColor={"#fff"}
+                fontColor={'#fff'}
                 modalType={this.props.role}
                 blockRanking={number > 3 ? this.props.blockRanking : false}
                 activeSelectable={this.props.activeSelectable}
@@ -1356,11 +1307,11 @@ class StandingsScreen extends React.Component {
                     : null
                 }
                 city={
-                  activeSelectable != "city"
+                  activeSelectable != 'city'
                     ? this.props.infoProfile.city
                       ? this.props.infoProfile.city.city_name
-                      : ""
-                    : ""
+                      : ''
+                    : ''
                 }
                 colorStar={colorStarFirst}
               />
@@ -1372,36 +1323,36 @@ class StandingsScreen extends React.Component {
   }
 }
 
-const getProfile = state => state.login.infoProfile;
-const getProfileNotSave = state => state.login.infoProfileNotSave;
+const getProfile = (state) => state.login.infoProfile;
+const getProfileNotSave = (state) => state.login.infoProfileNotSave;
 
 const getProfileState = createSelector(
   [getProfile, getProfileNotSave],
   (infoProfile, infoProfileNotSave) => {
     return {
       ...infoProfile,
-      ...infoProfileNotSave
+      ...infoProfileNotSave,
     };
-  }
+  },
 );
 
-const getStandings = state => state.standings;
+const getStandings = (state) => state.standings;
 
 const getStandingsState = createSelector(
   [getStandings],
-  StandingsState => StandingsState
+  (StandingsState) => StandingsState,
 );
 
-const getLevel = state => state.trainings.name;
+const getLevel = (state) => state.trainings.name;
 
-const getLevelState = createSelector([getLevel], level =>
-  level ? level : "Newbie"
+const getLevelState = createSelector([getLevel], (level) =>
+  level ? level : 'Newbie',
 );
 
-const getRole = state => state.login.role;
+const getRole = (state) => state.login.role;
 
-const getRoleState = createSelector([getRole], role =>
-  role.roleUser ? (role.roleUser ? role.roleUser : 0) : 0
+const getRoleState = createSelector([getRole], (role) =>
+  role.roleUser ? (role.roleUser ? role.roleUser : 0) : 0,
 );
 
 /* 
@@ -1409,13 +1360,13 @@ state.statistics.reduce(
   (acc, item) => (acc > item.points ? acc : item.points),
   0 ) */
 // modal_type
-const withConnect = connect(state => {
+const withConnect = connect((state) => {
   return {
     // standingsState: getStandingsState(state),
     infoProfile: getProfileState(state),
     level: getLevelState(state),
     role: getRoleState(state),
-    followed: getFollowedState(state)
+    followed: getFollowedState(state),
   };
 });
 

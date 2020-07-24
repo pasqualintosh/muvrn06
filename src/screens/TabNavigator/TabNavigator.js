@@ -757,9 +757,10 @@ const TabHome = createBottomTabNavigator(
     CityTournament: {screen: CityTournamentStack},
   },
   {
-    navigationOptions: ({navigation}) => ({
-      tabBarIcon: ({focused, tintColor}) => {
+    defaultNavigationOptions: ({navigation}) => ({
+      tabBarIcon: ({focused, horizontal, tintColor}) => {
         // prendo dove mi trovo in questo momento
+        console.log(navigation);
         const {routeName} = navigation.state;
         let iconName;
 
@@ -1331,7 +1332,7 @@ class Menu extends React.Component {
       </View>
     ),
     headerLeft: null,
-    headerRight: <Icon name="md-more" size={30} color="#9D9B9C" />,
+    headerRight: <Icon name="add-circle-outline" size={30} color="#9D9B9C" />,
   };
 
   // aggiorno lo stato con la nuova connessione

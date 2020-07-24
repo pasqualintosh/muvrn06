@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Text,
@@ -8,19 +8,20 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
   NativeModules,
-  ListView
-} from "react-native";
+} from 'react-native';
 
-import Aux from "../../helpers/Aux";
-import Blur from "../../components/Blur/Blur";
-import NotificationPoint from "./../../components/NotificationPoint/NotificationPoint";
-import TrophiesRanking from "../TrophiesRanking/TrophiesRanking";
-import Settings from "./../../config/Settings";
+import ListView from 'deprecated-react-native-listview';
+
+import Aux from '../../helpers/Aux';
+import Blur from '../../components/Blur/Blur';
+import NotificationPoint from './../../components/NotificationPoint/NotificationPoint';
+import TrophiesRanking from '../TrophiesRanking/TrophiesRanking';
+import Settings from './../../config/Settings';
 // import { Analytics, Hits as GAHits } from "react-native-google-analytics";
 
-import { connect } from "react-redux";
-import { getTrophiesDetailNew } from "./../../domains/standings/ActionCreators";
-import LinearGradient from "react-native-linear-gradient";
+import {connect} from 'react-redux';
+import {getTrophiesDetailNew} from './../../domains/standings/ActionCreators';
+import LinearGradient from 'react-native-linear-gradient';
 
 class TrophiesRankingBlur extends React.Component {
   constructor(props) {
@@ -29,12 +30,12 @@ class TrophiesRankingBlur extends React.Component {
     this.state = {
       trophies: [],
       viewRef: null,
-      title: "World",
+      title: 'World',
       trophy: {
         id: 7,
         user: {
           id: 11,
-          username: "angy",
+          username: 'angy',
           walking_index: 0,
           biking_index: 0,
           lpt_index: 0,
@@ -43,30 +44,28 @@ class TrophiesRankingBlur extends React.Component {
           city: 1122,
           avatar: 58,
           level_of_experience: 1,
-          role: 1
+          role: 1,
         },
         trophy: {
           id: 1,
           position: 1,
-          img: "/media/static/img/weekly_trophies/trophy_global_first.png",
+          img: '/media/static/img/weekly_trophies/trophy_global_first.png',
           img_small:
-            "/media/static/img/weekly_trophies/trophy_global_first_small.png"
+            '/media/static/img/weekly_trophies/trophy_global_first_small.png',
         },
-        week_date: "2020-03-08",
+        week_date: '2020-03-08',
         position: 1,
-        points: 99999
-      }
+        points: 99999,
+      },
     };
   }
 
   componentWillMount() {
-
-
-    const trophy = this.props.navigation.getParam("trophy", {
+    const trophy = this.props.navigation.getParam('trophy', {
       id: 7,
       user: {
         id: 11,
-        username: "angy",
+        username: 'angy',
         walking_index: 0,
         biking_index: 0,
         lpt_index: 0,
@@ -75,47 +74,47 @@ class TrophiesRankingBlur extends React.Component {
         city: 1122,
         avatar: 58,
         level_of_experience: 1,
-        role: 1
+        role: 1,
       },
       trophy: {
         id: 1,
         position: 1,
-        img: "/media/static/img/weekly_trophies/trophy_global_first.png",
+        img: '/media/static/img/weekly_trophies/trophy_global_first.png',
         img_small:
-          "/media/static/img/weekly_trophies/trophy_global_first_small.png"
+          '/media/static/img/weekly_trophies/trophy_global_first_small.png',
       },
-      week_date: "2020-03-08",
+      week_date: '2020-03-08',
       position: 1,
-      points: 99999
+      points: 99999,
     });
 
     console.log(trophy);
     this.setState({
-      trophy
+      trophy,
     });
 
     this.props.dispatch(getTrophiesDetailNew(trophy, this.saveTrophies));
   }
 
-  saveTrophies = data => {
+  saveTrophies = (data) => {
     this.setState({
-      trophies: data
+      trophies: data,
     });
   };
 
-  static navigationOptions = ({ navigation, screenProps }) => ({
+  static navigationOptions = ({navigation, screenProps}) => ({
     headerTitle: navigation.state.params
       ? navigation.state.params.headerTitle
-      : null
+      : null,
   });
 
   componentDidMount() {
     // quando ho caricato il componente, posso dire a blur che è possibile fare il blur usando questa variabile
-    this.setState({ viewRef: findNodeHandle(this.view) });
+    this.setState({viewRef: findNodeHandle(this.view)});
     // Individual Standings
     // const trophy = this.props.navigation.getParam("trophy", []);
 
-    const title = "World";
+    const title = 'World';
     // const title = trophy.city ? "Individual" : "World";
 
     // this.setState({
@@ -127,18 +126,17 @@ class TrophiesRankingBlur extends React.Component {
       headerTitle: (
         <Text
           style={{
-            left: Platform.OS == "android" ? 20 : 0
-          }}
-        >
+            left: Platform.OS == 'android' ? 20 : 0,
+          }}>
           {/* 
           {this.state.activeSelectable.charAt(0).toUpperCase()}
           {this.state.activeSelectable.slice(1)}
           {" Ranking"} 
           */}
           {title}
-          {" Standing"}
+          {' Standing'}
         </Text>
-      )
+      ),
     });
   }
 
@@ -159,10 +157,10 @@ class TrophiesRankingBlur extends React.Component {
         "th " +
         textDate.slice(10);
     } */
-    let dataStart = new Date("2020-03-01T00:00:00.465Z");
-    if (myTrophy.week_date.slice(0, 4) == "2021") {
+    let dataStart = new Date('2020-03-01T00:00:00.465Z');
+    if (myTrophy.week_date.slice(0, 4) == '2021') {
       // l'ultima domenica del 2018 come riferimento
-      dataStart = new Date("2021-01-01T00:00:00.465Z");
+      dataStart = new Date('2021-01-01T00:00:00.465Z');
     }
 
     const dateNow = new Date(myTrophy.week_date);
@@ -176,36 +174,31 @@ class TrophiesRankingBlur extends React.Component {
 
     // const Roman = this.ASCIItoRomanNumeralConverter(weeks);
     const descr =
-      " " +
+      ' ' +
       this.state.title +
-      " " +
-      "Weekly" +
-      " " +
+      ' ' +
+      'Weekly' +
+      ' ' +
       "Challenge '" +
-      dateNow
-        .getFullYear()
-        .toString()
-        .slice(2, 4);
+      dateNow.getFullYear().toString().slice(2, 4);
 
     return (
       <LinearGradient
-        start={{ x: 0.0, y: 0.0 }}
-        end={{ x: 0.0, y: 1.0 }}
+        start={{x: 0.0, y: 0.0}}
+        end={{x: 0.0, y: 1.0}}
         locations={[0, 1.0]}
-        colors={["#3D3D3D", "rgba(61, 61, 61, 0.9)"]}
-        style={styles.selectableHeaderBlock}
-      >
-        <View style={{ height: 10 }} />
+        colors={['#3D3D3D', 'rgba(61, 61, 61, 0.9)']}
+        style={styles.selectableHeaderBlock}>
+        <View style={{height: 10}} />
         <View
           style={{
-            alignContent: "center",
-            justifyContent: "center",
-            alignItems: "center",
-            alignSelf: "center",
-            flexDirection: "column",
-            width: Dimensions.get("window").width
-          }}
-        >
+            alignContent: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'center',
+            flexDirection: 'column',
+            width: Dimensions.get('window').width,
+          }}>
           <View style={styles.HeaderTimer}>
             <Text>
               <Text style={styles.TimerItalics}>
@@ -216,33 +209,33 @@ class TrophiesRankingBlur extends React.Component {
             </Text>
           </View>
         </View>
-        <View style={{ height: 10 }} />
+        <View style={{height: 10}} />
       </LinearGradient>
     );
   }
 
-  ordinaSuffixOf = i => {
+  ordinaSuffixOf = (i) => {
     var j = i % 10,
       k = i % 100;
     if (j == 1 && k != 11) {
-      return i + "st";
+      return i + 'st';
     }
     if (j == 2 && k != 12) {
-      return i + "nd";
+      return i + 'nd';
     }
     if (j == 3 && k != 13) {
-      return i + "rd";
+      return i + 'rd';
     }
-    return i + "th";
+    return i + 'th';
   };
 
   refreshTrophies = () => {
     this.props.dispatch(
-      getTrophiesDetailNew(this.state.trophy, this.saveTrophies)
+      getTrophiesDetailNew(this.state.trophy, this.saveTrophies),
     );
   };
 
-  ASCIItoRomanNumeralConverter = num => {
+  ASCIItoRomanNumeralConverter = (num) => {
     const lookup = {
       C: 100000,
       XC: 90000,
@@ -269,9 +262,9 @@ class TrophiesRankingBlur extends React.Component {
       IV: 4,
       III: 3,
       II: 2,
-      I: 1
+      I: 1,
     };
-    let roman = "";
+    let roman = '';
     let i = 0;
     for (i in lookup) {
       while (num >= lookup[i]) {
@@ -287,15 +280,14 @@ class TrophiesRankingBlur extends React.Component {
       <Aux>
         <NotificationPoint navigation={this.props.navigation} />
         <View
-          ref={view => {
+          ref={(view) => {
             this.view = view;
           }}
           style={{
-            backgroundColor: "#fff",
-            width: Dimensions.get("window").width,
-            height: Dimensions.get("window").height
-          }}
-        >
+            backgroundColor: '#fff',
+            width: Dimensions.get('window').width,
+            height: Dimensions.get('window').height,
+          }}>
           {this.renderHeader(this.state.trophy)}
           <TrophiesRanking
             navigation={this.props.navigation}
@@ -313,97 +305,97 @@ class TrophiesRankingBlur extends React.Component {
 const styles = StyleSheet.create({
   selectableHeader: {
     height: 30,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-around",
-    backgroundColor: "#fff"
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
+    backgroundColor: '#fff',
   },
   selectableHeaderBlock: {
-    height: 50
+    height: 50,
   },
   selectableHeaderRow: {
     height: 30,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-around"
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-around',
   },
 
   notSelectable: {
     flex: 1,
-    marginHorizontal: 6
+    marginHorizontal: 6,
   },
   selectable: {
     marginHorizontal: 6,
-    borderBottomColor: "#9D9B9C",
+    borderBottomColor: '#9D9B9C',
     borderBottomWidth: 4,
-    justifyContent: "center",
-    alignItems: "center",
-    alignContent: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignContent: 'center',
     height: 30,
-    width: Dimensions.get("window").width * 0.25
+    width: Dimensions.get('window').width * 0.25,
   },
   HeaderTimer: {
-    justifyContent: "center",
-    alignItems: "center",
-    alignContent: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignContent: 'center',
     height: 30,
-    flexDirection: "row"
+    flexDirection: 'row',
 
     // left: Dimensions.get("window").width * 0.1
   },
   selectableTouchable: {
-    justifyContent: "center",
-    alignItems: "center"
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   selectableContainer: {
     height: 30,
-    width: Dimensions.get("window").width * 0.2,
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "column"
+    width: Dimensions.get('window').width * 0.2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
   },
   selectableLabel: {
-    fontFamily: "Montserrat-ExtraBold",
-    color: "#3D3D3D",
+    fontFamily: 'Montserrat-ExtraBold',
+    color: '#3D3D3D',
     fontSize: 10,
     // fontWeight: "bold",
     // marginBottom: 4,
     marginVertical: 0,
-    textAlign: "center"
+    textAlign: 'center',
   },
   Timer: {
-    fontFamily: "Montserrat-ExtraBold",
-    color: "#FFFFFF",
+    fontFamily: 'Montserrat-ExtraBold',
+    color: '#FFFFFF',
     fontSize: 20,
     // fontWeight: "bold",
     // marginBottom: 4,
     marginVertical: 0,
-    textAlign: "center"
+    textAlign: 'center',
   },
   TimerItalics: {
-    fontFamily: "Montserrat-ExtraBold",
-    color: "#FFFFFF",
+    fontFamily: 'Montserrat-ExtraBold',
+    color: '#FFFFFF',
     fontSize: 20,
-    fontStyle: "italic",
+    fontStyle: 'italic',
     // fontWeight: "bold",
     // marginBottom: 4,
     marginVertical: 0,
-    textAlign: "center"
-  }
+    textAlign: 'center',
+  },
 });
 
-if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
+if (NativeModules.RNDeviceInfo.model.includes('iPad')) {
   Object.assign(styles, {
     selectableLabel: {
-      fontFamily: "Montserrat-ExtraBold",
-      color: "#3D3D3D",
+      fontFamily: 'Montserrat-ExtraBold',
+      color: '#3D3D3D',
       fontSize: 8,
       // fontWeight: "bold",
       // marginBottom: 4,
       marginVertical: 0,
       marginTop: 3,
-      textAlign: "center"
-    }
+      textAlign: 'center',
+    },
   });
 }
 

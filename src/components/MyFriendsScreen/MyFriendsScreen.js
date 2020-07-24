@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Dimensions,
@@ -11,20 +11,21 @@ import {
   Image,
   TouchableHighlight,
   ScrollView,
-  ListView,
   TouchableOpacity,
   PermissionsAndroid,
-  Platform
-} from "react-native";
+  Platform,
+} from 'react-native';
 
-import { styles, negativeData } from "./Style";
-import WavyArea from "./../../components/WavyArea/WavyArea";
-import FriendItem from "./../../components/FriendItem/FriendItem";
+import ListView from 'deprecated-react-native-listview';
 
-import FriendsThreesome from "./../../components/FriendsThreesome/FriendsThreesome";
-import FriendSingleReceiveInvite from "./../../components/FriendSingleReceiveInvite/FriendSingleReceiveInvite";
+import {styles, negativeData} from './Style';
+import WavyArea from './../../components/WavyArea/WavyArea';
+import FriendItem from './../../components/FriendItem/FriendItem';
 
-import Aux from "./../../helpers/Aux";
+import FriendsThreesome from './../../components/FriendsThreesome/FriendsThreesome';
+import FriendSingleReceiveInvite from './../../components/FriendSingleReceiveInvite/FriendSingleReceiveInvite';
+
+import Aux from './../../helpers/Aux';
 import {
   getFollowingUser,
   getFollowersUser,
@@ -36,7 +37,7 @@ import {
   getListSendRequestFriend,
   searchUsers,
   sendRequestFriend,
-} from "./../../domains/follow/ActionCreators";
+} from './../../domains/follow/ActionCreators';
 import {
   getFollowedState,
   getFollowState,
@@ -45,12 +46,9 @@ import {
   getlistFriendWithSendRequestState,
   getAllTypeFriendState,
   getNumFriendsState,
-} from "./../../domains/follow/Selectors";
-import { getProfile } from "./../../domains/login/Selectors";
-import { connect } from "react-redux";
-
-
-
+} from './../../domains/follow/Selectors';
+import {getProfile} from './../../domains/login/Selectors';
+import {connect} from 'react-redux';
 
 class MyFriendsScreen extends React.Component {
   constructor(props) {
@@ -61,15 +59,13 @@ class MyFriendsScreen extends React.Component {
       refreshing: false,
 
       results: [],
-      url: "",
+      url: '',
       loadingUrl: false,
     };
     this.buo = null;
 
     this.displayStandings = false;
   }
-
-
 
   // componentWillMount() {
   //   this.props.dispatch(getListFriend());
@@ -80,7 +76,7 @@ class MyFriendsScreen extends React.Component {
   // }
 
   onRefresh() {
-    this.setState({ refreshing: true });
+    this.setState({refreshing: true});
 
     // if (this.props.selected === "FOLLOWING") {
     this.props.dispatch(getListFriend());
@@ -89,60 +85,55 @@ class MyFriendsScreen extends React.Component {
 
     const loading = setInterval(() => {
       {
-        this.setState({ refreshing: false });
+        this.setState({refreshing: false});
         clearTimeout(loading);
       }
     }, 1000);
   }
 
-
   header() {
     return (
       <View
         style={{
-          flexDirection: "row",
-          alignContent: "center",
-          alignSelf: "center",
-          width: Dimensions.get("window").width * 0.9,
+          flexDirection: 'row',
+          alignContent: 'center',
+          alignSelf: 'center',
+          width: Dimensions.get('window').width * 0.9,
           height: 40,
-          justifyContent: "space-around",
-        }}
-      >
+          justifyContent: 'space-around',
+        }}>
         <TouchableOpacity
-          onPress={() => this.onSelect("FRIENDS")}
+          onPress={() => this.onSelect('FRIENDS')}
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <View
             style={{
-              flexDirection: "column",
-              alignContent: "center",
-              justifyContent: "center",
-            }}
-          >
+              flexDirection: 'column',
+              alignContent: 'center',
+              justifyContent: 'center',
+            }}>
             <Text
               style={{
-                color: "#000000",
-                fontFamily: "OpenSans-Regular",
+                color: '#000000',
+                fontFamily: 'OpenSans-Regular',
 
                 fontSize: 10,
 
                 fontWeight:
-                  this.props.selected == "FRIENDS" ? "bold" : "normal",
+                  this.props.selected == 'FRIENDS' ? 'bold' : 'normal',
                 // marginBottom: 4,
                 marginVertical: 0,
-                textAlign: "center",
-              }}
-            >
-               {strings('id_20_10')}
+                textAlign: 'center',
+              }}>
+              {strings('id_20_10')}
             </Text>
             <View
               style={{
-                borderBottomColor: "#FFFFFF",
-                borderBottomWidth: this.props.selected == "FRIENDS" ? 4 : 0,
+                borderBottomColor: '#FFFFFF',
+                borderBottomWidth: this.props.selected == 'FRIENDS' ? 4 : 0,
                 borderRadius: 2,
               }}
             />
@@ -150,78 +141,72 @@ class MyFriendsScreen extends React.Component {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => this.onSelect("FACEBOOK FRIENDS")}
+          onPress={() => this.onSelect('FACEBOOK FRIENDS')}
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <View
             style={{
-              flexDirection: "column",
-              alignContent: "center",
-              justifyContent: "center",
-            }}
-          >
+              flexDirection: 'column',
+              alignContent: 'center',
+              justifyContent: 'center',
+            }}>
             <Text
               style={{
-                color: "#000000",
-                fontFamily: "OpenSans-Regular",
+                color: '#000000',
+                fontFamily: 'OpenSans-Regular',
 
                 fontSize: 10,
                 fontWeight:
-                  this.props.selected == "FACEBOOK FRIENDS" ? "bold" : "normal",
+                  this.props.selected == 'FACEBOOK FRIENDS' ? 'bold' : 'normal',
                 // marginBottom: 4,
                 marginVertical: 0,
-                textAlign: "center",
-              }}
-            >
-                {strings('id_20_11')}
+                textAlign: 'center',
+              }}>
+              {strings('id_20_11')}
             </Text>
             <View
               style={{
-                borderBottomColor: "#FFFFFF",
+                borderBottomColor: '#FFFFFF',
                 borderBottomWidth:
-                  this.props.selected == "FACEBOOK FRIENDS" ? 4 : 0,
+                  this.props.selected == 'FACEBOOK FRIENDS' ? 4 : 0,
               }}
             />
           </View>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => this.onSelect("CONTACTS")}
+          onPress={() => this.onSelect('CONTACTS')}
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <View
             style={{
-              flexDirection: "column",
-              alignContent: "center",
-              justifyContent: "center",
-            }}
-          >
+              flexDirection: 'column',
+              alignContent: 'center',
+              justifyContent: 'center',
+            }}>
             <Text
               style={{
-                color: "#000000",
-                fontFamily: "OpenSans-Regular",
+                color: '#000000',
+                fontFamily: 'OpenSans-Regular',
 
                 fontSize: 10,
                 fontWeight:
-                  this.props.selected == "CONTACTS" ? "bold" : "normal",
+                  this.props.selected == 'CONTACTS' ? 'bold' : 'normal',
                 // marginBottom: 4,
                 marginVertical: 0,
-                textAlign: "center",
-              }}
-            >
-               {strings('id_20_12')}
+                textAlign: 'center',
+              }}>
+              {strings('id_20_12')}
             </Text>
             <View
               style={{
-                borderBottomColor: "#FFFFFF",
-                borderBottomWidth: this.props.selected == "CONTACTS" ? 4 : 0,
+                borderBottomColor: '#FFFFFF',
+                borderBottomWidth: this.props.selected == 'CONTACTS' ? 4 : 0,
               }}
             />
           </View>
@@ -234,75 +219,69 @@ class MyFriendsScreen extends React.Component {
     return (
       <View
         style={{
-          flexDirection: "row",
-          alignContent: "center",
-          alignSelf: "center",
-          width: Dimensions.get("window").width * 0.9,
+          flexDirection: 'row',
+          alignContent: 'center',
+          alignSelf: 'center',
+          width: Dimensions.get('window').width * 0.9,
           height: 70,
-          justifyContent: "space-around",
-        }}
-      >
+          justifyContent: 'space-around',
+        }}>
         <View
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <Text
             style={{
-              fontFamily: "Montserrat-ExtraBold",
-              color: "#000000",
+              fontFamily: 'Montserrat-ExtraBold',
+              color: '#000000',
               fontSize: 18,
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
-          >
+              fontWeight: 'bold',
+              textAlign: 'center',
+            }}>
             YOUR FRIENDS
           </Text>
         </View>
 
         <View
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
             width: 70,
             height: 70,
             borderRadius: 70 / 2,
-            borderColor: "#FFFFFF",
+            borderColor: '#FFFFFF',
             borderWidth: 3,
-          }}
-        >
+          }}>
           <Text
             style={{
-              color: "#FFFFFF",
-              fontFamily: "OpenSans-Regular",
+              color: '#FFFFFF',
+              fontFamily: 'OpenSans-Regular',
 
               fontSize: 18,
-              fontWeight: "bold",
+              fontWeight: 'bold',
               // marginBottom: 4,
               marginVertical: 0,
-              textAlign: "center",
-            }}
-          >
+              textAlign: 'center',
+            }}>
             {this.props.numFriendsState}
           </Text>
           <TouchableOpacity
             onPress={() =>
-              this.props.navigation.navigate("SearchFriendsScreen")
+              this.props.navigation.navigate('SearchFriendsScreen')
             }
             style={{
               width: 28,
               height: 28,
               // alignSelf: "center",
-              position: "absolute",
+              position: 'absolute',
               top: -5,
               right: -5,
-            }}
-          >
+            }}>
             <Image
-              source={require("../../assets/images/friend/friend_add_icn.png")}
+              source={require('../../assets/images/friend/friend_add_icn.png')}
               style={{
                 width: 28,
                 height: 28,
@@ -313,8 +292,6 @@ class MyFriendsScreen extends React.Component {
       </View>
     );
   }
-
-
 
   renderFriendList() {
     this.displayStandings = true;
@@ -373,7 +350,7 @@ class MyFriendsScreen extends React.Component {
                     <View
                       key={0}
                       style={{
-                        paddingTop: Dimensions.get("window").height * 0.23,
+                        paddingTop: Dimensions.get('window').height * 0.23,
                       }}
                     />
                   }
@@ -393,61 +370,55 @@ class MyFriendsScreen extends React.Component {
       <ScrollView style={styles.challengesList}>
         <View
           style={{
-            width: Dimensions.get("window").width * 0.9,
+            width: Dimensions.get('window').width * 0.9,
             top: 100,
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-            alignItems: "center",
-            alignSelf: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'center',
+          }}>
           <Image
             style={{
               width: 150,
               height: 150,
             }}
-            source={require("../../assets/images/friends_banner_icn.png")}
+            source={require('../../assets/images/friends_banner_icn.png')}
           />
           <TouchableOpacity
             onPress={() =>
-              this.props.navigation.navigate("SearchFriendsScreen")
-            }
-          >
+              this.props.navigation.navigate('SearchFriendsScreen')
+            }>
             <Image
               style={{
                 width: 50,
                 height: 50,
               }}
-              source={require("../../assets/images/friend/friend_add_icn.png")}
+              source={require('../../assets/images/friend/friend_add_icn.png')}
             />
           </TouchableOpacity>
-          <View style={{ width: 50, height: 50 }}></View>
+          <View style={{width: 50, height: 50}}></View>
           <Text
             style={{
-              color: "#3D3D3D",
-              fontFamily: "OpenSans-Regular",
+              color: '#3D3D3D',
+              fontFamily: 'OpenSans-Regular',
 
               fontSize: 14,
-              fontWeight: "bold",
+              fontWeight: 'bold',
 
               // marginBottom: 4,
               marginVertical: 0,
-              textAlign: "center",
-            }}
-          >
+              textAlign: 'center',
+            }}>
             MUV ha bisogno della tua autorizzazione per cercare i tuoi amici tra
             i tuoi contatti. Clicca su “+” e concedi l’autorizzazione a MUV di
             accedere alla lista dei tipo contatti.
           </Text>
-          <View style={{ width: 400, height: 400 }}></View>
+          <View style={{width: 400, height: 400}}></View>
         </View>
       </ScrollView>
     );
   };
-
-  
-
 
   renderFriendPage() {
     const number = this.props.alltypeFriend.length;
@@ -464,42 +435,20 @@ class MyFriendsScreen extends React.Component {
     this.props.dispatch(setFriendSelected(value));
   };
 
-
-
-
-
-
-  
-
-
   renderFriend = () => {
     return <Aux>{this.renderFriendPage()}</Aux>;
   };
 
-
-
-
   render() {
-    return (
-      
-        
-         this.renderFriend()
-       
-       
-        
-      
-    );
+    return this.renderFriend();
   }
 }
 
 const withConnect = connect((state) => {
   return {
-   
-
-   
     status: getStatusState(state),
     selected: getTabState(state),
-    
+
     alltypeFriend: getAllTypeFriendState(state), // prima elemento richieste ricevute in un array, successivi amici
     numFriendsState: getNumFriendsState(state),
   };

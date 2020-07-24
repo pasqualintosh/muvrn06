@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Dimensions,
@@ -11,20 +11,21 @@ import {
   Image,
   TouchableHighlight,
   ScrollView,
-  ListView,
   TouchableOpacity,
   PermissionsAndroid,
-  Platform
-} from "react-native";
+  Platform,
+} from 'react-native';
 
-import { styles, negativeData } from "./Style";
-import WavyArea from "./../../components/WavyArea/WavyArea";
-import FriendItem from "./../../components/FriendItem/FriendItem";
+import ListView from 'deprecated-react-native-listview';
 
-import FriendsThreesome from "./../../components/FriendsThreesome/FriendsThreesome";
-import FriendSingleReceiveInvite from "./../../components/FriendSingleReceiveInvite/FriendSingleReceiveInvite";
+import {styles, negativeData} from './Style';
+import WavyArea from './../../components/WavyArea/WavyArea';
+import FriendItem from './../../components/FriendItem/FriendItem';
 
-import Aux from "./../../helpers/Aux";
+import FriendsThreesome from './../../components/FriendsThreesome/FriendsThreesome';
+import FriendSingleReceiveInvite from './../../components/FriendSingleReceiveInvite/FriendSingleReceiveInvite';
+
+import Aux from './../../helpers/Aux';
 import {
   getFollowingUser,
   getFollowersUser,
@@ -36,7 +37,7 @@ import {
   getListSendRequestFriend,
   searchUsers,
   sendRequestFriend,
-} from "./../../domains/follow/ActionCreators";
+} from './../../domains/follow/ActionCreators';
 import {
   getFollowedState,
   getFollowState,
@@ -45,28 +46,33 @@ import {
   getlistFriendWithSendRequestState,
   getAllTypeFriendState,
   getNumFriendsState,
-} from "./../../domains/follow/Selectors";
-import { getProfile } from "./../../domains/login/Selectors";
-import { connect } from "react-redux";
+} from './../../domains/follow/Selectors';
+import {getProfile} from './../../domains/login/Selectors';
+import {connect} from 'react-redux';
 
-import OwnIcon from "../../components/OwnIcon/OwnIcon";
-import LinearGradient from "react-native-linear-gradient";
-import InviteNoFriendScreen from "./../../components/InviteNoFriendScreen/InviteNoFriendScreen";
-import InviteFriendsWave from "./../../components/InviteFriendsWave/InviteFriendsWave";
+import OwnIcon from '../../components/OwnIcon/OwnIcon';
+import LinearGradient from 'react-native-linear-gradient';
+import InviteNoFriendScreen from './../../components/InviteNoFriendScreen/InviteNoFriendScreen';
+import InviteFriendsWave from './../../components/InviteFriendsWave/InviteFriendsWave';
 
-import { LoginManager, ShareDialog, ShareApi, AccessToken, GraphRequest, GraphRequestManager } from 'react-native-fbsdk';
+import {
+  LoginManager,
+  ShareDialog,
+  ShareApi,
+  AccessToken,
+  GraphRequest,
+  GraphRequestManager,
+} from 'react-native-fbsdk';
 
-import { strings } from "../../config/i18n";
+import {strings} from '../../config/i18n';
 
-import branch, { RegisterViewEvent, BranchEvent } from "react-native-branch";
+import branch, {RegisterViewEvent, BranchEvent} from 'react-native-branch';
 
-import Contacts from "react-native-contacts";
+import Contacts from 'react-native-contacts';
 
 const defaultBUO = {
-  title: "MUV",
+  title: 'MUV',
 };
-
-
 
 class FacebookFriendScreen extends React.Component {
   constructor(props) {
@@ -77,7 +83,7 @@ class FacebookFriendScreen extends React.Component {
       refreshing: false,
 
       results: [],
-      url: "",
+      url: '',
       loadingUrl: false,
     };
     this.buo = null;
@@ -85,11 +91,8 @@ class FacebookFriendScreen extends React.Component {
     this.displayStandings = false;
   }
 
- 
-
- 
   onRefresh() {
-    this.setState({ refreshing: true });
+    this.setState({refreshing: true});
 
     // if (this.props.selected === "FOLLOWING") {
     this.props.dispatch(getListFriend());
@@ -98,16 +101,11 @@ class FacebookFriendScreen extends React.Component {
 
     const loading = setInterval(() => {
       {
-        this.setState({ refreshing: false });
+        this.setState({refreshing: false});
         clearTimeout(loading);
       }
     }, 1000);
   }
- 
-
- 
-
-
 
   onSelect = (value) => {
     this.props.dispatch(setFriendSelected(value));
@@ -117,7 +115,7 @@ class FacebookFriendScreen extends React.Component {
     const number = this.props.followed.length;
     if (this.props.status && number === 0) {
       return (
-        <View style={{ top: 150 }}>
+        <View style={{top: 150}}>
           <ActivityIndicator size="large" color="#3D3D3D" />
           <View style={styles.challengesList} />
         </View>
@@ -131,7 +129,7 @@ class FacebookFriendScreen extends React.Component {
     const number = this.props.follow.length;
     if (this.props.status && number === 0) {
       return (
-        <View style={{ top: 150 }}>
+        <View style={{top: 150}}>
           <ActivityIndicator size="large" color="#3D3D3D" />
           <View style={styles.challengesList} />
         </View>
@@ -145,49 +143,45 @@ class FacebookFriendScreen extends React.Component {
     return (
       <View
         style={{
-          flexDirection: "row",
-          alignContent: "center",
-          alignSelf: "center",
-          width: Dimensions.get("window").width * 0.9,
+          flexDirection: 'row',
+          alignContent: 'center',
+          alignSelf: 'center',
+          width: Dimensions.get('window').width * 0.9,
           height: 40,
-          justifyContent: "space-around",
-        }}
-      >
+          justifyContent: 'space-around',
+        }}>
         <TouchableOpacity
-          onPress={() => this.onSelect("FRIENDS")}
+          onPress={() => this.onSelect('FRIENDS')}
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <View
             style={{
-              flexDirection: "column",
-              alignContent: "center",
-              justifyContent: "center",
-            }}
-          >
+              flexDirection: 'column',
+              alignContent: 'center',
+              justifyContent: 'center',
+            }}>
             <Text
               style={{
-                color: "#000000",
-                fontFamily: "OpenSans-Regular",
+                color: '#000000',
+                fontFamily: 'OpenSans-Regular',
 
                 fontSize: 10,
 
                 fontWeight:
-                  this.props.selected == "FRIENDS" ? "bold" : "normal",
+                  this.props.selected == 'FRIENDS' ? 'bold' : 'normal',
                 // marginBottom: 4,
                 marginVertical: 0,
-                textAlign: "center",
-              }}
-            >
-               {strings('id_20_10')}
+                textAlign: 'center',
+              }}>
+              {strings('id_20_10')}
             </Text>
             <View
               style={{
-                borderBottomColor: "#FFFFFF",
-                borderBottomWidth: this.props.selected == "FRIENDS" ? 4 : 0,
+                borderBottomColor: '#FFFFFF',
+                borderBottomWidth: this.props.selected == 'FRIENDS' ? 4 : 0,
                 borderRadius: 2,
               }}
             />
@@ -195,78 +189,72 @@ class FacebookFriendScreen extends React.Component {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => this.onSelect("FACEBOOK FRIENDS")}
+          onPress={() => this.onSelect('FACEBOOK FRIENDS')}
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <View
             style={{
-              flexDirection: "column",
-              alignContent: "center",
-              justifyContent: "center",
-            }}
-          >
+              flexDirection: 'column',
+              alignContent: 'center',
+              justifyContent: 'center',
+            }}>
             <Text
               style={{
-                color: "#000000",
-                fontFamily: "OpenSans-Regular",
+                color: '#000000',
+                fontFamily: 'OpenSans-Regular',
 
                 fontSize: 10,
                 fontWeight:
-                  this.props.selected == "FACEBOOK FRIENDS" ? "bold" : "normal",
+                  this.props.selected == 'FACEBOOK FRIENDS' ? 'bold' : 'normal',
                 // marginBottom: 4,
                 marginVertical: 0,
-                textAlign: "center",
-              }}
-            >
-                {strings('id_20_11')}
+                textAlign: 'center',
+              }}>
+              {strings('id_20_11')}
             </Text>
             <View
               style={{
-                borderBottomColor: "#FFFFFF",
+                borderBottomColor: '#FFFFFF',
                 borderBottomWidth:
-                  this.props.selected == "FACEBOOK FRIENDS" ? 4 : 0,
+                  this.props.selected == 'FACEBOOK FRIENDS' ? 4 : 0,
               }}
             />
           </View>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => this.onSelect("CONTACTS")}
+          onPress={() => this.onSelect('CONTACTS')}
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <View
             style={{
-              flexDirection: "column",
-              alignContent: "center",
-              justifyContent: "center",
-            }}
-          >
+              flexDirection: 'column',
+              alignContent: 'center',
+              justifyContent: 'center',
+            }}>
             <Text
               style={{
-                color: "#000000",
-                fontFamily: "OpenSans-Regular",
+                color: '#000000',
+                fontFamily: 'OpenSans-Regular',
 
                 fontSize: 10,
                 fontWeight:
-                  this.props.selected == "CONTACTS" ? "bold" : "normal",
+                  this.props.selected == 'CONTACTS' ? 'bold' : 'normal',
                 // marginBottom: 4,
                 marginVertical: 0,
-                textAlign: "center",
-              }}
-            >
-                {strings('id_20_12')}
+                textAlign: 'center',
+              }}>
+              {strings('id_20_12')}
             </Text>
             <View
               style={{
-                borderBottomColor: "#FFFFFF",
-                borderBottomWidth: this.props.selected == "CONTACTS" ? 4 : 0,
+                borderBottomColor: '#FFFFFF',
+                borderBottomWidth: this.props.selected == 'CONTACTS' ? 4 : 0,
               }}
             />
           </View>
@@ -279,75 +267,69 @@ class FacebookFriendScreen extends React.Component {
     return (
       <View
         style={{
-          flexDirection: "row",
-          alignContent: "center",
-          alignSelf: "center",
-          width: Dimensions.get("window").width * 0.9,
+          flexDirection: 'row',
+          alignContent: 'center',
+          alignSelf: 'center',
+          width: Dimensions.get('window').width * 0.9,
           height: 70,
-          justifyContent: "space-around",
-        }}
-      >
+          justifyContent: 'space-around',
+        }}>
         <View
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+          }}>
           <Text
             style={{
-              fontFamily: "Montserrat-ExtraBold",
-              color: "#000000",
+              fontFamily: 'Montserrat-ExtraBold',
+              color: '#000000',
               fontSize: 18,
-              fontWeight: "bold",
-              textAlign: "center",
-            }}
-          >
+              fontWeight: 'bold',
+              textAlign: 'center',
+            }}>
             YOUR FRIENDS
           </Text>
         </View>
 
         <View
           style={{
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
             width: 70,
             height: 70,
             borderRadius: 70 / 2,
-            borderColor: "#FFFFFF",
+            borderColor: '#FFFFFF',
             borderWidth: 3,
-          }}
-        >
+          }}>
           <Text
             style={{
-              color: "#FFFFFF",
-              fontFamily: "OpenSans-Regular",
+              color: '#FFFFFF',
+              fontFamily: 'OpenSans-Regular',
 
               fontSize: 18,
-              fontWeight: "bold",
+              fontWeight: 'bold',
               // marginBottom: 4,
               marginVertical: 0,
-              textAlign: "center",
-            }}
-          >
+              textAlign: 'center',
+            }}>
             {this.props.numFriendsState}
           </Text>
           <TouchableOpacity
             onPress={() =>
-              this.props.navigation.navigate("SearchFriendsScreen")
+              this.props.navigation.navigate('SearchFriendsScreen')
             }
             style={{
               width: 28,
               height: 28,
               // alignSelf: "center",
-              position: "absolute",
+              position: 'absolute',
               top: -5,
               right: -5,
-            }}
-          >
+            }}>
             <Image
-              source={require("../../assets/images/friend/friend_add_icn.png")}
+              source={require('../../assets/images/friend/friend_add_icn.png')}
               style={{
                 width: 28,
                 height: 28,
@@ -368,76 +350,72 @@ class FacebookFriendScreen extends React.Component {
     return (
       <Aux>
         <ImageBackground
-          source={require("../../assets/images/invite_friend_banner.png")}
+          source={require('../../assets/images/invite_friend_banner.png')}
           style={styles.backgroundImage}
         />
         <View style={styles.backgroundImage}>
           <View style={[styles.userContainer, styles.firstUser]}>
-            <View style={{ flexDirection: "column", alignContent: "center" }}>
+            <View style={{flexDirection: 'column', alignContent: 'center'}}>
               <View
                 style={{
-                  flexDirection: "row",
-                  justifyContent: "space-around",
-                  alignContent: "center",
-                  alignSelf: "center",
-                  alignItems: "center",
-                }}
-              >
+                  flexDirection: 'row',
+                  justifyContent: 'space-around',
+                  alignContent: 'center',
+                  alignSelf: 'center',
+                  alignItems: 'center',
+                }}>
                 <View
                   style={{
-                    width: Dimensions.get("window").width * 0.25,
-                    alignContent: "center",
-                    alignSelf: "center",
-                    alignItems: "center",
-                  }}
-                >
+                    width: Dimensions.get('window').width * 0.25,
+                    alignContent: 'center',
+                    alignSelf: 'center',
+                    alignItems: 'center',
+                  }}>
                   <Image
                     style={{
                       width: 65,
                       height: 65,
                     }}
-                    source={require("../../assets/images/friends_banner_icn.png")}
+                    source={require('../../assets/images/friends_banner_icn.png')}
                   />
                 </View>
-                <View style={{ width: Dimensions.get("window").width * 0.5 }}>
+                <View style={{width: Dimensions.get('window').width * 0.5}}>
                   <Text
                     style={{
-                      fontFamily: "OpenSans-Regular",
-                      fontWeight: "400",
-                      color: "#3D3D3D",
+                      fontFamily: 'OpenSans-Regular',
+                      fontWeight: '400',
+                      color: '#3D3D3D',
                       fontSize: 12,
-                      textAlign: "left",
-                    }}
-                  >
-                    {strings("playing_with_fr")} {strings("gaining_2_coins")}
+                      textAlign: 'left',
+                    }}>
+                    {strings('playing_with_fr')} {strings('gaining_2_coins')}
                   </Text>
                 </View>
-                <View style={{ width: 10 }} />
-                <View style={{ width: Dimensions.get("window").width * 0.2 }}>
+                <View style={{width: 10}} />
+                <View style={{width: Dimensions.get('window').width * 0.2}}>
                   <Image
                     style={{
                       width: 45,
                       height: 45,
-                      position: "absolute",
+                      position: 'absolute',
                       top: -65,
                       left: 20,
                     }}
-                    source={require("../../assets/images/coins_icn_friends_banner.png")}
+                    source={require('../../assets/images/coins_icn_friends_banner.png')}
                   />
                   <LinearGradient
-                    start={{ x: 0.0, y: 0.0 }}
-                    end={{ x: 1.0, y: 0.0 }}
+                    start={{x: 0.0, y: 0.0}}
+                    end={{x: 1.0, y: 0.0}}
                     locations={[0, 1.0]}
-                    colors={["#7D4D99", "#6497CC"]}
-                    style={styles.button}
-                  >
+                    colors={['#7D4D99', '#6497CC']}
+                    style={styles.button}>
                     <TouchableHighlight
                       onPress={this.invite}
                       style={{
-                        width: Dimensions.get("window").width * 0.17,
+                        width: Dimensions.get('window').width * 0.17,
                         height: 30,
                         borderRadius: 5,
-                        alignItems: "center",
+                        alignItems: 'center',
                       }}
 
                       // disabled={this.props.status === "Inviting" ? true : false}
@@ -445,21 +423,19 @@ class FacebookFriendScreen extends React.Component {
                       <View
                         style={{
                           flex: 1,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
                         {!this.state.loadingUrl ? (
                           <Text
                             style={{
                               // margin: 10,
-                              color: "#FFFFFF",
-                              fontFamily: "OpenSans-Regular",
+                              color: '#FFFFFF',
+                              fontFamily: 'OpenSans-Regular',
 
                               fontSize: 14,
-                            }}
-                          >
-                            {strings("invite")}
+                            }}>
+                            {strings('invite')}
                           </Text>
                         ) : (
                           <ActivityIndicator size="small" color="white" />
@@ -475,28 +451,25 @@ class FacebookFriendScreen extends React.Component {
 
         <View style={styles.backgroundView}>
           <View style={[styles.userContainer, styles.firstUser]}>
-            <View style={{ flexDirection: "column", alignContent: "center" }}>
+            <View style={{flexDirection: 'column', alignContent: 'center'}}>
               <View
                 style={{
-                  flexDirection: "row",
-                  justifyContent: "space-around",
-                  alignContent: "center",
-                  alignSelf: "center",
-                  alignItems: "center",
-                }}
-              >
+                  flexDirection: 'row',
+                  justifyContent: 'space-around',
+                  alignContent: 'center',
+                  alignSelf: 'center',
+                  alignItems: 'center',
+                }}>
                 <View
                   style={{
-                    width: Dimensions.get("window").width * 0.25,
-                    alignContent: "center",
-                    alignSelf: "center",
-                    alignItems: "center",
+                    width: Dimensions.get('window').width * 0.25,
+                    alignContent: 'center',
+                    alignSelf: 'center',
+                    alignItems: 'center',
                   }}
                 />
-                <View
-                  style={{ width: Dimensions.get("window").width * 0.55 }}
-                />
-                <View style={{ width: Dimensions.get("window").width * 0.2 }}>
+                <View style={{width: Dimensions.get('window').width * 0.55}} />
+                <View style={{width: Dimensions.get('window').width * 0.2}}>
                   <TouchableHighlight
                     onPress={this.handleResetPassword}
 
@@ -505,21 +478,19 @@ class FacebookFriendScreen extends React.Component {
                     <View
                       style={{
                         flex: 1,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {this.props.status !== "Inviting" ? (
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
+                      {this.props.status !== 'Inviting' ? (
                         <Text
                           style={{
                             // margin: 10,
-                            color: "#FFFFFF",
-                            fontFamily: "OpenSans-Regular",
+                            color: '#FFFFFF',
+                            fontFamily: 'OpenSans-Regular',
 
                             fontSize: 14,
-                          }}
-                        >
-                          {strings("invite")}
+                          }}>
+                          {strings('invite')}
                         </Text>
                       ) : (
                         <ActivityIndicator size="small" color="white" />
@@ -541,8 +512,7 @@ class FacebookFriendScreen extends React.Component {
         {this.renderBody()}
         <InviteFriendsWave
           navigation={this.props.navigation}
-          typeInvite="Friend"
-        ></InviteFriendsWave>
+          typeInvite="Friend"></InviteFriendsWave>
       </Aux>
     );
   };
@@ -604,7 +574,7 @@ class FacebookFriendScreen extends React.Component {
                     <View
                       key={0}
                       style={{
-                        paddingTop: Dimensions.get("window").height * 0.23,
+                        paddingTop: Dimensions.get('window').height * 0.23,
                       }}
                     />
                   }
@@ -619,12 +589,11 @@ class FacebookFriendScreen extends React.Component {
     );
   }
 
-  
   renderFacebookFriendsPage() {
-    const number =1
+    const number = 1;
     // se non ho amici che richieste d'amicizia in arrivo
     // lunghezza uguale a 1 dato che nella prima posizione ho un array per le richieste in arrivo
-    if (number == 1 ) {
+    if (number == 1) {
       return this.renderPermFacebookFriends();
     } else {
       return this.renderFriendList();
@@ -643,101 +612,90 @@ class FacebookFriendScreen extends React.Component {
   }
 
   responseCallback = (error, result) => {
-    let response = {}
-    console.log(result)
+    let response = {};
+    console.log(result);
     if (error) {
-      response.ok = false
-      response.error = error
-      return (response)
+      response.ok = false;
+      response.error = error;
+      return response;
     } else {
-     
-      response.ok = true
-      response.json = result
+      response.ok = true;
+      response.json = result;
       // setTimeout(() => {
       // this.props.dispatch(
       //   createAccountNewSocial()
       //   )
 
-  
       //}, 1000)
-      return (response)
-
+      return response;
     }
-  }
+  };
 
   getFacebook = () => {
-    LoginManager.logInWithPermissions(['public_profile', 'email', "user_friends"]).then(
-       (result) => {
-        console.log(result)
-        if (result.isCancelled) {
-          console.log(result)
-          // alert("Login was cancelled");
-        } else {
+    LoginManager.logInWithPermissions([
+      'public_profile',
+      'email',
+      'user_friends',
+    ]).then((result) => {
+      console.log(result);
+      if (result.isCancelled) {
+        console.log(result);
+        // alert("Login was cancelled");
+      } else {
+        console.log(result);
+        // alert("Login was successful with permissions: " + result.grantedPermissions)
+        AccessToken.getCurrentAccessToken().then((data) => {
+          console.log(data);
+          console.log(data.accessToken.toString());
 
-          console.log(result)
-          // alert("Login was successful with permissions: " + result.grantedPermissions)
-          AccessToken.getCurrentAccessToken().then(
-            (data) => {
-              console.log(data)
-              console.log(data.accessToken.toString())
-              
-              
-              profileRequestConfig = {
-                httpMethod: 'GET',
-                
-                accessToken: data.accessToken.toString()
-              }
+          profileRequestConfig = {
+            httpMethod: 'GET',
 
-              profileRequest = new GraphRequest(
-                '/100051889367398/friends',
-                profileRequestConfig,
-                this.responseCallback,
-              )
-              new GraphRequestManager().addRequest(profileRequest).start();
-            }
-          )
-        }
-      })
-  }
+            accessToken: data.accessToken.toString(),
+          };
+
+          profileRequest = new GraphRequest(
+            '/100051889367398/friends',
+            profileRequestConfig,
+            this.responseCallback,
+          );
+          new GraphRequestManager().addRequest(profileRequest).start();
+        });
+      }
+    });
+  };
 
   requestContact = () => {
-
-    if (Platform.OS == "android") {
-      PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-        {
-          'title': 'Contacts',
-          'message': 'This app would like to view your contacts.',
-          'buttonPositive': 'Please accept bare mortal'
-        }
-      ).then(() => {
-        this.loadContants()
-      })
+    if (Platform.OS == 'android') {
+      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_CONTACTS, {
+        title: 'Contacts',
+        message: 'This app would like to view your contacts.',
+        buttonPositive: 'Please accept bare mortal',
+      }).then(() => {
+        this.loadContants();
+      });
     } else {
       Contacts.checkPermission((err, permission) => {
         if (err) throw err;
-      
+
         // Contacts.PERMISSION_AUTHORIZED || Contacts.PERMISSION_UNDEFINED || Contacts.PERMISSION_DENIED
         if (permission === 'undefined') {
           Contacts.requestPermission((err, permission) => {
-            console.log(permission)
+            console.log(permission);
             if (permission === 'authorized') {
-              this.loadContants()
+              this.loadContants();
             }
-          })
+          });
         }
         if (permission === 'authorized') {
-          this.loadContants()
+          this.loadContants();
         }
         if (permission === 'denied') {
           // x.x
         }
-      })
+      });
     }
-   
-  }
-  
-
+  };
 
   loadContants = () => {
     Contacts.getAll((err, contacts) => {
@@ -766,29 +724,27 @@ class FacebookFriendScreen extends React.Component {
         };
       });
 
-     
       // emailAddresses: [{
       //   label: 'work',
       //   email: 'carl-jung@example.com',
       // }],
-      // array di email per mandarli 
+      // array di email per mandarli
       const emailArray = contacts.map((person) => {
         if (person.emailAddresse.length) {
-          return person.emailAddresse.map( singleMail => singleMail.email);
+          return person.emailAddresse.map((singleMail) => singleMail.email);
         } else {
-          return([])
+          return [];
         }
-        
       });
     });
-  }
+  };
 
   renderContantsPage() {
     const permissionContact = false;
-    
+
     if (!permissionContact) {
       return (
-        <View style={{ top: 150 }}>
+        <View style={{top: 150}}>
           <ActivityIndicator size="large" color="#3D3D3D" />
           <View style={styles.challengesList} />
         </View>
@@ -798,7 +754,6 @@ class FacebookFriendScreen extends React.Component {
     }
   }
 
-  
   renderFacebookFriends = () => {
     return <Aux>{this.renderFacebookFriendsPage()}</Aux>;
   };
@@ -816,52 +771,46 @@ class FacebookFriendScreen extends React.Component {
       <ScrollView style={styles.challengesList}>
         <View
           style={{
-            width: Dimensions.get("window").width * 0.9,
+            width: Dimensions.get('window').width * 0.9,
             top: 100,
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-            alignItems: "center",
-            alignSelf: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'center',
+          }}>
           <Image
             style={{
               width: 150,
               height: 150,
             }}
-            source={require("../../assets/images/friends_banner_icn.png")}
+            source={require('../../assets/images/friends_banner_icn.png')}
           />
-          <TouchableOpacity
-            onPress={() =>
-              this.getFacebook()
-            }
-          >
+          <TouchableOpacity onPress={() => this.getFacebook()}>
             <Image
               style={{
                 width: 50,
                 height: 50,
               }}
-              source={require("../../assets/images/friend/friend_add_icn.png")}
+              source={require('../../assets/images/friend/friend_add_icn.png')}
             />
           </TouchableOpacity>
-          <View style={{ width: 50, height: 50 }}></View>
+          <View style={{width: 50, height: 50}}></View>
           <Text
             style={{
-              color: "#3D3D3D",
-              fontFamily: "OpenSans-Regular",
+              color: '#3D3D3D',
+              fontFamily: 'OpenSans-Regular',
 
               fontSize: 14,
-              fontWeight: "bold",
+              fontWeight: 'bold',
 
               // marginBottom: 4,
               marginVertical: 0,
-              textAlign: "center",
-            }}
-          >
+              textAlign: 'center',
+            }}>
             {strings('id_20_17')}
           </Text>
-          <View style={{ width: 400, height: 400 }}></View>
+          <View style={{width: 400, height: 400}}></View>
         </View>
       </ScrollView>
     );
@@ -872,75 +821,63 @@ class FacebookFriendScreen extends React.Component {
       <ScrollView style={styles.challengesList}>
         <View
           style={{
-            width: Dimensions.get("window").width * 0.9,
+            width: Dimensions.get('window').width * 0.9,
             top: 100,
-            flexDirection: "column",
-            alignContent: "center",
-            justifyContent: "center",
-            alignItems: "center",
-            alignSelf: "center",
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+            alignSelf: 'center',
+          }}>
           <Image
             style={{
               width: 150,
               height: 150,
             }}
-            source={require("../../assets/images/friends_banner_icn.png")}
+            source={require('../../assets/images/friends_banner_icn.png')}
           />
           <TouchableOpacity
             onPress={() =>
-              this.props.navigation.navigate("SearchFriendsScreen")
-            }
-          >
+              this.props.navigation.navigate('SearchFriendsScreen')
+            }>
             <Image
               style={{
                 width: 50,
                 height: 50,
               }}
-              source={require("../../assets/images/friend/friend_add_icn.png")}
+              source={require('../../assets/images/friend/friend_add_icn.png')}
             />
           </TouchableOpacity>
-          <View style={{ width: 50, height: 50 }}></View>
+          <View style={{width: 50, height: 50}}></View>
           <Text
             style={{
-              color: "#3D3D3D",
-              fontFamily: "OpenSans-Regular",
+              color: '#3D3D3D',
+              fontFamily: 'OpenSans-Regular',
 
               fontSize: 14,
-              fontWeight: "bold",
+              fontWeight: 'bold',
 
               // marginBottom: 4,
               marginVertical: 0,
-              textAlign: "center",
-            }}
-          >
+              textAlign: 'center',
+            }}>
             MUV ha bisogno della tua autorizzazione per cercare i tuoi amici tra
             i tuoi contatti. Clicca su “+” e concedi l’autorizzazione a MUV di
             accedere alla lista dei tipo contatti.
           </Text>
-          <View style={{ width: 400, height: 400 }}></View>
+          <View style={{width: 400, height: 400}}></View>
         </View>
       </ScrollView>
     );
   };
 
   render() {
-    return (
-     
-       this.renderFacebookFriends()
-        
-
-        
-    
-    );
+    return this.renderFacebookFriends();
   }
 }
 
 const withConnect = connect((state) => {
-  return {
-    
-  };
+  return {};
 });
 
 export default withConnect(FacebookFriendScreen);

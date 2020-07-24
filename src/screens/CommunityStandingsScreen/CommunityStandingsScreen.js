@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Dimensions,
@@ -7,16 +7,16 @@ import {
   Alert,
   Text,
   TouchableWithoutFeedback,
-  ListView
-} from "react-native";
+} from 'react-native';
 
+import ListView from 'deprecated-react-native-listview';
 
-import Svg, { Circle, Line } from "react-native-svg";
+import Svg, {Circle, Line} from 'react-native-svg';
 
-import { styles, negativeData } from "./Style";
-import WavyArea from "./../../components/WavyArea/WavyArea";
-import UserItem from "./../../components/UserItem/UserItem";
-import Aux from "./../../helpers/Aux";
+import {styles, negativeData} from './Style';
+import WavyArea from './../../components/WavyArea/WavyArea';
+import UserItem from './../../components/UserItem/UserItem';
+import Aux from './../../helpers/Aux';
 import {
   getLeaderboard,
   getMonthlyLeaderboard,
@@ -24,13 +24,13 @@ import {
   getLeaderboardByCity,
   getMonthlyLeaderboardByCity,
   getWeeklyLeaderboardByCity,
-  getWeeklyLeaderboardByCommunity
-} from "./../../domains/standings/ActionCreators";
-import { connect } from "react-redux";
-import pointsDecimal from "../../helpers/pointsDecimal";
-import OwnIcon from "../../components/OwnIcon/OwnIcon";
-import { createSelector } from "reselect";
-import { changeScreenProfile } from "./../../domains/trainings/ActionCreators";
+  getWeeklyLeaderboardByCommunity,
+} from './../../domains/standings/ActionCreators';
+import {connect} from 'react-redux';
+import pointsDecimal from '../../helpers/pointsDecimal';
+import OwnIcon from '../../components/OwnIcon/OwnIcon';
+import {createSelector} from 'reselect';
+import {changeScreenProfile} from './../../domains/trainings/ActionCreators';
 
 // import { pushNotifications } from "./../../services";
 
@@ -39,13 +39,13 @@ class CommunityStandingsScreen extends React.Component {
     super(props);
 
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2
+      rowHasChanged: (r1, r2) => r1 !== r2,
     });
 
     this.state = {
-      activeSelectable: "community",
+      activeSelectable: 'community',
       showLoading: true,
-      refreshing: false
+      refreshing: false,
     };
 
     this.displayStandings = false;
@@ -56,12 +56,12 @@ class CommunityStandingsScreen extends React.Component {
 
     // this.props.dispatch(getLeaderboardByCity());
     if (this.props.standingsState.error) {
-      Alert.alert("Oops", "Seems like an error occured, pull to refresh");
+      Alert.alert('Oops', 'Seems like an error occured, pull to refresh');
     }
   }
 
   onRefresh() {
-    this.setState({ refreshing: true });
+    this.setState({refreshing: true});
 
     this.props.dispatch(getWeeklyLeaderboardByCommunity());
 
@@ -70,12 +70,12 @@ class CommunityStandingsScreen extends React.Component {
       this.props.checkBlock();
     }
     if (this.props.standingsState.error) {
-      Alert.alert("Oops", "Seems like an error occured, pull to refresh");
+      Alert.alert('Oops', 'Seems like an error occured, pull to refresh');
     }
 
     const loading = setInterval(() => {
       if (this.props.standingsState.standing.length > 0) {
-        this.setState({ refreshing: false });
+        this.setState({refreshing: false});
         clearTimeout(loading);
       }
     }, 1000);
@@ -86,7 +86,7 @@ class CommunityStandingsScreen extends React.Component {
       return (
         <WavyArea
           data={negativeData}
-          color={"#3D3D3D"}
+          color={'#3D3D3D'}
           style={styles.overlayWave}
         />
       );
@@ -118,7 +118,7 @@ class CommunityStandingsScreen extends React.Component {
                       key={0}
                       style={{
                         height: 30,
-                        backgroundColor: "#F7F8F9"
+                        backgroundColor: '#F7F8F9',
                       }}
                     />
                   }
@@ -126,19 +126,19 @@ class CommunityStandingsScreen extends React.Component {
                   <UserItem
                     //navigation={this.props.navigation}
                     myProfile={this.myProfile}
-                    user={{ ...item, position: row }}
+                    user={{...item, position: row}}
                     rowID={rowID}
                     level={
                       item.referred_route__user__level__name
                         ? item.referred_route__user__level__name
                             .charAt(0)
                             .toUpperCase()
-                        : "N"
+                        : 'N'
                     }
                     modalType={
                       item.referred_route__user__role
-                        ? item.referred_route__user__role === "none" ||
-                          item.referred_route__user__role === "muver"
+                        ? item.referred_route__user__role === 'none' ||
+                          item.referred_route__user__role === 'muver'
                           ? 0
                           : parseInt(item.referred_route__user__role)
                         : 0
@@ -154,19 +154,19 @@ class CommunityStandingsScreen extends React.Component {
                   <UserItem
                     //navigation={this.props.navigation}
                     myProfile={this.myProfile}
-                    user={{ ...item, position: row }}
+                    user={{...item, position: row}}
                     rowID={rowID}
                     level={
                       item.referred_route__user__level__name
                         ? item.referred_route__user__level__name
                             .charAt(0)
                             .toUpperCase()
-                        : "N"
+                        : 'N'
                     }
                     modalType={
                       item.referred_route__user__role
-                        ? item.referred_route__user__role === "none" ||
-                          item.referred_route__user__role === "muver"
+                        ? item.referred_route__user__role === 'none' ||
+                          item.referred_route__user__role === 'muver'
                           ? 0
                           : parseInt(item.referred_route__user__role)
                         : 0
@@ -181,8 +181,8 @@ class CommunityStandingsScreen extends React.Component {
                       key={0}
                       style={{
                         paddingTop: this.props.blockRanking
-                          ? Dimensions.get("window").height * 0.23 + 80
-                          : Dimensions.get("window").height * 0.23 + 80
+                          ? Dimensions.get('window').height * 0.23 + 80
+                          : Dimensions.get('window').height * 0.23 + 80,
                       }}
                     />
                   }
@@ -193,19 +193,19 @@ class CommunityStandingsScreen extends React.Component {
                 <UserItem
                   //navigation={this.props.navigation}
                   myProfile={this.myProfile}
-                  user={{ ...item, position: row }}
+                  user={{...item, position: row}}
                   rowID={rowID}
                   level={
                     item.referred_route__user__level__name
                       ? item.referred_route__user__level__name
                           .charAt(0)
                           .toUpperCase()
-                      : "N"
+                      : 'N'
                   }
                   modalType={
                     item.referred_route__user__role
-                      ? item.referred_route__user__role === "none" ||
-                        item.referred_route__user__role === "muver"
+                      ? item.referred_route__user__role === 'none' ||
+                        item.referred_route__user__role === 'muver'
                         ? 0
                         : parseInt(item.referred_route__user__role)
                       : 0
@@ -224,7 +224,7 @@ class CommunityStandingsScreen extends React.Component {
     // se non ho utenti e ancora devo caricare la lista
     if (this.props.standingsState.fetchingData && number === 0) {
       return (
-        <View style={{ top: 150 }}>
+        <View style={{top: 150}}>
           <ActivityIndicator size="large" color="#3D3D3D" />
           <View style={styles.challengesList} />
         </View>
@@ -235,17 +235,17 @@ class CommunityStandingsScreen extends React.Component {
   }
 
   myProfile = () => {
-    this.props.navigation.navigate("Info");
+    this.props.navigation.navigate('Info');
   };
 
   render() {
     let number = 0;
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2
+      rowHasChanged: (r1, r2) => r1 !== r2,
     });
 
     let dataSource = ds.cloneWithRows([]);
-    let position = "-";
+    let position = '-';
     let totPoints = 0;
     dataSource = ds.cloneWithRows(this.props.standingsState.communityStanding);
     position = this.props.standingsState.infoUserCommunityClassification.index;
@@ -260,8 +260,7 @@ class CommunityStandingsScreen extends React.Component {
             refreshing={this.props.standingsState.fetchingData}
             onRefresh={this.onRefresh.bind(this)}
           />
-        }
-      >
+        }>
         {this.renderBody(number, dataSource, position, totPoints)}
         <WavyArea
           data={negativeData}
@@ -271,10 +270,9 @@ class CommunityStandingsScreen extends React.Component {
         <View style={[styles.userContainer, styles.firstUser]}>
           <View
             style={{
-              flexDirection: "column",
-              alignContent: "center"
-            }}
-          >
+              flexDirection: 'column',
+              alignContent: 'center',
+            }}>
             <View>
               <UserItem
                 //navigation={this.props.navigation}
@@ -288,18 +286,18 @@ class CommunityStandingsScreen extends React.Component {
 
                   points: totPoints,
                   position:
-                    position !== "-" && typeof position !== "object"
+                    position !== '-' && typeof position !== 'object'
                       ? position + 1
-                      : "-"
+                      : '-',
                 }}
                 // lo faccio piu piccolo dato che sopra metto il selettore per il periodo
-                style={{ height: 75 }}
+                style={{height: 75}}
                 level={
                   this.props.level
                     ? this.props.level.charAt(0).toUpperCase()
-                    : "N"
+                    : 'N'
                 }
-                fontColor={"#fff"}
+                fontColor={'#fff'}
                 modalType={this.props.role}
                 blockRanking={false}
                 activeSelectable={this.props.activeSelectable}
@@ -312,38 +310,36 @@ class CommunityStandingsScreen extends React.Component {
   }
 }
 
-const getProfile = state => state.login.infoProfile;
-const getProfileNotSave = state => state.login.infoProfileNotSave;
+const getProfile = (state) => state.login.infoProfile;
+const getProfileNotSave = (state) => state.login.infoProfileNotSave;
 
 const getProfileState = createSelector(
   [getProfile, getProfileNotSave],
   (infoProfile, infoProfileNotSave) => {
     return {
       ...infoProfile,
-      ...infoProfileNotSave
+      ...infoProfileNotSave,
     };
-  }
+  },
 );
 
-const getStandings = state => state.standings;
+const getStandings = (state) => state.standings;
 
 const getStandingsState = createSelector(
   [getStandings],
-  StandingsState => StandingsState
+  (StandingsState) => StandingsState,
 );
 
-const getLevel = state => state.trainings.name;
+const getLevel = (state) => state.trainings.name;
 
-const getLevelState = createSelector(
-  [getLevel],
-  level => (level ? level : "Newbie")
+const getLevelState = createSelector([getLevel], (level) =>
+  level ? level : 'Newbie',
 );
 
-const getRole = state => state.login.role;
+const getRole = (state) => state.login.role;
 
-const getRoleState = createSelector(
-  [getRole],
-  role => (role.roleUser ? (role.roleUser ? role.roleUser : 0) : 0)
+const getRoleState = createSelector([getRole], (role) =>
+  role.roleUser ? (role.roleUser ? role.roleUser : 0) : 0,
 );
 
 /* 
@@ -351,12 +347,12 @@ state.statistics.reduce(
   (acc, item) => (acc > item.points ? acc : item.points),
   0 ) */
 // modal_type
-const withConnect = connect(state => {
+const withConnect = connect((state) => {
   return {
     // standingsState: getStandingsState(state),
     infoProfile: getProfileState(state),
     level: getLevelState(state),
-    role: getRoleState(state)
+    role: getRoleState(state),
   };
 });
 

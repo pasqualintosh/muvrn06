@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   View,
   Text,
@@ -6,19 +6,19 @@ import {
   ImageBackground,
   ActivityIndicator,
   Image,
-  ListView
-} from "react-native";
+} from 'react-native';
 
+import ListView from 'deprecated-react-native-listview';
 
-import LinearGradient from "react-native-linear-gradient";
+import LinearGradient from 'react-native-linear-gradient';
 
-import { styles, negativeData, positiveData, cities } from "./Style";
-import WavyArea from "./../../components/WavyArea/WavyArea";
-import CityGameItem from "./../../components/CityGameItem/CityGameItem";
-import { getSeasonRanking } from "./../../domains/screen/ActionCreators";
-import { connect } from "react-redux";
-import { divisionTournamentCitiesInA } from "./../../components/FriendItem/FriendItem";
-import { getProfile } from "./../../domains/login/Selectors";
+import {styles, negativeData, positiveData, cities} from './Style';
+import WavyArea from './../../components/WavyArea/WavyArea';
+import CityGameItem from './../../components/CityGameItem/CityGameItem';
+import {getSeasonRanking} from './../../domains/screen/ActionCreators';
+import {connect} from 'react-redux';
+import {divisionTournamentCitiesInA} from './../../components/FriendItem/FriendItem';
+import {getProfile} from './../../domains/login/Selectors';
 
 // metto prima il gruppo B
 export function compareB(a, b) {
@@ -42,53 +42,49 @@ export function compareA(a, b) {
   return 0;
 }
 
- // ordina i gruppo con B prima o A prima
- export function orderByB (schedule, division) {
+// ordina i gruppo con B prima o A prima
+export function orderByB(schedule, division) {
   if (!division) {
     // metto prima group B
     schedule = schedule.sort(compareB);
     console.log(schedule);
   } else {
-     // metto prima group A
-     schedule = schedule.sort(compareA);
-     console.log(schedule);
+    // metto prima group A
+    schedule = schedule.sort(compareA);
+    console.log(schedule);
   }
   return schedule;
-};
-
-
+}
 
 class CitiesStandings extends React.Component {
   constructor(props) {
     super(props);
 
     const division = divisionTournamentCitiesInA(
-      this.props.infoProfile.city.city_name
+      this.props.infoProfile.city.city_name,
     );
 
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2
+      rowHasChanged: (r1, r2) => r1 !== r2,
     });
 
     this.state = {
-      dataSource: ds.cloneWithRows([{ loading: true }]),
+      dataSource: ds.cloneWithRows([{loading: true}]),
       length: 1,
-      division: division
+      division: division,
     };
   }
 
- 
-
-  saveSchedule = data => {
+  saveSchedule = (data) => {
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2
+      rowHasChanged: (r1, r2) => r1 !== r2,
     });
 
     data = orderByB(data, this.state.division);
 
     this.setState({
       dataSource: ds.cloneWithRows(data),
-      length: data.length
+      length: data.length,
     });
   };
 
@@ -96,37 +92,35 @@ class CitiesStandings extends React.Component {
     this.props.dispatch(getSeasonRanking({}, this.saveSchedule));
   }
 
-  loading = index => {
+  loading = (index) => {
     return (
       <View key={index}>
         <View
           style={{
-            width: Dimensions.get("window").width,
-            height: Dimensions.get("window").height * 0.64,
+            width: Dimensions.get('window').width,
+            height: Dimensions.get('window').height * 0.64,
 
-            flexDirection: "column",
-            alignContent: "flex-start"
-          }}
-        >
+            flexDirection: 'column',
+            alignContent: 'flex-start',
+          }}>
           <View
             style={{
-              alignContent: "center",
+              alignContent: 'center',
               flex: 1,
-              width: Dimensions.get("window").width,
-              height: Dimensions.get("window").height * 0.3,
+              width: Dimensions.get('window').width,
+              height: Dimensions.get('window').height * 0.3,
 
-              alignItems: "center",
-              alignSelf: "center"
-            }}
-          >
+              alignItems: 'center',
+              alignSelf: 'center',
+            }}>
             <View>
               <ActivityIndicator
                 style={{
-                  alignContent: "center",
+                  alignContent: 'center',
                   flex: 1,
 
-                  alignItems: "center",
-                  alignSelf: "center"
+                  alignItems: 'center',
+                  alignSelf: 'center',
                 }}
                 size="large"
                 color="#000000"
@@ -136,8 +130,8 @@ class CitiesStandings extends React.Component {
         </View>
         <View
           style={{
-            width: Dimensions.get("window").width,
-            height: Dimensions.get("window").height * 0.36
+            width: Dimensions.get('window').width,
+            height: Dimensions.get('window').height * 0.36,
           }}
         />
       </View>
@@ -174,8 +168,8 @@ class CitiesStandings extends React.Component {
                 <Image
                   source={
                     this.state.division
-                      ? require("./../../assets/images/wave/cites_standings_wave_purple.png")
-                      : require("./../../assets/images/wave/cites_standings_wave_red.png")
+                      ? require('./../../assets/images/wave/cites_standings_wave_purple.png')
+                      : require('./../../assets/images/wave/cites_standings_wave_red.png')
                   }
                   style={styles.secondStandingImage}
                 />
@@ -193,8 +187,7 @@ class CitiesStandings extends React.Component {
                     <Text style={styles.headerText}>LOST</Text>
                   </View>
                   <View
-                    style={[styles.cityColumn, styles.cityColumnPercentage]}
-                  >
+                    style={[styles.cityColumn, styles.cityColumnPercentage]}>
                     <Text style={styles.headerText}>POINTS</Text>
                   </View>
                 </View>
@@ -204,9 +197,9 @@ class CitiesStandings extends React.Component {
               <View>
                 <Image
                   source={
-                    city.group == "Group A"
-                      ? require("./../../assets/images/wave/cites_standings_wave_purple.png")
-                      : require("./../../assets/images/wave/cites_standings_wave_red.png")
+                    city.group == 'Group A'
+                      ? require('./../../assets/images/wave/cites_standings_wave_purple.png')
+                      : require('./../../assets/images/wave/cites_standings_wave_red.png')
                   }
                   style={styles.secondStandingImage}
                 />
@@ -224,8 +217,7 @@ class CitiesStandings extends React.Component {
                     <Text style={styles.headerText}>LOST</Text>
                   </View>
                   <View
-                    style={[styles.cityColumn, styles.cityColumnPercentage]}
-                  >
+                    style={[styles.cityColumn, styles.cityColumnPercentage]}>
                     <Text style={styles.headerText}>POINTS</Text>
                   </View>
                 </View>
@@ -259,10 +251,10 @@ class CitiesStandings extends React.Component {
   }
 }
 
-const withData = connect(state => {
+const withData = connect((state) => {
   // prendo le info dell'utente, in particolare la citta
   return {
-    infoProfile: getProfile(state)
+    infoProfile: getProfile(state),
   };
 });
 
