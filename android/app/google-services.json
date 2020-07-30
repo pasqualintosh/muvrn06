@@ -1,34 +1,34 @@
 {
   "project_info": {
-    "project_number": "664065711546",
-    "firebase_url": "https://muv-game.firebaseio.com",
-    "project_id": "muv-game",
-    "storage_bucket": "muv-game.appspot.com"
+    "project_number": "717934822397",
+    "firebase_url": "https://muvrn06.firebaseio.com",
+    "project_id": "muvrn06",
+    "storage_bucket": "muvrn06.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:664065711546:android:368fb353c7297000325183",
+        "mobilesdk_app_id": "1:717934822397:android:e0c12235901b3325e9cf94",
         "android_client_info": {
-          "package_name": "com.muvdev"
+          "package_name": "com.muvrn06"
         }
       },
       "oauth_client": [
         {
-          "client_id": "664065711546-c42s9s50lnrk5flj5s9d0r3hm6i49898.apps.googleusercontent.com",
+          "client_id": "717934822397-60s3h7v2ooqkbn5todut0sgi9ibgttne.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCrXzZr1y73JlVoOeZ8ju9a6eKM5hX3KKI"
+          "current_key": "AIzaSyBmCL7M4Yk-RpudTnozBSavgJNdKfkdsho"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "664065711546-c42s9s50lnrk5flj5s9d0r3hm6i49898.apps.googleusercontent.com",
+              "client_id": "717934822397-60s3h7v2ooqkbn5todut0sgi9ibgttne.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

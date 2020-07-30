@@ -16,8 +16,8 @@ buildscript {
     }
     dependencies {
         classpath("com.android.tools.build:gradle:3.5.3")
-        classpath 'com.google.gms:google-services:4.2.0'
-        classpath 'gradle.plugin.com.onesignal:onesignal-gradle-plugin:[0.12.8, 0.99.99]'
+        classpath 'com.google.gms:google-services:4.3.3' 
+       
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -54,13 +54,14 @@ allprojects {
         resolutionStrategy {
             force 'com.google.android.gms:play-services-location:17.0.0'
             force 'com.google.android.gms:play-services-places-placereport:17.0.0'
-            force 'com.google.android.gms:play-services-base:10.2.1'
+            // force 'com.google.android.gms:play-services-base:17.3.0'
+            // force 'com.google.android.gms:play-services-base:10.2.1'
             force 'com.google.android.gms:play-services-places:12.0.1'
             force 'com.google.android.gms:play-services-basement:16.2.0'
-            force 'com.google.firebase:firebase-common:17.0.0'
-            force 'com.google.firebase:firebase-analytics:12.0.1'
-            force 'com.google.firebase:firebase-iid:12.0.1'
-            force 'com.google.firebase:firebase-auth:17.0.0'
+            // force 'com.google.firebase:firebase-common:17.0.0'
+            // force 'com.google.firebase:firebase-analytics:12.0.1'
+            // force 'com.google.firebase:firebase-iid:12.0.1'
+            // force 'com.google.firebase:firebase-auth:17.0.0'
         }
     }
 }
