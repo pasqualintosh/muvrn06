@@ -42,26 +42,83 @@
       android:label="@string/app_name"
       android:icon="@mipmap/ic_launcher"
       android:roundIcon="@mipmap/ic_launcher_round"
-      android:allowBackup="false"
-      android:theme="@style/AppTheme">
+      android:allowBackup="true"
+      android:theme="@style/AppTheme"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:replace="android:icon,android:allowBackup">
 
+      <meta-data  android:name="com.dieam.reactnativepushnotification.notification_channel_name"
+                android:value="MUV"/>
+      <meta-data  android:name="com.dieam.reactnativepushnotification.notification_channel_description"
+                android:value="Tracking MUV"/>
+       
+
+      <meta-data
+      android:name="com.google.android.geo.API_KEY"
+      android:value="AIzaSyAXl9o2Ue_MKalb0_tgGATOOo5lQErM-Bo"/>
+      
 
       <meta-data android:name="com.facebook.sdk.ApplicationId"
           android:value="@string/facebook_app_id"/>
 
+      <service android:name="com.xebia.activityrecognition.DetectionService"/>
+
+      <receiver
+          android:name="com.google.android.gms.gcm.GcmReceiver"
+          android:exported="true"
+          android:permission="com.google.android.c2dm.permission.SEND" >
+          <intent-filter>
+              <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+              <category android:name="${applicationId}" />
+          </intent-filter>
+      </receiver>
+
+      <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationPublisher" />
+      <receiver android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationBootEventReceiver">
+          <intent-filter>
+              <action android:name="android.intent.action.BOOT_COMPLETED" />
+          </intent-filter>
+      </receiver>
+      <service android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationRegistrationService"/>
+      <service
+          android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationListenerService"
+          android:exported="false" >
+          <intent-filter>
+              <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+          </intent-filter>
+      </service>
 
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
-        android:configChanges="keyboard|keyboardHidden|orientation|screenSize|uiMode"
-        android:launchMode="singleTask"
-        android:windowSoftInputMode="adjustResize">
+        android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+        android:windowSoftInputMode="adjustPan"
+        android:screenOrientation="portrait"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:launchMode="singleTop">
         <intent-filter>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
       <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
+
+      <!-- Branch init -->
+      <meta-data android:name="io.branch.sdk.BranchKey" android:value="key_live_mgKblIgyg9l3PEwNPtg2xnajtvdrSSrL" />
+      <meta-data android:name="io.branch.sdk.TestMode" android:value="false" />
+      <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@mipmap/ic_notification" />
+
+      <!-- Branch install referrer tracking (optional) -->
+      <receiver android:name="io.branch.referral.InstallListener" android:exported="true">
+          <intent-filter>
+              <action android:name="com.android.vending.INSTALL_REFERRER" />
+          </intent-filter>
+      </receiver>
+      <!-- Bbugsnag -->
+      <meta-data android:name="com.bugsnag.android.API_KEY"
+      android:value="f2831bdc190a0175710fcdebcf5ba4f3"/>
+      
     </application>
 
 </manifest>
