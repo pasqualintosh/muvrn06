@@ -65,3 +65,27 @@ allprojects {
         }
     }
 }
+
+subprojects { subproject ->
+    afterEvaluate {
+        if ((subproject.plugins.hasPlugin('android') || subproject.plugins.hasPlugin('android-library'))) {
+            android {
+                compileSdkVersion rootProject.ext.compileSdkVersion
+                buildToolsVersion rootProject.ext.buildToolsVersion
+
+                variantFilter { variant ->
+                    def names = variant.flavors*.name
+                    if (
+                            names.contains("reactNative51") ||
+                            names.contains("reactNative55") ||
+                            names.contains("reactNative56") ||
+                            names.contains("reactNative57") ||
+                            names.contains("reactNative57_5")
+                    ) {
+                        setIgnore(true)
+                    }
+                }
+            }
+        }
+    }
+}
