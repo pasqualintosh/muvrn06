@@ -13,6 +13,9 @@
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		1740190924C892B40028ABB0 /* MoonFlower.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1740190724C892B40028ABB0 /* MoonFlower.ttf */; };
 		1740190A24C892B40028ABB0 /* MoonFlower-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1740190824C892B40028ABB0 /* MoonFlower-Bold.ttf */; };
+		176503F024D8082000CDF0EB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 176503EF24D8082000CDF0EB /* GoogleService-Info.plist */; };
+		176503FA24D80E3300CDF0EB /* NotificationService.m in Sources */ = {isa = PBXBuildFile; fileRef = 176503F924D80E3300CDF0EB /* NotificationService.m */; };
+		176503FE24D80E3300CDF0EB /* OneSignalNotificationServiceExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 176503F624D80E3300CDF0EB /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		17BC7D3A24C72B150018A449 /* img_5.png in Resources */ = {isa = PBXBuildFile; fileRef = 17BC7D3024C72B140018A449 /* img_5.png */; };
 		17BC7D3B24C72B150018A449 /* Splash screen.png in Resources */ = {isa = PBXBuildFile; fileRef = 17BC7D3124C72B140018A449 /* Splash screen.png */; };
 		17BC7D3C24C72B150018A449 /* Assents in Resources */ = {isa = PBXBuildFile; fileRef = 17BC7D3224C72B140018A449 /* Assents */; };
@@ -52,6 +55,7 @@
 		17BC7D7A24C72B4F0018A449 /* OpenSans-ExtraBoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 17BC7D7024C72B4E0018A449 /* OpenSans-ExtraBoldItalic.ttf */; };
 		17BC7D7B24C72B4F0018A449 /* OpenSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 17BC7D7124C72B4F0018A449 /* OpenSans-Bold.ttf */; };
 		1BFD9886175C3549E7C63305 /* libPods-muvrn06-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D8ADC33A8B6E95508CAAB33F /* libPods-muvrn06-tvOS.a */; };
+		2C8714B428BA328907265C43 /* libPods-OneSignalNotificationServiceExtension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 221FFE6C304E3C33417000EE /* libPods-OneSignalNotificationServiceExtension.a */; };
 		2D02E4BC1E0B4A80006451C7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.m */; };
 		2D02E4BD1E0B4A84006451C7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		2D02E4BF1E0B4AB3006451C7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
@@ -70,6 +74,13 @@
 			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
 			remoteInfo = muvrn06;
 		};
+		176503FC24D80E3300CDF0EB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 176503F524D80E3300CDF0EB;
+			remoteInfo = OneSignalNotificationServiceExtension;
+		};
 		2D02E4911E0B4A5D006451C7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
@@ -79,6 +90,20 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		1765040224D80E3400CDF0EB /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				176503FE24D80E3300CDF0EB /* OneSignalNotificationServiceExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		0018080ED4B7E10C061EC7DD /* Pods-muvrn06-tvOSTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-muvrn06-tvOSTests.release.xcconfig"; path = "Target Support Files/Pods-muvrn06-tvOSTests/Pods-muvrn06-tvOSTests.release.xcconfig"; sourceTree = "<group>"; };
 		008F07F21AC5B25A0029DE68 /* main.jsbundle */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = main.jsbundle; sourceTree = "<group>"; };
@@ -86,7 +111,7 @@
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* muvrn06Tests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = muvrn06Tests.m; sourceTree = "<group>"; };
 		0FE15D65A970A19D43ABCEC5 /* Pods-muvrn06-tvOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-muvrn06-tvOS.debug.xcconfig"; path = "Target Support Files/Pods-muvrn06-tvOS/Pods-muvrn06-tvOS.debug.xcconfig"; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* muvrn06.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = muvrn06.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07F961A680F5B00A75B9A /* muv.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = muv.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = muvrn06/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = muvrn06/AppDelegate.m; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = muvrn06/Images.xcassets; sourceTree = "<group>"; };
@@ -94,6 +119,13 @@
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = muvrn06/main.m; sourceTree = "<group>"; };
 		1740190724C892B40028ABB0 /* MoonFlower.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MoonFlower.ttf; path = Assents/Font/MoonFlower/MoonFlower.ttf; sourceTree = "<group>"; };
 		1740190824C892B40028ABB0 /* MoonFlower-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "MoonFlower-Bold.ttf"; path = "Assents/Font/MoonFlower/MoonFlower-Bold.ttf"; sourceTree = "<group>"; };
+		176503EF24D8082000CDF0EB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "muvrn06/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		176503F124D80DFF00CDF0EB /* muvrn06.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = muvrn06.entitlements; path = muvrn06/muvrn06.entitlements; sourceTree = "<group>"; };
+		176503F624D80E3300CDF0EB /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		176503F824D80E3300CDF0EB /* NotificationService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NotificationService.h; sourceTree = "<group>"; };
+		176503F924D80E3300CDF0EB /* NotificationService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = NotificationService.m; sourceTree = "<group>"; };
+		176503FB24D80E3300CDF0EB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		17BC74F424D85F9B004C7369 /* libRNNotificationActions.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libRNNotificationActions.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		17BC7D3024C72B140018A449 /* img_5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = img_5.png; sourceTree = "<group>"; };
 		17BC7D3124C72B140018A449 /* Splash screen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Splash screen.png"; sourceTree = "<group>"; };
 		17BC7D3224C72B140018A449 /* Assents */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Assents; sourceTree = "<group>"; };
@@ -148,6 +180,7 @@
 		17F1621324C9D59C00B0185E /* EvilIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = EvilIcons.ttf; sourceTree = "<group>"; };
 		17F1621424C9D59C00B0185E /* SimpleLineIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = SimpleLineIcons.ttf; sourceTree = "<group>"; };
 		17F1621524C9D59C00B0185E /* MaterialIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MaterialIcons.ttf; sourceTree = "<group>"; };
+		221FFE6C304E3C33417000EE /* libPods-OneSignalNotificationServiceExtension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-OneSignalNotificationServiceExtension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D02E47B1E0B4A5D006451C7 /* muvrn06-tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "muvrn06-tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D02E4901E0B4A5D006451C7 /* muvrn06-tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "muvrn06-tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		30B0F7EB7D50FA86F8E3BED5 /* libPods-muvrn06-tvOSTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-muvrn06-tvOSTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -158,7 +191,9 @@
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = muvrn06/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		A5ED815E21BCAF7AE7FB6528 /* Pods-muvrn06-muvrn06Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-muvrn06-muvrn06Tests.debug.xcconfig"; path = "Target Support Files/Pods-muvrn06-muvrn06Tests/Pods-muvrn06-muvrn06Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		C8147A945E16871FB1C8A29B /* Pods-muvrn06.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-muvrn06.debug.xcconfig"; path = "Target Support Files/Pods-muvrn06/Pods-muvrn06.debug.xcconfig"; sourceTree = "<group>"; };
+		D6EFF2424A81B566A46051C1 /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OneSignalNotificationServiceExtension.release.xcconfig"; path = "Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension.release.xcconfig"; sourceTree = "<group>"; };
 		D8ADC33A8B6E95508CAAB33F /* libPods-muvrn06-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-muvrn06-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE344C98B9F4C92028CCE89C /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OneSignalNotificationServiceExtension.debug.xcconfig"; path = "Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension.debug.xcconfig"; sourceTree = "<group>"; };
 		E4F6F518DA1C19E123A1CF35 /* libPods-muvrn06-muvrn06Tests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-muvrn06-muvrn06Tests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EB3689C180DFA3F66551BE68 /* Pods-muvrn06-muvrn06Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-muvrn06-muvrn06Tests.release.xcconfig"; path = "Target Support Files/Pods-muvrn06-muvrn06Tests/Pods-muvrn06-muvrn06Tests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -179,6 +214,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				7D1377B5AE3377FFA8AFB8F0 /* libPods-muvrn06.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		176503F324D80E3300CDF0EB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2C8714B428BA328907265C43 /* libPods-OneSignalNotificationServiceExtension.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,8 +264,10 @@
 		13B07FAE1A68108700A75B9A /* muvrn06 */ = {
 			isa = PBXGroup;
 			children = (
+				176503F124D80DFF00CDF0EB /* muvrn06.entitlements */,
 				008F07F21AC5B25A0029DE68 /* main.jsbundle */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
+				176503EF24D8082000CDF0EB /* GoogleService-Info.plist */,
 				13B07FB01A68108700A75B9A /* AppDelegate.m */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -230,6 +275,16 @@
 				13B07FB71A68108700A75B9A /* main.m */,
 			);
 			name = muvrn06;
+			sourceTree = "<group>";
+		};
+		176503F724D80E3300CDF0EB /* OneSignalNotificationServiceExtension */ = {
+			isa = PBXGroup;
+			children = (
+				176503F824D80E3300CDF0EB /* NotificationService.h */,
+				176503F924D80E3300CDF0EB /* NotificationService.m */,
+				176503FB24D80E3300CDF0EB /* Info.plist */,
+			);
+			path = OneSignalNotificationServiceExtension;
 			sourceTree = "<group>";
 		};
 		17F1620524C9D59B00B0185E /* Fonts */ = {
@@ -259,12 +314,14 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				17BC74F424D85F9B004C7369 /* libRNNotificationActions.a */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				ED2971642150620600B7C4FE /* JavaScriptCore.framework */,
 				6BFDE8B06D24D708A07F6FE4 /* libPods-muvrn06.a */,
 				E4F6F518DA1C19E123A1CF35 /* libPods-muvrn06-muvrn06Tests.a */,
 				D8ADC33A8B6E95508CAAB33F /* libPods-muvrn06-tvOS.a */,
 				30B0F7EB7D50FA86F8E3BED5 /* libPods-muvrn06-tvOSTests.a */,
+				221FFE6C304E3C33417000EE /* libPods-OneSignalNotificationServiceExtension.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -280,6 +337,8 @@
 				6F44C6D9926E5D4EF605E6E1 /* Pods-muvrn06-tvOS.release.xcconfig */,
 				7B4C5E0CFF6F4E8EC5B70491 /* Pods-muvrn06-tvOSTests.debug.xcconfig */,
 				0018080ED4B7E10C061EC7DD /* Pods-muvrn06-tvOSTests.release.xcconfig */,
+				DE344C98B9F4C92028CCE89C /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */,
+				D6EFF2424A81B566A46051C1 /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -338,6 +397,7 @@
 				13B07FAE1A68108700A75B9A /* muvrn06 */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				00E356EF1AD99517003FC87E /* muvrn06Tests */,
+				176503F724D80E3300CDF0EB /* OneSignalNotificationServiceExtension */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				396EA0003DB96A5DBDEE4B74 /* Pods */,
@@ -351,10 +411,11 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* muvrn06.app */,
+				13B07F961A680F5B00A75B9A /* muv.app */,
 				00E356EE1AD99517003FC87E /* muvrn06Tests.xctest */,
 				2D02E47B1E0B4A5D006451C7 /* muvrn06-tvOS.app */,
 				2D02E4901E0B4A5D006451C7 /* muvrn06-tvOSTests.xctest */,
+				176503F624D80E3300CDF0EB /* OneSignalNotificationServiceExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -401,15 +462,36 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				A7009FE8257D295E51DA3F45 /* [CP] Copy Pods Resources */,
 				45B5E5A8EF4957AFB42F5EF9 /* [CP-User] [RNFB] Core Configuration */,
+				1765040224D80E3400CDF0EB /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				176503FD24D80E3300CDF0EB /* PBXTargetDependency */,
+			);
+			name = muvrn06;
+			productName = muvrn06;
+			productReference = 13B07F961A680F5B00A75B9A /* muv.app */;
+			productType = "com.apple.product-type.application";
+		};
+		176503F524D80E3300CDF0EB /* OneSignalNotificationServiceExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 176503FF24D80E3400CDF0EB /* Build configuration list for PBXNativeTarget "OneSignalNotificationServiceExtension" */;
+			buildPhases = (
+				1A73EDCD8082200672F269AC /* [CP] Check Pods Manifest.lock */,
+				176503F224D80E3300CDF0EB /* Sources */,
+				176503F324D80E3300CDF0EB /* Frameworks */,
+				176503F424D80E3300CDF0EB /* Resources */,
+				062D704DA4E903122253DD67 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = muvrn06;
-			productName = muvrn06;
-			productReference = 13B07F961A680F5B00A75B9A /* muvrn06.app */;
-			productType = "com.apple.product-type.application";
+			name = OneSignalNotificationServiceExtension;
+			productName = OneSignalNotificationServiceExtension;
+			productReference = 176503F624D80E3300CDF0EB /* OneSignalNotificationServiceExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 		2D02E47A1E0B4A5D006451C7 /* muvrn06-tvOS */ = {
 			isa = PBXNativeTarget;
@@ -464,7 +546,13 @@
 						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 					13B07F861A680F5B00A75B9A = {
+						DevelopmentTeam = J4F438267B;
 						LastSwiftMigration = 1120;
+					};
+					176503F524D80E3300CDF0EB = {
+						CreatedOnToolsVersion = 11.6;
+						DevelopmentTeam = J4F438267B;
+						ProvisioningStyle = Automatic;
 					};
 					2D02E47A1E0B4A5D006451C7 = {
 						CreatedOnToolsVersion = 8.2.1;
@@ -494,6 +582,7 @@
 				00E356ED1AD99517003FC87E /* muvrn06Tests */,
 				2D02E47A1E0B4A5D006451C7 /* muvrn06-tvOS */,
 				2D02E48F1E0B4A5D006451C7 /* muvrn06-tvOSTests */,
+				176503F524D80E3300CDF0EB /* OneSignalNotificationServiceExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -520,6 +609,7 @@
 				17BC7D7824C72B4F0018A449 /* OpenSans-LightItalic.ttf in Resources */,
 				17BC7D7724C72B4F0018A449 /* OpenSans-Light.ttf in Resources */,
 				17BC7D3E24C72B150018A449 /* img_1.png in Resources */,
+				176503F024D8082000CDF0EB /* GoogleService-Info.plist in Resources */,
 				17BC7D6324C72B390018A449 /* Montserrat-Regular.ttf in Resources */,
 				17BC7D6624C72B390018A449 /* Montserrat-MediumItalic.ttf in Resources */,
 				17BC7D5924C72B390018A449 /* Montserrat-Light.ttf in Resources */,
@@ -555,6 +645,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		176503F424D80E3300CDF0EB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2D02E4791E0B4A5D006451C7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -586,6 +683,46 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "export NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+		};
+		062D704DA4E903122253DD67 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core.common/AccessibilityResources.bundle",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AccessibilityResources.bundle",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		1A73EDCD8082200672F269AC /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-OneSignalNotificationServiceExtension-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
 		};
 		1AF3360D501620A2DAECCD46 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -883,6 +1020,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		176503F224D80E3300CDF0EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				176503FA24D80E3300CDF0EB /* NotificationService.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		2D02E4771E0B4A5D006451C7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -907,6 +1052,11 @@
 			isa = PBXTargetDependency;
 			target = 13B07F861A680F5B00A75B9A /* muvrn06 */;
 			targetProxy = 00E356F41AD99517003FC87E /* PBXContainerItemProxy */;
+		};
+		176503FD24D80E3300CDF0EB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 176503F524D80E3300CDF0EB /* OneSignalNotificationServiceExtension */;
+			targetProxy = 176503FC24D80E3300CDF0EB /* PBXContainerItemProxy */;
 		};
 		2D02E4921E0B4A5D006451C7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -963,9 +1113,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C8147A945E16871FB1C8A29B /* Pods-muvrn06.debug.xcconfig */;
 			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = muvrn06/muvrn06.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J4F438267B;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = muvrn06/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -974,8 +1127,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = muvrn06;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wepush.MUVdev;
+				PRODUCT_NAME = muv;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -986,9 +1139,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 3D4BC772C5A7DCB5DD8D34CE /* Pods-muvrn06.release.xcconfig */;
 			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = muvrn06/muvrn06.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J4F438267B;
 				INFOPLIST_FILE = muvrn06/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = (
@@ -996,10 +1152,62 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = muvrn06;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wepush.MUVdev;
+				PRODUCT_NAME = muv;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		1765040024D80E3400CDF0EB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = DE344C98B9F4C92028CCE89C /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = J4F438267B;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = OneSignalNotificationServiceExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wepush.MUVdev.OneSignalNotificationServiceExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1765040124D80E3400CDF0EB /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D6EFF2424A81B566A46051C1 /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = J4F438267B;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = OneSignalNotificationServiceExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.6;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = org.wepush.MUVdev.OneSignalNotificationServiceExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -1117,6 +1325,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				APPLICATION_EXTENSION_API_ONLY = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -1177,6 +1386,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				APPLICATION_EXTENSION_API_ONLY = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -1243,6 +1453,15 @@
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
 				13B07F951A680F5B00A75B9A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		176503FF24D80E3400CDF0EB /* Build configuration list for PBXNativeTarget "OneSignalNotificationServiceExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1765040024D80E3400CDF0EB /* Debug */,
+				1765040124D80E3400CDF0EB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -1,11 +1,17 @@
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
+
 permissions_path = '../node_modules/react-native-permissions/ios'
 pod 'Permission-Camera', :path => "../node_modules/react-native-permissions/ios/Camera.podspec"
+# pod 'WCPhotoManipulator', :git => 'https://github.com/guhungry/ios-photo-manipulator.git', :tag => 'v1.0.0'
+# pod 'Firebase/Analytics'
+
+target 'OneSignalNotificationServiceExtension' do
+  pod 'OneSignal', '>= 2.9.3', '< 3.0'
+end
 
 platform :ios, '10.0'
-
 
 target 'muvrn06' do
   config = use_native_modules!
@@ -24,7 +30,15 @@ target 'muvrn06' do
   use_flipper!
   post_install do |installer|
     flipper_post_install(installer)
+
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['APPLICATION_EXTENSION_API_ONLY'] = 'NO'
+      end
+    end
+
   end
+
 end
 
 target 'muvrn06-tvOS' do
@@ -35,3 +49,4 @@ target 'muvrn06-tvOS' do
     # Pods for testing
   end
 end
+
