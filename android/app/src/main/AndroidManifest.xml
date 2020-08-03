@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools"
-  package="com.muvrn06">
+  package="com.muv">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-sdk tools:overrideLibrary="com.xebia.activityrecognition"/>

@@ -145,7 +145,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.muvrn06"
+        applicationId "com.muv"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

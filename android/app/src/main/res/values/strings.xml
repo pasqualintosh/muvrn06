@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">muvrn06</string>
+    <string name="app_name">muv</string>
     <string name="account_type">com.muvdev</string>
     <string name="content_authority">com.muvdev</string>
     <string name="fb_app_id">1947012025605083</string>

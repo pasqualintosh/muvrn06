@@ -1,4 +1,4 @@
-package com.muvrn06;
+package com.muv;
 
 import com.facebook.react.ReactActivity;
 
@@ -10,6 +10,6 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "muvrn06";
+    return "muv";
   }
 }
