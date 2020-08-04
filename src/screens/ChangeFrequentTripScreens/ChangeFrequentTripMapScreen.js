@@ -217,14 +217,14 @@ class FrequentTripMapScreen extends React.Component {
   };
 
   componentDidMount() {
-    this.setBackgroundGeolocation();
+    // this.setBackgroundGeolocation();
 
-    if (Platform.OS == "ios")
+    // if (Platform.OS == "ios")
       navigator.geolocation.getCurrentPosition(
         position => {
           console.log(position.coords);
           // BackgroundGeolocation.stop();
-          this.unsetBackgroundGeolocation();
+          //  this.unsetBackgroundGeolocation();
           this.setState(
             {
               user_lat: position.coords.latitude,
@@ -327,7 +327,7 @@ class FrequentTripMapScreen extends React.Component {
   }
 
   componentWillUnmount() {
-    this.unsetBackgroundGeolocation();
+    // this.unsetBackgroundGeolocation();
   }
 
   textDescriptionHeader = text => {

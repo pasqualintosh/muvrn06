@@ -430,11 +430,6 @@ class StatisticsRoutesScreen extends React.Component {
       const options = {
         scopes: [
           Scopes.FITNESS_ACTIVITY_READ,
-          Scopes.FITNESS_ACTIVITY_READ_WRITE,
-          Scopes.FITNESS_BODY_READ,
-          Scopes.FITNESS_BODY_READ_WRITE,
-          Scopes.FITNESS_NUTRITION_READ,
-          Scopes.FITNESS_LOCATION_READ_WRITE
         ]
       };
 
@@ -1068,7 +1063,7 @@ class StatisticsRoutesScreen extends React.Component {
           routes={pointsDecimal(routes)}
           distance={pointsDecimal(distanceInt)}
           calories={pointsDecimal(calories)}
-          time={pointsDecimal(Number.parseInt(time / 60))}
+          time={pointsDecimal(Number.parseInt(time * 60))}
         />
         <View
           style={{

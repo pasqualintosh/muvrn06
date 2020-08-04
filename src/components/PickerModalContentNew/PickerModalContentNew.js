@@ -47,7 +47,7 @@ class PickerModalContentNew extends React.Component {
 
   _toggleModal = () => {
     try {
-      if (this.props.value == '-') {
+      if (this.props.value == "-") {
         this.props.changeState(
           this.props.listValue[0],
           this.props.type,
@@ -56,10 +56,8 @@ class PickerModalContentNew extends React.Component {
       }
     } catch (error) {
       console.log(error);
-     
     }
-   
-   
+
     this.setState({ isModalVisible: !this.state.isModalVisible });
   };
   /* 
@@ -109,6 +107,27 @@ class PickerModalContentNew extends React.Component {
   // mentre su android lo fa in automatico
   _renderModalContent = () => (
     <View style={styles.modalContent}>
+     <View
+          style={{
+            paddingTop: 5,
+            paddingBottom: 5,
+            alignContent: "center",
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            style={{
+              color: "#3d3d3d",
+              fontSize: 20,
+              fontFamily: "Montserrat-ExtraBold",
+              textAlign: "center",
+            }}
+          >
+            {this.props.title}
+          </Text>
+        </View>
       <Picker
         selectedValue={this.props.value}
         onValueChange={(itemValue, itemIndex) => {
@@ -128,7 +147,6 @@ class PickerModalContentNew extends React.Component {
           />
         ))}
       </Picker>
-
       {this._renderButton(strings("id_13_23"), () => {
         this.setState({ isModalVisible: false });
         this.props.changeState(
@@ -144,56 +162,110 @@ class PickerModalContentNew extends React.Component {
 
   renderButtonsModal() {
     return (
-      <View style={styles.buttonsContainer}>
-        <TouchableWithoutFeedback
-          onPress={() => {
-            this.setState({ isModalVisible: false }, () => {});
+      <TouchableHighlight
+        onPress={() => {
+          this.setState({ isModalVisible: false }, () => {});
+        }}
+        style={styles.buttonRegister}
+      >
+        <View
+          style={{
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <View style={styles.buttonModalContainer}>
-            <Text style={styles.textButton}>
-              {strings("id_0_12").toLocaleUpperCase()}
-            </Text>
-          </View>
-        </TouchableWithoutFeedback>
-      </View>
+          <Text
+            style={{
+              color: "#ffffff",
+              fontFamily: "OpenSans-Regular",
+              fontWeight: "400",
+              fontSize: 15,
+              textAlignVertical: "center",
+              textAlign: "center",
+            }}
+          >
+            {strings("id_13_23")}
+          </Text>
+        </View>
+      </TouchableHighlight>
     );
   }
 
   _renderModalContentAndroid = () => {
     const values = this.props.listValue.map((element, index) => (
-      <PickerItem width={Dimensions.get("window").width * 0.8} key={index} label={element + " " + this.props.extraValue} value={"" + element} />
+      <PickerItem
+        width={Dimensions.get("window").width * 0.8}
+        key={index}
+        label={element + " " + this.props.extraValue}
+        value={"" + element}
+      />
     ));
     return (
       <View
         style={{
-          height: 250,
+          padding: 22,
           backgroundColor: "white",
-          borderRadius: 4,
-          borderColor: "rgba(0, 0, 0, 0.1)",
-          justifyContent: "center",
+          borderRadius: 10,
           alignItems: "center",
+
+          flexDirection: "column",
+          justifyContent: "center",
+          shadowRadius: 5,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.5,
         }}
       >
-        <Picker
+        <View
           style={{
-            width: 250,
-            height: 250,
-          }}
-          width={Dimensions.get("window").width * 0.8} 
-          selectedValue={this.props.value}
-          mode={"dropdown"}
-          onValueChange={(itemValue, itemIndex) => {
-            // this.setState({ isModalVisible: false });
-            this.props.changeState(
-              itemValue,
-              this.props.type,
-              this.props.function ? this.props.function : parseInt
-            );
+            paddingTop: 5,
+            paddingBottom: 5,
+            alignContent: "center",
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
           }}
         >
-          {values}
-        </Picker>
+          <Text
+            style={{
+              color: "#3d3d3d",
+              fontSize: 20,
+              fontFamily: "Montserrat-ExtraBold",
+              textAlign: "center",
+            }}
+          >
+            {this.props.title}
+          </Text>
+        </View>
+        <View
+          style={{
+            height: 250,
+            backgroundColor: "white",
+
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Picker
+            style={{
+              width: 250,
+              height: 250,
+            }}
+            width={Dimensions.get("window").width * 0.8}
+            selectedValue={this.props.value}
+            mode={"dropdown"}
+            onValueChange={(itemValue, itemIndex) => {
+              // this.setState({ isModalVisible: false });
+              this.props.changeState(
+                itemValue,
+                this.props.type,
+                this.props.function ? this.props.function : parseInt
+              );
+            }}
+          >
+            {values}
+          </Picker>
+        </View>
         {this.renderButtonsModal()}
       </View>
     );
@@ -360,6 +432,7 @@ class PickerModalContentNew extends React.Component {
             isVisible={this.state.isModalVisible}
             onBackdropPress={() => this.setState({ isModalVisible: false })}
             onBackButtonPress={() => this.setState({ isModalVisible: false })}
+            
           >
             {this._renderModalContent()}
           </Modal>
@@ -401,7 +474,7 @@ class PickerModalContentNew extends React.Component {
             ) : (
               <View>
                 <Text style={styles.Right}>
-                {this.props.value !== strings("to fill")
+                  {this.props.value !== strings("to fill")
                     ? this.props.value + " " + this.props.extraValue
                     : "-" + " " + this.props.extraValue}
                 </Text>
@@ -415,6 +488,8 @@ class PickerModalContentNew extends React.Component {
             isVisible={this.state.isModalVisible}
             onBackdropPress={() => this.setState({ isModalVisible: false })}
             onBackButtonPress={() => this.setState({ isModalVisible: false })}
+            
+           
           >
             {this._renderModalContentAndroid()}
           </Modal>
@@ -469,13 +544,25 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: "white",
     padding: 22,
-    borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderColor: "#3363AD",
+    borderWidth: 4,
+    borderRadius: 10,
+    // alignItems: "center",
+    // flexDirection: "column",
+    // justifyContent: "center",
+    shadowRadius: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.5,
   },
   modalContentAndroid: {
-    width: 120,
+    height: 250,
+    backgroundColor: "white",
     borderRadius: 4,
     borderColor: "rgba(0, 0, 0, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white",
   },
   button: {
     backgroundColor: "lightblue",

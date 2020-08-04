@@ -857,34 +857,22 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
       //   </Text>
       // );
     } else if (this.props.modal_type === "BonusActivities") {
-      return this.getFeedContentFromString(
-        strings("id_18_42"),
-       ""
-      );
+      if (this.props.bonusType == 1) {
+        return <Text style={styles.textDescr}>{strings("id_18_43")}</Text>;
+      } else if (this.props.activity_minutes == 2) {
+        return <Text style={styles.textDescr}>{strings("id_18_50")}</Text>;
+      } else {
+        // 3
+        return <Text style={styles.textDescr}>{strings("id_18_51")}</Text>;
+      }
     } else if (this.props.modal_type === "DailyActivities") {
       if (this.props.activity_minutes >= 10000) {
-       
-          return this.getFeedContentFromString(
-            strings("id_18_41"),
-            ""
-          );
-        
+        return this.getFeedContentFromString(strings("id_18_41"), "");
       } else if (this.props.activity_minutes >= 5000) {
-        return (
-           this.getFeedContentFromString(
-            strings("id_18_39"),
-            ""
-          ))
-        
+        return this.getFeedContentFromString(strings("id_18_39"), "");
       } else {
-      
-          return this.getFeedContentFromString(
-            strings("id_18_37"),
-            ""
-          );
-        
+        return this.getFeedContentFromString(strings("id_18_37"), "");
       }
-      
     } else if (this.props.modal_type === "Trophies") {
       if (this.props.trophy) {
         if (this.props.trophy.position == 1) {
@@ -1186,30 +1174,16 @@ It's a Bronze that looks like Gold! Your fellow citizens should follow your exam
           {strings("training_sessio")}
         </Text>
       );
-    }  else if (this.props.modal_type === "BonusActivities") {
-      return (
-        <Text style={styles.textModalSplit}>{strings("id_18_42")}</Text>
-      );
+    } else if (this.props.modal_type === "BonusActivities") {
+      return <Text style={styles.textModalSplit}>{strings("id_18_42")}</Text>;
     } else if (this.props.modal_type === "DailyActivities") {
       if (this.props.activity_minutes >= 90) {
-       
-        return (
-          <Text style={styles.textModalSplit}>{strings("id_18_40")}</Text>
-        );
-      
-    } else if (this.props.activity_minutes >= 60) {
-      return (
-        <Text style={styles.textModalSplit}>{strings("id_18_38")}</Text>
-      );
-      
-    } else {
-    
-      return (
-        <Text style={styles.textModalSplit}>{strings("id_18_36")}</Text>
-      );
-      
-    }
-      
+        return <Text style={styles.textModalSplit}>{strings("id_18_40")}</Text>;
+      } else if (this.props.activity_minutes >= 60) {
+        return <Text style={styles.textModalSplit}>{strings("id_18_38")}</Text>;
+      } else {
+        return <Text style={styles.textModalSplit}>{strings("id_18_36")}</Text>;
+      }
     } else if (this.props.modal_type === "Muv") {
       return (
         <Text style={styles.textModalSplit}>

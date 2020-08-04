@@ -204,6 +204,143 @@ class AlertCarPooling extends React.Component {
     );
   };
 
+  inviteDeleteFriend = () => {
+    return (
+      <View
+        style={{
+          borderRadius: 10,
+          alignItems: "center",
+
+          flexDirection: "column",
+          justifyContent: "space-between",
+          shadowRadius: 5,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.5,
+          borderColor: "#FAB22A",
+          borderWidth: 4,
+
+          width: Dimensions.get("window").width * 0.8,
+          backgroundColor: "white",
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            alignContent: "center",
+            alignItems: "center",
+            paddingTop: 15,
+            width: Dimensions.get("window").width * 0.7,
+          }}
+        >
+          <View
+            style={{
+              width: 100,
+              height: 120,
+              flexDirection: "column",
+            justifyContent: "flex-start",
+            alignContent: "center",
+            alignItems: "center",
+            }}
+          >
+            <ImageBackground
+            style={{
+              width: 100,
+              height: 100,
+              alignSelf: "center",
+              justifyContent: "center",
+            }}
+            source={require("../../assets/images/rewards_item_bg.png")}
+          >
+            <Image
+              style={{
+                width: 80,
+                height: 80,
+                alignSelf: "center",
+              }}
+              // source={require("../../assets/images/avatars/0Biker1xhdpi.png")}
+
+              source={
+                images[
+                  this.props.infoAlert ? this.props.infoAlert.avatar : 1
+                ]
+              }
+            />
+             <Image
+          source={require("../../assets/images/friend/friend_add_icn.png")}
+          style={{
+            width: 25,
+            height: 25,
+            alignSelf: "center",
+          position: "absolute",
+          bottom: 5,
+          right: 5,
+            
+            
+          }}
+        />
+            </ImageBackground>
+          </View>
+          
+        </View>
+
+        <View
+          style={{
+            width: Dimensions.get("window").width * 0.7,
+            alignContent: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            padding: 15,
+          }}
+        >
+          <Text
+            style={{
+              color: "#3d3d3d",
+              fontSize: 14,
+              fontFamily: "OpenSans-Bold",
+              textAlign: "center",
+            }}
+          >
+            {this.getFeedContentFromString(
+              strings("id_20_23"),
+              this.props.infoAlert
+                ? this.props.infoAlert.username
+                : "Mario"
+            )}
+          </Text>
+        </View>
+
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            paddingBottom: 15,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => this.props.confermModal(this.props.infoSend)}
+          >
+            <Image
+              source={require("./../../assets/images/check_green_icn.png")}
+              style={styles.buttonImageStyle}
+            />
+          </TouchableOpacity>
+
+          <View style={styles.buttonModalImageStyle} />
+          <TouchableOpacity
+            onPress={() => this.props.closeModal(this.props.infoSend)}
+          >
+            <Image
+              source={require("./../../assets/images/cancel_icn.png")}
+              style={styles.buttonImageStyle}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   inviteReceiveFriend = () => {
     return (
       <View
@@ -705,7 +842,15 @@ class AlertCarPooling extends React.Component {
       return this.alertOnePlus();
     }  else if (this.props.type == "SearchFriend") {
       return this.inviteReceiveFriend();
-    }   else {
+    } else if (this.props.type == "AddFriend") {
+      return this.inviteReceiveFriend();
+    } else if (this.props.type == "friend") {
+      // siamo amici, posso cancellare l'amicizia 
+      return this.inviteDeleteFriend();
+    } else if (this.props.type == "sendFriend") {
+      // ho già mandato l'amicizia, non ho alert
+      return <View/>
+    } else {
       return this.inviteReceive();
     }
   };

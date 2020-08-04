@@ -12,25 +12,25 @@ class MapFeedRecapScreen extends React.Component {
 
     this.mapRef = null;
     this.state = {
-      load: false
+      load: false,
     };
   }
 
   componentDidMount() {
     InteractionManager.runAfterInteractions(() => {
       this.setState({
-        load: true
+        load: true,
       });
     });
   }
 
   componentWillUnmount() {
     this.setState({
-      load: false
+      load: false,
     });
   }
 
-  getActivityColor = activity => {
+  getActivityColor = (activity) => {
     let color;
 
     switch (activity) {
@@ -47,9 +47,8 @@ class MapFeedRecapScreen extends React.Component {
         }
         break;
       case 3:
+      case 4:
       case 5:
-      case 6:
-      case 7:
       case "Public":
       case "Bus":
       case "Train":
@@ -61,13 +60,14 @@ class MapFeedRecapScreen extends React.Component {
           color = "#F9B224";
         }
         break;
-        case "Carpooling":
-          {
-            color = "#3363AD";
-            
-           
-          }
-          break
+        case 6:
+      case 7:
+      case "Carpooling":
+      case "Car":
+        {
+          color = "#3363AD";
+        }
+        break;
       default:
         {
           color = "rgba(108, 186, 126, 1)";
@@ -84,13 +84,13 @@ class MapFeedRecapScreen extends React.Component {
 
     if (fromDb) {
       route.forEach((el, index) => {
-        let latitude = el.map(element => element[1]);
-        let longitude = el.map(element => element[0]);
+        let latitude = el.map((element) => element[1]);
+        let longitude = el.map((element) => element[0]);
         coordinates.push(
           latitude.map((elem, index) => {
             return {
               latitude: elem,
-              longitude: longitude[index]
+              longitude: longitude[index],
             };
           })
         );
@@ -187,13 +187,13 @@ class MapFeedRecapScreen extends React.Component {
       lastTripLongitude = route[0].map(element => element[0]); */
       console.log(route);
 
-      latitude = route.map(element => element.map(elem => elem[1]));
-      longitude = route.map(element => element.map(elem => elem[0]));
+      latitude = route.map((element) => element.map((elem) => elem[1]));
+      longitude = route.map((element) => element.map((elem) => elem[0]));
       latitude = this.flatten(latitude);
       longitude = this.flatten(longitude);
     } else {
-      latitude = route.map(element => element.map(elem => elem.latitude));
-      longitude = route.map(element => element.map(elem => elem.longitude));
+      latitude = route.map((element) => element.map((elem) => elem.latitude));
+      longitude = route.map((element) => element.map((elem) => elem.longitude));
       latitude = this.flatten(latitude);
       longitude = this.flatten(longitude);
     }
@@ -222,7 +222,7 @@ class MapFeedRecapScreen extends React.Component {
     if (this.state.load)
       return (
         <MapView
-          ref={ref => {
+          ref={(ref) => {
             this.mapRef = ref;
           }}
           style={styles.map}
@@ -231,16 +231,16 @@ class MapFeedRecapScreen extends React.Component {
               [
                 {
                   latitude: MinLatitude - 0.0005,
-                  longitude: MinLongitude - 0.0005
+                  longitude: MinLongitude - 0.0005,
                 },
                 {
                   latitude: MaxLatitude + 0.0005,
-                  longitude: MaxLongitude + 0.0005
-                }
+                  longitude: MaxLongitude + 0.0005,
+                },
               ],
               {
                 edgePadding: { top: 40, right: 20, bottom: 80, left: 20 },
-                animated: false
+                animated: false,
               }
             )
           }
@@ -259,7 +259,7 @@ class MapFeedRecapScreen extends React.Component {
               image={require("./../../assets/images/map_pin_end.png")}
               coordinate={{
                 latitude: latitude[latitude.length - 1],
-                longitude: longitude[longitude.length - 1]
+                longitude: longitude[longitude.length - 1],
               }}
               anchor={{ x: 0.5, y: 0.5 }}
             />

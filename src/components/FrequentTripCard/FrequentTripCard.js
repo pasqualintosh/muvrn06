@@ -31,6 +31,7 @@ import { deleteMostFrequentRoute } from "./../../domains/login/ActionCreators";
 import Aux from "../../helpers/Aux";
 import Modal from "react-native-modal";
 
+import { getImageModalSplitPath } from "../../domains/tracking/Support"
 class FrequentTripCard extends React.Component {
   constructor(props) {
     super(props);
@@ -124,26 +125,6 @@ class FrequentTripCard extends React.Component {
     });
   }
 
-  getImagePath = (label) => {
-    switch (label) {
-      case "walk":
-        return require("../../assets/images/onboarding-walk.png");
-      case "bike":
-        return require("../../assets/images/onboarding-bike.png");
-      case "bus":
-        return require("../../assets/images/onboarding-bus.png");
-      case "car":
-        return require("../../assets/images/onboarding-car.png");
-      case "motorbike":
-        return require("../../assets/images/onboarding-moto.png");
-      case "train":
-        return require("../../assets/images/onboarding-train.png");
-      case "car_pooling": // car_pooling dal 15/02/2019 diventa train
-        return require("../../assets/images/carpooling_icn.png");
-      default:
-        return require("../../assets/images/onboarding-walk.png");
-    }
-  };
 
   renderImages() {
     let array_sliders = [
@@ -158,14 +139,9 @@ class FrequentTripCard extends React.Component {
           value: this.state.routine.bike_slider,
         },
         {
-          label: "bus",
-          type: "bus_slider",
-          value: this.state.routine.bus_slider,
-        },
-        {
-          label: "car",
-          type: "car_slider",
-          value: this.state.routine.car_slider,
+          label: "scooter",
+          type: "electric_scooter_slider",
+          value: this.state.routine.electric_scooter_slider,
         },
         {
           label: "motorbike",
@@ -177,6 +153,18 @@ class FrequentTripCard extends React.Component {
           type: "train_slider",
           value: this.state.routine.train_slider,
         },
+        {
+          label: "car",
+          type: "car_slider",
+          value: this.state.routine.car_slider,
+        },
+        {
+          label: "bus",
+          type: "bus_slider",
+          value: this.state.routine.bus_slider,
+        },
+        
+      
       ],
       count_values = 0;
     const dim =
@@ -185,7 +173,7 @@ class FrequentTripCard extends React.Component {
         ? Dimensions.get("window").width * 0.25
         : Dimensions.get("window").height * 0.07;
 
-    let array_sliders_2 = array_sliders.splice(3);
+    let array_sliders_2 = array_sliders.splice(4);
     return (
       <View style={{ backgroundColor: "#637FB8" }}>
         <View style={styles.imagesContainer}>
@@ -197,7 +185,7 @@ class FrequentTripCard extends React.Component {
                 width: dim,
                 opacity: this.state.routine[e.type] ? 1 : 0.4,
               }}
-              source={this.getImagePath(e.label)}
+              source={getImageModalSplitPath(e.label)}
             />
           ))}
         </View>
@@ -210,7 +198,7 @@ class FrequentTripCard extends React.Component {
                 height: dim,
                 opacity: this.state.routine[e.type] ? 1 : 0.4,
               }}
-              source={this.getImagePath(e.label)}
+              source={getImageModalSplitPath(e.label)}
             />
           ))}
         </View>

@@ -96,7 +96,9 @@ class GDPRScreen extends React.Component {
                     flexDirection: "row",
                     width: Dimensions.get("window").width,
                     
-                    justifyContent: 'flex-start'
+                    justifyContent: 'flex-start',
+                    height: 30,
+                  paddingTop: 10
                   }}
                 >
                   <TouchableOpacity
@@ -104,7 +106,7 @@ class GDPRScreen extends React.Component {
                       this.props.navigation.goBack(null);
                     }}
                   >
-                    <View style={{ width: 30, height: 30 }}>
+                    <View style={{ width: 30, height: 30, paddingLeft: 10 }}>
                       <Icon
                         name="md-arrow-forward"
                         size={18}

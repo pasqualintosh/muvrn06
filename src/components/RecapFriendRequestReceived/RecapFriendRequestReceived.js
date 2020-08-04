@@ -218,8 +218,10 @@ class RecapFriendRequestReceived extends React.PureComponent {
                 justifyContent: "space-between",
               }}
             >
+              
               <Text style={styles.textTitle}>
-                {this.descriptionTitle()}
+                {/* {this.descriptionTitle()} */}
+                <Text style={styles.textModalSplit}>{this.descriptionTitle()}</Text>
                 {label}
               </Text>
               {this.descriptionFeed()}
@@ -416,9 +418,8 @@ const styles = {
   textTitle: {
     fontSize: 11,
     fontFamily: "OpenSans-Regular",
-    fontWeight: "bold",
     marginVertical: 6,
-    marginTop: 15,
+    marginTop: 10,
     
   },
   textPoints: {

@@ -6,9 +6,7 @@ import {
   RefreshControl,
   ImageBackground,
 } from 'react-native';
-
 import ListView from 'deprecated-react-native-listview';
-
 import {styles, negativeData} from './Style';
 import UserItem from './../../components/UserItem/UserItem';
 import Aux from './../../helpers/Aux';

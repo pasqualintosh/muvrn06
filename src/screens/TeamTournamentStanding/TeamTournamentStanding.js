@@ -10,11 +10,8 @@ import {
   Platform,
   ImageBackground,
 } from 'react-native';
-
-import ListView from 'deprecated-react-native-listview';
-
 import Svg, {Circle, Line} from 'react-native-svg';
-
+import ListView from 'deprecated-react-native-listview';
 import {styles, negativeData} from './Style';
 import WavyArea from './../../components/WavyArea/WavyArea';
 import UserItem from './../../components/UserItem/UserItem';

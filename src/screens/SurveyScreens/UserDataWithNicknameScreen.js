@@ -655,6 +655,7 @@ const styles = StyleSheet.create({
     height: Dimensions.get("window").height,
   },
   icon: {
+    paddingTop: 10,
     width: Dimensions.get("window").width,
     justifyContent: "center",
     alignSelf: "center",

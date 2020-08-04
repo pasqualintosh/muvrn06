@@ -27,8 +27,8 @@ class AlertFeedback extends React.Component {
     super(props);
     this.state = {
       arrayResponse: 0,
-      question: 0
-    }
+      question: 0,
+    };
   }
 
   alertHonor = () => {
@@ -193,6 +193,120 @@ class AlertFeedback extends React.Component {
     );
   };
 
+  alertConfermFeedback = () => {
+    return (
+      <View
+        style={{
+          borderRadius: 10,
+          alignItems: "center",
+
+          flexDirection: "column",
+          justifyContent: "space-between",
+          shadowRadius: 5,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.5,
+          borderColor: this.props.infoAlert.borderColor,
+          borderWidth: 4,
+
+          width: Dimensions.get("window").width * 0.8,
+          backgroundColor: "white",
+        }}
+      >
+        <Image
+          style={{
+            width: 120,
+            height: 120,
+            paddingTop: 15,
+          }}
+          // source={require("../../assets/images/avatars/0Biker1xhdpi.png")}
+          source={this.props.infoAlert.modalTypeImageUrl}
+        />
+
+        <View
+          style={{
+            width: Dimensions.get("window").width * 0.7,
+            alignContent: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            padding: 15,
+          }}
+        >
+          <Text
+            style={{
+              color: "#3d3d3d",
+              fontSize: 14,
+              fontFamily: "OpenSans-Bold",
+              textAlign: "center",
+            }}
+          >
+            {strings('id_1_45')}
+          </Text>
+        </View>
+
+        <View
+          style={{
+            justifyContent: "center",
+            flexDirection: "row",
+            paddingTop: 30,
+            paddingBottom: 30,
+          }}
+          
+        >
+          <LinearGradient
+            start={{ x: 0.0, y: 0.0 }}
+            end={{ x: 1.0, y: 0.0 }}
+            locations={[0, 1.0]}
+            colors={["#7D4D99", "#6497CC"]}
+            style={{
+              width: Dimensions.get("window").width * 0.4,
+              height: 46,
+              borderRadius: 23,
+              alignItems: "center",
+              shadowRadius: 5,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 5 },
+              shadowOpacity: 0.5,
+              elevation: 1,
+            }}
+          >
+            <TouchableHighlight
+              onPress={() => this.props.closeModal()}
+              style={{
+                width: Dimensions.get("window").width * 0.4,
+                height: 46,
+                borderRadius: 23,
+                alignItems: "center",
+              }}
+
+              // disabled={this.props.status === "Inviting" ? true : false}
+            >
+              <View
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    // margin: 10,
+                    color: "#FFFFFF",
+                    fontFamily: "OpenSans-Bold",
+
+                    fontSize: 16,
+                  }}
+                >
+                  chiudi
+                </Text>
+              </View>
+            </TouchableHighlight>
+          </LinearGradient>
+        </View>
+      </View>
+    );
+  };
+
   getFeedContentFromString = (str, rplc_text) => {
     let first_perc = str.indexOf("%");
     let last_perc = str.indexOf("%", first_perc + 1);
@@ -209,25 +323,23 @@ class AlertFeedback extends React.Component {
   };
 
   selectResponse = (question, id) => {
-    this.setState(prevState => {
-     
+    this.setState((prevState) => {
       return {
         arrayResponse: id,
-        question: question
+        question: question,
       };
     });
     // this.props.confermModal( { id,
     //   question})
-   
   };
 
   confirmAnswer = () => {
     if (this.state.arrayResponse) {
-      this.props.confermModal(this.state)
+      this.props.confermModal(this.state);
     } else {
-      this.props.closeModal(this.props.infoSend)
+      this.props.closeModal(this.props.infoSend);
     }
-  }
+  };
 
   continueButton = () => {
     return (
@@ -236,7 +348,7 @@ class AlertFeedback extends React.Component {
           justifyContent: "center",
           flexDirection: "row",
           paddingTop: 30,
-          paddingBottom: 30
+          paddingBottom: 30,
         }}
       >
         <LinearGradient
@@ -253,7 +365,7 @@ class AlertFeedback extends React.Component {
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 5 },
             shadowOpacity: 0.5,
-            elevation: 1
+            elevation: 1,
           }}
         >
           <TouchableHighlight
@@ -262,7 +374,7 @@ class AlertFeedback extends React.Component {
               width: Dimensions.get("window").width * 0.4,
               height: 46,
               borderRadius: 23,
-              alignItems: "center"
+              alignItems: "center",
             }}
 
             // disabled={this.props.status === "Inviting" ? true : false}
@@ -271,7 +383,7 @@ class AlertFeedback extends React.Component {
               style={{
                 flex: 1,
                 alignItems: "center",
-                justifyContent: "center"
+                justifyContent: "center",
               }}
             >
               <Text
@@ -280,7 +392,7 @@ class AlertFeedback extends React.Component {
                   color: "#FFFFFF",
                   fontFamily: "OpenSans-Bold",
 
-                  fontSize: 16
+                  fontSize: 16,
                 }}
               >
                 continua
@@ -297,16 +409,14 @@ class AlertFeedback extends React.Component {
 
     return questions.map((elem, index) => (
       <TouchableOpacity
-        key={index }
+        key={index}
         onPress={() => this.selectResponse(elem.question, elem.id)}
         style={[
           styles.categoriesViewList,
           {
             backgroundColor:
-              this.state.arrayResponse == elem.id
-                ? "#8EC2E6"
-                : "#F7F8F9"
-          }
+              this.state.arrayResponse == elem.id ? "#8EC2E6" : "#F7F8F9",
+          },
         ]}
       >
         <View style={styles.indexResponse}>
@@ -321,21 +431,19 @@ class AlertFeedback extends React.Component {
 
   renderChoose = (feed) => {
     if (feed.length && feed[0].questions.length) {
-      const question = feed[0].questions[0]
-      console.log(feed)
+      const question = feed[0].questions[0];
+      console.log(feed);
       return (
         <View
           style={{
             width: Dimensions.get("window").width * 0.9,
             justifyContent: "center",
-            flexDirection: "row"
+            flexDirection: "row",
           }}
         >
           <View style={styles.categories}>
-            
-  
             <Text style={styles.TopQuestionTitle}>{question.question}</Text>
-  
+
             <View style={{ height: 30 }} />
             {this.renderQuestion(question.answers)}
             {this.continueButton()}
@@ -343,10 +451,11 @@ class AlertFeedback extends React.Component {
         </View>
       );
     } else {
-      return(<View/>)
+      return <View />;
     }
-   
   };
+
+
 
   questionWithAnswer = () => {
     if (this.props.infoAlert) {
@@ -355,18 +464,17 @@ class AlertFeedback extends React.Component {
           style={{
             borderRadius: 10,
             alignItems: "center",
-  
+
             flexDirection: "column",
             justifyContent: "space-between",
-            alignContent: 'center',
-            alignItems: 'center',
+            alignContent: "center",
+            alignItems: "center",
             shadowRadius: 5,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 5 },
             shadowOpacity: 0.5,
             borderColor: "#7D4D99",
             borderWidth: 4,
-  
             width: Dimensions.get("window").width * 0.9,
             backgroundColor: "white",
           }}
@@ -375,9 +483,8 @@ class AlertFeedback extends React.Component {
         </View>
       );
     } else {
-      return (<View />)
+      return <View />;
     }
-    
   };
 
   inviteReceive = () => {
@@ -691,7 +798,7 @@ class AlertFeedback extends React.Component {
                   alignContent: "center",
                 }}
               >
-                {strings('id_1_18')}
+                {strings("id_1_18")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -724,7 +831,7 @@ class AlertFeedback extends React.Component {
                   alignContent: "center",
                 }}
               >
-                {strings('id_1_19')}
+                {strings("id_1_19")}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -736,7 +843,9 @@ class AlertFeedback extends React.Component {
   renderCointaner = () => {
     if (this.props.type == "Answers") {
       return this.questionWithAnswer();
-    }   else {
+    } else if (this.props.type == "Conferm") {
+      return this.alertConfermFeedback();
+    } else {
       return this.questionWithAnswer();
     }
   };
@@ -1019,14 +1128,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     paddingBottom: 8,
     borderBottomColor: "#707070",
-    borderBottomWidth: 1
+    borderBottomWidth: 1,
   },
   viewCicle: {
     width: 50,
     flexDirection: "column",
     justifyContent: "center",
     alignContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   first: {
     flex: 1,
@@ -1037,7 +1146,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderTopColor: "#9D9B9C",
     borderTopWidth: 0.3,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   indexResponse: {
     height: 53,
@@ -1045,19 +1154,19 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "center",
     alignContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   viewResponse: {
     height: 53,
     width: Dimensions.get("window").width * 0.7 - 40,
     flexDirection: "column",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   startView: {
     flexDirection: "column",
     justifyContent: "center",
     alignContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   categoriesViewList: {
     marginTop: 15,
@@ -1065,28 +1174,28 @@ const styles = StyleSheet.create({
     height: 53,
     justifyContent: "flex-start",
     flexDirection: "row",
-    alignSelf: 'center',
-    alignContent: 'center',
+    alignSelf: "center",
+    alignContent: "center",
     backgroundColor: "#F7F8F9",
     shadowRadius: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.5,
-    elevation: 1
+    elevation: 1,
   },
   rowListTitle: {
     justifyContent: "center",
     alignContent: "center",
     alignItems: "center",
 
-    flexDirection: "row"
+    flexDirection: "row",
   },
   rowList: {
     justifyContent: "flex-start",
     alignContent: "center",
     alignItems: "center",
 
-    flexDirection: "row"
+    flexDirection: "row",
   },
   rowListResponse: {
     justifyContent: "flex-start",
@@ -1095,7 +1204,7 @@ const styles = StyleSheet.create({
 
     flexDirection: "row",
     paddingTop: 8,
-    paddingBottom: 8
+    paddingBottom: 8,
   },
 
   categoriesTitleText: {
@@ -1106,30 +1215,30 @@ const styles = StyleSheet.create({
     // fontWeight: "bold",
     // left: 20,
     fontFamily: "OpenSans-Bold",
-    color: "#3D3D3D"
+    color: "#3D3D3D",
   },
   TopQuestionTitle: {
     fontSize: 15,
     fontFamily: "OpenSans-Bold",
     color: "#707070",
-    textAlign: 'center'
+    textAlign: "center",
   },
   limitImageTitle: {
     fontSize: 12,
     fontFamily: "OpenSans-Regular",
-    color: "#D5D5D5"
+    color: "#D5D5D5",
   },
   indexTitle: {
     fontSize: 25,
     fontFamily: "Montserrat-ExtraBold",
-    color: "#000000"
+    color: "#000000",
   },
   categoriesView: {
     paddingTop: 10,
     paddingBottom: 10,
     width: Dimensions.get("window").width,
     justifyContent: "center",
-    flexDirection: "row"
+    flexDirection: "row",
   },
   categories: {
     //height: 20,
@@ -1138,7 +1247,7 @@ const styles = StyleSheet.create({
     paddingBottom: 25,
     width: Dimensions.get("window").width * 0.8,
     justifyContent: "flex-start",
-    flexDirection: "column"
+    flexDirection: "column",
   },
   categorieText: {
     //  alignSelf: "flex-start",
@@ -1148,7 +1257,7 @@ const styles = StyleSheet.create({
     // fontWeight: "bold",
     // left: 20,
     fontFamily: "OpenSans-Bold",
-    color: "#FFFFFF"
+    color: "#FFFFFF",
   },
   Question: {
     fontSize: 12,
@@ -1156,7 +1265,7 @@ const styles = StyleSheet.create({
     // fontWeight: "bold",
     // left: 20,
     fontFamily: "OpenSans-Bold",
-    color: "#3D3D3D"
+    color: "#3D3D3D",
   },
   indexResponseText: {
     fontSize: 15,
@@ -1164,7 +1273,7 @@ const styles = StyleSheet.create({
     // fontWeight: "bold",
     // left: 20,
     color: "#000000",
-    fontFamily: "Montserrat-ExtraBold"
+    fontFamily: "Montserrat-ExtraBold",
   },
   viewResponseText: {
     fontSize: 12,
@@ -1172,7 +1281,7 @@ const styles = StyleSheet.create({
     // fontWeight: "bold",
     // left: 20,
     color: "#000000",
-    fontFamily: "OpenSans-Regular"
+    fontFamily: "OpenSans-Regular",
   },
   QuestionResponse: {
     fontSize: 12,
@@ -1180,7 +1289,7 @@ const styles = StyleSheet.create({
     // fontWeight: "bold",
     // left: 20,
     color: "#707070",
-    fontFamily: "OpenSans-Regular"
+    fontFamily: "OpenSans-Regular",
   },
 
   other: {
@@ -1190,26 +1299,26 @@ const styles = StyleSheet.create({
     borderTopColor: "#9D9B9C",
     borderTopWidth: 0.3,
 
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   lastPadding: {
     flex: 1,
     height: Dimensions.get("window").height * 0.2,
-    flexDirection: "row"
+    flexDirection: "row",
   },
   last: {
     flex: 1,
     height: Dimensions.get("window").height * 0.1,
     flexDirection: "row",
     borderTopColor: "#9D9B9C",
-    borderTopWidth: 0.3
+    borderTopWidth: 0.3,
   },
   leftFrequentRoute: {
     // alignSelf: "center",
     // textAlignVertical: "center",
     // flex: 1,
     fontSize: 15,
-    fontWeight: "bold"
+    fontWeight: "bold",
     // left: 20
   },
   left: {
@@ -1220,7 +1329,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     left: 20,
     fontFamily: "OpenSans-Bold",
-    color: "#3D3D3D"
+    color: "#3D3D3D",
   },
   leftDescription: {
     alignSelf: "auto",
@@ -1229,7 +1338,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     left: 20,
     fontFamily: "OpenSans-Regular",
-    color: "#3D3D3D"
+    color: "#3D3D3D",
   },
   session: {
     alignSelf: "flex-start",
@@ -1238,7 +1347,7 @@ const styles = StyleSheet.create({
     alignContent: "flex-start",
     alignItems: "flex-start",
     flex: 1,
-    height: Dimensions.get("window").height * 0.1
+    height: Dimensions.get("window").height * 0.1,
   },
   sessionFirst: {
     alignSelf: "flex-start",
@@ -1250,7 +1359,7 @@ const styles = StyleSheet.create({
     height:
       Dimensions.get("window").height * 0.1 > 100
         ? Dimensions.get("window").height * 0.1
-        : 100
+        : 100,
   },
   right: {
     alignSelf: "center",
@@ -1258,44 +1367,44 @@ const styles = StyleSheet.create({
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     fontSize: 13,
-    color: "#3D3D3D"
+    color: "#3D3D3D",
   },
   rightAndroid: {
     alignSelf: "center",
-    right: 10
+    right: 10,
   },
   rightText: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     fontSize: 13,
-    color: "#3D3D3D"
+    color: "#3D3D3D",
   },
   centerTextContainer: {
     // width: 200,
     // height: 200,
     position: "absolute",
-    top: Dimensions.get("window").height * 0.1 + 190
+    top: Dimensions.get("window").height * 0.1 + 190,
   },
   centerValue: {
     fontFamily: "Montserrat-ExtraBold",
     color: "#3F3F3F",
     fontSize: 37,
     textAlign: "center",
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   centerTextParam: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     color: "#9D9B9C",
     fontSize: 9,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
   iconText: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     color: "#fff",
     fontSize: 10,
-    textAlignVertical: "center"
+    textAlignVertical: "center",
   },
   mfrText: {
     fontFamily: "OpenSans-Regular",
@@ -1304,19 +1413,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#3D3D3D",
     fontSize: 13,
-    textAlign: "center"
+    textAlign: "center",
   },
   modalContent: {
     backgroundColor: "white",
     padding: 22,
 
     borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)"
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   modalContentAndroid: {
     width: 120,
     borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)"
+    borderColor: "rgba(0, 0, 0, 0.1)",
   },
   button: {
     backgroundColor: "lightblue",
@@ -1325,8 +1434,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)"
-  }
+    borderColor: "rgba(0, 0, 0, 0.1)",
+  },
 });
 
 if (NativeModules.RNDeviceInfo.model.includes("iPad")) {

@@ -701,7 +701,7 @@ class ListRecapActivity extends React.Component {
           return <View key={item.updated_at} />;
         }
       }  else if (item.from_user) {
-        // amici 
+        // amici, richiesta ricevuta
           return (
             <View key={item.created + index}>
               <RecapFriendRequestReceived

@@ -35,6 +35,7 @@ import {
 } from "./../../domains/trainings/ActionCreators";
 
 import { strings } from "../../config/i18n";
+import { getImageModalSplitPath, getRenderModalSplitLabel } from "../../domains/tracking/Support"
 
 class ChangeFrequentTripModalSplitScreen extends React.Component {
   constructor(props) {
@@ -50,7 +51,15 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
           value: 0,
         },
         {
+          label: "scooter",
+          value: 0,
+        },
+        {
           label: "bus",
+          value: 0,
+        },
+        {
+          label: "train",
           value: 0,
         },
         {
@@ -65,10 +74,8 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
         //   label: "car_pooling",
         //   value: 0
         // },
-        {
-          label: "train",
-          value: 0,
-        },
+        
+       
       ],
       selected: false,
     };
@@ -139,58 +146,63 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
     }
   };
 
-  getRenderLabel = (label) => {
-    switch (label) {
-      case "walk":
-        return strings("walking");
-      case "bike":
-        return strings("bicycle");
-      case "bus":
-        return strings("local_public_tr");
-      case "car":
-        return strings("car");
-      case "motorbike":
-        return strings("motorbike");
-      case "car_pooling":
-        return strings("car_pooling");
-      default:
-        return strings("walking");
-    }
-  };
+
 
   renderSlider() {
     return this.state.values.map((item, index) => (
-      <View key={index} style={{ flexDirection: "row" }}>
+      <View
+        key={index}
+        style={{
+          flexDirection: "row",
+          height: 80,
+          width: Dimensions.get("window").width * 0.9,
+          alignSelf: "center",
+          justifyContent: "center",
+        }}
+      >
         <View style={{ flex: 0.3 }}>
           <Image
             style={{
               width: 60,
               height: 60,
             }}
-            source={this.getImagePath(this.state.values[index].label)}
+            source={getImageModalSplitPath(this.state.values[index].label)}
           />
         </View>
         <View style={{ flex: 0.7, marginTop: 10 }}>
           <Slider
             value={this.state.values[index].value}
             onValueChange={(value) => {
+              this.setState((prevState) => {
+                const newValues = prevState.values;
+                newValues[index].value = value;
+                let tot_value = 0;
+                // se almeno ho un valore positivo, 
+                newValues.forEach(el => (tot_value += el.value));
+
+                
+                return { values: newValues, selected: tot_value ? true : false };
+              });
+              /*
               let tot_value = 0;
-              this.state.values.forEach((el) => (tot_value += el.value));
+              this.state.values.forEach(el => (tot_value += el.value));
 
               let k = 0;
-              for (let ind = 0; ind < 6; ind++) {
+              for (let ind = 0; ind < 7; ind++) {
                 // non sempre devo decrementare tutto
                 if (ind != index && this.state.values[ind].value > 0) k++;
               }
 
+              if (tot_value > 0) {
               if (tot_value > 300) {
                 let v = this.state.values;
                 let diff_value = 10 / k;
 
-                for (ind = 0; ind < 6; ind++) {
+                for (ind = 0; ind < 7; ind++) {
                   if (ind == index) v[ind].value = value;
                   else if (v[ind].value > 0) v[ind].value -= diff_value;
                 }
+
 
                 this.setState({ values: v, selected: true });
               } else {
@@ -198,19 +210,34 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
                 v[index].value = value;
                 this.setState({ values: v, selected: true });
               }
-
-              tot_value = 0;
-              this.state.values.forEach((el) => (tot_value += el.value));
+              } else {
+                let v = this.state.values;
+                v[index].value = value;
+                this.setState({ values: v, selected: false });
+              }
+              */
+              
             }}
-            trackStyle={{ backgroundColor: "#3d3d3d", height: 2.5 }}
+            trackStyle={{
+              backgroundColor: "#ffffff",
+              height: 4,
+              borderRadius: 2,
+            }}
             // thumbImage={this.getImagePath(this.state.values[index].label)}
             style={{ height: 40 }}
-            thumbStyle={{ height: 20, width: 20, borderRadius: 15 }}
-            thumbTintColor={"#3d3d3d"}
-            minimumTrackTintColor={"#3d3d3d"}
+            thumbStyle={{
+              height: 26,
+              width: 26,
+              borderRadius: 13,
+              borderWidth: 2,
+              borderColor: "#FFFFFF",
+            }}
+            thumbTintColor={"#FAB21E"}
+            minimumTrackTintColor={"#ffffff"}
             minimumValue={0}
             maximumValue={100}
             step={10}
+            textRight={getRenderModalSplitLabel(this.state.values[index].label)}
           />
         </View>
       </View>
@@ -234,53 +261,7 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
   };
 
   render() {
-    let shadowOpt;
-    if (Platform.OS == "ios") {
-      shadowOpt = {
-        width: Dimensions.get("window").width * 0.2,
-        height: 40,
-        color: "#111",
-        border: 4,
-        radius: 5,
-        opacity: 0.25,
-        x: 0,
-        y: 1,
-        style: {
-          position: "absolute",
-          top: 0,
-        },
-      };
-      if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
-        shadowOpt = {
-          width: Dimensions.get("window").width * 0.2,
-          height: 28,
-          color: "#111",
-          border: 4,
-          radius: 5,
-          opacity: 0.25,
-          x: 0,
-          y: 1,
-          style: {
-            position: "absolute",
-            top: 0,
-          },
-        };
-      }
-    } else
-      shadowOpt = {
-        width: Dimensions.get("window").width * 0.2,
-        height: 40,
-        color: "#444",
-        border: 6,
-        radius: 5,
-        opacity: 0.35,
-        x: 0,
-        y: 1,
-        style: {
-          position: "absolute",
-          top: 0,
-        },
-      };
+    
     return (
       <ImageBackground
         source={require("./../../assets/images/bg-login.png")}
@@ -311,13 +292,13 @@ class ChangeFrequentTripModalSplitScreen extends React.Component {
             }}
           >
             <View style={[styles.buttonContainer]}>
-              {/* <BoxShadow setting={shadowOpt} /> */}
+             
               <TouchableWithoutFeedback
                 onPress={() => {
                   let tot_value = 0;
                   this.state.values.forEach((el) => (tot_value += el.value));
 
-                  if (tot_value >= 100) {
+                  if (tot_value >= 1) {
                     // this.props.dispatch(
                     //   deleteMostFrequentRoute(
                     //     {},

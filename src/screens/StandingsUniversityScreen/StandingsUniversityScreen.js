@@ -11,9 +11,7 @@ import {
   Image,
   TouchableHighlight,
 } from 'react-native';
-
 import ListView from 'deprecated-react-native-listview';
-
 import Svg, {Circle, Line} from 'react-native-svg';
 
 import {styles, negativeData} from './Style';

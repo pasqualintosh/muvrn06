@@ -1,3 +1,5 @@
+import { strings } from "../../config/i18n";
+
 // calcolo delle calorie con peso, tempo e tipo di esercizio
 export function getCalories(pounds, minutes, exercise) {
   let coef = 0.0383;
@@ -141,8 +143,82 @@ export function getIdModalTypeNew(modal_type = "Walking", coef = 800) {
   }
 }
 
+export function getImageUrl (label) {
+  switch (label) {
+    case "Walking":
+      return require("../../assets/images/walk_icn_recap.png");
+    case "Biking":
+      return require("../../assets/images/bike_icn_recap.png");
+    case "Public":
+    case "Bus":
+      return require("../../assets/images/bus_icn.png");
+      
+    case "Train":
+      return require("../../assets/images/train_icn.png");
+    case "Metro":
+      return require("../../assets/images/metro_icn.png");
+
+    case "Carpooling":
+      return require("../../assets/images/carpooling_icn.png");
+      
+    case "Multiple":
+      return require("../../assets/images/multitrack_icn_recap.png");
+     
+    default:
+      return require("../../assets/images/walk_icn_recap.png");
+  }
+};
+
+// image per gli slider per modal split 
+export function  getImageModalSplitPath (label)  {
+  switch (label) {
+    case "walk":
+      return require("../../assets/images/onboardingImage/walk_icn_onboarding.png");
+    case "bike":
+      return require("../../assets/images/onboardingImage/bike_icn_onboarding.png");
+    case "bus":
+      return require("../../assets/images/onboardingImage/bus_icn_onboarding.png");
+    case "car":
+      return require("../../assets/images/onboardingImage/car_icn_onboarding.png");
+    case "motorbike":
+      return require("../../assets/images/onboardingImage/moto_icn_onboarding.png");
+    case "train":
+      return require("../../assets/images/onboardingImage/trai_icn_onboarding.png");
+    case "scooter": // car_pooling dal 15/02/2019 diventa train
+      return require("../../assets/images/onboardingImage/scooter_icn_onboarding.png");
+    default:
+      return require("../../assets/images/onboardingImage/walk_icn_onboarding.png");
+  }
+};
+
+export function getRenderModalSplitLabel  (label) {
+  switch (label) {
+    case "walk":
+      return strings("id_0_151");
+    case "bike":
+      return strings("id_0_152");
+    case "bus":
+      return strings("id_0_153");
+      case "train":
+        return strings("id_0_154");
+    case "car":
+      return strings("id_0_155");
+    case "motorbike":
+      return strings("id_0_156");
+    case "car_pooling":
+      return strings("id_0_155");
+      case "scooter":
+        return strings("id_0_157");
+        
+      
+    default:
+      return strings("id_0_151");
+  }
+};
+
 export function getIdModalTypeFromBackend(modal_type = "Walking") {
   switch (modal_type) {
+    // Multiple esiste anche nei recap, non so se deve gestire anche questo caso 
     case "Walking":
       {
         return 1;

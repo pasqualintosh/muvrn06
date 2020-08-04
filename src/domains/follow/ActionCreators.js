@@ -157,6 +157,7 @@ export function getListSendRequestFriend(info, callback = () => {}) {
       console.log(response);
       if (response.status === 200) {
         dispatch(UpdateSpecificData({ listSendRequestFriend: response.data }));
+       
         callback;
       } else if (response.status == 401) {
         // se il token è scaduto
@@ -358,6 +359,68 @@ export async function sendRequestFriend(
   }
 }
 
+// cancello l'amicizia
+export async function deleteFriend(
+  infoSend = {
+    to_user: 0,
+  },
+  callback = () => {}
+) {
+  
+  console.log("deleteFriend");
+  console.log(infoSend);
+  let { access_token } = store.getState().login;
+ // /account/friendship/delete_friend/{user_id}
+  try {
+    // se ho l'id dell'utente da invitare
+    if (infoSend.to_user) {
+      const response = await requestNewBackend(
+        "delete",
+        "/api/v1/account/friendship/delete_friend/" + infoSend.to_user,
+        access_token,
+        null,
+        "application/json",
+        "Bearer"
+      );
+
+      console.log(response);
+      if (response.status === 200) {
+        store.dispatch(getListFriend());
+        callback;
+      }
+      if (response.status === 400) {
+        // data: "Friendship already requested"
+        callback(response.data);
+        store.dispatch(getListSendRequestFriend());
+      } else if (response.status == 401) {
+        // se il token è scaduto
+        // lo rinnovo e poi ricarico le richieste dall'app
+
+        console.log("token scaduto");
+        store.dispatch(
+          forceRefreshTokenWithCallback(deleteFriend(infoSend, callback))
+        );
+      } else {
+        const msg = new Error("deleteFriend fail");
+        bugsnag.notify(msg, function (report) {
+          report.metadata = { problem: response };
+        });
+      }
+    }
+  } catch (error) {
+    if (error.response) {
+      console.log(error.response.data);
+      console.log(error.response.status);
+      console.log(error.response.headers);
+    } else if (error.request) {
+      console.log(error.request);
+    } else {
+      console.log(error.message);
+    }
+    console.log(error.config);
+  }
+}
+
 // rispondo alla richiesta di amicizia di un utente specificando l'id dell'invitante e se accetto o no il messaggio
 export async function responseRequestFriend(
   infoSend = {
@@ -393,16 +456,19 @@ export async function responseRequestFriend(
       if (response.status === 201) {
         // accetto la richiesta
 
-        callback(response);
+       
         store.dispatch(getListRequestFriend());
 
         // se ho accettato allora ho un nuovo amico quindi carico anche gli amico
         store.dispatch(getListFriend());
+        // aggiorno la scheda 
+        callback(response);
       } else if (response.status === 200) {
         // rifiuto la richiesta
-
-        callback(response);
+        
+        
         store.dispatch(getListRequestFriend());
+        callback(response);
       } else if (response.status === 400) {
         // richiesta gia accetta o rifiutata
 

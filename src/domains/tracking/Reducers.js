@@ -1071,7 +1071,6 @@ export default function trackingReducer(state = DefaultState, action) {
               activity.splice(start_index, end_index - start_index + 1);
               console.log(activity);
             }
-
             return {
               ...state,
               activity: activity,
@@ -2135,17 +2134,27 @@ export default function trackingReducer(state = DefaultState, action) {
                 start_time_subTrip_array[indexStart] <= start_pooling
               ) {
                 // vedo se è una tratta carpooling, controllo live a seconda se è index > 0 o no
-                if (
-                  (indexStart &&
-                    state.PreviousRoute[indexStart].activityChoice.type ==
-                      "Carpooling") ||
-                  (!indexStart && state.activityChoice.type == "Carpooling")
-                ) {
-                  console.log("trovata tratta pooling");
-                  positionStartPooling = indexStart;
-                  positionStartEnterInPooling = indexStartPooling;
-                  indexStartPooling = start_time_pooling_length; // cosi chiudo anche il primo for
-                  break;
+                if (indexStart == start_time_subTrip_length - 1) {
+                  // tratte precedenti
+                  if (state.activityChoice.type == "Carpooling") {
+                    console.log("trovata tratta pooling");
+                    positionStartPooling = indexStart;
+                    positionStartEnterInPooling = indexStartPooling;
+                    indexStartPooling = start_time_pooling_length; // cosi chiudo anche il primo for
+                    break;
+                  }
+                } else {
+                  // live
+                  if (
+                    state.PreviousRoute[indexStart - 1].activityChoice.type ==
+                    "Carpooling"
+                  ) {
+                    console.log("trovata tratta pooling");
+                    positionStartPooling = indexStart;
+                    positionStartEnterInPooling = indexStartPooling;
+                    indexStartPooling = start_time_pooling_length; // cosi chiudo anche il primo for
+                    break;
+                  }
                 }
               }
               continue;
@@ -2198,11 +2207,10 @@ export default function trackingReducer(state = DefaultState, action) {
                   // aggiungo una variabile aggiuntiva che mi faccia capire che la ruote fatta è un segment
                   // quindi solo l'ultimo segment non avra questo valore
 
-                 
-
                   const time_travelled =
-                  new Date(start_time_pooling_array[positionStartEnterInPooling]).getTime() -
-                      new Date(state.start_time_subTrip).getTime();
+                    new Date(
+                      start_time_pooling_array[positionStartEnterInPooling]
+                    ).getTime() - new Date(state.start_time_subTrip).getTime();
 
                   console.log("1");
                   return {
@@ -2211,13 +2219,15 @@ export default function trackingReducer(state = DefaultState, action) {
                     sub_trip: null,
                     numSubTrip: state.numSubTrip + 1, // per capire quale sub trip è, 0 prima , 1 seconda, cosi non ho id e subid capisco sempre l'ordine
                     numTrip: state.numTrip,
-                    start_time_subTrip: start_time_pooling_array[positionStartEnterInPooling],
+                    start_time_subTrip:
+                      start_time_pooling_array[positionStartEnterInPooling],
                     route: [BaseRoute],
                     activityChoice: state.activityChoice,
                     DailyRoutine: state.DailyRoutine,
                     previousType: state.previousType,
 
-                    groupPooling: action.phasePooling[positionStartEnterInPooling],
+                    groupPooling:
+                      action.phasePooling[positionStartEnterInPooling],
 
                     PrecDistanceSameMode,
                     speed: BaseRoute.speed ? BaseRoute.speed : 0,
@@ -2251,7 +2261,8 @@ export default function trackingReducer(state = DefaultState, action) {
                         multiRouteId,
                         time_travelled: time_travelled,
                         distanceLive: state.distanceLive,
-                        end_time_subTrip: start_time_pooling_array[positionStartEnterInPooling], 
+                        end_time_subTrip:
+                          start_time_pooling_array[positionStartEnterInPooling],
                         start_time_subTrip: state.start_time_subTrip,
                         cityRoute: state.cityRoute,
                         infoIdCity: state.infoIdCity,

@@ -3132,7 +3132,7 @@ export function resumeRoute(limitMax, typeStop = 0) {
             // 300 ms vanno bene per l'analisi non dei mezzi
             // in public per le richieste https per le tratte aspetto 2 sec prima di riprovare
             // se ho le linee o ho gia provato allora scendo a 500 millisec il tempo, sufficiente per le intersezioni
-            const timer = 1000;
+            const timer = 1500;
 
             // imposto un timer che si ripete se ci sono piu coordinate, ovvero se ci sono 20 coordinate
             // vengono valutate 10 alla volta quindi si ripete per due volte
@@ -3369,6 +3369,35 @@ export function resumeRoute(limitMax, typeStop = 0) {
                   console.log(IdWeather);
                   console.log(peak_hours_type_id);
 
+                  let IdBonusStep =  16 // caso base
+                  
+                  try {
+                    console.log(multipliers.multipliers)
+                    if (multipliers.multipliers.lenght > 5){
+                      console.log(multipliers.multipliers[5].type)
+                      const statusActivity = getState().statistics.statusActivity
+                      console.log(statusActivity)
+                      // se ho i dettagli sul bonus e se almeno una volta è stato caricato 
+                      if (statusActivity && statusActivity.dateBonus) {
+                       
+                        const bonusType = statusActivity.bonusType
+                        const dateBonus = statusActivity.dateBonus
+                        const now = moment();
+                        const activities_day = now.format("YYYY-MM-DD");
+                        if (dateBonus == activities_day) {
+                          
+                          IdBonusStep = multipliers.multipliers[5].type[bonusType].id
+                        }
+                        
+                      }
+                      
+  
+                    }
+                  }catch (error) {
+                    console.log(error)
+                  }
+                  console.log(IdBonusStep)
+
                   // close_trip: {"type":"close_trip","body":{"trip":14,"previous_sub_trip_id":1,"end_time":"2020-01-21T19:04:29.407Z","multipliers":[{"id":2,"type_id":4},{"id":1,"type_id":2}],"time":"2020-01-21T19:04:29.407Z"}}
 
                   //   "multipliers": [
@@ -3434,25 +3463,253 @@ export function resumeRoute(limitMax, typeStop = 0) {
         // vedo se è stata validata almeno
 
         const validation = PreviousRoute[routeId - 1].validation;
-        if (Saved && (!validation || validation == 3)) {
-          // se non ho validazione oppure sta ancora validando anche la tratta (status 3 pending)
+        const end_time_Backend = PreviousRoute[routeId - 1].end_time;
+        console.log(end_time_Backend)
+        console.log(PreviousRoute[routeId - 1])
+        if (Saved) {
+          if (!end_time_Backend) {
+            // se non ho l'end time, per qualche strano motivo non è stata caricata
+            // uso lo stesso codice di stop ma uso previous route corrente 
+              console.log("richiudo cosi sono sicuro se la tratta è stata validata correttamente o no");
 
-          let numSubTripNext = 0;
-          if (routeId == Routes) {
-            // è l'ultima trip controllo la tratta in corso
-            numSubTripNext = getState().tracking.numSubTrip;
-          } else {
-            // controlla la successiva
-            numSubTripNext = getState().tracking.PreviousRoute[routeId]
-              .numSubTrip;
-          }
+              // e ovviamente deve essere salvata nel db se non è salvata
+              // prima di rimandare, tolgo l'eventuale send se in caso non è stata inviata
+              // l'aggiornamneto dello status lo faccic nella send se ancora non ho inviato dopo 2000 ms
+              // dispatch(UpdateStatus("", routeId));
+              // prendo tutti i segmenti
 
-          // se questa tratta ha concluso con lo stop e ed è l'ultima dato che la successiva ha numsub 0
-          if (!numSubTripNext) {
-            // chiedo se ci sono aggiornamenti
-            dispatch(getTrip({ id: PreviousRoute[routeId - 1].id }));
+              // quanti sub trip ho,
+              let numSegment = 0;
+              const idTrip =PreviousRoute[routeId - 1].id;
+              const numTrip = PreviousRoute[routeId - 1]
+                .numTrip;
+              let end_time_subTrip = PreviousRoute[
+                routeId - 1
+              ].end_time_subTrip;
+              let subTripId = PreviousRoute[routeId - 1]
+                .sub_trip.id;
+              // se posso inviare i segmenti
+              let infoReadySend = true;
+
+              for (
+                indexSegment = routeId - 1;
+                indexSegment >= 0;
+                indexSegment--
+              ) {
+                // devo quali sono le tratte con lo stesso id e con end_time
+                console.log(indexSegment);
+                console.log(numSegment);
+                console.log(infoReadySend);
+
+                if (indexSegment) {
+                  let routeObject = PreviousRoute[
+                    indexSegment - 1
+                  ];
+                  console.log(routeObject);
+                  if (numTrip == routeObject.numTrip) {
+                    // ovvero è la seconda sub trip o successiva
+                    if (
+                      routeObject.sub_trip &&
+                      routeObject.end_time_subTrip &&
+                      !routeObject.route.length &&
+                      !routeObject.activity.length
+                    ) {
+                      numSegment = +1;
+                    } else {
+                      // riparto da zero che ancora non ho finito l'analisi
+                      infoReadySend = false;
+                      break;
+                    }
+                  } else {
+                    break;
+                  }
+                } else {
+                  // vedo se sono ancora in live controllando numTrip
+                  if (numTrip == getState().tracking.numTrip) {
+                    // riparto da zero che ho una tratta con piu al momento
+                    infoReadySend = false;
+                    break;
+                  }
+                }
+              }
+              console.log(numSegment);
+              console.log(infoReadySend);
+
+              // devo vedere prima se ho i moltiplicatori
+              if (
+                infoReadySend &&
+                (!PreviousRoute[routeId - 1].sendStopTime ||
+                  new Date().getTime() >
+                    PreviousRoute[routeId - 1]
+                      .sendStopTime +
+                      5000)
+              ) {
+                // se hai gia mandato lo stop, riprova tra 10 secondi
+                const multipliers = getState().login.multipliers;
+                if (multipliers) {
+                  // devo creare i moltiplicatori
+                  // typeWeather(pin):"Rain"
+                  const typeWeather = getState().tracking.PreviousRoute[
+                    routeId - 1
+                  ].typeWeather;
+                  const tempWeatherInC =
+                    getState().tracking.PreviousRoute[routeId - 1]
+                      .tempWeatherInC !== null
+                      ? parseInt(
+                          getState().tracking.PreviousRoute[routeId - 1]
+                            .tempWeatherInC
+                        )
+                      : "";
+                  // calcolo il gruppo d'appartenza per il meteo
+                  const multipliers = getState().login.multipliers;
+                  const weather_type = multipliers.weather_type;
+                  const peak_hours_type = multipliers.peak_hours_type;
+                  const IdWeatherFind = weather_type.find((weather) => {
+                    return weather.description == typeWeather;
+                  });
+
+                  // vedo se il meteo è stato trovato altrimenti match con l'ultima tipologia
+                  const IdWeather = IdWeatherFind
+                    ? IdWeatherFind.type_weather
+                    : weather_type[weather_type.length - 1].type_weather;
+                  console.log(IdWeatherFind);
+                  console.log(IdWeather);
+
+                  let peak_hours_type_id = 5;
+                  const start = Date.parse(new Date(numTrip));
+                  let start_time = new Date(start).toTimeString();
+                  start_time = start_time.substring(0, 8);
+                  console.log("inizio per il controllo delle ore di punta");
+                  
+                  // ottengo 11:30
+
+                  const last = Date.parse(new Date(end_time_subTrip));
+                  let end_time = new Date(last).toTimeString();
+                  end_time = end_time.substring(0, 8);
+                  for (i = 0; i < peak_hours_type.length; i++) {
+                    if (
+                      start_time >= peak_hours_type[i].start_time &&
+                      start_time <= peak_hours_type[i].end_time
+                    ) {
+                      peak_hours_type_id = peak_hours_type[i].type_peak_hours;
+                      break;
+                    } else if (
+                      end_time >= peak_hours_type[i].start_time &&
+                      end_time <= peak_hours_type[i].end_time
+                    ) {
+                      peak_hours_type_id = peak_hours_type[i].type_peak_hours;
+                      break;
+                    }
+                  }
+                  console.log(IdWeather);
+                  console.log(peak_hours_type_id);
+
+                  // close_trip: {"type":"close_trip","body":{"trip":14,"previous_sub_trip_id":1,"end_time":"2020-01-21T19:04:29.407Z","multipliers":[{"id":2,"type_id":4},{"id":1,"type_id":2}],"time":"2020-01-21T19:04:29.407Z"}}
+
+                  //   "multipliers": [
+                  //     {
+                  //       "id": 2,
+                  //       "type_id": 4
+                  //     },
+                  //     {
+                  //       "id": 1,
+                  //       "type_id": 2
+                  //     },
+                  // ]
+
+                  // day(pin):-1, numDay(pin):0
+                  // const series = getState().login.NumDaysRoute.numDay;
+
+                  let IdBonusStep =  16 // caso base
+                  
+                  try {
+                    console.log(multipliers.multipliers)
+                    if (multipliers.multipliers.lenght > 5){
+                      console.log(multipliers.multipliers[5].type)
+                      const statusActivity = getState().statistics.statusActivity
+                      console.log(statusActivity)
+                      // se ho i dettagli sul bonus e se almeno una volta è stato caricato 
+                      if (statusActivity && statusActivity.dateBonus) {
+                       
+                        const bonusType = statusActivity.bonusType
+                        const dateBonus = statusActivity.dateBonus
+                        const now = moment();
+                        const activities_day = now.format("YYYY-MM-DD");
+                        if (dateBonus == activities_day) {
+                          
+                          IdBonusStep = multipliers.multipliers[5].type[bonusType].id
+                        }
+                        
+                      }
+                      
+  
+                    }
+                  }catch (error) {
+                    console.log(error)
+                  }
+                  console.log(IdBonusStep)
+                  
+                  
+
+                  dispatch({
+                    type: UPDATE_TRIP_DATA,
+                    trip: idTrip,
+                    playload: {
+                      sendStopTime: new Date().getTime(),
+                    },
+                  });
+                  dispatch(
+                    sendSocket(sendStopTrip, {
+                      end_time_subTrip,
+                      subTripId,
+                      idTrip,
+                      peak_hours_type_id,
+                      IdWeather,
+                      weather: typeWeather,
+                      temperature: tempWeatherInC,
+                    })
+                  );
+                  // dispatch(
+                  //   stopTrip(
+                  //     { end_time_subTrip, subTripId, idTrip },
+                  //     routeId - numSegment,
+                  //     numSegment,
+                  //     Routes
+                  //   )
+                  // );
+                  continue;
+                } else {
+                  console.log("richiedo i moltiplicatori");
+                  // richiedo i moltiplicatori
+                  dispatch(getMultipliers());
+                }
+              } else {
+                dispatch(resumeRoute(Routes, typeStop));
+                break;
+              }
+          
+          
+          } else if (!validation || validation == 3) {
+            // se non ho validazione oppure sta ancora validando anche la tratta (status 3 pending)
+  
+            let numSubTripNext = 0;
+            if (routeId == Routes) {
+              // è l'ultima trip controllo la tratta in corso
+              numSubTripNext = getState().tracking.numSubTrip;
+            } else {
+              // controlla la successiva
+              numSubTripNext = getState().tracking.PreviousRoute[routeId]
+                .numSubTrip;
+            }
+  
+            // se questa tratta ha concluso con lo stop e ed è l'ultima dato che la successiva ha numsub 0
+            if (!numSubTripNext) {
+              // chiedo se ci sono aggiornamenti
+              dispatch(getTrip({ id: PreviousRoute[routeId - 1].id }));
+            }
           }
-        }
+        } 
+         
       }
     } catch (error) {
       bugsnag.notify(error, function (report) {

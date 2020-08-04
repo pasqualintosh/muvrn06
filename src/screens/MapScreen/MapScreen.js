@@ -7,8 +7,7 @@
  */
 
 import React from "react";
-import { View, Text, Alert, Platform, Dimensions } from "react-native";
-import { NetInfo } from "@react-native-community/netinfo";
+import { View, Text, Alert, Platform, Dimensions, NetInfo } from "react-native";
 
 import { connect } from "react-redux";
 import ResumeMap from "./../../components/ResumeMap/ResumeMap";

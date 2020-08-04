@@ -31,6 +31,7 @@ import Modal from "react-native-modal";
 import Aux from "./../../helpers/Aux";
 
 import { strings } from "../../config/i18n";
+import { withNavigation } from "react-navigation";
 
 class FriendSingleView extends React.PureComponent {
   constructor(props) {
@@ -121,13 +122,46 @@ class FriendSingleView extends React.PureComponent {
     
   // };
 
+  navigateFriend = () => {
+    console.log(this.props)
+    if (this.props.type == "sendFriend") {
+      // gia invitato
+      this.props.navigation.navigate("FriendDetailFromFriendsPage", {
+        friendData: this.props.user,
+        can_follow: false,
+      });
+
+      
+    } else if (this.props.type == "friend") {
+      this.props.navigation.navigate("FriendDetailFromFriendsPage", {
+        friendData: this.props.user,
+        can_follow: false,
+      });
+      // gia amici 
+    }  else if (this.props.type == "inviteFriend") {
+      // posso invitare 
+      this.props.navigation.navigate("FriendDetailFromFriendsPage", {
+        friendData: this.props.user,
+        can_follow: false,
+      });
+    } else {
+      // altri casi ma siamo gia amici 
+      this.props.navigation.navigate("FriendDetailFromFriendsPage", {
+        friendData: this.props.user,
+        can_follow: false,
+      });
+    }
+
+    
+  };
+
   sendFriend = () => {
 this.props.action(this.props.user)
   }
 
   render() {
     return (
-      <TouchableOpacity onPress={() => {}}>
+      <TouchableOpacity onPress={this.navigateFriend}>
         <View
           style={{
             width: Dimensions.get("window").width * 0.3,
@@ -187,4 +221,4 @@ this.props.action(this.props.user)
   }
 }
 
-export default FriendSingleView;
+export default withNavigation(FriendSingleView);

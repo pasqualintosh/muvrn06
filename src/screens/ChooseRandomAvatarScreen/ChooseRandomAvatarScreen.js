@@ -247,6 +247,7 @@ class ChooseRandomAvatarScreen extends React.Component {
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingBottom: 100 }}
             >
+            <View style={styles.textHeaderContainer}>
               <TouchableOpacity
                 onPress={() => {
                   this.props.navigation.goBack(null);
@@ -261,6 +262,7 @@ class ChooseRandomAvatarScreen extends React.Component {
                   />
                 </View>
               </TouchableOpacity>
+              </View>
               <View style={{ padding: 10 }}>
                 <Text style={styles.title}>{strings('id_0_29')}</Text>
               </View>
@@ -455,10 +457,10 @@ const styles = StyleSheet.create({
     top: Dimensions.get("window").height * 0.8,
   },
   textHeaderContainer: {
-    marginTop: Platform.OS == "ios" ? 30 : 15,
-    marginLeft: 20,
     flexDirection: "row",
-    width: Dimensions.get("window").width * 0.85,
+    width: Dimensions.get("window").width,
+    height: 40,
+    paddingTop: 10
   },
   textHeader: {
     fontFamily: "OpenSans-ExtraBold",

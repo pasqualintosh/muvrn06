@@ -4523,7 +4523,7 @@ export function getDetailRouteNew(dataUser = {}) {
 export function getFeedbackForRoute(dataUser = {}) {
   return async function backendRequest(dispatch, getState) {
     // richiesta di accesso mandando i dati con axios
-
+    console.log(dataUser)
     // prendo l'id per prendere la tratta di quel trip
     const { trip_id, trip_type_id, language, validated, callback } = dataUser;
     let { access_token } = getState().login;
@@ -4535,8 +4535,8 @@ export function getFeedbackForRoute(dataUser = {}) {
     try {
       const response = await requestNewBackend(
         "get",
-        "/api/v1/tracking/feedback/questions/" + trip_id + "/1/1/False",
-        // "/api/v1/tracking/feedback/questions/" + trip_id + "/" + trip_type_id + "/" + language + "/" + valid,
+        // "/api/v1/tracking/feedback/questions/" + trip_id + "/1/1/False",
+        "/api/v1/tracking/feedback/questions/" + trip_id + "/" + trip_type_id + "/" + language + "/" + valid,
         access_token,
         null,
         "application/json",
@@ -4554,10 +4554,17 @@ export function getFeedbackForRoute(dataUser = {}) {
             status: "",
           },
         });
-        if (callback) {
-          // ritorno i dettagli che salvo nello stato
-          callback(feedback);
+        if (feedback.length) {
+          // se ho un feedback, 
+          if (callback) {
+            // ritorno i dettagli che salvo nello stato
+            callback(feedback);
+          }
+        } else if (!dataUser.repeatNo) {
+          // se non ho feedback, provo in inglese, altrimenti poi mi servo 
+          dispatch(getFeedbackForRoute({...dataUser, language: 0, repeatNo: true}));
         }
+        
       } else if (response.status == 401) {
         // se il token è scaduto
         // lo rinnovo e poi ricarico le richieste dall'app
@@ -4591,13 +4598,13 @@ export function postFeedbackForRoute(dataUser = {}) {
     // }
 
     try {
-      const data = {
+      const data = [{
         answer_text: answer_text ? answer_text : null,
         answer: answer ? answer : null,
         question,
         trip,
         file: file ? file : null,
-      };
+      }];
       const response = await requestNewBackend(
         "post",
         "/api/v1/tracking/feedback/my_answer",
@@ -5285,8 +5292,8 @@ export async function requestBackend(
       headers,
       ...anotherData,
     });
-    console.log(response.request.responseURL);
-    console.log(response);
+    // console.log(response.request.responseURL);
+    // console.log(response);
     return response;
   } catch (error) {
     if (error.response) {
@@ -5340,8 +5347,8 @@ export async function requestNewBackend(
       headers,
       data,
     });
-    console.log(response.request.responseURL);
-    console.log(response);
+    // console.log(response.request.responseURL);
+    // console.log(response);
     return response;
   } catch (error) {
     if (error.response) {
@@ -5775,7 +5782,7 @@ export function setSoddfrustValue(page) {
 // },
 
 // https://muvprod.tk
-
+// split modale generico dell'utente, comprende il monopattino 
 export function postBaseTrip(dataUser = {}) {
   return async function (dispatch, getState) {
     console.log("postBaseTrip");
@@ -5795,10 +5802,11 @@ export function postBaseTrip(dataUser = {}) {
 
         walk_slider = mostFrequentRaceModalSplit[0].value;
         bike_slider = mostFrequentRaceModalSplit[1].value;
-        bus_slider = mostFrequentRaceModalSplit[2].value;
-        train_slider = mostFrequentRaceModalSplit[3].value;
-        car_slider = mostFrequentRaceModalSplit[4].value;
-        electric_scooter_slider = mostFrequentRaceModalSplit[5].value;
+        electric_scooter_slider = mostFrequentRaceModalSplit[2].value;
+        bus_slider = mostFrequentRaceModalSplit[3].value;
+        train_slider = mostFrequentRaceModalSplit[4].value;
+        car_slider = mostFrequentRaceModalSplit[5].value;
+        
         motorbike_slider = mostFrequentRaceModalSplit[6].value;
 
         const data = {
@@ -5884,10 +5892,11 @@ export function postFrequentTrip(dataUser = {}) {
         sunday: frequent_trip_choosed_weekdays[0],
         walk_slider: mostFrequentRaceModalSplit[0].value,
         bike_slider: mostFrequentRaceModalSplit[1].value,
-        bus_slider: mostFrequentRaceModalSplit[2].value,
-        car_slider: mostFrequentRaceModalSplit[3].value,
-        motorbike_slider: mostFrequentRaceModalSplit[4].value,
-        train_slider: mostFrequentRaceModalSplit[5].value,
+        electric_scooter_slider: mostFrequentRaceModalSplit[2].value,
+        bus_slider: mostFrequentRaceModalSplit[3].value,
+        car_slider: mostFrequentRaceModalSplit[4].value,
+        motorbike_slider: mostFrequentRaceModalSplit[5].value,
+        train_slider: mostFrequentRaceModalSplit[6].value,
         // is_active,
         start_type: frequent_trip_type_start,
         end_type: frequent_trip_type_end,

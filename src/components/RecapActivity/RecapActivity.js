@@ -18,6 +18,7 @@ import { BoxShadow } from "react-native-shadow";
 import { timeAgo } from "../RecapTraining/RecapTraining";
 
 import { strings } from "../../config/i18n";
+import { data } from "../../assets/ListCities";
 
 // componente per visualizzare i punti che ho guadagnato in questo preciso momento
 
@@ -184,8 +185,16 @@ class RecapActivity extends React.PureComponent {
         console.error(error);
       }
     }
+    console.log(DataTrip)
+    if (DataTrip.validated) {
+      // se valida vado nel recap della tratta 
+      this.props.navigation.navigate("FeedRecapScreen", DataTrip);
+    } else {
+      // altrimenti nella recap della tratta non valida
+      this.props.navigation.navigate("RecapRouteNotValidScreen", DataTrip);
+    }
 
-    this.props.navigation.navigate("FeedRecapScreen", DataTrip);
+    
   };
 
   //
@@ -194,8 +203,9 @@ class RecapActivity extends React.PureComponent {
   }
 
   getModalColor = () => {
+    console.log(this.props.modal_type)
     let color = "#B3B3B3";
-    if (this.props.validated == 1) {
+   
       switch (this.props.modal_type) {
         case "Biking":
           {
@@ -228,12 +238,13 @@ class RecapActivity extends React.PureComponent {
            
           
           }
+          break;
         default:
           {
             color = "#3d3d3d";
           }
           break;
-      }
+      
     }
 
     return color;

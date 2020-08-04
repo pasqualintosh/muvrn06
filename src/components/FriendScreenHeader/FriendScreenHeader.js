@@ -12,7 +12,8 @@ import { connect } from "react-redux";
 import {
   postFollowUser,
   deleteFollowedUser,
-  sendRequestFriend
+  sendRequestFriend,
+  deleteFriend
 } from "./../../domains/follow/ActionCreators";
 
 import { strings } from "../../config/i18n";
@@ -26,9 +27,11 @@ import {
   getlistFriendState,
   getlistSendRequestFriendState,
   getStatusState,
-  
 } from "./../../domains/follow/Selectors";
 import AlertCarPooling from "../../components/AlertCarPooling/AlertCarPooling";
+
+import LinearGradient from "react-native-linear-gradient";
+import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
 class FriendScreenHeader extends React.Component {
   constructor(props) {
@@ -36,13 +39,18 @@ class FriendScreenHeader extends React.Component {
 
     this.state = {
       modal_visible: false,
-      typeFriend: "",
+      typeFriend: "AddFriend",
       userInvite: { username: "pippo", id: 0, avatar: 1 },
       AlertCarPooling: false,
     };
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    const typeFriend = this.checkStatusFriendFromId(this.props.user.id, this.props);
+      this.setState({
+        typeFriend,
+      });
+  }
 
   componentWillReceiveProps(props) {
     console.log("componentWillReceiveProps", props);
@@ -65,7 +73,7 @@ class FriendScreenHeader extends React.Component {
       props.user &&
       this.props.listRequestFriend.length != props.listRequestFriend.length
     ) {
-      const typeFriend = this.checkStatusFriendFromId(props.user.id,props );
+      const typeFriend = this.checkStatusFriendFromId(props.user.id, props);
       this.setState({
         typeFriend,
       });
@@ -85,14 +93,15 @@ class FriendScreenHeader extends React.Component {
   };
 
   checkStatusFriendFromId = (id, props) => {
-    let typeFriend = "";
+    console.log(id)
+    console.log(props)
+    let typeFriend = "AddFriend";
     if (props.listFriend.findIndex((friend) => friend.id == id) != -1) {
       // è un mio amico
       typeFriend = "friend";
     } else if (
-      props.listRequestFriend.findIndex(
-        (friend) => friend.to_user.id == id
-      ) != -1
+      props.listRequestFriend.findIndex((friend) => friend.to_user.id == id) !=
+      -1
     ) {
       // l'ho gia invitato
       typeFriend = "sendFriend";
@@ -259,12 +268,27 @@ class FriendScreenHeader extends React.Component {
     this.closeTutorialCarPooling();
   };
 
+  sendDeleteFriend = (data) => {
+    deleteFriend(data);
+    this.closeTutorialCarPooling();
+  }
+
   showAlertCarPooling = (userInvite) => {
     this.setState({
       AlertCarPooling: true,
       userInvite,
     });
   };
+
+  sendRequestConfirm = (data) => {
+    if (this.state.typeFriend == "AddFriend") {
+      this.sendRequest(data)
+    } else if (this.state.typeFriend == "friend") {
+      this.sendDeleteFriend(data)
+    } else {
+      this.closeTutorialCarPooling();
+    }
+  }
 
   render() {
     // prendo l'id dell'utente a seconda se sono nella lista amici o se mi arriva il link
@@ -276,8 +300,14 @@ class FriendScreenHeader extends React.Component {
       button = (
         <Aux>
           <View style={styles.endFlex}>
-            <View style={styles.mainContainer}>
-              <View style={styles.sideContainer}>
+            <LinearGradient
+              start={{ x: 0.2, y: 1.0 }}
+              end={{ x: 0.8, y: 0.0 }}
+              locations={[0, 1.0]}
+              colors={["#7D4D99", "#6497CC"]}
+              style={styles.mainContainer}
+            >
+              <View style={{ paddingLeft: 10, paddingRight: 10 }}>
                 <ActivityIndicator
                   // hidesWhenStopped={false}
                   // animating={this.props.fetchingData}
@@ -285,7 +315,7 @@ class FriendScreenHeader extends React.Component {
                   color={"#fff"}
                 />
               </View>
-            </View>
+            </LinearGradient>
           </View>
         </Aux>
       );
@@ -293,26 +323,37 @@ class FriendScreenHeader extends React.Component {
       button = (
         <Aux>
           <View style={styles.endFlex}>
-            <View style={styles.mainContainer}>
-              <TouchableWithoutFeedback
-                onPress={() => {
-                  this.setState({ modal_visible: true });
-                }}
-                // onPress={() => {
-                //   let link = this.props.friendData["~referring_link"];
-                //   this.props.dispatch(
-                //     postFollowUser({
-                //       followed_user_id: user_id,
-                //       referral_url: link
-                //     })
-                //   );
-                // }}
+            <TouchableWithoutFeedback
+              onPress={() => {
+                this.showAlertCarPooling(this.props.user);
+              }}
+              // onPress={() => {
+              //   let link = this.props.friendData["~referring_link"];
+              //   this.props.dispatch(
+              //     postFollowUser({
+              //       followed_user_id: user_id,
+              //       referral_url: link
+              //     })
+              //   );
+              // }}
+            >
+              <LinearGradient
+                start={{ x: 0.0, y: 0.0 }}
+                end={{ x: 0.0, y: 1.0 }}
+                locations={[0, 1.0]}
+                colors={["#920005", "#DC4711"]}
+                style={styles.mainContainer}
               >
-                <View style={styles.sideContainer}>
-                  <Text style={styles.text}>Unfollow</Text>
+                <Text style={styles.text}>Unfollow</Text>
+                <View style={{ paddingLeft: 10 }}>
+                  <OwnIcon
+                    name="eliminate_friend_icn"
+                    size={20}
+                    color={"#FFFFFF"}
+                  />
                 </View>
-              </TouchableWithoutFeedback>
-            </View>
+              </LinearGradient>
+            </TouchableWithoutFeedback>
           </View>
         </Aux>
       );
@@ -320,49 +361,49 @@ class FriendScreenHeader extends React.Component {
       button = (
         <Aux>
           <View style={styles.endFlex}>
-            <View style={styles.mainContainer}>
-              <TouchableWithoutFeedback
-                onPress={() => {
-                  this.setState({ modal_visible: true });
-                }}
-                // onPress={() => {
-                //   let link = this.props.friendData["~referring_link"];
-                //   this.props.dispatch(
-                //     postFollowUser({
-                //       followed_user_id: user_id,
-                //       referral_url: link
-                //     })
-                //   );
-                // }}
+            
+              <LinearGradient
+                start={{ x: 0.0, y: 0.0 }}
+                end={{ x: 0.0, y: 1.0 }}
+                locations={[0, 1.0]}
+                colors={["#FAB21E", "#FA941E"]}
+                style={styles.mainContainer}
               >
-                <View style={styles.sideContainer}>
-                  <Text style={styles.text}>Wait</Text>
+                <Text style={styles.text}>Attendi</Text>
+                <View style={{ paddingLeft: 10 }}>
+                  <OwnIcon
+                    name="wait_for_friend_icn"
+                    size={20}
+                    color={"#FFFFFF"}
+                  />
                 </View>
-              </TouchableWithoutFeedback>
-            </View>
+              </LinearGradient>
+            
           </View>
         </Aux>
       );
-    else
+    else 
       button = (
         <Aux>
           <View style={styles.endFlex}>
-            <View style={styles.mainContainer}>
-              <TouchableWithoutFeedback
-                // onPress={() =>
-                //   this.props.dispatch(deleteFollowedUser({ id: user_id }))
-                // }
-                onPress={() => {
-                  this.showAlertCarPooling(this.props.user)
-                }}
+            <TouchableWithoutFeedback
+              onPress={() => {
+                this.showAlertCarPooling(this.props.user);
+              }}
+            >
+              <LinearGradient
+                start={{ x: 0.0, y: 0.0 }}
+                end={{ x: 0.0, y: 1.0 }}
+                locations={[0, 1.0]}
+                colors={["#6CBA7E", "#007C1C"]}
+                style={styles.mainContainer}
               >
-                <View
-                  style={[styles.sideContainer, { backgroundColor: "#FC6754" }]}
-                >
-                  <Text style={[styles.text, { color: "#fff" }]}>Follow</Text>
+                <Text style={[styles.text, { color: "#fff" }]}>AGGIUNGI</Text>
+                <View style={{ paddingLeft: 10 }}>
+                  <OwnIcon name="add_friend_icn" size={20} color={"#FFFFFF"} />
                 </View>
-              </TouchableWithoutFeedback>
-            </View>
+              </LinearGradient>
+            </TouchableWithoutFeedback>
           </View>
         </Aux>
       );
@@ -372,8 +413,8 @@ class FriendScreenHeader extends React.Component {
         <AlertCarPooling
           isModalVisible={this.state.AlertCarPooling}
           closeModal={this.closeTutorialCarPooling}
-          confermModal={this.sendRequest}
-          type={"SearchFriend"}
+          confermModal={this.sendRequestConfirm}
+          type={this.state.typeFriend}
           infoAlert={this.state.userInvite}
           infoSend={{ message: "", to_user: this.state.userInvite.id }}
         />

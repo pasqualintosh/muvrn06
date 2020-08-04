@@ -6,7 +6,6 @@ import {
   RefreshControl,
   ImageBackground,
 } from 'react-native';
-import ListView from 'deprecated-react-native-listview';
 import {styles, negativeData} from './Style';
 import ChooseItem from './../../components/ChooseItem/ChooseItem';
 import Aux from './../../helpers/Aux';
@@ -20,6 +19,7 @@ import {
   getTournamentsQualificationById,
 } from './../../domains/tournaments/ActionCreators';
 import WebService from './../../config/WebService';
+import ListView from 'deprecated-react-native-listview';
 
 class ChooseTeamScreen extends React.Component {
   constructor(props) {

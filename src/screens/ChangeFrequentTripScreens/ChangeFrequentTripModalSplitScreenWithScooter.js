@@ -38,6 +38,7 @@ import {
 } from "./../../domains/trainings/ActionCreators";
 
 import { strings } from "../../config/i18n";
+import { getImageModalSplitPath, getRenderModalSplitLabel } from "../../domains/tracking/Support"
 
 class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
   constructor(props) {
@@ -53,6 +54,10 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
           value: 0,
         },
         {
+          label: "scooter",
+          value: 0,
+        },
+        {
           label: "bus",
           value: 0,
         },
@@ -62,10 +67,6 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
         },
         {
           label: "car",
-          value: 0,
-        },
-        {
-          label: "scooter",
           value: 0,
         },
         {
@@ -106,26 +107,6 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
     console.log(this.props);
   }
 
-  getImagePath = (label) => {
-    switch (label) {
-      case "walk":
-        return require("../../assets/images/onboardingImage/walk_icn_onboarding.png");
-      case "bike":
-        return require("../../assets/images/onboardingImage/bike_icn_onboarding.png");
-      case "bus":
-        return require("../../assets/images/onboardingImage/bus_icn_onboarding.png");
-      case "car":
-        return require("../../assets/images/onboardingImage/car_icn_onboarding.png");
-      case "motorbike":
-        return require("../../assets/images/onboardingImage/moto_icn_onboarding.png");
-      case "train":
-        return require("../../assets/images/onboardingImage/trai_icn_onboarding.png");
-      case "scooter": // car_pooling dal 15/02/2019 diventa train
-        return require("../../assets/images/onboardingImage/scooter_icn_onboarding.png");
-      default:
-        return require("../../assets/images/onboardingImage/walk_icn_onboarding.png");
-    }
-  };
 
   getLabel = (label) => {
     switch (label) {
@@ -148,30 +129,7 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
     }
   };
 
-  getRenderLabel = (label) => {
-    switch (label) {
-      case "walk":
-        return strings("id_0_151");
-      case "bike":
-        return strings("id_0_152");
-      case "bus":
-        return strings("id_0_153");
-        case "train":
-          return strings("id_0_154");
-      case "car":
-        return strings("id_0_155");
-      case "motorbike":
-        return strings("id_0_156");
-      case "car_pooling":
-        return strings("id_0_155");
-        case "scooter":
-          return strings("id_0_157");
-          
-        
-      default:
-        return strings("id_0_151");
-    }
-  };
+ 
 
   renderSlider() {
     return this.state.values.map((item, index) => (
@@ -191,19 +149,24 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
               width: 60,
               height: 60,
             }}
-            source={this.getImagePath(this.state.values[index].label)}
+            source={getImageModalSplitPath(this.state.values[index].label)}
           />
         </View>
         <View style={{ flex: 0.7, marginTop: 10 }}>
           <Slider
             value={this.state.values[index].value}
             onValueChange={(value) => {
-              // this.setState((prevState) => {
-              //   const newValues = prevState.values;
-              //   newValues[index].value = value;
+              this.setState((prevState) => {
+                const newValues = prevState.values;
+                newValues[index].value = value;
+                let tot_value = 0;
+                // se almeno ho un valore positivo, 
+                newValues.forEach(el => (tot_value += el.value));
+
                 
-              //   return { values: newValues };
-              // });
+                return { values: newValues, selected: tot_value ? true : false };
+              });
+              /*
               let tot_value = 0;
               this.state.values.forEach(el => (tot_value += el.value));
 
@@ -235,7 +198,7 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
                 v[index].value = value;
                 this.setState({ values: v, selected: false });
               }
-
+              */
               
             }}
             trackStyle={{
@@ -243,7 +206,7 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
               height: 4,
               borderRadius: 2,
             }}
-            // thumbImage={this.getImagePath(this.state.values[index].label)}
+            // thumbImage={this.getImageModalSplitPath(this.state.values[index].label)}
             style={{ height: 40 }}
             thumbStyle={{
               height: 26,
@@ -257,7 +220,7 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
             minimumValue={0}
             maximumValue={100}
             step={10}
-            textRight={this.getRenderLabel(this.state.values[index].label)}
+            textRight={getRenderModalSplitLabel(this.state.values[index].label)}
           />
         </View>
       </View>
@@ -276,18 +239,16 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
         mostFrequentRaceModalSplit: this.state.values
       })
     );
-    if (this.state.values[6].value || this.state.values[4].value || this.state.values[1].value) {
+    if (this.state.values[6].value || this.state.values[5].value || this.state.values[1].value) {
     this.props.navigation.navigate('AllGarageScreen', {
       moto_owning_answer: this.state.values[6].value > 0 ? 1 : 0,
-      car_owning_answer: this.state.values[4].value > 0 ? 1 : 0,
+      car_owning_answer: this.state.values[5].value > 0 ? 1 : 0,
       bike_owning_answer: this.state.values[1].value > 0 ? 1 : 0,
     })
   } else {
-   
     // salta direttamente 
     this.skipScreen()
   }
-   
   };
 
   render() {
@@ -308,12 +269,13 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
         >
           <SafeAreaView style={{ flex: 1 }}>
             <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 100 }}>
+            <View style={styles.textHeaderContainer}>
               <TouchableOpacity
                 onPress={() => {
                   this.props.navigation.goBack(null);
                 }}
               >
-                <View style={{ width: 30, height: 30, marginLeft: 20 }}>
+                <View style={{ width: 30, height: 30, marginLeft: 10 }}>
                   <Icon
                     name="md-arrow-forward"
                     size={18}
@@ -322,6 +284,7 @@ class ChangeFrequentTripModalSplitScreenWithScooter extends React.Component {
                   />
                 </View>
               </TouchableOpacity>
+              </View>
               <View style={{ padding: 10 }}>
                  <Text style={styles.title}>{strings("id_0_150")}</Text>
                 </View>
@@ -487,10 +450,10 @@ const styles = StyleSheet.create({
     top: Dimensions.get("window").height * 0.8,
   },
   textHeaderContainer: {
-    marginTop: Platform.OS == "ios" ? 30 : 15,
-    marginLeft: 20,
     flexDirection: "row",
-    width: Dimensions.get("window").width * 0.85,
+    width: Dimensions.get("window").width,
+    height: 40,
+    paddingTop: 10
   },
   textHeader: {
     fontFamily: "OpenSans-ExtraBold",

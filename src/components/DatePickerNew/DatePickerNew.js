@@ -97,6 +97,27 @@ class DatePickerNew extends React.Component {
   // mentre su android lo fa in automatico
   _renderModalContent = () => (
     <View style={styles.modalContent}>
+    <View
+          style={{
+            paddingTop: 5,
+            paddingBottom: 5,
+            alignContent: "center",
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
+          }}
+        >
+          <Text
+            style={{
+              color: "#3d3d3d",
+              fontSize: 20,
+              fontFamily: "Montserrat-ExtraBold",
+              textAlign: "center",
+            }}
+          >
+            {this.props.title}
+          </Text>
+        </View>
       <DatePickerIOS
         date={
           this.props.value !== ""
@@ -203,7 +224,6 @@ class DatePickerNew extends React.Component {
               justifyContent: "flex-end",
               alignContent: "center",
               alignItems: "center",
-
               height: 44,
               width: Dimensions.get("window").width * 0.45,
             }}
@@ -286,9 +306,16 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: "white",
     padding: 22,
-
-    borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    borderColor: "#3363AD",
+    borderWidth: 4,
+    borderRadius: 10,
+    // alignItems: "center",
+    // flexDirection: "column",
+    // justifyContent: "center",
+    shadowRadius: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.5,
   },
   modalContentAndroid: {
     width: 120,

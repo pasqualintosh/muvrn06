@@ -9,6 +9,7 @@ import {
   Image,
   ImageBackground,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import ProgressBar from "react-native-progress/Bar";
 import { timeAgo } from "../RecapTraining/RecapTraining";
@@ -72,6 +73,7 @@ class RecapActivityLoading extends React.Component {
           />
         );
       case "carpooling":
+        case "car":
         return (
           <Image
             source={require("../../assets/images/carpooling_icn.png")}
@@ -112,7 +114,11 @@ class RecapActivityLoading extends React.Component {
 
   getImageReload = () => {
     return (
-      <TouchableOpacity activeOpacity={0.7} onPress={() => this.reloadStatus()}>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        // onPress={() => Alert.alert('ciao')}
+        // onLongPress={() => Alert.alert('ciao lungo')}
+      >
         <View
           style={{
             flexDirection: "row",
@@ -176,15 +182,17 @@ class RecapActivityLoading extends React.Component {
           );
         }
         break;
-      case "Carpooling": {
-        return (
-          <ImageBackground
-            style={{ width: "100%", height: "100%" }}
-            source={require("../../assets/images/multi_loading_track.png")}
-          />
-        );
-      }
-      break;
+      case "Carpooling":
+      case "Car":
+        {
+          return (
+            <ImageBackground
+              style={{ width: "100%", height: "100%" }}
+              source={require("../../assets/images/multi_loading_track.png")}
+            />
+          );
+        }
+        break;
       default:
         {
           return (
@@ -227,13 +235,12 @@ class RecapActivityLoading extends React.Component {
           color = "#60368C";
         }
         break;
-        case "Carpooling":
-          {
-            color = "#3363AD";
-           
-           
-          }
-          break
+      case "Carpooling":
+        case "Car":
+        {
+          color = "#3363AD";
+        }
+        break;
       default:
         {
           color = "rgba(108, 186, 126, 1)";

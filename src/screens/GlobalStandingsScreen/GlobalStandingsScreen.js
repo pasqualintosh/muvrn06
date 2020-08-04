@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Dimensions,
@@ -8,28 +8,28 @@ import {
   Text,
   TouchableWithoutFeedback,
   Platform,
-} from 'react-native';
+  ListView
+} from "react-native";
 
-import ListView from 'deprecated-react-native-listview';
 
-import Svg, {Circle, Line} from 'react-native-svg';
+import Svg, { Circle, Line } from "react-native-svg";
 
-import {styles, negativeData} from './Style';
-import WavyArea from './../../components/WavyArea/WavyArea';
-import UserItem from './../../components/UserItem/UserItem';
-import Aux from './../../helpers/Aux';
+import { styles, negativeData } from "./Style";
+import WavyArea from "./../../components/WavyArea/WavyArea";
+import UserItem from "./../../components/UserItem/UserItem";
+import Aux from "./../../helpers/Aux";
 import {
   getLeaderboard,
   getMonthlyLeaderboard,
   getWeeklyLeaderboard,
   getLeaderboardByCity,
   getMonthlyLeaderboardByCity,
-  getWeeklyLeaderboardByCity,
-} from './../../domains/standings/ActionCreators';
-import {connect} from 'react-redux';
-import pointsDecimal from '../../helpers/pointsDecimal';
-import OwnIcon from '../../components/OwnIcon/OwnIcon';
-import {getProfile} from './../../domains/login/Selectors';
+  getWeeklyLeaderboardByCity
+} from "./../../domains/standings/ActionCreators";
+import { connect } from "react-redux";
+import pointsDecimal from "../../helpers/pointsDecimal";
+import OwnIcon from "../../components/OwnIcon/OwnIcon";
+import { getProfile } from "./../../domains/login/Selectors";
 
 // import { pushNotifications } from "./../../services";
 
@@ -38,11 +38,11 @@ class GlobalStandingsScreen extends React.Component {
     super(props);
 
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2,
+      rowHasChanged: (r1, r2) => r1 !== r2
     });
 
     this.state = {
-      activeSelectable: 'global',
+      activeSelectable: "global",
       loadData: false,
 
       dataSource: null,
@@ -51,14 +51,14 @@ class GlobalStandingsScreen extends React.Component {
       showLoading: true,
       refreshing: false,
       position: 0,
-      totPoints: 0,
+      totPoints: 0
     };
 
     this.displayStandings = false;
   }
 
   myProfile = () => {
-    this.props.navigation.navigate('Info');
+    this.props.navigation.navigate("Info");
   };
 
   componentWillMount() {
@@ -71,7 +71,7 @@ class GlobalStandingsScreen extends React.Component {
   }
 
   onRefresh() {
-    this.setState({refreshing: true});
+    this.setState({ refreshing: true });
     // this.props.dispatch(getLeaderboard());
     // this.props.dispatch(getLeaderboardByCity());
 
@@ -79,7 +79,7 @@ class GlobalStandingsScreen extends React.Component {
 
     const loading = setInterval(() => {
       if (this.props.standingsState.standing.length > 0) {
-        this.setState({refreshing: false});
+        this.setState({ refreshing: false });
         clearTimeout(loading);
       }
     }, 1000);
@@ -87,10 +87,10 @@ class GlobalStandingsScreen extends React.Component {
 
   setResponse = (response, user_id) => {
     const ds = new ListView.DataSource({
-      rowHasChanged: (r1, r2) => r1 !== r2,
+      rowHasChanged: (r1, r2) => r1 !== r2
     });
 
-    let infoUserGlobalClassification = {index: '-', points: 0};
+    let infoUserGlobalClassification = { index: "-", points: 0 };
 
     for (index = 0; index < response.length; index++) {
       const condition =
@@ -98,7 +98,7 @@ class GlobalStandingsScreen extends React.Component {
       if (condition) {
         infoUserGlobalClassification = {
           ...response[index],
-          index,
+          index
         };
         break;
       }
@@ -113,7 +113,7 @@ class GlobalStandingsScreen extends React.Component {
       number: standing.length,
       position: infoUserGlobalClassification.index,
       totPoints: infoUserGlobalClassification.points,
-      loadData: true,
+      loadData: true
     });
   };
   displayWavyArea() {
@@ -121,7 +121,7 @@ class GlobalStandingsScreen extends React.Component {
       return (
         <WavyArea
           data={negativeData}
-          color={'#3D3D3D'}
+          color={"#3D3D3D"}
           style={styles.overlayWave}
         />
       );
@@ -131,11 +131,12 @@ class GlobalStandingsScreen extends React.Component {
     headerTitle: (
       <Text
         style={{
-          left: Platform.OS == 'android' ? 20 : 0,
-        }}>
+          left: Platform.OS == "android" ? 20 : 0
+        }}
+      >
         Global ranking
       </Text>
-    ),
+    )
   };
 
   renderPage() {
@@ -164,7 +165,7 @@ class GlobalStandingsScreen extends React.Component {
                       key={0}
                       style={{
                         height: 30,
-                        backgroundColor: '#F7F8F9',
+                        backgroundColor: "#F7F8F9"
                       }}
                     />
                   }
@@ -174,7 +175,7 @@ class GlobalStandingsScreen extends React.Component {
                     user={{
                       ...item,
                       position: row,
-                      id: this.props.infoProfile.user_id,
+                      id: this.props.infoProfile.user_id
                     }}
                     rowID={rowID}
                     level={
@@ -182,12 +183,12 @@ class GlobalStandingsScreen extends React.Component {
                         ? item.referred_route__user__level__name
                             .charAt(0)
                             .toUpperCase()
-                        : 'N'
+                        : "N"
                     }
                     modalType={
                       item.referred_route__user__role
-                        ? item.referred_route__user__role === 'none' ||
-                          item.referred_route__user__role === 'muver'
+                        ? item.referred_route__user__role === "none" ||
+                          item.referred_route__user__role === "muver"
                           ? 0
                           : parseInt(item.referred_route__user__role)
                         : 0
@@ -210,7 +211,7 @@ class GlobalStandingsScreen extends React.Component {
                     user={{
                       ...item,
                       position: row,
-                      id: this.props.infoProfile.user_id,
+                      id: this.props.infoProfile.user_id
                     }}
                     rowID={rowID}
                     level={
@@ -218,12 +219,12 @@ class GlobalStandingsScreen extends React.Component {
                         ? item.referred_route__user__level__name
                             .charAt(0)
                             .toUpperCase()
-                        : 'N'
+                        : "N"
                     }
                     modalType={
                       item.referred_route__user__role
-                        ? item.referred_route__user__role === 'none' ||
-                          item.referred_route__user__role === 'muver'
+                        ? item.referred_route__user__role === "none" ||
+                          item.referred_route__user__role === "muver"
                           ? 0
                           : parseInt(item.referred_route__user__role)
                         : 0
@@ -242,8 +243,8 @@ class GlobalStandingsScreen extends React.Component {
                       key={0}
                       style={{
                         paddingTop: this.props.blockRanking
-                          ? Dimensions.get('window').height * 0.23 + 50
-                          : Dimensions.get('window').height * 0.23,
+                          ? Dimensions.get("window").height * 0.23 + 50
+                          : Dimensions.get("window").height * 0.23
                       }}
                     />
                   }
@@ -257,7 +258,7 @@ class GlobalStandingsScreen extends React.Component {
                   user={{
                     ...item,
                     position: row,
-                    id: this.props.infoProfile.user_id,
+                    id: this.props.infoProfile.user_id
                   }}
                   rowID={rowID}
                   level={
@@ -265,12 +266,12 @@ class GlobalStandingsScreen extends React.Component {
                       ? item.referred_route__user__level__name
                           .charAt(0)
                           .toUpperCase()
-                      : 'N'
+                      : "N"
                   }
                   modalType={
                     item.referred_route__user__role
-                      ? item.referred_route__user__role === 'none' ||
-                        item.referred_route__user__role === 'muver'
+                      ? item.referred_route__user__role === "none" ||
+                        item.referred_route__user__role === "muver"
                         ? 0
                         : parseInt(item.referred_route__user__role)
                       : 0
@@ -292,7 +293,7 @@ class GlobalStandingsScreen extends React.Component {
   renderBody() {
     if (!this.state.loadData) {
       return (
-        <View style={{top: 150}}>
+        <View style={{ top: 150 }}>
           <ActivityIndicator size="large" color="#3D3D3D" />
           <View style={styles.challengesList} />
         </View>
@@ -311,19 +312,21 @@ class GlobalStandingsScreen extends React.Component {
             refreshing={this.state.refreshing}
             onRefresh={this.onRefresh.bind(this)}
           />
-        }>
+        }
+      >
         {this.renderBody()}
         <WavyArea
           data={negativeData}
-          color={'#3D3D3D'}
+          color={"#3D3D3D"}
           style={styles.overlayWave}
         />
         <View style={[styles.userContainer, styles.firstUser]}>
           <View
             style={{
-              flexDirection: 'column',
-              alignContent: 'center',
-            }}>
+              flexDirection: "column",
+              alignContent: "center"
+            }}
+          >
             <View>
               <UserItem
                 myProfile={this.myProfile}
@@ -338,25 +341,25 @@ class GlobalStandingsScreen extends React.Component {
 
                   points: this.state.totPoints,
                   position:
-                    this.state.position !== '-' &&
-                    typeof this.state.position !== 'object'
+                    this.state.position !== "-" &&
+                    typeof this.state.position !== "object"
                       ? this.state.position + 1
-                      : '-',
+                      : "-",
                   id: this.props.infoProfile.user_id,
                   referred_route__user__city_id: this.props.infoProfile.city
                     ? this.props.infoProfile.city.id
                       ? this.props.infoProfile.city.id
                       : 0
-                    : 0,
+                    : 0
                 }}
                 // lo faccio piu piccolo dato che sopra metto il selettore per il periodo
-                style={{height: 75}}
+                style={{ height: 75 }}
                 level={
                   this.props.level
                     ? this.props.level.charAt(0).toUpperCase()
-                    : 'N'
+                    : "N"
                 }
-                fontColor={'#fff'}
+                fontColor={"#fff"}
                 modalType={this.props.role}
                 blockRanking={
                   this.state.number > 3 ? this.props.blockRanking : false
@@ -371,8 +374,8 @@ class GlobalStandingsScreen extends React.Component {
                   this.props.infoProfile.city
                     ? this.props.infoProfile.city.city_name
                       ? this.props.infoProfile.city.city_name
-                      : ''
-                    : ''
+                      : ""
+                    : ""
                 }
               />
             </View>
@@ -388,17 +391,17 @@ state.statistics.reduce(
   0 ) */
 // modal_type
 
-const withConnect = connect((state) => {
+const withConnect = connect(state => {
   return {
     standingsState: state.standings,
     infoProfile: getProfile(state),
     statisticsState: state.statistics,
-    level: state.trainings.name ? state.trainings.name : 'Newbie',
+    level: state.trainings.name ? state.trainings.name : "Newbie",
     role: state.login.role
       ? state.login.role.roleUser
         ? state.login.role.roleUser
         : 0
-      : 0,
+      : 0
   };
 });
 

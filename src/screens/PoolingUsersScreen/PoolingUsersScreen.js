@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -13,41 +13,34 @@ import {
   Alert,
   StatusBar,
   Image,
+  ListView,
   RefreshControl,
-} from 'react-native';
+} from "react-native";
 
-import ListView from 'deprecated-react-native-listview';
+import { connect } from "react-redux";
 
-import {connect} from 'react-redux';
+import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
-import OwnIcon from '../../components/OwnIcon/OwnIcon';
+import { createSelector } from "reselect";
 
-import {createSelector} from 'reselect';
 
-import InteractionManager from '../../helpers/loadingComponent';
 
-import Aux from '../../helpers/Aux';
-import UserItemPooling from './../../components/UserItemPooling/UserItemPooling';
-import WaveTopLive from './../../components/WaveTopLive/WaveTopLive';
-import {getGroupPoolingState} from '../../domains/tracking/Selectors';
-import {store} from '../../store';
+import InteractionManager from "../../helpers/loadingComponent";
+
+import Aux from "../../helpers/Aux";
+import UserItemPooling from "./../../components/UserItemPooling/UserItemPooling";
+import WaveTopLive from "./../../components/WaveTopLive/WaveTopLive";
+import {getGroupPoolingState} from "../../domains/tracking/Selectors"
+import { store } from "../../store";
 
 class PoolingUsersScreen extends React.Component {
   constructor(props) {
     super(props);
     this.clickBack = this.clickBack.bind(this);
-    // prendo il nickname
-    const myNickname =
-      store.getState().login.infoProfile &&
-      store.getState().login.infoProfile.username
-        ? store.getState().login.infoProfile.username
-        : '';
-    // vedo se sono il master
-    const masterIs = this.props.groupPooling.filter(
-      (elem) => elem.master && elem.user.username == myNickname,
-    ).length
-      ? true
-      : false;
+    // prendo il nickname 
+    const myNickname = store.getState().login.infoProfile && store.getState().login.infoProfile.username  ? store.getState().login.infoProfile.username : "" 
+    // vedo se sono il master 
+    const masterIs = this.props.groupPooling.filter(elem => elem.master && elem.user.username == myNickname).length ? true : false
 
     this.state = {
       myNickname,
@@ -117,8 +110,8 @@ class PoolingUsersScreen extends React.Component {
         },
       ],
       animationLoop: 5,
-      curvyWidth: Dimensions.get('window').width * 2 * 5,
-      curvyLeft: -Dimensions.get('window').width * 0.75 * 5,
+      curvyWidth: Dimensions.get("window").width * 2 * 5,
+      curvyLeft: -Dimensions.get("window").width * 0.75 * 5,
       time: 0,
       interval: 0,
       start: null,
@@ -155,8 +148,8 @@ class PoolingUsersScreen extends React.Component {
           dates: -560,
         },
       ],
-      keys1: ['dates'],
-      keys: ['bananas', 'cherries'],
+      keys1: ["dates"],
+      keys: ["bananas", "cherries"],
       totDistanceAlsoNotValid: 0,
       totPointsRoute: 0,
       totPointsAlsoNotValid: 0,
@@ -172,13 +165,14 @@ class PoolingUsersScreen extends React.Component {
     this.props.navigation.goBack();
   };
 
-  static navigationOptions = ({navigation}) => {
+  static navigationOptions = ({ navigation }) => {
     return {
       headerTitle: (
         <Text
           style={{
-            left: Platform.OS == 'android' ? 20 : 0,
-          }}>
+            left: Platform.OS == "android" ? 20 : 0,
+          }}
+        >
           Group
         </Text>
       ),
@@ -187,7 +181,10 @@ class PoolingUsersScreen extends React.Component {
 
   componentWillMount() {
     this.updateColorSegment(this.props);
+    
   }
+
+  
 
   componentDidMount() {
     //this.animation.play();
@@ -201,9 +198,9 @@ class PoolingUsersScreen extends React.Component {
   }
 
   componentWillReceiveProps(props) {
-    const {activityChoice, distanceLive} = props;
+    const { activityChoice, distanceLive } = props;
 
-    if (activityChoice && props.activityChoice.type === '') {
+    if (activityChoice && props.activityChoice.type === "") {
       if (this.state.anim) {
         this.state.anim.reset();
       }
@@ -213,7 +210,7 @@ class PoolingUsersScreen extends React.Component {
       if (
         activityChoice &&
         this.props.activityChoice.type != activityChoice.type &&
-        activityChoice.type !== ''
+        activityChoice.type !== ""
       ) {
         // this.animation.play();
         // this.props.navigation.goBack();
@@ -232,7 +229,7 @@ class PoolingUsersScreen extends React.Component {
     let modalSplitIndex = 0;
 
     switch (props.activityChoice.type) {
-      case 'Walking':
+      case "Walking":
         {
           r = 108;
           g = 186;
@@ -240,7 +237,7 @@ class PoolingUsersScreen extends React.Component {
           modalSplitIndex = 0;
         }
         break;
-      case 'Biking':
+      case "Biking":
         {
           r = 232;
           g = 52;
@@ -248,7 +245,7 @@ class PoolingUsersScreen extends React.Component {
           modalSplitIndex = 1;
         }
         break;
-      case 'Public':
+      case "Public":
         if (props.activityChoice.coef === 800) {
           r = 250;
           g = 178;
@@ -266,7 +263,7 @@ class PoolingUsersScreen extends React.Component {
           modalSplitIndex = 3;
         }
         break;
-      case 'Carpooling':
+        case "Carpooling":
         {
           r = 51;
           g = 99;
@@ -274,6 +271,7 @@ class PoolingUsersScreen extends React.Component {
           modalSplitIndex = 5;
         }
         break;
+
 
       default:
         {
@@ -299,35 +297,37 @@ class PoolingUsersScreen extends React.Component {
   moveMap = () => {
     return (
       <TouchableWithoutFeedback
-        onPress={() => this.props.navigation.navigate('Mappa')}
-        style={{}}>
+        onPress={() => this.props.navigation.navigate("Mappa")}
+        style={{}}
+      >
         <View
           style={{
-            position: 'absolute',
+            position: "absolute",
             shadowRadius: 5,
-            shadowColor: '#000',
-            shadowOffset: {width: 0, height: 5},
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 5 },
             shadowOpacity: 0.5,
-            backgroundColor: 'transparent',
+            backgroundColor: "transparent",
             elevation: 2,
             borderRadius: 20,
             height: 40,
             width: 40,
-            alignContent: 'center',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'white',
+            alignContent: "center",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "white",
             top: 40,
             right: 40,
-          }}>
-          <OwnIcon name="map_icn" size={35} color={'rgba(61, 61, 61, 1)'} />
+          }}
+        >
+          <OwnIcon name="map_icn" size={35} color={"rgba(61, 61, 61, 1)"} />
         </View>
       </TouchableWithoutFeedback>
     );
   };
 
   onRefresh() {
-    this.setState({refreshing: true});
+    this.setState({ refreshing: true });
     // const loading = setInterval(() => {
     //   if (this.props.standingsState.standing.length > 0) {
     //     this.setState({ refreshing: false });
@@ -341,13 +341,13 @@ class PoolingUsersScreen extends React.Component {
       <View>
         <View
           style={{
-            height: Dimensions.get('window').height / 10,
+            height: Dimensions.get("window").height / 10,
           }}
         />
         {
           // aggiungo delo spazio in meno dato che il padding lo aggiunto prima su android e quindi qua non lo aggiungo
         }
-        <View style={{height: Dimensions.get('window').height * 0.23}} />
+        <View style={{ height: Dimensions.get("window").height * 0.23 }} />
       </View>
     );
   };
@@ -361,6 +361,8 @@ class PoolingUsersScreen extends React.Component {
     dataSource = ds.cloneWithRows(friends);
 
     const number = friends.length;
+
+    
 
     return (
       <View>
@@ -376,64 +378,68 @@ class PoolingUsersScreen extends React.Component {
           style={styles.challengesList}
           dataSource={dataSource}
           // onScrollEndDrag={this.onScrollEndDrag}
-          renderHeader={() => (
+          renderHeader={() => <View
+            style={{
+              height: 100,
+              width: Dimensions.get("window").width,
+            }}
+          >
             <View
               style={{
-                height: 100,
-                width: Dimensions.get('window').width,
-              }}>
-              <View
-                style={{
-                  height: 80,
-                  width: Dimensions.get('window').width,
+                height: 80,
+                width: Dimensions.get("window").width,
 
-                  // top: -150
-                }}>
-                <WaveTopLive
-                  width="100%"
-                  height="50"
-                  colors={this.state.colors}
+                // top: -150
+              }}
+            >
+              <WaveTopLive
+                width="100%"
+                height="50"
+                colors={this.state.colors}
 
-                  // scale={width/24}
-                />
-              </View>
-
-              {this.moveMap()}
+                // scale={width/24}
+              />
             </View>
-          )}
+
+            {this.moveMap()}
+          </View>}
           renderRow={(item, sectionID, rowID) => {
             const row = parseInt(rowID) + 1;
+            
+              return (
+                <Aux key={rowID}>
+                  
 
-            return (
-              <Aux key={rowID}>
-                <UserItemPooling
-                  navigation={this.props.navigation}
-                  // myProfile={this.myProfile}
-                  user={{
-                    ...item.user,
-                    position: row,
-                  }}
-                  rowID={rowID}
-                  level={'N'}
-                  modalType={
-                    item.referred_route__user__role
-                      ? item.referred_route__user__role === 'none' ||
-                        item.referred_route__user__role === 'muver'
-                        ? 0
-                        : parseInt(item.referred_route__user__role)
-                      : 0
-                  }
-                  blockRanking={false}
-                  community={''}
-                  city={''}
-                  master={item.master}
-                  myNickname={this.state.myNickname}
-                  masterIs={this.state.masterIs}
-                  all={item}
-                />
-                {number === row ? this.endScroll() : <View />}
-              </Aux>
-            );
+                  <UserItemPooling
+                    navigation={this.props.navigation}
+                    // myProfile={this.myProfile}
+                    user={{
+                      ...item.user,
+                      position: row,
+                    }}
+                    rowID={rowID}
+                    level={"N"}
+                    modalType={
+                      item.referred_route__user__role
+                        ? item.referred_route__user__role === "none" ||
+                          item.referred_route__user__role === "muver"
+                          ? 0
+                          : parseInt(item.referred_route__user__role)
+                        : 0
+                    }
+                    blockRanking={false}
+                    community={""}
+                    city={""}
+                    master={item.master}
+                    myNickname={this.state.myNickname}
+                    masterIs={this.state.masterIs}
+                    all={item}
+
+                  />
+                  {number === row ?  this.endScroll() : <View/>}
+                </Aux>
+              );
+          
           }}
         />
       </View>
@@ -448,12 +454,13 @@ class PoolingUsersScreen extends React.Component {
 
           <View
             style={{
-              width: Dimensions.get('window').width,
-              height: Dimensions.get('window').height,
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
+              width: Dimensions.get("window").width,
+              height: Dimensions.get("window").height,
+              justifyContent: "flex-start",
+              alignItems: "flex-start",
               // backgroundColor: "#3e3"
-            }}>
+            }}
+          >
             {this.renderPoolingUsers()}
           </View>
         </Aux>
@@ -466,66 +473,66 @@ class PoolingUsersScreen extends React.Component {
 
 const styles = {
   challengesList: {
-    height: Dimensions.get('window').height,
-    backgroundColor: '#FFFFFF',
+    height: Dimensions.get("window").height,
+    backgroundColor: "#FFFFFF",
   },
   routeParametersLabel: {
-    fontFamily: 'OpenSans-ExtraBold',
-    fontWeight: 'bold',
-    color: '#3D3D3D',
+    fontFamily: "OpenSans-ExtraBold",
+    fontWeight: "bold",
+    color: "#3D3D3D",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   routeParametersValue: {
-    fontFamily: 'OpenSans-Regular',
-    fontWeight: '600',
-    color: '#3D3D3D',
+    fontFamily: "OpenSans-Regular",
+    fontWeight: "600",
+    color: "#3D3D3D",
     fontSize: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   userNameTxt: {
-    fontFamily: 'OpenSans-Regular',
-    fontWeight: 'bold',
-    color: '#3D3D3D',
+    fontFamily: "OpenSans-Regular",
+    fontWeight: "bold",
+    color: "#3D3D3D",
     fontSize: 12,
   },
   routeParametersLabel: {
-    fontFamily: 'OpenSans-ExtraBold',
-    fontWeight: 'bold',
-    color: '#3D3D3D',
+    fontFamily: "OpenSans-ExtraBold",
+    fontWeight: "bold",
+    color: "#3D3D3D",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
 };
 
-if (NativeModules.RNDeviceInfo.model.includes('iPad')) {
+if (NativeModules.RNDeviceInfo.model.includes("iPad")) {
   Object.assign(styles, {
     circle6: {
-      width: Dimensions.get('window').width / 4 + 60,
-      height: Dimensions.get('window').width / 4 + 60,
-      borderRadius: Dimensions.get('window').width / 4,
-      justifyContent: 'center',
-      alignSelf: 'center',
+      width: Dimensions.get("window").width / 4 + 60,
+      height: Dimensions.get("window").width / 4 + 60,
+      borderRadius: Dimensions.get("window").width / 4,
+      justifyContent: "center",
+      alignSelf: "center",
       // backgroundColor: "#33e"
     },
   });
 }
 
 export const modalSplitImage = {
-  0: require('./../../assets/images/live_walk.png'),
-  1: require('./../../assets/images/live_bike.png'),
-  2: require('./../../assets/images/live_bus.png'),
-  3: require('./../../assets/images/live_train.png'),
-  4: require('./../../assets/images/live_metro.png'),
+  0: require("./../../assets/images/live_walk.png"),
+  1: require("./../../assets/images/live_bike.png"),
+  2: require("./../../assets/images/live_bus.png"),
+  3: require("./../../assets/images/live_train.png"),
+  4: require("./../../assets/images/live_metro.png"),
 };
 
 export const modalSplitBackground = {
-  0: require('./../../assets/images/pooling_circles_walk.png'),
-  1: require('./../../assets/images/pooling_circles_bike.png'),
-  2: require('./../../assets/images/pooling_circles_walk.png'),
-  3: require('./../../assets/images/pooling_circles_walk.png'),
-  4: require('./../../assets/images/pooling_circles_walk.png'),
-  5: require('./../../assets/images/pooling_circles_car.png'),
+  0: require("./../../assets/images/pooling_circles_walk.png"),
+  1: require("./../../assets/images/pooling_circles_bike.png"),
+  2: require("./../../assets/images/pooling_circles_walk.png"),
+  3: require("./../../assets/images/pooling_circles_walk.png"),
+  4: require("./../../assets/images/pooling_circles_walk.png"),
+  5: require("./../../assets/images/pooling_circles_car.png"),
 };
 
 // quali dati prendere
@@ -535,19 +542,27 @@ const getActivity = (state) => state.tracking.activityChoice;
 
 const getStatusButtonState = createSelector(
   [getStatusButton],
-  (StatusButton) => StatusButton,
+  (StatusButton) => StatusButton
 );
 
 const getActivityState = createSelector(
   [getActivity],
-  (activityChoice) => activityChoice,
+  (activityChoice) => activityChoice
 );
+
+
+
+
+
 
 const withActivity = connect((state, props) => {
   return {
+
     StatusButton: getStatusButtonState(state),
     activityChoice: getActivityState(state),
-    groupPooling: getGroupPoolingState(state),
+   groupPooling: getGroupPoolingState(state)
+
+
   };
 });
 

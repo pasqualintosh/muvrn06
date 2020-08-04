@@ -29,6 +29,7 @@ import ChartsStats from "./../../components/ChartsStats/ChartsStats";
 import pointsDecimal from "./../../helpers/pointsDecimal";
 import { BoxShadow } from "react-native-shadow";
 import EnableHealthButton from "./../../components/EnableHealthButton/EnableHealthButton";
+import SustainabilitySection from "./../../components/SustainabilitySection/SustainabilitySection";
 
 function roundUsing(func, number, prec) {
   var tempnumber = number * Math.pow(10, prec);
@@ -543,7 +544,8 @@ class ProfileScreen extends React.Component {
         <ProfileScreenCards navigation={this.props.navigation} statisticsState={this.props.statisticsState}/>
         {/* {this.renderTextStats()}
         {this.renderStats()} */}
-        {this.renderSustainabilitySection(CO2)}
+        <SustainabilitySection CO2={CO2} />
+        {/* {this.renderSustainabilitySection(CO2)} */}
         
       </ScrollView>
     );

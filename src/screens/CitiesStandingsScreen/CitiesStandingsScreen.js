@@ -7,11 +7,8 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-
 import ListView from 'deprecated-react-native-listview';
-
 import LinearGradient from 'react-native-linear-gradient';
-
 import {styles, negativeData, positiveData, cities} from './Style';
 import WavyArea from './../../components/WavyArea/WavyArea';
 import CityGameItem from './../../components/CityGameItem/CityGameItem';

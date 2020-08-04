@@ -1,6 +1,21 @@
 import { StyleSheet, Dimensions, Platform } from "react-native";
 
 export const styles = StyleSheet.create({
+  categories: {
+    //height: 20,
+    // width: 60,
+    paddingTop: 25,
+    paddingBottom: 25,
+    width: Dimensions.get("window").width * 0.9,
+    justifyContent: "flex-start",
+    flexDirection: "column"
+  },
+  TopQuestionTitle: {
+    fontSize: 15,
+    fontFamily: "OpenSans-Bold",
+    color: "#FFFFFF",
+    textAlign: 'center'
+  },
   container: {
     height: Dimensions.get("window").height,
     width: Dimensions.get("window").width,
@@ -17,7 +32,6 @@ export const styles = StyleSheet.create({
   end: {
     width: Dimensions.get("window").width,
     flexDirection: "row",
-
     justifyContent: "space-around",
     alignItems: "center",
     height: 150
@@ -62,9 +76,11 @@ export const styles = StyleSheet.create({
   },
   iconBanner: {
     width: Dimensions.get("window").width,
-    height: 220,
+    paddingBottom: 120,
     flexDirection: "column",
-    justifyContent: "flex-start"
+    justifyContent: "flex-start",
+    alignContent: 'center',
+    alignItems: 'center'
     // top: -60
   },
 
@@ -189,6 +205,12 @@ export const styles = StyleSheet.create({
   pointsBonus: {
     fontFamily: "OpenSans-Regular",
 
+    fontSize: 10,
+    color: "#3D3D3D"
+  },
+  pointsOpacityBonus: {
+    fontFamily: "OpenSans-Regular",
+    opacity: 0,
     fontSize: 10,
     color: "#3D3D3D"
   },

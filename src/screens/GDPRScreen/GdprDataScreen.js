@@ -181,6 +181,8 @@ class GdprDataScreen extends React.Component {
                   width: Dimensions.get("window").width,
 
                   justifyContent: "flex-start",
+                  height: 30,
+                  paddingTop: 10
                 }}
               >
                 <TouchableOpacity
@@ -188,7 +190,7 @@ class GdprDataScreen extends React.Component {
                     this.props.navigation.goBack(null);
                   }}
                 >
-                  <View style={{ width: 30, height: 30 }}>
+                  <View style={{ width: 30, height: 30, paddingLeft: 10 }}>
                     <Icon
                       name="md-arrow-forward"
                       size={18}

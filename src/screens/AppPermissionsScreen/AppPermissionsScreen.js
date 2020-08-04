@@ -97,11 +97,6 @@ class AppPermissionsScreen extends React.Component {
       const options = {
         scopes: [
           Scopes.FITNESS_ACTIVITY_READ,
-          Scopes.FITNESS_ACTIVITY_READ_WRITE,
-          Scopes.FITNESS_BODY_READ,
-          Scopes.FITNESS_BODY_READ_WRITE,
-          Scopes.FITNESS_NUTRITION_READ,
-          Scopes.FITNESS_LOCATION_READ_WRITE,
           
         ]
       };
@@ -575,6 +570,7 @@ class AppPermissionsScreen extends React.Component {
               <View
                 style={{
                   height: 30,
+                  paddingTop: 10
                 }}
               >
                 <View
@@ -587,7 +583,7 @@ class AppPermissionsScreen extends React.Component {
                       this.props.navigation.goBack(null);
                     }}
                   >
-                    <View style={{ width: 30, height: 30 }}>
+                    <View style={{ width: 30, height: 30 , paddingLeft: 10}}>
                       <Icon
                         name="md-arrow-forward"
                         size={18}

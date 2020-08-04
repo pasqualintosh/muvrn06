@@ -13,7 +13,9 @@ import {
   Alert,
   StatusBar,
   Image,
-  Easing
+  Easing,
+  RefreshControl,
+  ScrollView
 } from "react-native";
 import { StackedAreaChart } from "react-native-svg-charts";
 import { connect } from "react-redux";
@@ -41,7 +43,8 @@ import {getUsersPoolingFindState, getReceiveInvitePoolingState, getInvitePooling
 import { searchUsersPoolingWithLastPoint, searchUsersPoolingWithCurrentPoint } from "../../domains/tracking/ActionCreators"
 import { getGroupPoolingState } from "../../domains/tracking/Selectors"
 
-import { InvitePooling, acceptInvitePooling, declineInvitePooling, deleteDataReceiveInvite, deleteDataSendInvite } from "../../domains/connection/ActionCreators"
+import { InvitePooling, acceptInvitePooling, declineInvitePooling, deleteDataReceiveInvite, deleteDataSendInvite, deleteSearchData } from "../../domains/connection/ActionCreators"
+import WaveTopLive from "../../components/WaveTopLive/WaveTopLive";
 
 class PoolingRadarScreen extends React.Component {
   constructor(props) {
@@ -135,28 +138,28 @@ class PoolingRadarScreen extends React.Component {
           apples: 3840,
           bananas: 1400,
           cherries: 1200,
-          dates: 1200
+          dates: 1200 - 1200
         },
         {
           month: new Date(2015, 1, 1),
           apples: 1600,
           bananas: 2400,
           cherries: 960,
-          dates: -960
+          dates: -960 - 1200
         },
         {
           month: new Date(2015, 2, 1),
           apples: 640,
           bananas: 3500,
           cherries: 3640,
-          dates: -3640
+          dates: -3640 - 1200
         },
         {
           month: new Date(2015, 3, 1),
           apples: 3320,
           bananas: 480,
           cherries: 640,
-          dates: -640
+          dates: -640 - 1200
         }
       ],
       keys1: ["dates"],
@@ -168,8 +171,21 @@ class PoolingRadarScreen extends React.Component {
       totDistanceSegment: 0,
       totPointsSegmentValid: 0,
       hoursTraffic: false,
-      pointsLive: 0
+      pointsLive: 0,
+      refreshing: false
     };
+  }
+
+  _onRefresh() {
+    if (!this.state.refreshing) {
+      this.setState({ refreshing: true });
+      searchUsersPoolingWithCurrentPoint()
+      setTimeout(() => {
+        // console.log("check");
+
+        this.setState({ refreshing: false });
+      }, 5000);
+    }
   }
 
   opacity = new Animated.Value(1); // Initial value for opacity: 0
@@ -225,7 +241,9 @@ class PoolingRadarScreen extends React.Component {
   componentWillMount() {
     this.updateColorSegment(this.props);
 
-    // se c'e qualche route
+    // cancello eventuali risultati precedente 
+    this.props.dispatch(deleteSearchData())
+
   }
 
   animateOpacity = () => {
@@ -275,8 +293,8 @@ class PoolingRadarScreen extends React.Component {
       })
     );
     searchUsersPoolingWithCurrentPoint()
-    // avvio un timer per avviare una ricerca ogni minuti 
-    this.research = setInterval(function(){ searchUsersPoolingWithCurrentPoint() }, 60000);
+    // avvio un timer per avviare una ricerca ogni dieci secondi
+    this.research = setInterval(function(){ searchUsersPoolingWithCurrentPoint() }, 10000);
 
     this.animate = setInterval(() => { this.animateOpacity() }, 1100);
   }
@@ -287,7 +305,7 @@ class PoolingRadarScreen extends React.Component {
   
 
   componentWillReceiveProps(props) {
-    const { activityChoice } = props;
+    const { activityChoice, groupPooling } = props;
 
     if (activityChoice && props.activityChoice.type === "") {
 
@@ -303,6 +321,16 @@ class PoolingRadarScreen extends React.Component {
 
       // se cambio mezzo, ricalcolo tutte le informazioni
       this.updateColorSegment(props);
+    } else if (
+      
+      this.props.groupPooling.length != groupPooling.length
+    ) {
+      // è cambiato il gruppo, quindi ho gia accettato l'invito o è stato accettato 
+      // ritorno al live
+      
+      this.props.navigation.goBack();
+
+      
     }
   }
 
@@ -576,13 +604,19 @@ class PoolingRadarScreen extends React.Component {
   render() {
     if (this.state.load) {
       return (
-        <View
-          style={{
+        <ScrollView
+        contentContainerStyle={{
             flex: 1,
             justifyContent: "center",
             alignItems: "space-around",
             flexDirection: "column"
           }}
+          refreshControl={
+          <RefreshControl
+            refreshing={this.state.refreshing}
+            onRefresh={this._onRefresh.bind(this)}
+          />
+        }
         >
           <StatusBar backgroundColor="white" barStyle="dark-content" />
           <AlertCarPooling
@@ -596,19 +630,32 @@ class PoolingRadarScreen extends React.Component {
          
           <RadarBackgroundSvg child={<View />} colors={this.state.colors} opacity={this.opacity}/>
          
-          <StackedAreaChart
+          {/* <StackedAreaChart
             style={{
-              height: 200,
+              height: 50,
               width: Dimensions.get("window").width,
               position: "absolute",
-              top: -150
+              top: 0
             }}
             data={this.state.data}
             keys={this.state.keys1}
             colors={this.state.colors}
             curve={shape.curveNatural}
             showGrid={false}
-          />
+          /> */}
+          <WaveTopLive
+           
+           width='100%'
+           height="50"
+           colors={this.state.colors}
+           style={{
+              height: 50,
+              width: Dimensions.get("window").width,
+              position: "absolute",
+              top: 0
+            }}
+           // scale={width/24}
+         />
           <View style={{
                   height: 200,
                   width: Dimensions.get("window").width,
@@ -639,7 +686,7 @@ class PoolingRadarScreen extends React.Component {
           >
             {this.renderNearUsers()}
           </View>
-        </View>
+        </ScrollView>
       );
     } else {
       return <View />;

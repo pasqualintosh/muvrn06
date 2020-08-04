@@ -7,13 +7,13 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   userPositionContainer: {
     flex: 0.5,
     justifyContent: "center",
     alignItems: "center",
-    alignContent: "center"
+    alignContent: "center",
   },
   userAvatarContainer: {
     width: Dimensions.get("window").width * 0.25,
@@ -21,7 +21,7 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
 
     alignItems: "center",
-    alignSelf: "center"
+    alignSelf: "center",
   },
   otherContainer: {
     width: Dimensions.get("window").width * 0.75,
@@ -30,43 +30,43 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "center",
-    alignContent: "center"
+    alignContent: "center",
   },
   userLabel: {
     fontFamily: "OpenSans-Bold",
     color: "#3D3D3D",
     fontSize: 12,
     fontWeight: "bold",
-    textAlign: "left"
+    textAlign: "left",
   },
   userIndex: {
     fontFamily: "Montserrat-ExtraBold",
     color: "#3D3D3D",
     fontSize: 12,
-    textAlign: "left"
+    textAlign: "left",
   },
   userPoints: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     color: "#3D3D3D",
     fontSize: 10,
-    textAlign: "left"
+    textAlign: "left",
   },
   userPosition: {
     fontFamily: "OpenSans-Regular",
     fontWeight: "400",
     color: "#3D3D3D",
-    fontSize: 11
+    fontSize: 11,
   },
   userAvatar: {
     backgroundColor: "#518A9C",
     width: 65,
     height: 65,
-    borderRadius: 100
+    borderRadius: 100,
   },
   userAvatarImage: {
     width: 65,
-    height: 65
+    height: 65,
   },
   userBadge: {
     backgroundColor: "#6CBA7E",
@@ -77,14 +77,14 @@ export const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   badgeText: {
     fontFamily: "Montserrat-ExtraBold",
     fontWeight: "bold",
     color: "#3D3D3D",
     fontSize: 11,
-    textAlign: "center"
+    textAlign: "center",
   },
   //
   modalContainer: {
@@ -95,39 +95,51 @@ export const styles = StyleSheet.create({
     borderColor: "rgba(0, 0, 0, 0.1)",
     justifyContent: "center",
     alignItems: "center",
-    alignSelf: "center"
+    alignSelf: "center",
   },
   modalText: {
     color: "#00000054",
     fontFamily: "OpenSans-Regular",
-    fontSize: 16
+    fontSize: 16,
   },
   modalBtnText: {
     color: "#51AEC9",
     fontFamily: "OpenSans-Regular",
     fontSize: 14,
-    textAlign: 'center'
+    textAlign: "center",
   },
   modalButtonsContainer: { flexDirection: "row", marginTop: 30 },
   buttonContainer: {
     height: 40,
     width: Dimensions.get("window").width * 0.4,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   mainContainer: {
-    width: Dimensions.get("window").width * 0.9,
-    height: 50,
+    height: 41,
     flexDirection: "row",
     justifyContent: "flex-end",
-    alignItems: "center"
+    alignItems: "center",
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingTop: 10,
+    paddingBottom: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 20,
+
+    // height: 65,
+    alignItems: "center",
+    alignSelf: "center",
+    flexDirection: "row",
   },
   endFlex: {
     width: Dimensions.get("window").width,
-    height: 50,
+    height: 80,
     flexDirection: "column",
-    justifyContent: "flex-end",
-    alignItems: "center"
+    justifyContent: "center",
+    alignItems: "center",
+    
   },
   sideContainer: {
     width: 70,
@@ -140,26 +152,26 @@ export const styles = StyleSheet.create({
     backgroundColor: "#87D99A",
     flexDirection: "column",
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
   },
   textDescrInvite: {
     fontFamily: "OpenSans-Regular",
     color: "#FFFFFF",
     fontSize: 12,
     // marginVertical: 10,
-    textAlign: "left"
+    textAlign: "left",
   },
   text: {
-    fontFamily: "OpenSans-Regular",
-    color: "#3D3D3D",
+    fontFamily: "Montserrat-ExtraBold",
+    color: "#FFFFFF",
     fontSize: 14,
     // marginVertical: 10,
-    textAlign: "center"
+    textAlign: "center",
   },
   underline: {
     width: Dimensions.get("window").width * 0.25,
     height: 6,
-    backgroundColor: "#FFFFFF"
+    backgroundColor: "#FFFFFF",
     //marginVertical: 4
-  }
+  },
 });

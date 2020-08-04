@@ -9,9 +9,7 @@ import {
   TouchableWithoutFeedback,
   NativeModules,
 } from 'react-native';
-
 import ListView from 'deprecated-react-native-listview';
-
 import Aux from '../../helpers/Aux';
 import Blur from '../../components/Blur/Blur';
 import NotificationPoint from './../../components/NotificationPoint/NotificationPoint';

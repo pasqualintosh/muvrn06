@@ -540,7 +540,7 @@ class FeedbackScreen extends React.Component {
                   fontSize: 16
                 }}
               >
-                Invia
+                {strings('id_0_132')}
               </Text>
             </View>
           </TouchableHighlight>

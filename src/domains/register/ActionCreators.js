@@ -1002,7 +1002,6 @@ export function createAccountNew(account, callback = () => {}) {
         gender: (gender? gender : undefined),
         height: (height? height : undefined),
         weight: (weight? weight : undefined),
-        
         app_version: DeviceInfo.getVersion()
       };
 

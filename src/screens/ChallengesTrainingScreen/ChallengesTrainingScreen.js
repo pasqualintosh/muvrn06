@@ -198,13 +198,14 @@ class ChallengesTrainingScreen extends React.Component {
     else
       return (
         <ScrollView
+        contentContainerStyle={styles.allView}
           refreshControl={
             <RefreshControl
               refreshing={this.state.refreshing}
               onRefresh={this.onRefresh.bind(this)}
             />
           }
-          contentContainerStyle={styles.allView}
+          
         >
           <LinearGradient
             start={{ x: 0.0, y: 0.0 }}
@@ -218,14 +219,18 @@ class ChallengesTrainingScreen extends React.Component {
               style={styles.allView}
             >
               <View style={styles.space}></View>
+              <View style={styles.subView}>
+              <Text style={styles.textTitle}>{strings("id_3_01")}</Text>
+              <Text style={styles.textSubTitle}>
+                <Text style={styles.textSubTitle}>{strings("id_3_15")} </Text>
+                
+              </Text>
+            </View>
+            <View style={styles.space}></View>
               <Image
                 source={require("./../../assets/images/challenge_empty.png")}
                 style={styles.imageLogo}
               />
-              {/* <View style={styles.space}></View> */}
-              <View style={styles.subView}>
-                <Text style={styles.textTournament}>{strings("id_3_15")}</Text>
-              </View>
             </ImageBackground>
           </LinearGradient>
         </ScrollView>
@@ -234,6 +239,19 @@ class ChallengesTrainingScreen extends React.Component {
 }
 
 const styles = StyleSheet.create({
+  textTitle: {
+    fontFamily: "Montserrat-ExtraBold",
+    fontSize: 30,
+    textAlign: "center",
+    color: "#FFFFFF"
+  },
+  textSubTitle: {
+    paddingTop: 10,
+    fontFamily: "OpenSans-Regular",
+    fontSize: 15,
+    textAlign: "center",
+    color: "#FFFFFF"
+  },
   textTournament: {
     fontFamily: "OpenSans-Bold",
     fontSize: 16,

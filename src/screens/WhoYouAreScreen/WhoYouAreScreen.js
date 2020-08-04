@@ -237,6 +237,7 @@ class WhoYouAreScreen extends React.Component {
         <View style={styles.inputView}>
           <Text style={styles.LeftTitle}>{strings("id_13_18")}</Text>
           <PickerModalContentNew
+          title={strings("id_13_18")}
             value={this.state.height !== "0" ? this.state.height : "-"}
             type={"height"}
             changeState={this.changeState}
@@ -268,6 +269,7 @@ class WhoYouAreScreen extends React.Component {
         <View style={styles.inputView}>
           <Text style={styles.LeftTitle}>{strings("id_13_19")}</Text>
           <PickerModalContentNew
+          title={strings("id_13_19")}
             value={this.state.weight !== "0" ? this.state.weight : "-"}
             type={"weight"}
             changeState={this.changeState}
@@ -287,6 +289,7 @@ class WhoYouAreScreen extends React.Component {
         <View style={styles.inputView}>
           <Text style={styles.LeftTitle}>{strings("id_13_16")}</Text>
           <PickerModalContentNew
+            title={strings("id_13_16")}
             value={
               this.state.gender
                 ? typeof this.state.gender === "number"
@@ -342,6 +345,7 @@ class WhoYouAreScreen extends React.Component {
         <View style={styles.inputView}>
           <Text style={styles.LeftTitle}>{strings("id_13_14")}</Text>
           <DatePickerNew
+            title={strings("id_13_14")}
             value={
               this.state.date_of_birth
                 ? this.state.date_of_birth
@@ -517,12 +521,13 @@ class WhoYouAreScreen extends React.Component {
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingBottom: 100 }}
             >
+             <View style={styles.textHeaderContainer}>
               <TouchableOpacity
                 onPress={() => {
                   this.props.navigation.goBack(null);
                 }}
               >
-                <View style={{ width: 30, height: 30, marginLeft: 20 }}>
+                <View style={{ width: 30, height: 30, marginLeft: 10 }}>
                   <Icon
                     name="md-arrow-forward"
                     size={18}
@@ -531,18 +536,16 @@ class WhoYouAreScreen extends React.Component {
                   />
                 </View>
               </TouchableOpacity>
+              </View>
               <View style={{ padding: 10 }}>
                 <Text style={styles.title}>{strings("id_0_143")}</Text>
               </View>
-
               {this.inputAge()}
               {this.inputGender()}
               {this.inputHeight()}
               {this.inputWeight()}
               {this.textCalories()}
-
               {this.renderSlider()}
-
               <View style={{}}>
                 <View
                   style={{
@@ -752,10 +755,10 @@ const styles = StyleSheet.create({
     top: Dimensions.get("window").height * 0.8,
   },
   textHeaderContainer: {
-    marginTop: Platform.OS == "ios" ? 30 : 15,
-    marginLeft: 20,
     flexDirection: "row",
-    width: Dimensions.get("window").width * 0.85,
+    width: Dimensions.get("window").width,
+    height: 40,
+    paddingTop: 10
   },
   textHeader: {
     fontFamily: "OpenSans-ExtraBold",

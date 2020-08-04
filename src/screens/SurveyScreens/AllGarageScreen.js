@@ -20,6 +20,8 @@ import WavyArea from "./../../components/WavyArea/WavyArea";
 import OwnIcon from "./../../components/OwnIcon/OwnIcon";
 import AlertListChoose from "./../../components/AlertListChoose/AlertListChoose";
 import AlertAcceptOrDecline from "./../../components/AlertAcceptOrDecline/AlertAcceptOrDecline";
+import PickerOnlyModalContent from "./../../components/PickerOnlyModalContent/PickerOnlyModalContent";
+
 
 import LinearGradient from "react-native-linear-gradient";
 import {
@@ -956,7 +958,17 @@ class AllGarageScreen extends React.Component {
       (!this.state.bike_owning_answer || this.state.bike);
     return (
       <View>
-        <AlertListChoose
+        {/* <AlertListChoose
+          isModalVisible={this.state.isModalVisible}
+          closeModal={this.closeTutorialCarPooling}
+          confermModal={this.saveChoose}
+          paramAlert={this.state.paramAlert}
+          listOption={this.state.listOption}
+          imageAlert={this.state.imageAlert}
+          titleAlert={this.state.titleAlert}
+          valueAlert={this.state.valueAlert}
+        /> */}
+        <PickerOnlyModalContent
           isModalVisible={this.state.isModalVisible}
           closeModal={this.closeTutorialCarPooling}
           confermModal={this.saveChoose}
@@ -993,12 +1005,13 @@ class AllGarageScreen extends React.Component {
                 style={{ flex: 1 }}
                 contentContainerStyle={{ paddingBottom: 100 }}
               >
+               <View style={styles.textHeaderContainer}>
                 <TouchableOpacity
                   onPress={() => {
                     this.props.navigation.goBack(null);
                   }}
                 >
-                  <View style={{ width: 30, height: 30, marginLeft: 20 }}>
+                  <View style={{ width: 30, height: 30, marginLeft: 10 }}>
                     <Icon
                       name="md-arrow-forward"
                       size={18}
@@ -1007,6 +1020,7 @@ class AllGarageScreen extends React.Component {
                     />
                   </View>
                 </TouchableOpacity>
+                </View>
                 <View style={{ padding: 10 }}>
                   <Text style={styles.title}>{strings("id_0_68")}</Text>
                 </View>
@@ -1187,7 +1201,7 @@ const styles = StyleSheet.create({
     height: Dimensions.get("window").height * 0.2,
     top: Dimensions.get("window").height * 0.8,
   },
-  textHeaderContainer: {
+  textHeaderContainerOld: {
     marginTop: Platform.OS == "ios" ? 30 : 15,
     marginLeft: 20,
     flexDirection: "row",
@@ -1317,9 +1331,10 @@ const styles = StyleSheet.create({
     top: Dimensions.get("window").height * 0.8,
   },
   textHeaderContainer: {
-    marginLeft: 20,
     flexDirection: "row",
-    width: Dimensions.get("window").width * 0.85,
+    width: Dimensions.get("window").width,
+    height: 40,
+    paddingTop: 10
   },
   textHeader: {
     fontFamily: "OpenSans-ExtraBold",

@@ -16,6 +16,7 @@ import {
   TouchableHighlight,
   Alert,
   RefreshControl,
+  ImageBackground,
   Image,
 } from "react-native";
 import { connect } from "react-redux";
@@ -29,12 +30,12 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import Svg, {
   Circle,
-  LinearGradient,
   Line,
   Defs,
   Stop,
 } from "react-native-svg";
 import OwnIcon from "./../../components/OwnIcon/OwnIcon";
+import LinearGradient from "react-native-linear-gradient";
 import {
   frequentTripsState,
   frequentTripsNotSaveState,
@@ -291,6 +292,14 @@ class PersonalFrequentTripDataScreen extends React.Component {
             />
           }
         >
+        <View
+            
+            style={styles.allView}
+          >
+            <ImageBackground
+              source={require("./../../assets/images/cities/city_page_bg.png")}
+              style={styles.allView}
+            >
           <View style={styles.space}></View>
           <View style={styles.subView}>
             <Text style={styles.textTitle}>{strings("id_6_01")}</Text>
@@ -314,6 +323,8 @@ class PersonalFrequentTripDataScreen extends React.Component {
               style={styles.buttonImageStyle}
             />
           </TouchableOpacity>
+          </ImageBackground>
+          </View>
         </ScrollView>
       </View>
     );
@@ -462,6 +473,7 @@ const styles = StyleSheet.create({
     alignContent: "center",
     alignItems: "center",
     flexDirection: "column",
+    backgroundColor: '#F7F8F9'
   },
   first: {
     flex: 1,

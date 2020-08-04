@@ -149,7 +149,7 @@ class DrawerScreen extends React.Component {
                 </View>
               </View>
             </TouchableWithoutFeedback>
-            {/* <TouchableWithoutFeedback
+            <TouchableWithoutFeedback
               onPress={this.navigateToScreen("PersonalMobilityDataScreen")}
             >
               <View style={styles.menuItem}>
@@ -174,7 +174,7 @@ class DrawerScreen extends React.Component {
                   <OwnIcon name={"garage_icn"} size={25} color={"#FFFFFF"} />
                 </View>
               </View>
-            </TouchableWithoutFeedback> */}
+            </TouchableWithoutFeedback>
             <TouchableWithoutFeedback
               onPress={this.navigateToScreen("FriendStack")}
             >

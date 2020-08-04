@@ -642,7 +642,8 @@ const styles = {
   textHeaderContainer: {
     flexDirection: "row",
     width: Dimensions.get("window").width,
-    height: 90
+    height: 90,
+    paddingTop: 10
   },
   input: {
     width: Dimensions.get("window").width * 0.85,

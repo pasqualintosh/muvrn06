@@ -17,7 +17,7 @@ import {
   EXIT_USER_GROUP_POOLING,
 } from "../tracking/ActionTypes";
 
-import { View, Text, Alert, Platform, Dimensions } from "react-native";
+import { View, Text, NetInfo, Alert, Platform, Dimensions } from "react-native";
 import { Client } from "bugsnag-react-native";
 import WebService from "../../config/WebService";
 const bugsnag = new Client(WebService.BugsnagAppId);
@@ -28,8 +28,6 @@ import { getSpecificPositionNew } from "./../../domains/standings/ActionCreators
 import { UpdateStatus, sendSocket } from "./../tracking/ActionCreators";
 import { store } from "./../../store";
 import moment from "moment";
-
-import { NetInfo } from "@react-native-community/netinfo";
 
 /* export function changeConnectionStatus(status) {
   return function(dispatch) {
@@ -48,6 +46,17 @@ export function changeConnectionStatus(status) {
     isConnected: status.isConnected,
   };
 }
+
+export function deleteSearchData() {
+  return {
+    type: FIND_USERS_POOLING,
+    payload: [],
+    myUserPoolingFind: [],
+  };
+}
+
+
+
 
 // cancello qualcuno dal gruppo o me stesso
 export function sendDeleteUserInGroupPooling(
@@ -242,9 +251,9 @@ export function wsConnect() {
       if (access_token && (!wsOld || wsOld.readystate == 3)) {
         ws = new WebSocket(
           "wss://" +
-          WebService.socket +
-          "/ws/tracking/point/?token=" +
-          access_token
+            WebService.socket +
+            "/ws/tracking/point/?token=" +
+            access_token
         );
         timer = timer + 3000;
 
@@ -492,15 +501,39 @@ export function wsConnect() {
                 // prendo anche l'username per sapere in quali pooling sono presente
                 const username = store.getState().login.infoProfile.username;
 
-                let lastPoolingHistory = data.master_recap;
-                // l'inizio ha sempre due pooling
+                let orderPooling = data.master_recap.sort( (a, b) => {
+                  return b[0].pool - a[0].pool
+                })
+                console.log(orderPooling)
+
+                let lastPoolingHistory = orderPooling;
+                // l'inizio ha sempre due pooling e anche la fine
+                // i pooling piu nuovi sono all'inizio dell'array
                 for (
-                  let iPooling = lastPoolingHistory.length - 1;
-                  iPooling >= 0;
-                  iPooling--
+                  let iPooling = 0;
+                  iPooling < lastPoolingHistory.length;
+                  iPooling++
                 ) {
-                  if (lastPoolingHistory[iPooling].length == 2) {
-                    lastPoolingHistory = data.master_recap.slice(iPooling);
+                  if (lastPoolingHistory[iPooling].length == 2 && !lastPoolingHistory[iPooling][0].reject_time ) {
+                    // controllo se quella precedente ha match time e end time diversi, se si allora è l'inizio
+                    
+                    
+                    if (iPooling < lastPoolingHistory.length - 1) {
+                      match_time = lastPoolingHistory[iPooling].filter( elem => elem.match_time)
+                      reject_time = lastPoolingHistory[iPooling + 1].filter( elem => elem.reject_time)
+                      console.log(match_time)
+                      console.log(reject_time)
+                      if (reject_time.length && match_time.length && reject_time[0] == match_time[0]) {
+                        // sicuramente devo andare avanti, non è l'inizio
+                        continue;
+                      } else {
+                        lastPoolingHistory = orderPooling.slice(0,iPooling + 1);
+                      }
+                      
+                    } else {
+                      // non ho altri pooling, quindi è la fine
+                      lastPoolingHistory = orderPooling.slice(0,iPooling + 1);
+                    }
                     break;
                   }
                 }
@@ -557,7 +590,7 @@ export function wsConnect() {
                 {"id": 25, "user": {"username": "angynew", "avatar": {"avatar_image": null}}, "master": true, "pool": 9, "end_time": null, "match_time": "2020-07-07T15:40:43+02:00", "reject_time": null}]}
                  */
 
-                // salvo gli utenti che sono rimasti ancora nel pooling, ovvero non hanno reject_time
+                /* // salvo gli utenti che sono rimasti ancora nel pooling, ovvero non hanno reject_time
                 // mi servono i time per comprendere come suddividere i sub trip
 
                 let pool_array_end = data.rejected.filter(
@@ -576,7 +609,81 @@ export function wsConnect() {
                   phasePooling: pool_array_end,
                   username,
                   myGroupPooling: data.master_recap,
-                });
+                }); */
+                 // prendo anche l'username per sapere in quali pooling sono presente
+                 const username = store.getState().login.infoProfile.username;
+
+                 let orderPooling = data.master_recap.sort( (a, b) => {
+                   return b[0].pool - a[0].pool
+                 })
+                 console.log(orderPooling)
+ 
+                 let lastPoolingHistory = orderPooling;
+                 // l'inizio ha sempre due pooling e anche la fine
+                 // i pooling piu nuovi sono all'inizio dell'array
+                 for (
+                   let iPooling = 0;
+                   iPooling < lastPoolingHistory.length;
+                   iPooling++
+                 ) {
+                   if (lastPoolingHistory[iPooling].length == 2 ) {
+                     // controllo se quella precedente ha match time e end time diversi, se si allora è l'inizio
+                     
+                     
+                     if (iPooling < lastPoolingHistory.length - 1) {
+                       match_time = lastPoolingHistory[iPooling].filter( elem => elem.match_time)
+                       reject_time = lastPoolingHistory[iPooling + 1].filter( elem => elem.reject_time)
+                       console.log(match_time)
+                       console.log(reject_time)
+                       if (reject_time.length && match_time.length && reject_time[0] == match_time[0]) {
+                         // sicuramente devo andare avanti, non è l'inizio
+                         continue;
+                       } else {
+                         lastPoolingHistory = orderPooling.slice(0,iPooling + 1);
+                       }
+                       
+                     } else {
+                       // non ho altri pooling, quindi è la fine
+                       lastPoolingHistory = orderPooling.slice(0,iPooling + 1);
+                     }
+                     break;
+                   }
+                 }
+                 console.log(lastPoolingHistory);
+ 
+                 const phasePooling = lastPoolingHistory.reduce(
+                   (total, pooling, index, array) => {
+                     // cerco i pooling legati all'utente corrente
+                     const users = pooling.map((elem) => elem.user.username);
+ 
+                     /*   var inventario = [
+                       {name: 'mele', quantity: 2},
+                       {name: 'banane', quantity: 0},
+                       {name: 'ciliegie', quantity: 5}
+                   ];
+                   
+                   function findCherries(fruit) { 
+                       return fruit.name === 'ciliegie';
+                   }
+                   
+                   console.log(inventario.find(findCherries));  */
+                     // { name: 'ciliegie', quantity: 5 }
+                     // prendo gli utenti del singolo pooling
+                     if (users.indexOf(username) != -1) {
+                       return [...total, pooling];
+                     } else {
+                       return total;
+                     }
+                   },
+                   []
+                 );
+                 console.log(phasePooling);
+ 
+                 dispatch({
+                   type: EXIT_USER_GROUP_POOLING,
+                   groupPooling: data.rejected,
+                   phasePooling,
+                 });
               } else {
                 dispatch(UpdateStatus(data.type, 0));
                 msg = new Error("status 200 ma non gestito");

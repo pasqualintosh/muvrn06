@@ -1,8 +1,7 @@
 import React from 'react';
 import {View, Text, Dimensions} from 'react-native';
-import ListView from 'deprecated-react-native-listview';
 import LinearGradient from 'react-native-linear-gradient';
-
+import ListView from 'deprecated-react-native-listview';
 import {styles, negativeData, positiveData, cities} from './Style';
 import WavyArea from './../../components/WavyArea/WavyArea';
 import CityItem from './../../components/CityItem/CityItem';

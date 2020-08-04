@@ -23,6 +23,7 @@ class MapRoutineBlur extends React.Component {
       </Text>
     )
   };
+  
 
   componentDidMount() {
     // quando ho caricato il componente, posso dire a blur che è possibile fare il blur usando questa variabile

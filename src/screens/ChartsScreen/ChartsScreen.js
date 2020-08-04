@@ -454,11 +454,6 @@ class ChartsScreen extends React.Component {
       const options = {
         scopes: [
           Scopes.FITNESS_ACTIVITY_READ,
-          Scopes.FITNESS_ACTIVITY_READ_WRITE,
-          Scopes.FITNESS_BODY_READ,
-          Scopes.FITNESS_BODY_READ_WRITE,
-          Scopes.FITNESS_NUTRITION_READ,
-          Scopes.FITNESS_LOCATION_READ_WRITE
         ]
       };
 

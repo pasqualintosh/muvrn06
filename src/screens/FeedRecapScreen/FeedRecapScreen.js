@@ -25,6 +25,8 @@ import pointsDecimal from "../../helpers/pointsDecimal";
 import OwnIcon from "../../components/OwnIcon/OwnIcon";
 
 import AlertFeedback from "../../components/AlertFeedback/AlertFeedback";
+import ViewFeedback from "../../components/ViewFeedback/ViewFeedback";
+
 import LinearGradient from "react-native-linear-gradient";
 import Aux from "./../../helpers/Aux";
 import Svg, { Circle } from "react-native-svg";
@@ -40,17 +42,18 @@ import { createSelector } from "reselect";
 import { getDevice } from "../../helpers/deviceInfo";
 
 import { strings } from "../../config/i18n";
-import { getLanguageI18n } from "../../config/i18n";
+import { getLanguageI18n, convertLanguagesIndexForBackend } from "../../config/i18n";
 import moment from "moment";
 import haversine from "./../../helpers/haversine";
-import { getIdModalTypeFromBackend } from "./../../domains/tracking/Support";
+import { getIdModalTypeFromBackend, getImageUrl } from "./../../domains/tracking/Support";
+
 
 class FeedRecapScreen extends React.Component {
   constructor(props) {
     super(props);
 
     const languageSet = getLanguageI18n();
-    const indexLanguage = this.convertLanguagesIndexForBackend(
+    const indexLanguage = convertLanguagesIndexForBackend(
       languageSet.substring(0, 2)
     );
 
@@ -72,12 +75,16 @@ class FeedRecapScreen extends React.Component {
       weather_points: 0,
       peak_hours_points: 0,
       routinary_points: 0,
+      altitude_points: 0,
       avg_speed: [], //  le velocità media delle varie sottotratte
       indexLanguage,
       feedback: null,
       feedbackAnswer: null,
       feedbackAnswerInfo: null,
       Alert: false,
+      feedbackOldAnswer: null,
+      modalTypeImageUrl: require("../../assets/images/walk_icn_recap.png"),
+      avg_speed_for_avg_routes: 0
     };
   }
 
@@ -94,14 +101,20 @@ class FeedRecapScreen extends React.Component {
   };
 
   setResponseAnswer = (feedbackAnswer) => {
-    this.setState({
-      feedbackAnswer: feedbackAnswer.id,
-      feedbackAnswerInfo: feedbackAnswer
-    });
+    if (feedbackAnswer.length) {
+      // se ho almeno una risposta, allora ho mandato le mie risposte 
+      this.setState({
+        feedbackAnswer: feedbackAnswer[0].id,
+        feedbackAnswerInfo: feedbackAnswer[0],
+      });
+    }
   };
 
   sendRequest = (data) => {
-    const referred_route_id = this.props.navigation.getParam("referred_route_id", 0);
+    const referred_route_id = this.props.navigation.getParam(
+      "referred_route_id",
+      0
+    );
 
     this.props.dispatch(
       postFeedbackForRoute({
@@ -111,8 +124,9 @@ class FeedRecapScreen extends React.Component {
         callback: this.setResponseAnswer,
       })
     );
-    this.closeAlert();
+    this.openAlert();
   };
+  
 
   showAlert = () => {
     this.setState({
@@ -136,7 +150,7 @@ class FeedRecapScreen extends React.Component {
         return 1;
         break;
       // case "ct":
-      //   return 5;
+      //   return 5;s
       //   break;
       case "es":
         return 2;
@@ -307,6 +321,9 @@ class FeedRecapScreen extends React.Component {
       }
     }
   }
+
+
+
 
   getImagePath = (label) => {
     switch (label) {
@@ -704,24 +721,21 @@ class FeedRecapScreen extends React.Component {
 
   setFeedBack = (responseFeedback) => {
     if (responseFeedback.length) {
-      if (responseFeedback[0].my_answer) {
+      if (responseFeedback[0].my_answer && responseFeedback[0].my_answer.length) {
         // ho la risposta, la salvo cosi so che ho gia risposto
         // mi basta l'id
         this.setState({
           feedback: responseFeedback,
-          feedbackAnswer: responseFeedback[0].my_answer.id,
-          feedbackAnswerInfo: responseFeedback[0].my_answer
-          
+          feedbackAnswer: responseFeedback[0].my_answer[0].id,
+          feedbackAnswerInfo: responseFeedback[0].my_answer[0],
+          // feedbackOldAnswer: true
         });
       } else {
         this.setState({
           feedback: responseFeedback,
-          
         });
       }
-      
     }
-   
   };
 
   setRouteBackend = (response) => {
@@ -735,12 +749,33 @@ class FeedRecapScreen extends React.Component {
       routeComplet = routeComplet.sort(this.compare);
       console.log(routeComplet);
 
-      const avg_speed = routeComplet.map((elem) => {
-        return {
-          avg_speed: elem.avg_speed,
-          calculated_treshold: elem.calculated_treshold,
-        };
-      });
+      // const avg_speed = routeComplet.map((elem) => {
+      //   return {
+      //     avg_speed: elem.avg_speed,
+      //     calculated_treshold: elem.calculated_treshold,
+      //     distance: elem.distance,
+      //   };
+      // });
+
+       let avg_speed_for_avg_routes = 0
+       const numRoutes = routeComplet.length 
+       if (numRoutes > 1) {
+         // media ponderata 
+         let sum = 0
+         let sum_distance = 0
+         for (i = 0; i < numRoutes; i++) {
+          sum += routeComplet[i].avg_speed * routeComplet[i].distance
+          sum_distance += routeComplet[i].distance
+         }
+         console.log(sum)
+         console.log(sum_distance)
+         avg_speed_for_avg_routes = sum / sum_distance
+
+       } else if (numRoutes == 1){
+        avg_speed_for_avg_routes = routeComplet[0].avg_speed
+       }
+       
+
 
       // da linestring ottengo un array di lat e log
       let route = routeComplet.map((elem) => {
@@ -790,7 +825,8 @@ class FeedRecapScreen extends React.Component {
         typology: typology.reverse(),
         firstLat,
         firstLon,
-        avg_speed,
+        // avg_speed,
+        avg_speed_for_avg_routes: Number.parseFloat(avg_speed_for_avg_routes * 3.6).toFixed(2)
       });
 
       /* console.log("setRouteBackend");
@@ -908,12 +944,15 @@ class FeedRecapScreen extends React.Component {
     const { navigation } = this.props;
     const fromDb = navigation.getParam("fromDb", []);
 
+    const modalType = navigation.getParam("modalType", []);
+    const modalTypeImageUrl = getImageUrl(modalType)
+
     if (!fromDb) {
       const route = navigation.getParam("route", []);
       const firstLat = navigation.getParam("firstLat", []);
       const firstLon = navigation.getParam("firstLon", []);
 
-      this.setState({ route, firstLat, firstLon });
+      this.setState({ route, firstLat, firstLon, modalTypeImageUrl });
     } else {
       const referred_route_id = navigation.getParam("referred_route_id", 0);
       const referred_route = navigation.getParam("referred_route", {
@@ -923,11 +962,13 @@ class FeedRecapScreen extends React.Component {
       this.setState({
         frequent_trip:
           referred_route.referred_most_freq_route !== null ? true : false,
+          modalTypeImageUrl
       });
 
       this.props.dispatch(
         getDetailRouteNew({ referred_route_id, callback: this.setRouteBackend })
       );
+      
       const trip_type_id = getIdModalTypeFromBackend(
         navigation.getParam("modalType", "Walking")
       );
@@ -1181,10 +1222,10 @@ class FeedRecapScreen extends React.Component {
     } else {
       distanceWithComma = parseInt(distanceWithComma * 1000);
     }
-
+    
     return (
       <Aux>
-        <AlertFeedback
+        {/* <AlertFeedback
           isModalVisible={this.state.Alert}
           closeModal={this.closeAlert}
           // dispatch={this.dispatch}
@@ -1192,7 +1233,18 @@ class FeedRecapScreen extends React.Component {
           type={"Answers"}
           infoAlert={this.state.feedback}
           infoSend={this.state.feedback}
+        /> */}
+        <AlertFeedback
+          isModalVisible={this.state.Alert}
+          closeModal={this.closeAlert}
+          // dispatch={this.dispatch}
+          confermModal={this.closeAlert}
+          type={"Conferm"}
+          infoAlert={{ modalTypeImageUrl: this.state.modalTypeImageUrl, borderColor: color}}
+          infoSend={this.state.feedback}
         />
+
+       
 
         <ScrollView style={styles.container}>
           {this.renderHeader(
@@ -1209,11 +1261,11 @@ class FeedRecapScreen extends React.Component {
               source={require("./../../assets/images/recap/route_summary_banner_ligth_gray.png")}
               style={styles.backgroundImageLigth}
             />
-            <View style={[styles.Rest, { height: 340 }]}>
+            <View style={[styles.Rest, { height: 400 }]}>
               <Aux>
                 <TouchableWithoutFeedback onPress={() => this.expandDetail()}>
                   <View style={styles.LigthUp}>
-                    <Text style={styles.trip}>Trip Data</Text>
+                    <Text style={styles.trip}>{strings("id_1_23")}</Text>
                     {/* <Animated.View style={{ transform: [{ rotateZ: angle }] }}>
                     <OwnIcon name="arrow_down_icn" size={24} color="#3D3D3D" />
                   </Animated.View> */}
@@ -1235,7 +1287,13 @@ class FeedRecapScreen extends React.Component {
                     {calories + " " + strings("id_1_31")}
                   </Text>
                 </View>
-                {this.state.avg_speed.map((elem) => {
+                <View style={styles.LigthDetailUp}>
+                  <Text style={styles.trip}>👟 {strings("id_1_43")}</Text>
+                  <Text style={styles.tripDetail}>
+                    {this.state.avg_speed_for_avg_routes + " " + strings("id_1_44")}
+                  </Text>
+                </View>
+                {/* {this.state.avg_speed.map((elem) => {
                   return (
                     <Text style={styles.tripDetail}>
                       {"media" +
@@ -1246,7 +1304,7 @@ class FeedRecapScreen extends React.Component {
                         elem.calculated_treshold}
                     </Text>
                   );
-                })}
+                })} */}
                 <View style={styles.IconDetailUp}>
                   {this.state.weather_points ? (
                     <View style={styles.SingleIconDetail}>
@@ -1258,7 +1316,7 @@ class FeedRecapScreen extends React.Component {
                       />
                       <View style={{ height: 10 }} />
                       <Text style={styles.pointsBonus}>
-                        {this.state.weather_points}pt
+                        +{this.state.weather_points}pt
                       </Text>
                     </View>
                   ) : (
@@ -1269,6 +1327,37 @@ class FeedRecapScreen extends React.Component {
                         size={40}
                         color={"rgba(61, 61, 61, 0.3)"}
                       />
+                      <View style={{ height: 10 }} />
+                      <Text style={styles.pointsOpacityBonus}>
+                        +{this.state.weather_points}pt
+                      </Text>
+                    </View>
+                  )}
+                  {this.state.altitude_points ? (
+                    <View style={styles.SingleIconDetail}>
+                      <View style={{ height: 10 }} />
+                      <OwnIcon
+                        name="altitude_icn"
+                        size={40}
+                        color={"rgba(61, 61, 61, 1)"}
+                      />
+                      <View style={{ height: 10 }} />
+                      <Text style={styles.pointsBonus}>
+                        +{this.state.altitude_points}pt
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.SingleIconDetail}>
+                      <View style={{ height: 10 }} />
+                      <OwnIcon
+                        name="altitude_icn"
+                        size={40}
+                        color={"rgba(61, 61, 61, 0.3)"}
+                      />
+                      <View style={{ height: 10 }} />
+                      <Text style={styles.pointsOpacityBonus}>
+                        +{this.state.altitude_points}pt
+                      </Text>
                     </View>
                   )}
                   {this.state.peak_hours_points ? (
@@ -1281,7 +1370,7 @@ class FeedRecapScreen extends React.Component {
                       />
                       <View style={{ height: 10 }} />
                       <Text style={styles.pointsBonus}>
-                        {this.state.peak_hours_points}pt
+                        +{this.state.peak_hours_points}pt
                       </Text>
                     </View>
                   ) : (
@@ -1292,52 +1381,64 @@ class FeedRecapScreen extends React.Component {
                         size={40}
                         color={"rgba(61, 61, 61, 0.3)"}
                       />
+                      <View style={{ height: 10 }} />
+                      <Text style={styles.pointsOpacityBonus}>
+                        +{this.state.peak_hours_points}pt
+                      </Text>
                     </View>
                   )}
                   {this.state.day_series_points ? (
                     <View style={styles.SingleIconDetail}>
                       <View style={{ height: 10 }} />
                       <OwnIcon
-                        name="series_icn"
+                        name="flame_icn"
                         size={40}
                         color={"rgba(61, 61, 61, 1)"}
                       />
                       <View style={{ height: 10 }} />
                       <Text style={styles.pointsBonus}>
-                        {this.state.day_series_points}pt
+                        +{this.state.day_series_points}pt
                       </Text>
                     </View>
                   ) : (
                     <View style={styles.SingleIconDetail}>
                       <View style={{ height: 10 }} />
                       <OwnIcon
-                        name="series_icn"
+                        name="flame_icn"
                         size={40}
                         color={"rgba(61, 61, 61, 0.3)"}
                       />
+                      <View style={{ height: 10 }} />
+                      <Text style={styles.pointsOpacityBonus}>
+                        +{this.state.day_series_points}pt
+                      </Text>
                     </View>
                   )}
                   {this.state.routinary_points ? (
                     <View style={styles.SingleIconDetail}>
                       <View style={{ height: 10 }} />
                       <OwnIcon
-                        name="routinary_bonus_icn"
+                        name="frequent_icn"
                         size={40}
                         color={"rgba(61, 61, 61, 1)"}
                       />
                       <View style={{ height: 10 }} />
                       <Text style={styles.pointsBonus}>
-                        {this.state.routinary_points}pt
+                        +{this.state.routinary_points}pt
                       </Text>
                     </View>
                   ) : (
                     <View style={styles.SingleIconDetail}>
                       <View style={{ height: 10 }} />
                       <OwnIcon
-                        name="routinary_bonus_icn"
+                        name="frequent_icn"
                         size={40}
                         color={"rgba(61, 61, 61, 0.3)"}
                       />
+                      <View style={{ height: 10 }} />
+                      <Text style={styles.pointsOpacityBonus}>
+                        +{this.state.routinary_points}pt
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -1448,7 +1549,7 @@ class FeedRecapScreen extends React.Component {
                     <Text style={styles.Map}>{strings("id_1_32")}</Text>
                   </View>
                 </View>
-                <View
+                {/* <View
                   style={{
                     justifyContent: "center",
                     alignContent: "center",
@@ -1525,7 +1626,7 @@ class FeedRecapScreen extends React.Component {
                   >
                     <Text style={styles.Map}>{strings("id_1_33")}</Text>
                   </View>
-                </View>
+                </View> */}
 
                 <View
                   style={{
@@ -1598,6 +1699,33 @@ class FeedRecapScreen extends React.Component {
                 </View>
                 {this.renderCelebrateIcon()}
               </View>
+              <View
+                style={{
+                  width: Dimensions.get("window").width * 0.6,
+                  flexDirection: "row",
+
+                  justifyContent: "space-around",
+                  alignItems: "center",
+                  height: 2,
+                  backgroundColor: "#FEC42D",
+                }}
+              ></View>
+              {this.state.feedbackAnswer ?  <View style={styles.categories}>
+            
+  
+            <Text style={styles.TopQuestionTitle}>{strings('id_1_45')}</Text>
+  
+        
+          </View> :
+               <ViewFeedback
+          isModalVisible={this.state.Alert}
+          closeModal={this.closeAlert}
+          // dispatch={this.dispatch}
+          confermModal={this.sendRequest}
+          type={"Answers"}
+          infoAlert={this.state.feedback}
+          infoSend={this.state.feedback}
+        /> }
             </LinearGradient>
             {/* </ImageBackground> */}
           </View>

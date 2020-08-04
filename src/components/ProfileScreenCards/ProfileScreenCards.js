@@ -186,9 +186,27 @@ class ProfileScreenCards extends React.Component {
     );
   };
 
-  renderHeaderPointAndCoin = () => {
+  renderHeaderPointAndCoin = (colorTitle) => {
     return (
       <View style={styles.LigthUp}>
+      {/* <View style={styles.LigthUpColumn}>
+                <Text style={styles.valueStyle}>
+                  {this.props.infoProfile.coins
+                    ? this.props.infoProfile.coins
+                    : 0}
+                </Text>
+                <Text style={styles.valueTextStyle}>MONETE</Text>
+              </View> */}
+              <View style={styles.LigthUpColumn}>
+              
+              <OwnIcon
+                    name="play-icn"
+                    size={50}
+                    color={colorTitle}
+                    
+                  />
+              </View>
+               {/* <View style={styles.LigthUpColumnCenter}></View> */}
               <View style={styles.LigthUpColumn}>
                 <Text style={styles.valueStyle}>
                   {pointsDecimal(
@@ -199,15 +217,8 @@ class ProfileScreenCards extends React.Component {
                 </Text>
                 <Text style={styles.valueTextStyle}>PUNTI</Text>
               </View>
-              <View style={styles.LigthUpColumnCenter}></View>
-              <View style={styles.LigthUpColumn}>
-                <Text style={styles.valueStyle}>
-                  {this.props.infoProfile.coins
-                    ? this.props.infoProfile.coins
-                    : 0}
-                </Text>
-                <Text style={styles.valueTextStyle}>MONETE</Text>
-              </View>
+             
+              
             </View>
     )
   }
@@ -259,7 +270,7 @@ class ProfileScreenCards extends React.Component {
       </TouchableOpacity>);
   };
 
-  headerStatistics = () => {
+  headerStatistics = (colorTitle) => {
     return (
       <View>
         <ImageBackground
@@ -271,7 +282,7 @@ class ProfileScreenCards extends React.Component {
 
             
 
-            {this.renderHeaderPointAndCoin()}
+            {this.renderHeaderPointAndCoin(colorTitle)}
             {this.renderDistance()}
             {this.renderCounterRoutes()}
             
@@ -322,12 +333,14 @@ class ProfileScreenCards extends React.Component {
           width: Dimensions.get("window").width * 0.9 - 30,
           top: -40,
           flexDirection: "row",
-          justifyContent: "space-between",
+          justifyContent: "space-around",
         }}
       >
         {this.circleTeam()}
-        {this.circleTeam()}
-        {this.circleTeam()}
+         {/*
+         {this.circleTeam()}
+        
+        {this.circleTeam()} */}
       </View>
     );
   };
@@ -377,7 +390,7 @@ class ProfileScreenCards extends React.Component {
         : 1
     );
 
-    const colorCircle = ["#60368C", "#6CBA7E", "#E83475", "#FAB21E"];
+    const colorCircle = ["#62367E", "#6CBA7E", "#E83475", "#FAB21E", '#3363AD'];
     const colorRGBA = [
       "rgba(96, 54, 140, 0.5)",
       "rgba(108, 186, 126, 0.5)",
@@ -386,14 +399,15 @@ class ProfileScreenCards extends React.Component {
     ];
     const colorText = ["#FFFFFF", "#000000", "#FFFFFF", "#000000"];
 
+    // this.props.infoProfile.role ? this.props.infoProfile.role : 0
     const colorProfile =
-      colorRGBA[this.props.infoProfile.role ? this.props.infoProfile.role : 1];
+      colorRGBA[0];
     const colorTitle =
       colorCircle[
-        this.props.infoProfile.role ? this.props.infoProfile.role : 1
+        0
       ];
     const colorName =
-      colorText[this.props.infoProfile.role ? this.props.infoProfile.role : 1];
+      colorText[0];
 
     let city = this.props.infoProfile
       ? this.props.infoProfile.city
@@ -460,7 +474,8 @@ class ProfileScreenCards extends React.Component {
             <ImageBackground
               source={
                 backgroundImage[
-                  this.props.infoProfile.role ? this.props.infoProfile.role : 1
+                  // this.props.infoProfile.role ? this.props.infoProfile.role : 1
+                  0
                 ]
               }
               style={[styles.content, { backgroundColor: colorProfile }]}
@@ -543,7 +558,7 @@ class ProfileScreenCards extends React.Component {
           </View>
         </TouchableOpacity>
         {this.headerTeam()}
-        {this.headerStatistics()}
+        {this.headerStatistics(colorTitle)}
         {/* 
           <TouchableOpacity
             activeOpacity={1}
@@ -733,7 +748,7 @@ const styles = StyleSheet.create({
     // top: -20
   },
   LigthUpColumn: {
-    width: Dimensions.get("window").width * 0.4 - 2,
+    width: Dimensions.get("window").width * 0.4,
     height: 60,
     justifyContent: "center",
     flexDirection: "column",

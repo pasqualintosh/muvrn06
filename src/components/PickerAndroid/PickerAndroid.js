@@ -328,7 +328,7 @@ let height = Dimensions.get("window").height;
 let ratio = PixelRatio.get();
 let styles = StyleSheet.create({
   container: {
-    flex: 1,
+    width: Dimensions.get("window").width * 0.8,
     justifyContent: "center",
     alignItems: "center",
     //this is very important
@@ -354,7 +354,7 @@ let styles = StyleSheet.create({
     minWidth: 360,
     textAlign: "center",
     fontFamily: "OpenSans-Regular",
-    fontWeight: "bold",
+    // fontWeight: "bold",
     marginBottom: 0
   },
   middle: {
@@ -381,7 +381,7 @@ let styles = StyleSheet.create({
     minWidth: 360,
     textAlign: "center",
     fontFamily: "OpenSans-Regular",
-    fontWeight: "bold",
+    // fontWeight: "bold",
     marginBottom: 0
   },
   down: {
@@ -406,7 +406,7 @@ let styles = StyleSheet.create({
     minWidth: 360,
     textAlign: "center",
     fontFamily: "OpenSans-Regular",
-    fontWeight: "bold",
+    // fontWeight: "bold",
     marginBottom: 0
   }
 });

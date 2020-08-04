@@ -267,11 +267,11 @@ class StandingsScreen extends React.Component {
                   }
                   <UserItem
                     navigation={this.props.navigation}
-                    // myProfile={this.myProfile}
+                    myProfile={this.myProfile}
                     user={{
                       ...item,
                       position: row,
-                      id: this.props.infoProfile.user_id,
+                      myUsername: this.props.infoProfile.username,
                     }}
                     rowID={rowID}
                     level={item.referred_route__user__level__name}
@@ -300,12 +300,12 @@ class StandingsScreen extends React.Component {
               return (
                 <Aux key={rowID}>
                   <UserItem
-                    // myProfile={this.myProfile}
+                    myProfile={this.myProfile}
                     navigation={this.props.navigation}
                     user={{
                       ...item,
                       position: row,
-                      id: this.props.infoProfile.user_id,
+                      myUsername: this.props.infoProfile.username,
                     }}
                     rowID={rowID}
                     level={item.referred_route__user__level__name}
@@ -334,12 +334,12 @@ class StandingsScreen extends React.Component {
             } else {
               return (
                 <UserItem
-                  // myProfile={this.myProfile}
+                  myProfile={this.myProfile}
                   navigation={this.props.navigation}
                   user={{
                     ...item,
                     position: row,
-                    id: this.props.infoProfile.user_id,
+                    myUsername: this.props.infoProfile.username,
                   }}
                   rowID={rowID}
                   level={item.referred_route__user__level__name}
@@ -1159,6 +1159,289 @@ class StandingsScreen extends React.Component {
     }
   };
 
+  selectTypeFriendAndTeam = (community, checkSponsor) => {
+    // community
+    // controllo se è una community o sponsor
+
+    // deve essere una community e avere un nome
+
+    if (community) {
+      return (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignContent: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignContent: 'center',
+              justifyContent: 'flex-end',
+              width: Dimensions.get('window').width * 0.5 - 90,
+            }}>
+            <TouchableWithoutFeedback
+              onPress={() => this.props.changeActiveSelectable('Global')}>
+              <View
+                style={{
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
+                  // right: 10
+                }}>
+                <Text
+                  style={{
+                    color:
+                      this.props.activeSelectable == 'global'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
+
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                    // marginBottom: 4,
+                    marginVertical: 0,
+                    textAlign: 'center',
+                  }}>
+                  WORLD
+                </Text>
+                <View
+                  style={{
+                    borderBottomColor: '#FAB21E',
+                    borderBottomWidth:
+                      this.props.activeSelectable == 'global' ? 1 : 0,
+                  }}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+
+          <View
+            style={{
+              flexDirection: 'row',
+              alignContent: 'center',
+              justifyContent: 'center',
+              width: 110,
+            }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+                width: 30,
+
+                // - 38
+              }}>
+              <OwnIcon name="rank_arrow_up_icn" size={20} color={'#9D9B9C'} />
+              <OwnIcon
+                name="rank_arrow_down_icn"
+                size={20}
+                color={'#FFFFFF'}
+                style={{right: 12}}
+              />
+            </View>
+
+            <TouchableWithoutFeedback
+              onPress={() => this.props.changeActiveSelectable('Friend')}
+              style={{flex: 1}}>
+              <View
+                style={{
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
+                }}>
+                <Text
+                  style={{
+                    color:
+                      this.props.activeSelectable == 'friend'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
+
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                    // marginBottom: 4,
+                    marginVertical: 0,
+                    textAlign: 'center',
+                  }}>
+                  FRIENDS
+                </Text>
+                <View
+                  style={{
+                    borderBottomColor: '#FAB21E',
+                    borderBottomWidth:
+                      this.props.activeSelectable == 'friend' ? 1 : 0,
+                  }}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignContent: 'center',
+                alignItems: 'center',
+                alignSelf: 'center',
+                width: 30,
+                // - 38
+              }}>
+              <OwnIcon name="rank_arrow_up_icn" size={20} color={'#9D9B9C'} />
+              <OwnIcon
+                name="rank_arrow_down_icn"
+                size={20}
+                color={'#FFFFFF'}
+                style={{right: 12}}
+              />
+            </View>
+          </View>
+
+          <View
+            style={{
+              flexDirection: 'row',
+              alignContent: 'center',
+              justifyContent: 'flex-start',
+              width: Dimensions.get('window').width * 0.5 - 90,
+            }}>
+            <TouchableWithoutFeedback
+              onPress={() => this.props.changeActiveSelectable('Community')}
+              style={{flex: 1}}>
+              <View
+                style={{
+                  flexDirection: 'column',
+                  alignContent: 'center',
+                  justifyContent: 'center',
+                  height: 40,
+                }}>
+                <Text
+                  style={{
+                    color:
+                      this.props.activeSelectable == 'community'
+                        ? '#FFFFFF'
+                        : '#9D9B9C',
+                    fontFamily: 'Montserrat-ExtraBold',
+
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                    // marginBottom: 4,
+                    marginVertical: 0,
+                    textAlign: 'center',
+                  }}>
+                  TEAM
+                </Text>
+                <View
+                  style={{
+                    borderBottomColor: '#FFFFFF',
+                    borderBottomWidth:
+                      this.props.activeSelectable == 'community' ? 1 : 0,
+                  }}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </View>
+      );
+    } else {
+      return (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignContent: 'center',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <TouchableWithoutFeedback
+            onPress={() => this.props.changeActiveSelectable('Global')}
+            style={{flex: 1}}>
+            <View
+              style={{
+                flexDirection: 'column',
+                alignContent: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text
+                style={{
+                  color:
+                    this.props.activeSelectable == 'global'
+                      ? '#FFFFFF'
+                      : '#9D9B9C',
+                  fontFamily: 'Montserrat-ExtraBold',
+                  fontSize: 10,
+                  fontWeight: 'bold',
+                  // marginBottom: 4,
+                  marginVertical: 0,
+                  textAlign: 'center',
+                }}>
+                WORLD
+              </Text>
+              <View
+                style={{
+                  borderBottomColor: '#FAB21E',
+                  borderBottomWidth:
+                    this.props.activeSelectable == 'global' ? 1 : 0,
+                }}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignContent: 'center',
+              alignItems: 'center',
+              alignSelf: 'center',
+              width: 30,
+              left: 2,
+              // - 38
+            }}>
+            <OwnIcon name="rank_arrow_up_icn" size={20} color={'#9D9B9C'} />
+            <OwnIcon
+              name="rank_arrow_down_icn"
+              size={20}
+              color={'#FFFFFF'}
+              style={{right: 12}}
+            />
+          </View>
+          <TouchableWithoutFeedback
+            onPress={() => this.props.changeActiveSelectable('Friend')}
+            style={{flex: 1}}>
+            <View
+              style={{
+                flexDirection: 'column',
+                alignContent: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text
+                style={{
+                  color:
+                    this.props.activeSelectable == 'friend'
+                      ? '#FFFFFF'
+                      : '#9D9B9C',
+                  fontFamily: 'Montserrat-ExtraBold',
+
+                  fontSize: 10,
+                  fontWeight: 'bold',
+                  // marginBottom: 4,
+                  marginVertical: 0,
+                  textAlign: 'center',
+                }}>
+                FRIENDS
+              </Text>
+              <View
+                style={{
+                  borderBottomColor: '#FAB21E',
+                  borderBottomWidth:
+                    this.props.activeSelectable == 'friend' ? 1 : 0,
+                }}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      );
+    }
+  };
+
   render() {
     let number = 0;
     const ds = new ListView.DataSource({
@@ -1271,14 +1554,15 @@ class StandingsScreen extends React.Component {
               flexDirection: 'column',
               alignContent: 'center',
             }}>
-            {/* {this.selectTypeNew(community, checkSponsor)} */}
+            {this.selectTypeFriendAndTeam(community, checkSponsor)}
             <View>
               <UserItem
-                // myProfile={this.myProfile}
+                myProfile={this.myProfile}
                 navigation={this.props.navigation}
                 currentUser={true}
                 user={{
                   username: this.props.infoProfile.username,
+                  myUsername: this.props.infoProfile.username,
 
                   avatar: this.props.infoProfile.avatar,
                   id: this.props.infoProfile.id,

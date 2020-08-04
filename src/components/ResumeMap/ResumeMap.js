@@ -113,6 +113,13 @@ class ResumeMap extends React.Component {
            
           }
           break
+          case "Car":
+          {
+            color = "#3363AD";
+            color1 = "#3363AD";
+           
+          }
+          break
         default:
           {
             color = "rgba(108, 186, 126, 1)";

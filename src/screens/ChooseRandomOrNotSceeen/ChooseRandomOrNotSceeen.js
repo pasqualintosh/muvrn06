@@ -163,6 +163,7 @@ class ChooseRandomOrNotSceeen extends React.Component {
                 <View
                   style={{
                     flexDirection: "row",
+                    paddingTop: 10,
                   }}
                 >
                   <TouchableOpacity
@@ -327,21 +328,7 @@ class ChooseRandomOrNotSceeen extends React.Component {
                   }}
                 />
                 <View>
-                <View style={styles.textcondition}>
-                <Text
-                    style={{
-                      // margin: 10,
-                      color: "#FFFFFF",
-                      fontFamily: "OpenSans-Regular",
-
-                      fontSize: 15,
-
-                      textAlign: "center",
-                    }}
-                  >
-                    {strings("id_0_24")}
-                  </Text>
-                  </View>
+                
                   <View
                   style={{
                     height: 30,
@@ -410,6 +397,7 @@ const styles = {
     height: Dimensions.get("window").height,
   },
   icon: {
+    
     width: Dimensions.get("window").width,
     justifyContent: "center",
     alignSelf: "center",

@@ -216,6 +216,10 @@ export const Language = {
     id_1_32: "Map",
     id_1_33: "Feedback",
     id_1_34: "Celebrate",
+    id_1_43: "Average speed",
+    id_1_44: "km/h",
+    id_1_45: "Thanks for your feedback!",
+    id_1_46: "It will help us to improve MUV.",
     id_1_35: "Trip pending",
     id_1_36: "Do you want to resume it?",
     id_1_37:
@@ -227,9 +231,11 @@ export const Language = {
       "To score points you need to add at least one friend to the route by enabling carpooling. If you don't add anyone, your mobility data will nevertheless be refined.",
     id_1_41: "%nickname% wants to carpool with you. Do you accept?",
     id_1_42: "Steps",
-    id_1_43: "",
-    id_1_44: "",
-    id_1_45: "",
+    id_1_47: "Invalid trip",
+    id_1_48: "Delete",
+    id_1_49:
+      "Based on our analysis, your route is not valid. If you think we are wrong (it happens to everyone) send us a message in which you explain us better how you travelled.",
+    id_1_50: "Tell us more",
     id_2_01: "Tournaments",
     id_2_02: "Here you will see the tournaments you can sign up for.",
     id_2_03: "Pick your team and get ready to prove yourself!",
@@ -636,15 +642,20 @@ export const Language = {
       "Update your privacy settings to participate in challenges and get rewarded by sponsors.",
     id_18_36: "Keep it up!",
     id_18_37:
-      "You recorded 30 minutes of activity and earned 100 points. Let's bet you can do better?",
+      "You recorded 2.000 steps and earned 100 points. Let's bet you can do better?",
     id_18_38: "Now that's being active!",
     id_18_39:
-      "You achieved 60 minutes of activity, besides the compliments you got 200 points. Now there's only one last step left.",
+      "You accomplished 5.000 steps, besides the compliments you got 200 points. Now there's only one final effort left.",
     id_18_40: "Simply impressive!",
     id_18_41:
-      "You reached your daily goal by completing 90 minutes of activity. Here are 300 points to reward your hard work.",
+      "You reached your daily goal, completing the beauty of 10.000 steps. Here's 300 points to remind you how tough you are.",
     id_18_42: "You're on fire!",
-    id_18_43: "",
+    id_18_43:
+      "Here's a +5% bonus on points for your trips thanks to your active lifestyle.",
+    id_18_50:
+      "Brilliant! You hit a bonus of +10% on each trip. Make the most of it!",
+    id_18_51:
+      "Here's an athlete with a capital 'A\"! Enjoy the true champs bonus of +20% points per trip.",
     id_18_44: "Friend request",
     id_18_45: "%nickname% wants to be your friend.",
     id_18_46: "Accept",
@@ -851,7 +862,7 @@ export const Language = {
     id_0_95: "2007-2012",
     id_0_96: "dal 2013 in poi",
     id_0_97: "≥ 51 cm3",
-    id_0_52: "Tilologia",
+    id_0_52: "Tipologia",
     id_0_53: "Bici da città",
     id_0_54: "Mountain bike",
     id_0_55: "Bici da corsa",
@@ -974,6 +985,10 @@ export const Language = {
     id_1_32: "Mappa",
     id_1_33: "Feedback",
     id_1_34: "Festeggia",
+    id_1_43: "Velocità media",
+    id_1_44: "km/h",
+    id_1_45: "Grazie per il tuo feedback!",
+    id_1_46: "Ci aiuterà a migliorare MUV.",
     id_1_35: "Tratta sospesa",
     id_1_36: "Vuoi riprendere il tracciamento?",
     id_1_37:
@@ -985,9 +1000,11 @@ export const Language = {
       "Per fare punti hai bisogno di aggiungere almeno un amico alla tratta, abilitando il car pooling. Se non aggiungi nessuno contribuirai comunque a raffinare i tuio dati di mobilità.",
     id_1_41: "%nickname% vuole fare car pooling con te. Accetti la richiesta?",
     id_1_42: "Passi",
-    id_1_43: "",
-    id_1_44: "",
-    id_1_45: "",
+    id_1_47: "Tratta non valida",
+    id_1_48: "Elimina",
+    id_1_49:
+      "Dalle nostre analisi la tua tratta risulta non valida. Se pensi ci stiamo sbagliando (capita a tutti) inviaci un messaggio in cui ci spieghi meglio come ti sei mosso.",
+    id_1_50: "Dicci di più",
     id_2_01: "Tornei",
     id_2_02: "Qui verranno visualizzati i tornei a cui potrai iscriverti.",
     id_2_03: "Scegli la tua squadra e tieniti pronto a dimostrare quanto vali!",
@@ -1407,15 +1424,20 @@ export const Language = {
       "Aggiorna le tue impostazioni sulla privacy per partecipare alle sfide ed essere ricompensato dagli sponsor.",
     id_18_36: "Continua così!",
     id_18_37:
-      "Hai registrato 30 minuti di attività e conquistato 100 punti. Scommettiamo che puoi fare di meglio?",
+      "Hai registrato 2000 passi e conquistato 100 punti. Scommettiamo che puoi fare di meglio?",
     id_18_38: "Questo si che essere attivi!",
     id_18_39:
-      "Hai raggiunto 60 minuti di attività, oltre ai complimenti ti sei meritato 200 punti. Adesso manca solo l'ultimo passo.",
+      "Hai completato ben 5.000 passi, oltre ai complimenti ti sei meritato 200 punti. Adesso manca solo l'ultimo sforzo.",
     id_18_40: "Semplicemente impressionante!",
     id_18_41:
-      "Hai raggiunto il tuo obiettivo giornaliero, completando 90 minuti di attività. Eccoti 300 punti per premiare i tuoi sforzi.",
+      "Hai raggiunto il tuo obiettivo giornaliero, completando la bellezza di 10.000 passi. Eccoti 300 punti per premiare la tua tenacia.",
     id_18_42: "Sei tutto un fuoco!",
-    id_18_43: "",
+    id_18_43:
+      "Eccoti un bonus di +5% sui punti per le tue tratte grazie al tuo stile di vita attivo.",
+    id_18_50:
+      "Magnifico! Hai raggiunto un bonus pari a +10% per ogni tratta. Sfruttalo a dovere!",
+    id_18_51:
+      "Ecco un atleta con la 'A\" maiuscola! Goditi il bonus dei veri campioni, pari a +20% di punti per tratta.",
     id_18_44: "Richiesta di amicizia",
     id_18_45: "%nickname% vuole stringere amicizia con te.",
     id_18_46: "Accetta",
@@ -1606,7 +1628,7 @@ export const Language = {
     id_0_78: "Cilindrada",
     id_0_79: "pequeña",
     id_0_80: "medio",
-    id_0_81: "pequeña",
+    id_0_81: "grande",
     id_0_82: "mini",
     id_0_84: "Motor",
     id_0_85: "2 tiempos",
@@ -1745,6 +1767,10 @@ export const Language = {
     id_1_32: "Mapa",
     id_1_33: "Comentario",
     id_1_34: "Celebra",
+    id_1_43: "Average speed",
+    id_1_44: "km/h",
+    id_1_45: "Thanks for your feedback!",
+    id_1_46: "It will help us to improve MUV.",
     id_1_35: "Ruta suspendida",
     id_1_36: "¿Quieres recuperar el seguimiento?",
     id_1_37:
@@ -1756,9 +1782,11 @@ export const Language = {
       "To score points you need to add at least one friend to the route by enabling carpooling. If you don't add anyone, your mobility data will nevertheless be refined.",
     id_1_41: "%nickname% wants to carpool with you. Do you accept?",
     id_1_42: "Steps",
-    id_1_43: "",
-    id_1_44: "",
-    id_1_45: "",
+    id_1_47: "Invalid trip",
+    id_1_48: "Delete",
+    id_1_49:
+      "Based on our analysis, your route is not valid. If you think we are wrong (it happens to everyone) send us a message in which you explain us better how you travelled.",
+    id_1_50: "Tell us more",
     id_2_01: "torneos",
     id_2_02: "Aquí verás los torneos en los que puedes registrarte.",
     id_2_03: "¡Elige tu equipo y prepárate para demostrar cuánto vales!",
@@ -2175,15 +2203,20 @@ export const Language = {
       "Actualiza tu configuración de privacidad para participar en desafíos y ser recompensado por los patrocinadores.",
     id_18_36: "Keep it up!",
     id_18_37:
-      "You recorded 30 minutes of activity and earned 100 points. Let's bet you can do better?",
+      "You recorded 2.000 steps and earned 100 points. Let's bet you can do better?",
     id_18_38: "Now that's being active!",
     id_18_39:
-      "You achieved 60 minutes of activity, besides the compliments you got 200 points. Now there's only one last step left.",
+      "You accomplished 5.000 steps, besides the compliments you got 200 points. Now there's only one final effort left.",
     id_18_40: "Simply impressive!",
     id_18_41:
-      "You reached your daily goal by completing 90 minutes of activity. Here are 300 points to reward your hard work.",
+      "You reached your daily goal, completing the beauty of 10.000 steps. Here's 300 points to remind you how tough you are.",
     id_18_42: "You're on fire!",
-    id_18_43: "",
+    id_18_43:
+      "Here's a +5% bonus on points for your trips thanks to your active lifestyle.",
+    id_18_50:
+      "Brilliant! You hit a bonus of +10% on each trip. Make the most of it!",
+    id_18_51:
+      "Here's an athlete with a capital 'A\"! Enjoy the true champs bonus of +20% points per trip.",
     id_18_44: "Friend request",
     id_18_45: "%nickname% wants to be your friend.",
     id_18_46: "Accept",
@@ -2452,7 +2485,7 @@ export const Language = {
     id_0_137: "Por favor, entre com seu Apelido.",
     id_0_138: "Por favor insira sua nova senha.",
     id_0_141:
-      "Oi, MUV foi recentemente atualizado com um novo banco de dados e um aplicativo mais rápido do que nunca!\nDesde que você não se registrou qualquer viagens nas últimas semanas seu perfil foi desativado. Nós, portanto, pedir-lhe para registar uma nova conta. Obrigado por sua compreensão.",
+      "Oi, MUV foi recentemente atualizado com um novo banco de dados e um aplicativo mais rápido do que nunca!\nDesde que você não se registrou qualquer viagens nas últimas semanas seu perfil foi desativado. Nós, portanto, pedir-lhe para registar uma nova conta. Obrigado pela sua compreensão.",
     id_0_31: "Digite a sua primeira viagem frequentes",
     id_0_32: "CASA",
     id_0_33: "TRABALHOS",
@@ -2515,6 +2548,10 @@ export const Language = {
     id_1_32: "Mapa",
     id_1_33: "Comentários",
     id_1_34: "Comemoro",
+    id_1_43: "Average speed",
+    id_1_44: "km/h",
+    id_1_45: "Thanks for your feedback!",
+    id_1_46: "It will help us to improve MUV.",
     id_1_35: "Trip pendente",
     id_1_36: "Você quer retomá-lo?",
     id_1_37:
@@ -2526,9 +2563,11 @@ export const Language = {
       "To score points you need to add at least one friend to the route by enabling carpooling. If you don't add anyone, your mobility data will nevertheless be refined.",
     id_1_41: "%nickname% wants to carpool with you. Do you accept?",
     id_1_42: "Steps",
-    id_1_43: "",
-    id_1_44: "",
-    id_1_45: "",
+    id_1_47: "Invalid trip",
+    id_1_48: "Delete",
+    id_1_49:
+      "Based on our analysis, your route is not valid. If you think we are wrong (it happens to everyone) send us a message in which you explain us better how you travelled.",
+    id_1_50: "Tell us more",
     id_2_01: "torneios",
     id_2_02: "Aqui você vai ver os torneios que você pode se inscrever.",
     id_2_03: "Escolha seu time e prepare-se para provar a si mesmo!",
@@ -2943,15 +2982,20 @@ export const Language = {
       "Atualize suas configurações de privacidade para participar de desafios e ser recompensado por patrocinadores.",
     id_18_36: "Keep it up!",
     id_18_37:
-      "You recorded 30 minutes of activity and earned 100 points. Let's bet you can do better?",
+      "You recorded 2.000 steps and earned 100 points. Let's bet you can do better?",
     id_18_38: "Now that's being active!",
     id_18_39:
-      "You achieved 60 minutes of activity, besides the compliments you got 200 points. Now there's only one last step left.",
+      "You accomplished 5.000 steps, besides the compliments you got 200 points. Now there's only one final effort left.",
     id_18_40: "Simply impressive!",
     id_18_41:
-      "You reached your daily goal by completing 90 minutes of activity. Here are 300 points to reward your hard work.",
+      "You reached your daily goal, completing the beauty of 10.000 steps. Here's 300 points to remind you how tough you are.",
     id_18_42: "You're on fire!",
-    id_18_43: "",
+    id_18_43:
+      "Here's a +5% bonus on points for your trips thanks to your active lifestyle.",
+    id_18_50:
+      "Brilliant! You hit a bonus of +10% on each trip. Make the most of it!",
+    id_18_51:
+      "Here's an athlete with a capital 'A\"! Enjoy the true champs bonus of +20% points per trip.",
     id_18_44: "Friend request",
     id_18_45: "%nickname% wants to be your friend.",
     id_18_46: "Accept",
@@ -3281,6 +3325,10 @@ export const Language = {
     id_1_32: "Mapa",
     id_1_33: "Sprzężenie zwrotne",
     id_1_34: "Świętować",
+    id_1_43: "Average speed",
+    id_1_44: "km/h",
+    id_1_45: "Thanks for your feedback!",
+    id_1_46: "It will help us to improve MUV.",
     id_1_35: "potknąć oczekiwaniu",
     id_1_36: "Czy chcesz je wznowić?",
     id_1_37:
@@ -3292,9 +3340,11 @@ export const Language = {
       "To score points you need to add at least one friend to the route by enabling carpooling. If you don't add anyone, your mobility data will nevertheless be refined.",
     id_1_41: "%nickname% wants to carpool with you. Do you accept?",
     id_1_42: "Steps",
-    id_1_43: "",
-    id_1_44: "",
-    id_1_45: "",
+    id_1_47: "Invalid trip",
+    id_1_48: "Delete",
+    id_1_49:
+      "Based on our analysis, your route is not valid. If you think we are wrong (it happens to everyone) send us a message in which you explain us better how you travelled.",
+    id_1_50: "Tell us more",
     id_2_01: "turnieje",
     id_2_02: "Tutaj widać turnieje można rejestrować się do.",
     id_2_03: "Wybierz swoją drużynę i przygotować się do udowodnienia samemu!",
@@ -3611,7 +3661,7 @@ export const Language = {
     id_16_10:
       "Każdego tygodnia wszystkie MUVers naprzeciw siebie w celu identyfikacji najbardziej odpowiednie z nich. Najlepszym trzy wygrywać trofea.",
     id_16_11:
-      "Okresowo MUV oferuje wyzwania nagrodzonych. Po uruchomieniu są widoczne w obszarze Dostępne Wyzwania, w którym można przeglądać i je zaakceptować.",
+      "Okresowo MUV oferuje wyzwania nagrodzonych. Po uruchomieniu są widoczne w obszarze Dostępne Wyzwania w którym można przeglądać i je zaakceptować.",
     id_16_12:
       "Twoje zaakceptowanych wyzwania zostaną przeniesione do obszaru określonego. Od tej chwili jesteś oficjalnie w konkursie!",
     id_16_13:
@@ -3710,15 +3760,20 @@ export const Language = {
       "Aktualizować swoje ustawienia prywatności uczestniczyć w wyzwaniach i nagrodzony przez sponsorów.",
     id_18_36: "Keep it up!",
     id_18_37:
-      "You recorded 30 minutes of activity and earned 100 points. Let's bet you can do better?",
+      "You recorded 2.000 steps and earned 100 points. Let's bet you can do better?",
     id_18_38: "Now that's being active!",
     id_18_39:
-      "You achieved 60 minutes of activity, besides the compliments you got 200 points. Now there's only one last step left.",
+      "You accomplished 5.000 steps, besides the compliments you got 200 points. Now there's only one final effort left.",
     id_18_40: "Simply impressive!",
     id_18_41:
-      "You reached your daily goal by completing 90 minutes of activity. Here are 300 points to reward your hard work.",
+      "You reached your daily goal, completing the beauty of 10.000 steps. Here's 300 points to remind you how tough you are.",
     id_18_42: "You're on fire!",
-    id_18_43: "",
+    id_18_43:
+      "Here's a +5% bonus on points for your trips thanks to your active lifestyle.",
+    id_18_50:
+      "Brilliant! You hit a bonus of +10% on each trip. Make the most of it!",
+    id_18_51:
+      "Here's an athlete with a capital 'A\"! Enjoy the true champs bonus of +20% points per trip.",
     id_18_44: "Friend request",
     id_18_45: "%nickname% wants to be your friend.",
     id_18_46: "Accept",

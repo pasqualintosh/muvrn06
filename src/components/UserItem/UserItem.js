@@ -141,9 +141,8 @@ class UserItem extends React.PureComponent {
   goToFriendNew = () => {
     // se ho un id allora vado nel mio profilo
     // se uguale al mio id
-    console.log(this.props.user.id);
-    console.log(this.props.user.referred_route__user_id);
-    if (this.props.user.id == this.props.user.referred_route__user_id) {
+    console.log(this.props.user);
+    if (this.props.user.myUsername == this.props.user.username) {
       if (this.props.myProfile) {
         this.props.myProfile();
       }
