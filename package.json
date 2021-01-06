@@ -26,7 +26,7 @@
     "@turf/buffer": "^5.1.5",
     "@turf/helpers": "^6.1.4",
     "@turf/line-intersect": "^6.0.2",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "bugsnag-react-native": "^2.23.10",
     "deprecated-react-native-listview": "0.0.6",
     "json-query": "^2.2.2",
